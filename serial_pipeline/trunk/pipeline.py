@@ -49,7 +49,9 @@ def main():
         print whtfile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
 
-    def pa(x):		
+    def pa(x):
+        """ The function which will bring position angle 
+         measured by sextrator in the range -90 and 90"""		
         if(float(x)>=0 and float(x)<=180.0): 
             pos_ang = float(x) - 90.0 #position angle
         if(float(x)<0 and float(x)>=-180.0):
@@ -61,6 +63,7 @@ def main():
         return pos_ang
 
     def psf_select(alpha_j, delta_j):					
+        """This function will select the nearest psf from the psflist"""
         distance = 9999.0
         psffile = 'test.fits'
         psflist = c.psflist

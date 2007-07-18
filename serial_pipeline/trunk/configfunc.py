@@ -26,6 +26,7 @@ def conf(clus_id, line_s, psffile):
     outfile   = 'out_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
     mask_file = 'mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
     config_file = 'gal_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.in' #Name of the GALFIT configuration file
+    contrain_file = str(imagefile)[:6] + '_'  + str(clus_id) + '.con'
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
@@ -52,7 +53,7 @@ def conf(clus_id, line_s, psffile):
                   ' to data\n'])
     f.writelines(['F) ', str(mask_file), '		# Bad pixel',
                   ' mask(FITS image or ASCII coord list)\n'])
-    f.writelines(['G) none			# File with parameter',\
+    f.writelines(['G) ', str(contrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
     f.writelines(['H) 1 ', str(size), ' 1 ', str(size), '		#',\
                   ' Image region to fit (xmin xmax ymin ymax)\n'])
@@ -176,6 +177,7 @@ def conf(clus_id, line_s, psffile):
     f_fit = open('fit2.log','a')
     if exists('fit.log'):
         os.system('rm fit.log')
+#Here the user should tell the location of the GALFIT excutable
     os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
     if exists('fit.log'):
         for line in open('fit.log','r'):
