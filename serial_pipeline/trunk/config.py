@@ -12,4 +12,3 @@ threshold = 2.5 #Masking will start for neighbours whose distace from the object
 size = 120 # size of the stamp image
 shiftra = 0.000212500000004 
 shiftdec =  6.66666666653e-05 #If the image WCS is not same as the coordinate given in the clus_cata, the appropriateshiftra and shiftdec  should be used. It will be better to correct WCS using iraf command ccmap so that the programcan identify the correct objects. Remember: Shift in the frame in not LINEAR! and it can leads to detect wrong objects
-

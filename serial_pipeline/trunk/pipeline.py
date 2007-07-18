@@ -139,8 +139,8 @@ def main():
                                                      str(imagefile)[:6] + \
                                                     '_'  + str(clus_id) + \
                                                     '.fits'
-                                    xcntr_o  = float(values[1]) #x center of the object
-                                    ycntr_o  = float(values[2]) #y center of the object
+                                    xcntr_o  = xcntr #x center of the object
+                                    ycntr_o  = ycntr #y center of the object
                                     xcntr = (size) + 1.0 + xcntr_o - \
                                             int(xcntr_o)
                                     ycntr = (size) + 1.0 + ycntr_o - \
