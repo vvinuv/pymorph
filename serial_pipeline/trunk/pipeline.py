@@ -25,10 +25,13 @@ def main():
     size = c.size/2
     threshold = c.threshold
     thresh_area = c.thresh_area
-    indexfile = open('index.html', 'w')
-    indexfile.writelines(['<HTML>\n<BODY>\n'])
-    indexfile.writelines(['</BODY></HTML>'])
-    indexfile.close()
+    if exists('index.html'):
+        pass
+    else:
+        indexfile = open('index.html', 'w')
+        indexfile.writelines(['<HTML>\n<BODY>\n'])
+        indexfile.writelines(['</BODY></HTML>'])
+        indexfile.close()
     try:
         img = pyfits.open(imagefile)
         image = img[0].data
