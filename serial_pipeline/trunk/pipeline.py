@@ -89,7 +89,11 @@ def main():
         return psffile, distance
 
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
-
+    f_res = open("result.csv", "ab")
+    writer = csv.writer(f_res)
+    writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re','re_err','n',\
+                     'n_err','Id','Id_err','rd','rd_err','chi2nu','Comments'])
+    f_res.close()
     f_cat = open(out_cata,'w')
     for line_s in open(sex_cata,'r'):
         try:
@@ -110,6 +114,7 @@ def main():
                     delta1 = float(values[4])
                     delta2 = float(values[5])
                     delta3 = float(values[6])
+                    z = float(values[8])
                     alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
                     delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
@@ -232,7 +237,7 @@ def main():
                             try:	
                                 PlotFunc(cutimage)
                                 try:	
-                                    write_params(cutimage, distance)
+                                    write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z)
                                     f_err.writelines(['(((((((((( Successful', \
                                                       ' ))))))))))\n'])
                                 except:
