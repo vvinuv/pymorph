@@ -28,23 +28,26 @@ def main():
     if exists('index.html'):
         pass
     else:
-        indexfile = open('index.html', 'w')
-        indexfile.writelines(['<HTML>\n<BODY>\n'])
-        indexfile.writelines(['</BODY></HTML>'])
-        indexfile.close()
+        if(c.repeat == False):
+            indexfile = open('index.html', 'w')
+            indexfile.writelines(['<HTML>\n<BODY>\n'])
+            indexfile.writelines(['</BODY></HTML>'])
+            indexfile.close()
     try:
-        img = pyfits.open(imagefile)
-        image = img[0].data
-        img.close()
+        if(c.repeat == False):
+            img = pyfits.open(imagefile)
+            image = img[0].data
+            img.close()
         print imagefile
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
     try:
         if exists(whtfile):
-            wht = pyfits.open(whtfile)
-            weight = wht[0].data
-            wht.close()
+            if(c.repeat == False):
+                wht = pyfits.open(whtfile)
+                weight = wht[0].data
+                wht.close()
             print whtfile
         else:
            print 'No weight image found\n'
@@ -135,18 +138,22 @@ def main():
                         f_err.writelines(['\n\n###########   ', str(clus_id), \
                                           '   ###########\n'])
                         try:
-                            z1 = image[ymin:ymax,xmin:xmax]
-                            hdu = pyfits.PrimaryHDU(z1.astype(Float32))
-                            hdu.header.update('RA_TARG', alpha_j)
-                            hdu.header.update('DEC_TARG', delta_j)
-                            hdu.writeto(cutimage)
+                            if(c.repeat == False):
+                                z1 = image[ymin:ymax,xmin:xmax]
+                                hdu = pyfits.PrimaryHDU(z1.astype(Float32))
+                                hdu.header.update('RA_TARG', alpha_j)
+                                hdu.header.update('DEC_TARG', delta_j)
+                                hdu.writeto(cutimage)
                             try:
-                                if exists(whtfile): 
-                                    z2 = weight[ymin:ymax,xmin:xmax]
-                                    hdu = pyfits.PrimaryHDU(z2.astype(Float32))
-                                    hdu.writeto(whtimage)
+                                if(c.repeat == False):
+                                    if exists(whtfile): 
+                                        z2 = weight[ymin:ymax,xmin:xmax]
+                                        hdu = pyfits.PrimaryHDU(z2.astype\
+                                              (Float32))
+                                        hdu.writeto(whtimage)
                                 try:
-                                    ElliMaskFunc(clus_id, line_s)
+                                    if(c.repeat == False):
+                                        ElliMaskFunc(clus_id, line_s)
                                     values = line_s.split()
                                     ell_mask_file = 'ell_mask_' + \
                                                      str(imagefile)[:6] + \
@@ -169,33 +176,35 @@ def main():
                                         eg = 0.07
                                     major_axis = float(values[14])
                                     #major axis of the object
-                                    try:
-                                        iraf.imcopy(ell_mask_file, 'image' + \
-                                                    str(ell_mask_file)[8:] + \
-                                                    '.pl')
+                                    if(c.repeat == False):
                                         try:
-                                            run_elli(cutimage, xcntr, ycntr, \
-                                                     eg, pos_ang, major_axis)
+                                            iraf.imcopy(ell_mask_file, 'image' \
+                                                       + str(ell_mask_file)[8:]\
+                                                       + '.pl')
+                                            try:
+                                                run_elli(cutimage, xcntr, \
+                                                         ycntr, eg, \
+                                                         pos_ang, major_axis)
+                                            except:
+                                                f_err.writelines(['Error in',\
+                                                          ' ellipse',\
+                                                          ' task. Check ',\
+                                                          'whether elli_',\
+                                                          str(cutimage)[6:-4],\
+                                                          'txt or ellip ',\
+                                                          'or err  or ',\
+                                                          'test.tab exists\n'])
+                                                run = 0
                                         except:
-                                            f_err.writelines(['Error in',\
-                                                              ' ellipse',\
-                                                              ' task. Check ',\
-                                                              'whether elli_',\
-                                                              str(cutimage)[6:-4],\
-                                                               'txt or ellip ',\
-                                                               'or err  or ',\
-                                                              'test.tab exists\n'])
+                                            f_err.writelines(['Exists image',\
+                                                       str(ell_mask_file)[8:],\
+                                                       '.pl or ',\
+                                                       str(ell_mask_file),\
+                                                       ' does not exist\n'])  
                                             run = 0
-                                    except:
-                                        f_err.writelines(['Exists image',\
-                                                           str(ell_mask_file)[8:],\
-                                                          '.pl or ',\
-                                                           str(ell_mask_file),\
-                                                          ' does not exist\n'])  
-                                        run = 0
                                 except:
-                                    f_err.writelines(['Error in making mask for ',\
-                                                      'ellipse task\n'])
+                                    f_err.writelines(['Error in making mask \
+                                                       for ','ellipse task\n'])
                                     run = 0
                             except:
                                 f_err.writelines(['The file ', str(whtimage), \
@@ -206,15 +215,34 @@ def main():
                                               ' exists\n'])
                             run = 0
                         try:
-                            MaskFunc(clus_id, line_s)
+                            if(c.repeat == False):
+                                MaskFunc(clus_id, line_s)
                             try:
                                 psffile = psf_select(alpha_j, delta_j)[0]
                                 distance = psf_select(alpha_j, delta_j)[1] * \
                                            60.0 * 60.0
-                                ConfigFunc(clus_id, line_s, psffile)
-                                outimage = 'out_' + str(imagefile)[:6] + '_'  + \
+                                if(c.repeat == False):
+                                    ConfigFunc(clus_id, line_s, psffile)
+                                if(c.repeat == True):
+                                    config_file = 'gal_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.in'
+                                    f_fit = open('fit2.log','a')
+                                    if exists('fit.log'):
+                                        os.system('rm fit.log')
+                                    #Here the user should tell the location of the GALFIT excutable
+                                    os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
+                                    if exists('fit.log'):
+                                        for line in open('fit.log','r'):
+                                            f_fit.writelines([str(line)])
+                                    f_fit.close()
+
+                                outimage = 'out_' + str(imagefile)[:6] + '_' + \
                                            str(clus_id) + '.fits[2]'
                                 try:
+                                    ell_output = 'out_elli_' + \
+                                                 str(outimage)[4:-7] + 'txt'
+                                    if(c.repeat == True):
+                                       if os.access(ell_output, os.F_OK):
+                                           os.remove(ell_output)    
                                     run_elli(outimage, xcntr, ycntr, eg, \
                                              pos_ang, major_axis)
                                 except:

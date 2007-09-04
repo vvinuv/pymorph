@@ -56,7 +56,7 @@ def run_elli(input, xcntr, ycntr, eg, pa, sma):#,radd,background):
 	#unlearn geompar	controlpar samplepar magpar ellipse
     iraf.geompar(x0=xcntr, y0=ycntr, ellip0=eg, pa0=pa, sma0=10, minsma=0.1, \
                  maxsma=sma*5.0, step=0.1,recente="yes")
-    iraf.controlpar(conver=0.05, minit=10, maxit=50, hcenter="no", hellip="no", \
+    iraf.controlpar(conver=0.05, minit=10, maxit=50, hcenter="no", hellip="no",\
                     hpa="no", wander="", maxgerr=0.5, olthres=1,soft="no")
     iraf.samplepar(integrm="bi-linear", usclip=3,lsclip=3, nclip=0, fflag=0.5)
     iraf.magpar(mag0=0, refer=1, zerolev=0)

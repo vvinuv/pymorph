@@ -42,4 +42,4 @@ pixelscale = 0.045                    #Pixel scale (arcsec/pixel)
 H0 = 71                               #Hubble parameter
 WM = 0.27                             #Omega matter
 WV = 0.73                             #Omega Lambda
-
+repeat = False                        #Repeat the pipeline manually
