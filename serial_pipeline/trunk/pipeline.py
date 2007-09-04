@@ -92,13 +92,14 @@ def main():
         return psffile, distance
 
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
-    f_res = open("result.csv", "ab")
-    writer = csv.writer(f_res)
-    writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
-                     're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
-                     'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)', \
-                     'rd(kpc)', 'rd_err(kpc)', 'chi2nu','Comments'])
-    f_res.close()
+    if(c.repeat == False):
+        f_res = open("result.csv", "ab")
+        writer = csv.writer(f_res)
+        writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
+                         're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
+                         'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
+                         'rd(kpc)', 'rd_err(kpc)', 'chi2nu', 'run', 'Comments'])
+        f_res.close()
     f_cat = open(out_cata,'w')
     for line_s in open(sex_cata,'r'):
         try:
@@ -224,7 +225,8 @@ def main():
                                 if(c.repeat == False):
                                     ConfigFunc(clus_id, line_s, psffile)
                                 if(c.repeat == True):
-                                    config_file = 'gal_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.in'
+                                    config_file = 'gal_' + str(imagefile)[:6]\
+                                                  + '_'  + str(clus_id) + '.in'
                                     f_fit = open('fit2.log','a')
                                     if exists('fit.log'):
                                         os.system('rm fit.log')

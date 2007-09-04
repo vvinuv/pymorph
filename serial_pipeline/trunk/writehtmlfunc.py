@@ -18,8 +18,7 @@ class WriteHtmlFunc:
         self.write_params = write_params(files, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z)
 
 def write_params(files, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z):
-    f_res = open("result.csv", "ab")
-    writer = csv.writer(f_res)
+
     outfile = open('result_' + str(files)[6:-4] + 'html','w')
     outfile.writelines(['<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 \
                          Transitional//EN">\n'])
@@ -102,8 +101,14 @@ def write_params(files, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3
         re_err_kpc = phy_parms[3] * re_err
         rd_kpc = phy_parms[3] * rd
         rd_err_kpc = phy_parms[3] * rd_err
-
-        writer.writerow([clus_id, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, chi2nu])
+        run = 1
+        if exists('result.csv'):
+            for line_res in csv.reader(open('result.csv').readlines()[1:]):    
+                if(str(line_res[0]) == clus_id):
+                    run += 1
+        f_res = open("result.csv", "ab")
+        writer = csv.writer(f_res)
+        writer.writerow([clus_id, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, chi2nu, run])
         f_res.close()
     outfile.writelines(['</TABLE> \n'])
     #outfile.writelines(['<CENTER><IMG SRC="plot_', str(files)[6:-4], 'png"></CENTER>'])
