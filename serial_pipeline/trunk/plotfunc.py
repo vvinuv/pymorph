@@ -48,7 +48,7 @@ def plot_profile(files):
     mag1 = data1.mag		#Magnitude at various sma
     mag_uerr1 = data1.mag_uerr	#Upper error in magnitude
     mag_lerr1 = data1.mag_lerr	#lower error in Magnitude
-    sc1=subplot(224)
+    sc1=subplot(234)
     #sc1.scatter(sma, mag, s=10, alpha=0.75, c='r')
     sc1.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3) 
     #fmt point type, ecolor point color, ms, point size
@@ -72,15 +72,34 @@ def plot_profile(files):
     model  		= f[2].data
     residual	= f[3].data
     f.close()
-    subplot(221)
+    subplot(231)
+    title('Original Galaxy')
     anorm = normalize(0.0,.04)
     image1=imshow(numarray.mlab.rot90(numarray.swapaxes(galaxy,0,1)),norm=anorm)
     image1.autoscale()
-    subplot(222)
+    subplot(232)
+    title('Model Galaxy')
     image1=imshow(numarray.mlab.rot90(numarray.swapaxes(model,0,1)),norm=anorm)
     image1.autoscale()
-    subplot(223)
+    subplot(233)
+    title('Residual')
     image1=imshow(numarray.mlab.rot90(numarray.swapaxes(residual,0,1)),norm=anorm)
+    image1.autoscale()
+    minvalue = image1.norm.vmin
+    maxvalue = image1.norm.vmax
+    histrange = (maxvalue - minvalue) / 10.0
+    # this is an inset axes over the main axes
+#    a = axes([0, 0, 150, 150], axisbg='y')
+    subplot(235)
+    n, bins, patches = hist(residual,50, normed=0)
+    title('Difference Histogram')
+#    setp(a, xticks=[], yticks=[])
+    subplot(236)
+    title('Mask')
+    f_mask=pyfits.open('mask_' + str(files)[6:-4] + 'fits')
+    mask 		= f_mask[0].data 
+    f_mask.close()
+    image1=imshow(numarray.mlab.rot90(numarray.swapaxes(mask,0,1)),norm=anorm)
     image1.autoscale()
     savefig('plot_' + str(files)[6:-4] + 'png')
     figure()

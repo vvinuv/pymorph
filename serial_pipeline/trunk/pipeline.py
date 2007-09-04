@@ -91,8 +91,10 @@ def main():
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
     f_res = open("result.csv", "ab")
     writer = csv.writer(f_res)
-    writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re','re_err','n',\
-                     'n_err','Id','Id_err','rd','rd_err','chi2nu','Comments'])
+    writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
+                     're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
+                     'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)', \
+                     'rd(kpc)', 'rd_err(kpc)', 'chi2nu','Comments'])
     f_res.close()
     f_cat = open(out_cata,'w')
     for line_s in open(sex_cata,'r'):
