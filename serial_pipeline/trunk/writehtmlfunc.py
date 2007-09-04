@@ -46,13 +46,14 @@ def write_params(files, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3
                                         '</TD> <TH> RA </TH> <TD>', \
                                         str(alpha1), ' ', str(alpha2),\
                                         ' ',str(alpha3), '</TD> </TR> \n' ])
-                    indexfile = open('index.html', 'a+')
-                    indexfile.writelines(['<a href="result',\
-                                          str(values[3])[5:-18],'.html',\
-                                          '"> ', str(values[3])[13:-18],\
-                                          ' </a> <br>\n'])
-                    indexfile.writelines(['</BODY></HTML>\n'])
-                    indexfile.close()
+                    if(c.repeat == False):
+                        indexfile = open('index.html', 'a+')
+                        indexfile.writelines(['<a href="result',\
+                                              str(values[3])[5:-18],'.html',\
+                                              '"> ', str(values[3])[13:-18],\
+                                              ' </a> <br>\n'])
+                        indexfile.writelines(['</BODY></HTML>\n'])
+                        indexfile.close()
                 if(str(values[0]) == 'Init.'):
                     outfile.writelines(['<TR align="center" bgcolor="#99CCFF">\
                                         <TH> Init. par. file </TH> \
