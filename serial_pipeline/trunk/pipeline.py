@@ -28,11 +28,10 @@ def main():
     if exists('index.html'):
         pass
     else:
-        if(c.repeat == False):
-            indexfile = open('index.html', 'w')
-            indexfile.writelines(['<HTML>\n<BODY>\n'])
-            indexfile.writelines(['</BODY></HTML>'])
-            indexfile.close()
+        indexfile = open('index.html', 'w')
+        indexfile.writelines(['<HTML>\n<BODY>\n'])
+        indexfile.writelines(['</BODY></HTML>'])
+        indexfile.close()
     try:
         if(c.repeat == False):
             img = pyfits.open(imagefile)
@@ -92,7 +91,9 @@ def main():
         return psffile, distance
 
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
-    if(c.repeat == False):
+    if exists('result.csv'):
+        pass
+    else:
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
@@ -263,21 +264,28 @@ def main():
                         except:
                             f_err.writelines(['Error in making mask for galfit\n'])
                             run = 0
-                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
-                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
+#                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
+#                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
                         if(run == 1):
-                            try:	
+                            try:
+                                if exists('plot_' + str(cutimage)[6:-4] \
+                                          + 'png'):	
+                                    os.system('rm ''plot_' + str(cutimage)\
+                                               [6:-4] + 'png''')
                                 PlotFunc(cutimage)
-                                try:	
-                                    write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z)
-                                    f_err.writelines(['(((((((((( Successful', \
-                                                      ' ))))))))))\n'])
-                                except:
-                                    f_err.writelines(['Error in writing html\n'])
-                                    run = 0
                             except:
                                 f_err.writelines(['Error in plotting\n'])
                                 run = 0	
+                            try:	
+                                write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z)
+#                                f_err.writelines(['(((((((((( Successful', \
+ #                                                     ' ))))))))))\n'])
+                            except:
+                                f_err.writelines(['Error in writing html\n'])
+                                run = 0
+                        if(run == 1):
+                            f_err.writelines(['(((((((((( Successful', \
+                                               ' ))))))))))\n'])
 						
 #iraf.imcopy(str(imagefile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', cutimage)	
 #iraf.imcopy(str(whtfile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', whtimage)	
