@@ -7,26 +7,25 @@ from os.path import exists
 
 class ConfigFunc:
     """The class making configuration file for GALFIT and this will run GALFIT"""
-    def __init__(self, clus_id, line_s, psffile):
-        self.clus_id = clus_id
+    def __init__(self, cutimage, whtimage, size, line_s, psffile):
+        self.cutimage = cutimage
         self.line_s  = line_s
-        self.conf    = conf(clus_id, line_s, psffile)
+	self.whtimage = whtimage
+        self.size = size
+        self.conf    = conf(cutimage, whtimage, size, line_s, psffile)
 		
 
-def conf(clus_id, line_s, psffile):
+def conf(cutimage, whtimage, size, line_s, psffile):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
-    size = c.size
     mask_reg = c.mask_reg
     values = line_s.split()
-    inputfile = 'image_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-    whtfile   = 'wht_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-    outfile   = 'out_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-    mask_file = 'mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-    config_file = 'gal_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.in' #Name of the GALFIT configuration file
-    contrain_file = str(imagefile)[:6] + '_'  + str(clus_id) + '.con'
+    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
+    contrain_file = str(cutimage)[:-5] + '.con'
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
@@ -41,11 +40,11 @@ def conf(clus_id, line_s, psffile):
     major_axis = float(values[14])	#major axis of the object
     #Write configuration file
     f.write('# IMAGE PARAMETERS\n')
-    f.writelines(['A) ', str(inputfile), '	# Input data image',\
+    f.writelines(['A) ', str(cutimage), '	# Input data image',\
                   ' (FITS file)\n'])
     f.writelines(['B) ', str(outfile), '		# Name for',\
                   ' the output image\n'])
-    f.writelines(['C) ', str(whtfile), '		# Noise image name', \
+    f.writelines(['C) ', str(whtimage), '		# Noise image name', \
                   ' (made from data if blank or "none")\n'])
     f.writelines(['D) ', str(psffile), '			# Input PSF', \
                   ' image for convolution (FITS file)\n'])
@@ -174,12 +173,12 @@ def conf(clus_id, line_s, psffile):
         except:
             pass
     f.close()
-    f_fit = open('fit2.log','a')
-    if exists('fit.log'):
-        os.system('rm fit.log')
+#    f_fit = open('fit2.log','a')
+#    if exists('fit.log'):
+#        os.system('rm fit.log')
 #Here the user should tell the location of the GALFIT excutable
-    os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
-    if exists('fit.log'):
-        for line in open('fit.log','r'):
-            f_fit.writelines([str(line)])
-    f_fit.close()
+#    os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
+#    if exists('fit.log'):
+#        for line in open('fit.log','r'):
+#            f_fit.writelines([str(line)])
+#    f_fit.close()

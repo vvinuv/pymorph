@@ -14,8 +14,8 @@ def fit_elli(clus_id, line_s):
     #try:
     size = c.size
     values = line_s.split()
-    mask_file = 'ell_mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-    image_file = 'image_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits' 
+    mask_file = 'ell_mask_' + str(c.rootname) + '_'  + str(clus_id) + '.fits'
+    image_file = 'image_' + str(c.rootname) + '_'  + str(clus_id) + '.fits' 
     print image_file
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
@@ -42,20 +42,24 @@ def fit_elli(clus_id, line_s):
     run_elli(image_file, xcntr, ycntr, eg, pos_ang, major_axis)
 
 
-def run_elli(input, xcntr, ycntr, eg, pa, sma):#,radd,background):
+def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
 	
     iraf.stsdas(_doprint=0)
     iraf.tables(_doprint=0)
     iraf.stsdas.analysis(_doprint=0)
     iraf.stsdas.analysis.isophote(_doprint=0)
     image_exist = 1
-    if(str(input)[:3] == 'ima'):
-        output = 'elli_' + input[6:-4] + 'txt' 
-    if(str(input)[:3] == 'out'):
-        output = 'out_elli_' + str(input)[4:-7] + 'txt'
+#    if(str(input)[:3] == 'ima'):
+#        output = 'elli_' + input[6:-4] + 'txt' 
+#    if(str(input)[:3] == 'out'):
+#        output = 'out_elli_' + str(input)[4:-7] + 'txt'
+#    else:
+#        output = 'elli_' + input[:-5] + '.txt'
 	#unlearn geompar	controlpar samplepar magpar ellipse
+    iraf.unlearn('geompar')
     iraf.geompar(x0=xcntr, y0=ycntr, ellip0=eg, pa0=pa, sma0=10, minsma=0.1, \
-                 maxsma=sma*5.0, step=0.1,recente="yes")
+                 maxsma=sma*5.0, step=0.1,recente="no")
+    iraf.unlearn('controlpar')
     iraf.controlpar(conver=0.05, minit=10, maxit=50, hcenter="no", hellip="no",\
                     hpa="no", wander="", maxgerr=0.5, olthres=1,soft="no")
     iraf.samplepar(integrm="bi-linear", usclip=3,lsclip=3, nclip=0, fflag=0.5)
@@ -64,8 +68,8 @@ def run_elli(input, xcntr, ycntr, eg, pa, sma):#,radd,background):
                  Stderr="err")
     iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \
                 showrow="no", orig_row="no", showhdr="no", showunits="no", \
-                columns="SMA, INTENS, INT_ERR, MAG, MAG_LERR, MAG_UERR",\
-                rows="-", \
+                columns="SMA, INTENS, INT_ERR, MAG, MAG_LERR, MAG_UERR, \
+                TFLUX_E", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
     for myfile in ['ellip','err','test.tab']:
         if os.access(myfile,os.F_OK):

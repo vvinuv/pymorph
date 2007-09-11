@@ -4,24 +4,24 @@ import config as c
 
 class MaskFunc:
     """The class for making mask for GALFIT """
-    def __init__(self, clus_id, line_s):
-        self.clus_id = clus_id
+    def __init__(self, cutimage, size, line_s):
+        self.cutimage = cutimage
+        self.size = size
         self.line_s  = line_s
-        self.mask    = mask(clus_id, line_s)
+        self.mask    = mask(cutimage, size, line_s)
 
-def mask(clus_id, line_s):
+def mask(cutimage, size, line_s):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
-    size = c.size
     mask_reg = c.mask_reg
     x = n.reshape(n.arange(size*size),(size,size)) % size
     x = x.astype(n.Float32)
     y = n.reshape(n.arange(size*size),(size,size)) / size
     y = y.astype(n.Float32)
     values = line_s.split()
-    mask_file = 'mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
+    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
     xcntr = size / 2.0 + 1.0 + xcntr_o - int(xcntr_o)

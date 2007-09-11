@@ -6,25 +6,26 @@ import config as c
 
 class ElliMaskFunc:
     """The class for making mask for ellipse task"""
-    def __init__(self, clus_id, line_s):
-        self.clus_id = clus_id
+    def __init__(self, cutimage, size, line_s, galflag):
+        self.cutimage = cutimage
+        self.size = size
         self.line_s  = line_s
-        self.mask    = mask(clus_id, line_s)
+        self.galflag = galflag
+        self.mask    = mask(cutimage, size, line_s, galflag)
 
-def mask(clus_id, line_s):
+def mask(cutimage, size, line_s, galflag):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     clus_cata = c.out_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
-    size = c.size
     mask_reg = c.mask_reg
     x = n.reshape(n.arange(size*size),(size,size)) % size
     x = x.astype(n.Float32)
     y = n.reshape(n.arange(size*size),(size,size)) / size
     y = y.astype(n.Float32)
     values = line_s.split()
-    mask_file = 'ell_mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
+    mask_file = 'EM_' + str(cutimage)[:-5] + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
     xcntr = size / 2.0 + 1.0 + xcntr_o - int(xcntr_o)
@@ -55,7 +56,7 @@ def mask(clus_id, line_s):
             one_minus_eg_sq    = (1.0-eg)**2.0
             if(abs(xcntr_n - xcntr_o) < size/2.0 and \
                abs(ycntr_n - ycntr_o) < size/2.0 and \
-               xcntr_n != xcntr_o and ycntr_n != ycntr_o):
+               xcntr_n != xcntr_o and ycntr_n != ycntr_o and galflag == 1):
                 if((xcntr_o - xcntr_n) < 0):
                     xn = xcntr + abs(xcntr_n - xcntr_o)
                 if((ycntr_o - ycntr_n) < 0):
@@ -68,7 +69,28 @@ def mask(clus_id, line_s):
                 ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                 z[n.where(R<=mask_reg*maj_axis)] = 1
+            if(abs(xcntr_n - xcntr_o) < size/2.0 and \
+               abs(ycntr_n - ycntr_o) < size/2.0 and galflag == 0):  
+                if((xcntr_o - xcntr_n) < 0):
+                    xn = xcntr + abs(xcntr_n - xcntr_o)
+                if((ycntr_o - ycntr_n) < 0):
+                    yn = ycntr + abs(ycntr_n - ycntr_o)
+                if((xcntr_o - xcntr_n) > 0):
+                    xn = xcntr - (xcntr_o -xcntr_n)
+                if((ycntr_o - ycntr_n) > 0):
+                    yn = ycntr - (ycntr_o -ycntr_n)
+                if(xcntr_n == xcntr_o and ycntr_n == ycntr_o):
+                    xn = xcntr 
+                    yn = ycntr
+                tx = (x - xn + 0.5) * co + (y - yn + 0.5) * si
+                ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
+                R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
+                z[n.where(R<=mask_reg*maj_axis*2.0)] = 1
         except:
             i=1	
-    hdu = pyfits.PrimaryHDU(z.astype(n.Float32))
-    hdu.writeto(mask_file)
+    if(galflag):
+        hdu = pyfits.PrimaryHDU(z.astype(n.Float32))
+        hdu.writeto(mask_file)
+    else:
+        hdu = pyfits.PrimaryHDU(z.astype(n.Float32))
+        hdu.writeto("BMask.fits")

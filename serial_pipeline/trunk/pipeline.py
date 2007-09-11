@@ -4,6 +4,7 @@
 import os
 from os.path import exists
 import sys
+import csv
 import pyfits
 import numarray as n
 from pyraf import iraf
@@ -14,7 +15,8 @@ from ellimaskfunc import *
 from fitellifunc import *
 from plotfunc import *
 from writehtmlfunc import *
-
+from runsexfunc import *
+from casgm import *
 
 def main():
     imagefile = c.imagefile
@@ -33,27 +35,43 @@ def main():
         indexfile.writelines(['</BODY></HTML>'])
         indexfile.close()
     try:
-        if(c.repeat == False):
+        if(c.repeat == False and c.galcut == False):
             img = pyfits.open(imagefile)
             image = img[0].data
             img.close()
-        print imagefile
+            print imagefile
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
     try:
         if exists(whtfile):
-            if(c.repeat == False):
+            if(c.repeat == False and c.galcut == False):
                 wht = pyfits.open(whtfile)
                 weight = wht[0].data
                 wht.close()
-            print whtfile
+                print whtfile
         else:
            print 'No weight image found\n'
     except IOError, (errno, strerror):
         print whtfile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
-
+    psflist = c.psflist
+    try:        #The function which will update the psf header if the psf files
+                #are the specified format
+        for element in psflist:
+            ra1 = float(str(element)[4:6])
+            ra2 = float(str(element)[6:8])
+            ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
+            dec1 = float(str(element)[11:-10])
+            dec2 = float(str(element)[-10:-8])
+            dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
+            ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
+            dec = (dec1 - (ra2 + ra3 / 60.0) / 60.0)
+            print element
+            iraf.hedit(element, 'RA_TARG', ra, verify= 'no', update='yes')
+            iraf.hedit(element, 'DEC_TARG', dec, verify= 'no', update='yes')
+    except:
+        pass
     def pa(x):
         """ The function which will bring position angle 
          measured by sextrator in the range -90 and 90"""		
@@ -96,118 +114,237 @@ def main():
     else:
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
-        writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
+        if(c.decompose):
+            writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
                          're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
-                         'rd(kpc)', 'rd_err(kpc)', 'chi2nu', 'run', 'Comments'])
+                         'rd(kpc)', 'rd_err(kpc)', 'chi2nu', 'run', 'C', \
+                         'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
+                         'Comments'])
+        else:
+            writer.writerow(['Name','ra','dec','z', 'C', \
+                         'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
+                         'Comments'])
         f_res.close()
     f_cat = open(out_cata,'w')
-    for line_s in open(sex_cata,'r'):
+    obj_file = open(clus_cata,'r')  #The file contains the objects of interest
+    pnames = obj_file.readline().split() #The names of the parameters given 
+                                         #in the first line in the clus_cata
+    pdb = {}                        #The parameter dictionary
+    psfcounter = 0                  #For getting psf in the case of unknown ra
+                                    #and dec
+    for line_j in obj_file:
         try:
-            values = line_s.split()
-            alpha_s = float(values[3]) - (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
-            delta_s = float(values[4]) - (c.shiftdec) 
-            sex_id = values[0]
-            xcntr  = float(values[1])
-            ycntr  = float(values[2])
-    	    #print sex_id,xcntr,ycntr 
-            for line_j in open(clus_cata,'r'):
+            values = line_j.split()
+            k = 0
+            for pname in pnames:
+                pdb[pname] = values[k]
+                k += 1
+            try:
+                gal_id = pdb["gal_id"]
+            except:
+                gal_id = pdb["gimg"][:-5] #id will be filename without .fits
+            try:
+                alpha1 = float(pdb["ra1"])
+            except:
+                alpha1 = -9999
+            try:
+                alpha2 = float(pdb["ra2"])
+            except:
+                alpha2 = 0
+            try:
+                alpha3 = float(pdb["ra3"])
+            except:
+                alpha3 = 0
+            try:
+                delta1 = float(pdb["dec1"])
+            except:
+                delta1 = -9999
+            try:
+                delta2 = float(pdb["dec2"])
+            except:
+                delta2 = 0
+            try:
+                delta3 = float(pdb["dec3"])
+            except:
+                delta3 = 0
+            try:
+                z = float(pdb["z"])
+            except:
+                z = 9999
+            try:
+                gimg = pdb["gimg"]    #Galaxy cutout
+            except:
+                gimg = 'None'
+            try:
+                wimg = pdb["wimg"]   #Weight cut
+            except:
+                wimg = 'None'
+            try:
+                cfile = pdb["cfile"]  #GALFIT configuration file
+            except:
+                if(c.repeat == True and c.galcut == False):
+                    cfile = 'G_I' + str(c.rootname) + '_' + \
+                             str(gal_id) + '.in'
+                elif(c.repeat == True and c.galcut == True):
+                    cfile = 'G_' + str(gimg)[:-5] + '.in'
+                else:
+                    cfile = 'None'
+            if exists(cfile):
+                for line_c in open(cfile,'r'): #Reading config file if it exists
+                    try:
+                        valuec = line_c.split()
+                        if(str(valuec[0]) == 'A)'):
+                            gimg = str(valuec[1])
+                        if(str(valuec[0]) == 'B)'):
+                            oimg = (valuec[1])
+                        if(str(valuec[0]) == 'C)'):
+                            wimg = (valuec[1])
+                        if(str(valuec[0]) == 'D)'):
+                            pfile = (valuec[1])
+                        if(str(valuec[0]) == 'F)'):
+                            mimg = (valuec[1])
+                        if(str(valuec[0]) == 'G)'):
+                            confile = (valuec[1])
+                    except:
+                        pass
+            else:
+                cfile = 'None'
+            try:
+                ximg = pdb["ximg"]
+            except:
+                if(c.galcut == True):
+                    ggimg = pyfits.open(gimg)
+                    ggimage = ggimg[0].data
+                    ggimg.close()
+                    c.size = ggimage.shape[0] 
+                    ximg = c.size / 2.0
+                else:
+                    ximg = -9999
+            try:
+                yimg = pdb["yimg"]
+            except:
+                if(c.galcut == True):
+                    yimg = c.size / 2.0
+                else:
+                    yimg = -9999
+            if(c.galcut == True):   #Given galaxy cutouts
+                if exists(sex_cata): #If the user provides sextractor catalogue
+                                     #then it will not run SExtractor else do!
+                    pass
+                else: 
+                    RunSex(gimg, wimg)
+            if(alpha1 == -9999 or delta1 == -9999):
+                alpha_j = -9999
+                delta_j = -9999
+            else:
+                alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
+                delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
+            for line_s in open(sex_cata,'r'):
                 try:
-                    values = line_j.split()
-                    clus_id = values[0]
-                    alpha1 = float(values[1])
-                    alpha2 = float(values[2])
-                    alpha3 = float(values[3])
-                    delta1 = float(values[4])
-                    delta2 = float(values[5])
-                    delta3 = float(values[6])
-                    z = float(values[8])
-                    alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
-                    delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
+                    values = line_s.split()
+                    if(c.galcut == False):
+                        alpha_s = float(values[3]) - (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
+                        delta_s = float(values[4]) - (c.shiftdec) 
+                    else:
+                        alpha_s = 9999
+                        delta_s = 9999
+                    sex_id = values[0]
+                    if(c.galcut == True):
+                        xcntr  = float(values[1])
+                        ycntr  = float(values[2])
+                    else:
+                        xcntr  = 9999
+                        ycntr  = 9999
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
-                       abs(delta_s - delta_j) < 0.00027/1.0):
+                       abs(delta_s - delta_j) < 0.00027/1.0 or \
+                       abs(xcntr - ximg) < 3.0 and abs(ycntr - yimg) < 3.0):
                         f_err = open('error.log', 'a') 
-                        xmin = int(xcntr) - (size + 1)
-                        ymin = int(ycntr) - (size + 1)
-                        xmax = int(xcntr) + (size - 1)
-                        ymax = int(ycntr) + (size - 1)
-                        cutimage = 'image_' + str(imagefile)[:6] + '_' + \
-                                    str(clus_id) + '.fits'
-                        whtimage = 'wht_' + str(imagefile)[:6] + '_' + \
-                                    str(clus_id) + '.fits'
-#                       mask_file = 'mask_' + str(imagefile)[:6] + '_'  + str(clus_id) + '.fits'
-                        run = 1 #run =1 when pipeline runs sucessfuly
-                        f_err.writelines(['\n\n###########   ', str(clus_id), \
+                        if(c.galcut == True):
+                            cutimage = gimg
+                            whtimage = wimg
+                        else:
+                            cutimage = 'I' + str(c.rootname) + '_' + \
+                                        str(gal_id) + '.fits'
+                            whtimage = 'W' + str(c.rootname) + '_' + \
+                                        str(gal_id) + '.fits'
+                            xcntr  = float(values[1])
+                            ycntr  = float(values[2])
+                            xmin = int(xcntr) - (size + 1)
+                            ymin = int(ycntr) - (size + 1)
+                            xmax = int(xcntr) + (size - 1)
+                            ymax = int(ycntr) + (size - 1)
+                        f_err.writelines(['\n\n###########   ', str(gal_id), \
                                           '   ###########\n'])
+                        run = 1 #run =1 when pipeline runs sucessfuly
                         try:
-                            if(c.repeat == False):
+                            if(c.repeat == False and c.galcut == False):
                                 z1 = image[ymin:ymax,xmin:xmax]
                                 hdu = pyfits.PrimaryHDU(z1.astype(Float32))
                                 hdu.header.update('RA_TARG', alpha_j)
                                 hdu.header.update('DEC_TARG', delta_j)
                                 hdu.writeto(cutimage)
                             try:
-                                if(c.repeat == False):
+                                if(c.repeat == False and c.galcut == False):
                                     if exists(whtfile): 
                                         z2 = weight[ymin:ymax,xmin:xmax]
                                         hdu = pyfits.PrimaryHDU(z2.astype\
                                               (Float32))
                                         hdu.writeto(whtimage)
-                                try:
-                                    if(c.repeat == False):
-                                        ElliMaskFunc(clus_id, line_s)
-                                    values = line_s.split()
-                                    ell_mask_file = 'ell_mask_' + \
-                                                     str(imagefile)[:6] + \
-                                                    '_'  + str(clus_id) + \
-                                                    '.fits'
+                                if(c.galcut == False):
                                     xcntr_o  = xcntr #x center of the object
                                     ycntr_o  = ycntr #y center of the object
-                                    xcntr = (size) + 1.0 + xcntr_o - \
-                                            int(xcntr_o)
-                                    ycntr = (size) + 1.0 + ycntr_o - \
-                                            int(ycntr_o)
-                                    mag    = float(values[7]) #Magnitude
-                                    radius = float(values[9]) #Half light radius
-                                    mag_zero = 25.256 #magnitude zero point
-                                    sky	 = float(values[10]) #sky
-                                    pos_ang = pa(values[11])
-                                    axis_rat = 1.0 / float(values[12]) #axis ration b/a
-                                    eg = 1 - axis_rat
-                                    if(eg<=0.05):
-                                        eg = 0.07
-                                    major_axis = float(values[14])
-                                    #major axis of the object
-                                    if(c.repeat == False):
-                                        try:
-                                            iraf.imcopy(ell_mask_file, 'image' \
-                                                       + str(ell_mask_file)[8:]\
-                                                       + '.pl')
+                                    xcntr = size + 1.0 + xcntr_o - int(xcntr_o)
+                                    ycntr = size + 1.0 + ycntr_o - int(ycntr_o)
+                                mag    = float(values[7]) #Magnitude
+                                radius = float(values[9]) #Half light radius
+                                mag_zero = 25.256 #magnitude zero point
+                                sky  = float(values[10]) #sky
+                                pos_ang = pa(values[11])
+                                axis_rat = 1.0 / float(values[12]) #axis ration b/a
+                                eg = 1 - axis_rat
+                                if(eg<=0.05):
+                                    eg = 0.07
+                                major_axis = float(values[14])
+                                #major axis of the object
+                                if(c.decompose):
+                                    try:
+                                        if(c.repeat == False):
+                                            ElliMaskFunc(cutimage, c.size, \
+                                                         line_s, 1)
+                                        ell_mask_file = 'EM_' + \
+                                                         str(cutimage)[:-5] + \
+                                                        '.fits'
+                                        if(c.repeat == False):
                                             try:
-                                                run_elli(cutimage, xcntr, \
-                                                         ycntr, eg, \
-                                                         pos_ang, major_axis)
-                                            except:
-                                                f_err.writelines(['Error in',\
-                                                          ' ellipse',\
-                                                          ' task. Check ',\
-                                                          'whether elli_',\
-                                                          str(cutimage)[6:-4],\
-                                                          'txt or ellip ',\
-                                                          'or err  or ',\
+                                                iraf.imcopy(ell_mask_file, \
+                                                       str(cutimage) + '.pl')
+                                                try:
+                                                    ell_out = 'E_' + \
+                                                     str(cutimage)[:-4] + 'txt'
+                                                    run_elli(cutimage, ell_out,\
+                                                             xcntr, ycntr, eg, \
+                                                            pos_ang, major_axis)
+                                                except:
+                                                    f_err.writelines(['Error '\
+                                                           'in ellipse ',\
+                                                           'task. Check ',\
+                                                           'whether elli_',\
+                                                           str(cutimage)[:-4],\
+                                                           'txt or ellip ',\
+                                                           'or err  or ',\
                                                           'test.tab exists\n'])
-                                                run = 0
-                                        except:
-                                            f_err.writelines(['Exists image',\
-                                                       str(ell_mask_file)[8:],\
-                                                       '.pl or ',\
+                                                    run = 0
+                                            except:
+                                                f_err.writelines(['Exists ',\
+                                                       str(cutimage),'.pl or ',\
                                                        str(ell_mask_file),\
                                                        ' does not exist\n'])  
-                                            run = 0
-                                except:
-                                    f_err.writelines(['Error in making mask \
-                                                       for ','ellipse task\n'])
-                                    run = 0
+                                                run = 0
+                                    except:
+                                        f_err.writelines(['Error in making '\
+                                                     'mask for ellipse task\n'])
+                                        run = 0
                             except:
                                 f_err.writelines(['The file ', str(whtimage), \
                                                   ' exists\n'])	
@@ -216,89 +353,190 @@ def main():
                             f_err.writelines(['The file ', str(cutimage),\
                                               ' exists\n'])
                             run = 0
-                        try:
-                            if(c.repeat == False):
-                                MaskFunc(clus_id, line_s)
+                        if(c.cas):
                             try:
-                                psffile = psf_select(alpha_j, delta_j)[0]
-                                distance = psf_select(alpha_j, delta_j)[1] * \
-                                           60.0 * 60.0
-                                if(c.repeat == False):
-                                    ConfigFunc(clus_id, line_s, psffile)
-                                if(c.repeat == True):
-                                    config_file = 'gal_' + str(imagefile)[:6]\
-                                                  + '_'  + str(clus_id) + '.in'
+                                ElliMaskFunc(cutimage, c.size, line_s,0)
+                                try:
+                                    if(cfile == 'None'):
+                                        MaskFunc(cutimage, c.size, line_s)
+                                        maskimage = 'M_' + str(cutimage)[:-5]\
+                                                     + '.fits'
+                                    else:
+                                        maskimage = mimg
+                                    try:
+                                        caSgm = casgm(cutimage, maskimage,\
+                                              xcntr, \
+                                              ycntr, eg, pos_ang, sky)
+                                        C = caSgm[0]
+                                        C_err = caSgm[1]
+                                        A = caSgm[2]
+                                        A_err = caSgm[3]
+                                        S = caSgm[4]
+                                        S_err = caSgm[5]
+                                        G = caSgm[6]
+                                        M = caSgm[7]
+                                        print C, C_err, A, A_err, S, S_err, G,M
+                                        if(c.decompose == False):
+                                            f_res = open("result.csv", "ab")
+                                            writer = csv.writer(f_res)
+                                            GalId = str(cutimage)[:-5]
+                                            writer.writerow([GalId, alpha_j, \
+                                            delta_j, z, C, C_err, A, A_err, S, \
+                                            S_err, G, M])
+                                            f_res.close()
+                                        f_err.writelines(['(((((CASGM '\
+                                                          'Successful)))))'])
+                                    except:
+                                        f_err.writelines(['The CASGM module',\
+                                                          ' failed\n'])   
+                                    for myfile in ['BMask.fits']:
+                                        if os.access(myfile, os.F_OK):
+                                            os.remove(myfile)
+                                    if(cfile == 'None'):
+                                        if os.access(maskimage, os.F_OK):
+                                            os.remove(maskimage)
+                                except:
+                                    f_err.writelines(['Could not make mask ',\
+                                                      'image for casgm\n'])
+                            except:
+                                f_err.writelines(['Could not create mask ',\
+                                                  'for casgm to find the sky'\
+                                                  ' sigma and mean\n'])
+                        a=1
+                        if(c.decompose):
+                            try:
+                                if(c.repeat == False and cfile == 'None'):
+                                    if(alpha_j == -9999 or delta_j == -9999):
+                                        psffile = c.psflist[psfcounter]
+                                        distance = 9999
+                                        psfcounter += 1
+                                    else:
+                                        psffile = psf_select(alpha_j, delta_j)\
+                                                  [0]
+                                        distance = psf_select(alpha_j, delta_j)\
+                                                  [1] * 60.0 * 60.0
+                                else:
+                                    if(alpha_j == -9999 or delta_j == -9999):
+                                        distance = 9999
+                                    else:
+                                        p=pyfits.open(pfile)
+                                        header = p[0].header
+                                        if(header.has_key('RA_TARG')):
+                                            ra_p = header['RA_TARG']
+                                        else:
+                                            ra_p = 9999
+                                        if (header.has_key('DEC_TARG')):
+                                            dec_p = header['DEC_TARG']
+                                        else:
+                                            dec_p = 9999
+                                        p.close()
+                                        r = 3.14159265 / 180.0
+                                        if(ra_p == 9999 or dec_p == 9999):
+                                            distance = 9999
+                                        else:
+                                            distance = n.arccos(n.cos((90.0 - \
+                                                delta_j) \
+                                             * r) * n.cos((90.0 - dec) * r) \
+                                             + n.sin((90.0 - delta_j) * r) *  \
+                                             n.sin((90.0 - dec) * r) * \
+                                             n.cos((alpha_j - ra) * r))
+                                if(cfile == 'None'):
+                                    MaskFunc(cutimage, c.size, line_s)
+                                    maskimage = 'M_' + str(cutimage)[:-5] +\
+                                                '.fits'
+                                else:
+                                    maskimage = mimg
+                                try:
+                                    if(cfile == 'None'):
+                                        ConfigFunc(cutimage, whtimage, c.size,\
+                                                   line_s, psffile)
+                                        config_file = 'G_' + \
+                                                       str(cutimage)[:-5]+ '.in'
+                                        outimage = 'O_' + str(cutimage)
+                                    else:
+                                        config_file = cfile
+                                        outimage = str(oimg)
                                     f_fit = open('fit2.log','a')
                                     if exists('fit.log'):
                                         os.system('rm fit.log')
-                                    #Here the user should tell the location of the GALFIT excutable
+                                #Here the user should tell the location of the GALFIT excutable
                                     os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
                                     if exists('fit.log'):
                                         for line in open('fit.log','r'):
                                             f_fit.writelines([str(line)])
                                     f_fit.close()
-
-                                outimage = 'out_' + str(imagefile)[:6] + '_' + \
-                                           str(clus_id) + '.fits[2]'
-                                try:
-                                    ell_output = 'out_elli_' + \
-                                                 str(outimage)[4:-7] + 'txt'
-                                    if(c.repeat == True):
-                                       if os.access(ell_output, os.F_OK):
-                                           os.remove(ell_output)    
-                                    run_elli(outimage, xcntr, ycntr, eg, \
-                                             pos_ang, major_axis)
+                                    try:
+                                        ell_output = 'OE_' + \
+                                                     str(cutimage)[:-4] + 'txt'
+                                        if(c.repeat == True):
+                                           if os.access(ell_output, os.F_OK):
+                                               os.remove(ell_output)  
+                                        outmodel = outimage + '[2]'  
+                                        run_elli(outmodel, ell_output, xcntr, \
+                                                 ycntr, eg, pos_ang, major_axis)
+                                    except:
+                                        f_err.writelines(['Error in ellipse '\
+                                                          'task. Check ', \
+                                                          'whether ' ,\
+                                                           str(ell_output) ,\
+                                                      ' or ellip or err  or',\
+                                                      ' test.tab exists OR ',\
+                                                      'GALFIT MIGHT BE '\
+                                                      'CRASHED\n'])
+                                        run = 0
                                 except:
-                                    f_err.writelines(['Error in ellipse task.'\
-                                                      ' Check ', \
-                                                      'whether out_elli_' ,\
-                                                      str(cutimage)[6:-4] ,\
-                                                      'txt or ellip or err  or',\
-                                                      'test.tab exists OR',\
-                                                      'GALFIT MIGHT BE CRASHED\n'])
+                                    f_err.writelines(['Error in writing',\
+                                                      ' configuration file\n'])	
                                     run = 0
                             except:
-                                f_err.writelines(['Error in writing',\
-                                                  ' configuration file\n'])	
+                                f_err.writelines(['Error in making mask for '\
+                                                  'galfit\n'])
                                 run = 0
-                        except:
-                            f_err.writelines(['Error in making mask for galfit\n'])
-                            run = 0
 #                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
 #                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
-                        if(run == 1):
-                            try:
-                                if exists('plot_' + str(cutimage)[6:-4] \
-                                          + 'png'):	
-                                    os.system('rm ''plot_' + str(cutimage)\
-                                               [6:-4] + 'png''')
-                                PlotFunc(cutimage)
-                            except:
-                                f_err.writelines(['Error in plotting\n'])
-                                run = 0	
-                            try:	
-                                write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z)
+                            if(run == 1):
+                                try:
+                                    if exists('P_' + str(cutimage)[6:-4] \
+                                              + 'png'):	
+                                        os.system('rm ''P_' + str(cutimage)\
+                                                   [6:-4] + 'png''')
+                                    PlotFunc(cutimage, outimage, maskimage)
+                                except:
+                                    f_err.writelines(['Error in plotting. '])
+                                    if(maskimage == 'None'):
+                                        f_err.writelines(['Could not find '\
+                                                          'Mask image\n'])
+                                    run = 0	
+                                try:	
+                                    write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, C, C_err, A, A_err, S, S_err, G, M)
 #                                f_err.writelines(['(((((((((( Successful', \
  #                                                     ' ))))))))))\n'])
-                            except:
-                                f_err.writelines(['Error in writing html\n'])
-                                run = 0
-                        if(run == 1):
-                            f_err.writelines(['(((((((((( Successful', \
-                                               ' ))))))))))\n'])
+                                except:
+                                    try:
+                                        write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999)
+                                    except:
+                                        f_err.writelines(['Error in writing '\
+                                                          'html\n'])
+                                        run = 0
+                            if(run == 1):
+                                f_err.writelines(['((((( Decomposition '\
+                                                  'Successful )))))\n'])
 						
 #iraf.imcopy(str(imagefile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', cutimage)	
 #iraf.imcopy(str(whtfile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', whtimage)	
-#					fitellifunc(clus_id, line_s)
+#					fitellifunc(gal_id, line_s)
 
-                        f_err.close()
-                        f_cat.writelines([str(clus_id), ' '])
-                        f_cat.write(line_s)
-                        for myfile in ['ellip','err','test.tab']:
-                            if os.access(myfile,os.F_OK):
-                                os.remove(myfile)
+                            f_err.close()
+                            f_cat.writelines([str(gal_id), ' '])
+                            f_cat.write(line_s)
+                            for myfile in ['ellip','err','test.tab']:
+                                if os.access(myfile,os.F_OK):
+                                    os.remove(myfile)
                 except:
                     pass
+            if(c.galcut == True):
+                if os.access(sex_cata, os.F_OK):
+                    os.remove(sex_cata)
         except:
             pass
     f_cat.close()
@@ -306,7 +544,7 @@ def main():
 main()
 #Filename conventions
 #Suppose imagefile = j8f645-1-1_drz_sci.fits
-#and clus_id = 9999, then
+#and gal_id = 9999, then
 #cutimage = image_j8f645_9999.fits, the cut out of the galaxy
 #whtimage = wht_j8f645_9999.fits, correspoding weight image for the cuts
 #maskfile = mask_j8f645_9999.fits, galfit mask

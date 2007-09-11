@@ -6,9 +6,11 @@ import random, numarray.random_array,numarray.mlab
 
 class PlotFunc:
     """The class for plotting"""
-    def __init__(self, files):
-        self.files        = files
-        self.plot_profile = plot_profile(files)
+    def __init__(self, cutimage, outimage, maskimage):
+        self.cutimage  = cutimage
+        self.outimage  = outimage
+        self.maskimage = maskimage
+        self.plot_profile = plot_profile(cutimage, outimage, maskimage)
 
 def get_data(ticker):
     """ Returns the values from the ellipse output table"""
@@ -33,9 +35,9 @@ def get_data(ticker):
     c1 = get_ticker(ticker)
     return c1
 
-def plot_profile(files):
-    data = get_data('elli_' + str(files)[6:-4] + 'txt')
-    data1 = get_data('out_elli_' + str(files)[6:-4] + 'txt')
+def plot_profile(cutimage, outimage, maskimage):
+    data = get_data('E_' + str(cutimage)[:-4] + 'txt')
+    data1 = get_data('OE_' + str(cutimage)[:-4] + 'txt')
     sma = data.sma		#sma from ellise fitting
     flux = data.flux	#Flux at various sma
     flux_err =data.flux_err	#Error in Flux
@@ -64,13 +66,13 @@ def plot_profile(files):
     ylabel(r'Surface Brightness', size='medium')
     title('1-D Profile Comparison')
     grid(True)
-    #savefig('plot_' + str(files)[6:-4] + 'png')
+    #savefig('plot_' + str(cutimage)[6:-4] + 'png')
     #colorbar()
     #show()
-    f=pyfits.open('out_' + str(files)[6:-4] + 'fits')
-    galaxy 		= f[1].data 
-    model  		= f[2].data
-    residual	= f[3].data
+    f=pyfits.open(outimage)
+    galaxy = f[1].data 
+    model = f[2].data
+    residual = f[3].data
     f.close()
     subplot(231)
     title('Original Galaxy')
@@ -96,10 +98,10 @@ def plot_profile(files):
 #    setp(a, xticks=[], yticks=[])
     subplot(236)
     title('Mask')
-    f_mask=pyfits.open('mask_' + str(files)[6:-4] + 'fits')
-    mask 		= f_mask[0].data 
+    f_mask=pyfits.open(maskimage)
+    mask = f_mask[0].data 
     f_mask.close()
     image1=imshow(numarray.mlab.rot90(numarray.swapaxes(mask,0,1)),norm=anorm)
     image1.autoscale()
-    savefig('plot_' + str(files)[6:-4] + 'png')
+    savefig('P_' + str(cutimage)[:-4] + 'png')
     figure()
