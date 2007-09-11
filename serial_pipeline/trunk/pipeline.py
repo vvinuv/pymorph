@@ -355,18 +355,17 @@ def main():
                             run = 0
                         if(c.cas):
                             try:
-                                ElliMaskFunc(cutimage, c.size, line_s,0)
+                                ElliMaskFunc(cutimage, c.size, line_s, 0)
                                 try:
-                                    if(cfile == 'None'):
-                                        MaskFunc(cutimage, c.size, line_s)
-                                        maskimage = 'M_' + str(cutimage)[:-5]\
-                                                     + '.fits'
-                                    else:
-                                        maskimage = mimg
+                                    if(c.decompose == False):
+                                        ElliMaskFunc(cutimage, c.size, \
+                                                         line_s, 1)
+                                    ell_mask_file = 'EM_' + \
+                                                      str(cutimage)[:-5] + \
+                                                      '.fits'
                                     try:
-                                        caSgm = casgm(cutimage, maskimage,\
-                                              xcntr, \
-                                              ycntr, eg, pos_ang, sky)
+                                        caSgm = casgm(cutimage, ell_mask_file,\
+                                              xcntr, ycntr, eg, pos_ang, sky)
                                         C = caSgm[0]
                                         C_err = caSgm[1]
                                         A = caSgm[2]
@@ -389,12 +388,7 @@ def main():
                                     except:
                                         f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
-                                    for myfile in ['BMask.fits']:
-                                        if os.access(myfile, os.F_OK):
-                                            os.remove(myfile)
-                                    if(cfile == 'None'):
-                                        if os.access(maskimage, os.F_OK):
-                                            os.remove(maskimage)
+
                                 except:
                                     f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
@@ -402,7 +396,14 @@ def main():
                                 f_err.writelines(['Could not create mask ',\
                                                   'for casgm to find the sky'\
                                                   ' sigma and mean\n'])
-                        a=1
+                        f_err.close()
+                        for myfile in ['BMask.fits', 'MRotated.fits']:
+                            if os.access(myfile, os.F_OK):
+                                os.remove(myfile)
+                        if(c.decompose == False):
+                            if os.access(ell_mask_file, os.F_OK):
+                                os.remove(ell_mask_file)
+                        f_err = open('error.log', 'a') 
                         if(c.decompose):
                             try:
                                 if(c.repeat == False and cfile == 'None'):

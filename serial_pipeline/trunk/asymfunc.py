@@ -139,7 +139,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, backgro
             ini_xcntr=xcntr[index]
             ini_ycntr=ycntr[index]
             n+=1
-    for myfile in ['AMask.fits', 'MaskedGalaxy.fits']:
+    for myfile in ['AMask.fits', 'MaskedGalaxy.fits', 'MRotated.fits']:
         if os.access(myfile, os.F_OK):
             os.remove(myfile)
     return Aabso,error_asym,ini_xcntr, ini_ycntr,n, flag_out,\

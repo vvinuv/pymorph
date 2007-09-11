@@ -96,8 +96,19 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
                             back_ini_ycntr = bycntr
                     bycntr += 4.0
                 bxcntr += 4.0
-            skysig_iter *= 1.2
+            skysig_iter *= 1.4
+            print countback
+            if countback == 5:
+                FLAG_BACK1 = 1
             countback += 1
+    f_err = open('error.log', 'a')
+    try:
+        print back_ini_xcntr, back_ini_ycntr
+        casgmrun = 1
+    except:
+        casgmrun = 0
+        f_err.writelines(['Failed to find the background region\n'])
+    f_err.close()
     z = z - sky
     f=pyfits.open(maskimage)
     mask = f[0].data
@@ -107,15 +118,18 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
     ########################
     #   CONCENTRATION      #
     ########################
-    con=concentration(z, xcntr, ycntr, nxpts, nypts, 0, 0, sky)
-    extraction_radius=con.total_rad
+    if(casgmrun):
+        con=concentration(z, xcntr, ycntr, nxpts, nypts, 0, 0, sky)
+        extraction_radius=con.total_rad
+    else:
+        extraction_radius == 9999
     if(extraction_radius == 9999):
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
     else:
         sigma=0.25*extraction_radius/1.5
 
         print "EXTRACTION RADIUS ",con.total_rad
-        print "CONCENTRATIN AND ERROR ",con.concen,con.error_con
+        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
 
         ########################
         #   ASYMMETRY          #
@@ -142,6 +156,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
             ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
             ASY_ERROR = 2 * sqrt(asy.image_asymm[1]**2 \
                         + back_asy.image_asymm[1]**2)
+        try:
+            ASY_ERROR = round(ASY_ERROR, 4)    
+        except:
+            ASY_ERROR = 9999
         print "ASYMMETRY, ERROR and flag_out ", \
                ASY, ASY_ERROR, asy.image_asymm[5]
         ########################
@@ -175,6 +193,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
         except:
             S = S1 - S2
             ERROR_SMOO = sqrt(error_S1**2.0 + error_S2**2.0)
+        try:
+            ERROR_SMOO = round(ERROR_SMOO, 4)
+        except:
+            ERROR_SMOO = 9999
         print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
 
         ########################
