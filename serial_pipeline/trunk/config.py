@@ -48,5 +48,5 @@ back_extraction_radius = 15.0
 #back_ini_ycntr = 22.0
 angle = 180.0
 decompose = False
-galfit = False
+galfit = True   #Always keep this True as it is not functional yet!
 cas = True
