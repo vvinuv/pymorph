@@ -44,11 +44,18 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, backgro
                         ncols= "INDEF",\
                         nlines = "INDEF", interpo= "linear", \
                         boundar="nearest", verbose="no")
-    iraf.imarith("".join(maskimage), op="*", operand2="MRotated.fits", \
-                    result="AMask.fits")
-    f=pyfits.open("AMask.fits")
-    mask = f[0].data
+#    iraf.imarith("".join(maskimage), op="*", operand2="MRotated.fits", \
+#                    result="AMask.fits")
+#    f=pyfits.open("AMask.fits")
+#    mask = f[0].data
+#    f.close()
+    f=pyfits.open("MRotated.fits")
+    mask1 = f[0].data
     f.close()
+    f=pyfits.open(maskimage)
+    mask2 = f[0].data
+    f.close()
+    mask = mask1 * mask2
     maskedgalaxy = ma.masked_array(z, mask)
     z = ma.filled(maskedgalaxy, value = background)
     hdu = pyfits.PrimaryHDU(z.astype(Float32))
@@ -139,7 +146,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, backgro
             ini_xcntr=xcntr[index]
             ini_ycntr=ycntr[index]
             n+=1
-    for myfile in ['AMask.fits', 'MaskedGalaxy.fits', 'MRotated.fits']:
+    for myfile in ['MaskedGalaxy.fits', 'MRotated.fits']:
         if os.access(myfile, os.F_OK):
             os.remove(myfile)
     return Aabso,error_asym,ini_xcntr, ini_ycntr,n, flag_out,\

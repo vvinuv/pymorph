@@ -258,7 +258,7 @@ def main():
                         ycntr  = 9999
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
-                       abs(xcntr - ximg) < 3.0 and abs(ycntr - yimg) < 3.0):
+                       abs(xcntr - ximg) < 3.5 and abs(ycntr - yimg) < 3.5):
                         f_err = open('error.log', 'a') 
                         if(c.galcut == True):
                             cutimage = gimg
@@ -395,11 +395,11 @@ def main():
                             except:
                                 f_err.writelines(['Could not create mask ',\
                                                   'for casgm to find the sky'\
-                                                  ' sigma and mean\n'])
+                                                  ' sigma and mean. Remove '\
+                                                   'if BMask.fits exists\n'])
                         f_err.close()
-                        for myfile in ['BMask.fits', 'MRotated.fits']:
-                            if os.access(myfile, os.F_OK):
-                                os.remove(myfile)
+                        os.system('rm -f BMask.fits MRotated.fits \
+                                  MaskedGalaxy.fits Rotated.fits')
                         if(c.decompose == False):
                             if os.access(ell_mask_file, os.F_OK):
                                 os.remove(ell_mask_file)
@@ -460,8 +460,9 @@ def main():
                                     f_fit = open('fit2.log','a')
                                     if exists('fit.log'):
                                         os.system('rm fit.log')
-                                #Here the user should tell the location of the GALFIT excutable
-                                    os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
+                                #Here the user should tell the location of the GALFIT excutable                     
+                                    if(c.galfit):
+                                        os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
                                     if exists('fit.log'):
                                         for line in open('fit.log','r'):
                                             f_fit.writelines([str(line)])

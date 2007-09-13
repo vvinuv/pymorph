@@ -52,7 +52,7 @@ def CLUMPNESS(z,ini_xcntr,ini_ycntr,pa,eg,background,extraction_radius,sigma,fla
 		res[where(R<=extraction_radius*(1/20.0))]=0
 		res[where(R>=extraction_radius)]=0
 		res_inside_anulus_sum=res[where(res>0)].sum() #the sum of residue inside the anulus
-                print res_inside_anulus_sum, 3.14*extraction_radius*extraction_radius
+#                print res_inside_anulus_sum, 3.14*extraction_radius*extraction_radius
 		z_inside_R_sum=zextract[where(R<=extraction_radius)].sum()/(3.14*extraction_radius*extraction_radius*sqrt(1-eg**2.0))
 		area=3.14*(extraction_radius*extraction_radius*sqrt(1-eg**2.0))-3.14*(extraction_radius*extraction_radius*(1/6.0)*(1/6.0)*sqrt(1-eg**2.0))
 		S=res_inside_anulus_sum/area#-(0.25*extraction_radius/1.5)*(0.25*extraction_radius/1.5)*sqrt(1-eg**2.0)))

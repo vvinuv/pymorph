@@ -1,9 +1,9 @@
 """Configure file for automation"""
 imagefile = 'j8f647-1-1_drz_sci.fits'
 whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'j8f647_sex.cat'           #The sextractor catalogue which has 
+sex_cata = 'goods_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
+clus_cata = 'abhi_goods_first.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
@@ -48,4 +48,5 @@ back_extraction_radius = 15.0
 #back_ini_ycntr = 22.0
 angle = 180.0
 decompose = False
+galfit = False
 cas = True

@@ -49,7 +49,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
         bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
         skysig = im.standard_deviation(bgmaskedgalaxy1d)
         sky_iter = ma.average(bgmaskedgalaxy1d)
-        skysig_iter = skysig * 0.8
+        skysig_iter = skysig * 3.0
         x = reshape(arange(nxpts * nypts),(nxpts, nypts)) % nypts
         x = x.astype(Float32)
         y = reshape(arange(nxpts * nypts),(nxpts, nypts)) / nypts
@@ -86,19 +86,20 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
 #                            back_ini_ycntr = bycntr
                         bmax = abs(z[where(R <= back_extraction_radius)] \
                                - sky_iter).max()
-                        if(bmax < skysig_iter and FLAG_BACK == 1):
-                            FLAG_BACK1 = 1
-                            back_ini_xcntr1 = bxcntr
-                            back_ini_ycntr1 = bycntr  
+#                        if(bmax < skysig_iter and FLAG_BACK == 1):
+#                            FLAG_BACK1 = 1
+#                            back_ini_xcntr1 = bxcntr
+#                            back_ini_ycntr1 = bycntr  
                         if(bmax < skysig_iter and FLAG_BACK == 0):
                             FLAG_BACK = 1
+                            FLAG_BACK1 = 1
                             back_ini_xcntr = bxcntr
                             back_ini_ycntr = bycntr
                     bycntr += 4.0
                 bxcntr += 4.0
-            skysig_iter *= 1.4
+            skysig_iter *= 1.3
             print countback
-            if countback == 5:
+            if countback == 3:
                 FLAG_BACK1 = 1
             countback += 1
     f_err = open('error.log', 'a')
@@ -130,74 +131,81 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
 
         print "EXTRACTION RADIUS ",con.total_rad
         print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
-
+        
         ########################
         #   ASYMMETRY          #
         ########################
-
-        asy = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0, \
-              extraction_radius, sky, angle, 1, 0)
-        extraction_radius = asy.image_asymm[8]
-        ABS_ZSUM = asy.image_asymm[6] * (back_extraction_radius * \
-                   back_extraction_radius) / (extraction_radius * \
-                   extraction_radius * 1.0)
-        back_asy = asymmetry(cutimage, maskimage, back_ini_xcntr, \
-                             back_ini_ycntr, 0, 0, back_extraction_radius, \
-                             sky, angle, 0, ABS_ZSUM)
         try:
-            back_asy1 = asymmetry(cutimage, maskimage, back_ini_xcntr1, \
-                       back_ini_ycntr1,\
-                       0, 0, back_extraction_radius, sky, angle, 0, ABS_ZSUM)
-            ASY = asy.image_asymm[0] - (back_asy.image_asymm[0] +\
-                                    back_asy1.image_asymm[0]) / 2.0
-            ASY_ERROR = 2 * sqrt(asy.image_asymm[1]**2 + \
-                      back_asy.image_asymm[1]**2 + back_asy1.image_asymm[1]**2)
+            asy = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0, \
+                  extraction_radius, sky, angle, 1, 0)
+            extraction_radius = asy.image_asymm[8]
+            ABS_ZSUM = asy.image_asymm[6] * (back_extraction_radius * \
+                       back_extraction_radius) / (extraction_radius * \
+                       extraction_radius * 1.0)
+            back_asy = asymmetry(cutimage, maskimage, back_ini_xcntr, \
+                                back_ini_ycntr, 0, 0, back_extraction_radius, \
+                                sky, angle, 0, ABS_ZSUM)
+            try:
+                back_asy1 = asymmetry(cutimage, maskimage, back_ini_xcntr1, \
+                           back_ini_ycntr1,\
+                          0, 0, back_extraction_radius, sky, angle, 0, ABS_ZSUM)
+                ASY = asy.image_asymm[0] - (back_asy.image_asymm[0] +\
+                                      back_asy1.image_asymm[0]) / 2.0
+                ASY_ERROR = 2 * sqrt(asy.image_asymm[1]**2 + \
+                       back_asy.image_asymm[1]**2 + back_asy1.image_asymm[1]**2)
+            except:
+                ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
+                ASY_ERROR = 2 * sqrt(asy.image_asymm[1]**2 \
+                            + back_asy.image_asymm[1]**2)
+            try:
+                ASY_ERROR = round(ASY_ERROR, 4)    
+            except:
+                ASY_ERROR = 9999
+            print "ASYMMETRY, ERROR and flag_out ", \
+                   ASY, ASY_ERROR, asy.image_asymm[5]
         except:
-            ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
-            ASY_ERROR = 2 * sqrt(asy.image_asymm[1]**2 \
-                        + back_asy.image_asymm[1]**2)
-        try:
-            ASY_ERROR = round(ASY_ERROR, 4)    
-        except:
-            ASY_ERROR = 9999
-        print "ASYMMETRY, ERROR and flag_out ", \
-               ASY, ASY_ERROR, asy.image_asymm[5]
+            ASY = ASY_ERROR = 9999 
         ########################
         #   CLUMPNESS          #
         ########################
-        sigma = int(sigma)
-        if(sigma / 2.0 == int(sigma / 2.0)):
-            sigma = sigma + 1.0
-        clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 0, 0, \
-                          extraction_radius, sigma, sky, 1)
-        S1 = 10.0 * clump.image_clumpness[0] / clump.image_clumpness[2]
-        error_S1 = sqrt((clump.image_clumpness[1] + clump.image_clumpness[3] / \
-                         clump.image_clumpness[4]) * S1**2.0)
-        if(sigma > back_extraction_radius):
-            back_extraction_radius = sigma + 2.0
-        back_clump = clumpness(z, back_ini_xcntr, back_ini_ycntr, 0, 0,\
-                               back_extraction_radius, sigma, sky, 0)
-        S2 = 10.0 * back_clump.image_clumpness[0] / clump.image_clumpness[2]
-        error_S2 = sqrt((back_clump.image_clumpness[1] \
-                        + clump.image_clumpness[3] \
-                        / clump.image_clumpness[4]) * S2**2.0)
         try:
-            back_clump1 = clumpness(z, back_ini_xcntr1, back_ini_ycntr1, 0, 0,\
-                                     back_extraction_radius, sigma, sky, 0)
-            S3 = 10.0 * back_clump1.image_clumpness[0] / \
-                 clump.image_clumpness[2]
-            error_S3 = sqrt((back_clump1.image_clumpness[1] + \
-               clump.image_clumpness[3]  / clump.image_clumpness[4]) * S3**2.0)
-            S = S1 - (S2 +S3) / 2.0
-            ERROR_SMOO = sqrt(error_S1**2.0 + error_S2**2.0 + error_S3**2.0)
+            sigma = int(sigma)
+            if(sigma / 2.0 == int(sigma / 2.0)):
+                sigma = sigma + 1.0
+            clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 0, 0, \
+                              extraction_radius, sigma, sky, 1)
+            S1 = 10.0 * clump.image_clumpness[0] / clump.image_clumpness[2]
+            error_S1 = sqrt((clump.image_clumpness[1] + \
+                             clump.image_clumpness[3] / \
+                             clump.image_clumpness[4]) * S1**2.0)
+            if(sigma > back_extraction_radius):
+                back_extraction_radius = sigma + 2.0
+            back_clump = clumpness(z, back_ini_xcntr, back_ini_ycntr, 0, 0,\
+                                   back_extraction_radius, sigma, sky, 0)
+            S2 = 10.0 * back_clump.image_clumpness[0] / clump.image_clumpness[2]
+            error_S2 = sqrt((back_clump.image_clumpness[1] \
+                            + clump.image_clumpness[3] \
+                            / clump.image_clumpness[4]) * S2**2.0)
+            try:
+                back_clump1 = clumpness(z, back_ini_xcntr1, back_ini_ycntr1, \
+                              0, 0, back_extraction_radius, sigma, sky, 0)
+                S3 = 10.0 * back_clump1.image_clumpness[0] / \
+                     clump.image_clumpness[2]
+                error_S3 = sqrt((back_clump1.image_clumpness[1] + \
+                           clump.image_clumpness[3]  / \
+                           clump.image_clumpness[4]) * S3**2.0)
+                S = S1 - (S2 +S3) / 2.0
+                ERROR_SMOO = sqrt(error_S1**2.0 + error_S2**2.0 + error_S3**2.0)
+            except:
+                S = S1 - S2
+                ERROR_SMOO = sqrt(error_S1**2.0 + error_S2**2.0)
+            try:
+                ERROR_SMOO = round(ERROR_SMOO, 4)
+            except:
+                ERROR_SMOO = 9999
+            print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
         except:
-            S = S1 - S2
-            ERROR_SMOO = sqrt(error_S1**2.0 + error_S2**2.0)
-        try:
-            ERROR_SMOO = round(ERROR_SMOO, 4)
-        except:
-            ERROR_SMOO = 9999
-        print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
+             S = ERROR_SMOO = 9999
 
         ########################
         #   GINI COEFFICIENT   #
@@ -207,12 +215,12 @@ def casgm(cutimage, maskimage, xcntr, ycntr, eg, pa, sky):
         gin = gini(z, xcntr, ycntr, 0, 0, extraction_radius, sky, skysig)
         gini_coef = gin.gini_coef
         print "GINI COEFFI ",gini_coef
-        for myfile in ['segmentation.fits']:
-            if os.access(myfile,os.F_OK):
-                os.remove(myfile)
+#        for myfile in ['segmentation.fits']:
+#            if os.access(myfile,os.F_OK):
+#                os.remove(myfile)
         # Write Model galaxy image
-        hdu = pyfits.PrimaryHDU(gin.segmentation.astype(Float32))
-        hdu.writeto('segmentation.fits')
+#        hdu = pyfits.PrimaryHDU(gin.segmentation.astype(Float32))
+#        hdu.writeto('segmentation.fits')
 
         ########################
         #   MOMENT CALCULATION #
