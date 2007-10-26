@@ -93,7 +93,20 @@ def plot_profile(cutimage, outimage, maskimage):
     # this is an inset axes over the main axes
 #    a = axes([0, 0, 150, 150], axisbg='y')
     subplot(235)
-    n, bins, patches = hist(residual,50, normed=0)
+    n, bins, patches = hist(residual, 100, normed=0)
+    nMaxArg = n.argmax()
+    if(nMaxArg < 16):
+        ArgInc = nMaxArg
+    else:
+        ArgInc = 16
+    print trapz(bins,n)
+
+    nMax = max(n) 
+    binmin = bins[nMaxArg-ArgInc]
+    binmax = bins[nMaxArg+ArgInc]
+    axis([binmin, binmax, 0.0, nMax])
+    setp(patches, 'facecolor', 'g', 'alpha', 0.75)
+    grid(True)
     title('Difference Histogram')
 #    setp(a, xticks=[], yticks=[])
     subplot(236)

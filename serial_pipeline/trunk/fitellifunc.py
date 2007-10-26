@@ -57,13 +57,34 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
 #        output = 'elli_' + input[:-5] + '.txt'
 	#unlearn geompar	controlpar samplepar magpar ellipse
     iraf.unlearn('geompar')
-    iraf.geompar(x0=xcntr, y0=ycntr, ellip0=eg, pa0=pa, sma0=10, minsma=0.1, \
-                 maxsma=sma*5.0, step=0.1,recente="no")
+    iraf.geompar.x0=xcntr
+    iraf.geompar.y0=ycntr
+    iraf.geompar.ellip0=eg
+    iraf.geompar.pa0=pa
+    iraf.geompar.sma0=10
+    iraf.geompar.minsma=0.1
+    iraf.geompar.maxsma=sma*5.0
+    iraf.geompar.step=0.1
+    iraf.geompar.recente="no"
     iraf.unlearn('controlpar')
-    iraf.controlpar(conver=0.05, minit=10, maxit=50, hcenter="no", hellip="no",\
-                    hpa="no", wander="", maxgerr=0.5, olthres=1,soft="no")
-    iraf.samplepar(integrm="bi-linear", usclip=3,lsclip=3, nclip=0, fflag=0.5)
-    iraf.magpar(mag0=0, refer=1, zerolev=0)
+    iraf.controlpar.conver=0.05
+    iraf.controlpar.minit=10
+    iraf.controlpar.maxit=50
+    iraf.controlpar.hcenter="no"
+    iraf.controlpar.hellip="no"
+    iraf.controlpar.hpa="no"
+    iraf.controlpar.wander="INDEF"
+    iraf.controlpar.maxgerr=0.5
+    iraf.controlpar.olthres=1
+    iraf.controlpar.soft="no"
+    iraf.samplepar.integrm="bi-linear"
+    iraf.samplepar.usclip=3
+    iraf.samplepar.lsclip=3
+    iraf.samplepar.nclip=0
+    iraf.samplepar.fflag=0.5
+    iraf.magpar.mag0=0
+    iraf.magpar.refer=1
+    iraf.magpar.zerolev=0
     iraf.ellipse("".join(input), output="test", interac="no",Stdout="ellip", \
                  Stderr="err")
     iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \

@@ -12,6 +12,7 @@ import config as c
 from maskfunc import *
 from configfunc import *
 from ellimaskfunc import *
+from outmaskfunc import *
 from fitellifunc import *
 from plotfunc import *
 from writehtmlfunc import *
@@ -118,9 +119,9 @@ def main():
             writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
                          're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
-                         'rd(kpc)', 'rd_err(kpc)', 'chi2nu', 'run', 'C', \
-                         'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
-                         'Comments'])
+                         'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
+                         'run', 'C', 'C_err', 'A', 'A_err', 'S', 'S_err', \
+                         'G', 'M', 'Comments'])
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
@@ -315,32 +316,36 @@ def main():
                                         ell_mask_file = 'EM_' + \
                                                          str(cutimage)[:-5] + \
                                                         '.fits'
-                                        if(c.repeat == False):
+                                        plfile = str(cutimage) + '.pl'
+                                        if os.access(plfile, os.F_OK):
+                                            os.remove(plfile)
+                                        try:
+                                            iraf.imcopy(ell_mask_file, \
+                                                       plfile)
                                             try:
-                                                iraf.imcopy(ell_mask_file, \
-                                                       str(cutimage) + '.pl')
-                                                try:
-                                                    ell_out = 'E_' + \
+                                                ell_out = 'E_' + \
                                                      str(cutimage)[:-4] + 'txt'
-                                                    run_elli(cutimage, ell_out,\
+                                                if os.access(ell_out, os.F_OK):
+                                                    os.remove(ell_out)
+                                                run_elli(cutimage, ell_out,\
                                                              xcntr, ycntr, eg, \
                                                             pos_ang, major_axis)
-                                                except:
-                                                    f_err.writelines(['Error '\
+                                            except:
+                                                f_err.writelines(['Error '\
                                                            'in ellipse ',\
                                                            'task. Check ',\
-                                                           'whether elli_',\
+                                                           'whether E_',\
                                                            str(cutimage)[:-4],\
                                                            'txt or ellip ',\
                                                            'or err  or ',\
                                                           'test.tab exists\n'])
-                                                    run = 0
-                                            except:
-                                                f_err.writelines(['Exists ',\
+                                                run = 0
+                                        except:
+                                            f_err.writelines(['Exists ',\
                                                        str(cutimage),'.pl or ',\
                                                        str(ell_mask_file),\
                                                        ' does not exist\n'])  
-                                                run = 0
+                                            run = 0
                                     except:
                                         f_err.writelines(['Error in making '\
                                                      'mask for ellipse task\n'])
@@ -468,16 +473,32 @@ def main():
                                             f_fit.writelines([str(line)])
                                     f_fit.close()
                                     try:
-                                        ell_output = 'OE_' + \
+                                        if(c.repeat == False):
+                                            OutMaskFunc(outimage, c.size, \
+                                                       line_s)
+                                        out_mask_file = 'OEM_' + \
+                                                         str(outimage)[:-5] + \
+                                                        '.fits'
+                                        outplfile = str(outimage) + '.pl'
+                                        if os.access(outplfile, os.F_OK):
+                                            os.remove(outplfile)
+                                        try:
+                                            iraf.imcopy(out_mask_file, \
+                                                       outplfile)
+
+                                            try:
+                                                ell_output = 'OE_' + \
                                                      str(cutimage)[:-4] + 'txt'
-                                        if(c.repeat == True):
-                                           if os.access(ell_output, os.F_OK):
-                                               os.remove(ell_output)  
-                                        outmodel = outimage + '[2]'  
-                                        run_elli(outmodel, ell_output, xcntr, \
-                                                 ycntr, eg, pos_ang, major_axis)
-                                    except:
-                                        f_err.writelines(['Error in ellipse '\
+                                                if os.access(ell_output, \
+                                                             os.F_OK):
+                                                    os.remove(ell_output)  
+                                                outmodel = outimage + '[2]'  
+                                                run_elli(outmodel, ell_output,\
+                                                         xcntr, ycntr, eg, \
+                                                         pos_ang, major_axis)
+                                            except:
+                                                f_err.writelines(['Error in \
+                                                           ellipse '\
                                                           'task. Check ', \
                                                           'whether ' ,\
                                                            str(ell_output) ,\
@@ -485,7 +506,17 @@ def main():
                                                       ' test.tab exists OR ',\
                                                       'GALFIT MIGHT BE '\
                                                       'CRASHED\n'])
-                                        run = 0
+                                                run = 0
+                                        except:
+                                            f_err.writelines(['Exists ',\
+                                                       str(outimage),'.pl or ',\
+                                                       str(out_mask_file),\
+                                                       ' does not exist\n'])  
+                                            run = 0
+                                    except:
+                                        f_err.writelines(['Error in making '\
+                                                'out mask for ellipse task\n'])
+                                        run = 0 
                                 except:
                                     f_err.writelines(['Error in writing',\
                                                       ' configuration file\n'])	

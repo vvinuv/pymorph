@@ -123,12 +123,14 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
         run = 1
         if exists('result.csv'):
             for line_res in csv.reader(open('result.csv').readlines()[1:]):    
-                if(str(line_res[0]) == cutimage):
+                if(str(line_res[0]) == cutimage[:-5]):
                     run += 1
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         galid = str(cutimage)[:-5]
-        writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, chi2nu, run, C, C_err, A, A_err, S, S_err, G, M])
+        BD = 10**(-0.4 * ( mag_b - mag_d))
+        BT = 1.0 / (1.0 + 1.0 / BD)
+        writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, run, C, C_err, A, A_err, S, S_err, G, M])
         f_res.close()
     outfile.writelines(['</TABLE> \n'])
     #outfile.writelines(['<CENTER><IMG SRC="plot_', str(files)[6:-4], 'png"></CENTER>'])
@@ -246,6 +248,16 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                 a=values[0]				
             except:
                 pass
+    outfile.writelines(['<TR align="center" bgcolor="#99CCFF"> <TH> \
+                         Concentration <TH> Asymmetry <TH> Clumpness <TH>\
+                         Gini Coefficient <TH> M20 \
+                         <TH> B/D <TH> B/T </TH> </TR> \n'])
+    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TD>',\
+                         str(C)[:5], ' </TD> <TD> ', str(A)[:5], \
+                        ' </TD> <TD> ', str(S)[:5], ' </TD> <TD> ', str(G)[:5],\
+                        ' </TD> <TD> ', str(M)[:5], ' </TD> <TD> ', str(BD)[:5]\
+                        , ' </TD> <TD> ', str(BT)[:5], ' </TD> </TR> \n' ])
+
     outfile.write('</TABLE> \n')		
     outfile.write('</BODY></HTML> \n')
     outfile.close()

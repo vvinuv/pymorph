@@ -157,6 +157,7 @@ def eta_radius_fnc(divide_r,r,nxpts,nypts,background,incr,eta_radius):
 		if(eta_radius>min(nxpts,nypts)/2.0):
 			print "The radius measurment exceeded the size of the frame. Exiting program"
 			eta_radius_corre = 9999
+			FLAG_ETA=1
 #			os._exit(0)
 		I_ave_radius=I_ave=no_I_ave=no_I_ave_radius=0.0
 		n+=1
