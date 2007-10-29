@@ -480,7 +480,10 @@ def main():
                                         os.system('rm fit.log')
                                 #Here the user should tell the location of the GALFIT excutable                     
                                     if(c.galfit):
-                                        os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
+                                        cmd = str(c.GALFIT_PATH) + ' ' + config_file
+                                        os.system(cmd)
+
+#                                        os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
                                     if exists('fit.log'):
                                         for line in open('fit.log','r'):
                                             f_fit.writelines([str(line)])

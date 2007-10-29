@@ -21,5 +21,5 @@ def sex(cutimage, whtimage):
     f_sex = open(sex_conf, 'w')
     f_sex.write(template %vars())
     f_sex.close()
-    cmd = '/Vstr/vstr/vvinuv/sextractor-2.5.0/sex/bin/sex ' + str(cutimage) + ' -c ' + str(sex_conf)
+    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf)
     os.system(cmd)    
