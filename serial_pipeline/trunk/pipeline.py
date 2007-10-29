@@ -55,7 +55,7 @@ def main():
            print 'No weight image found\n'
     except IOError, (errno, strerror):
         print whtfile, "I/O error(%s): %s" % (errno, strerror)
-        os._exit(0)
+        pass
     psflist = c.psflist
     try:        #The function which will update the psf header if the psf files
                 #are the specified format
@@ -67,10 +67,15 @@ def main():
             dec2 = float(str(element)[-10:-8])
             dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
             ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
-            dec = (dec1 - (ra2 + ra3 / 60.0) / 60.0)
+            if dec1 < 0.0:
+                dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
+            else:
+                dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
             print element
-            iraf.hedit(element, 'RA_TARG', ra, verify= 'no', update='yes')
-            iraf.hedit(element, 'DEC_TARG', dec, verify= 'no', update='yes')
+            iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
+                       update='yes')
+            iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
+                       update='yes')
     except:
         pass
     def pa(x):
@@ -104,6 +109,7 @@ def main():
             d = n.arccos(n.cos((90.0 - delta_j) * r) * n.cos((90.0 - dec) *\
                 r) + n.sin((90.0 - delta_j) * r) *  n.sin((90.0 - dec) * r) * \
                 n.cos((alpha_j - ra) * r))
+            print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra, dec, d
             if(d < distance):
                 psffile = element
                 distance = d
@@ -240,7 +246,10 @@ def main():
                 delta_j = -9999
             else:
                 alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
-                delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
+                if delta1 < 0.0:
+                    delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
+                else:
+                    delta_j = delta1 + (delta2 + delta3 / 60.0) / 60.0
             for line_s in open(sex_cata,'r'):
                 try:
                     values = line_s.split()
@@ -282,8 +291,11 @@ def main():
                             if(c.repeat == False and c.galcut == False):
                                 z1 = image[ymin:ymax,xmin:xmax]
                                 hdu = pyfits.PrimaryHDU(z1.astype(Float32))
-                                hdu.header.update('RA_TARG', alpha_j)
-                                hdu.header.update('DEC_TARG', delta_j)
+                                try:
+                                    hdu.header.update('RA_TARG', alpha_j)
+                                    hdu.header.update('DEC_TARG', delta_j)
+                                except:
+                                    pass
                                 hdu.writeto(cutimage)
                             try:
                                 if(c.repeat == False and c.galcut == False):
@@ -442,10 +454,11 @@ def main():
                                         else:
                                             distance = n.arccos(n.cos((90.0 - \
                                                 delta_j) \
-                                             * r) * n.cos((90.0 - dec) * r) \
+                                             * r) * n.cos((90.0 - dec_p) * r) \
                                              + n.sin((90.0 - delta_j) * r) *  \
-                                             n.sin((90.0 - dec) * r) * \
-                                             n.cos((alpha_j - ra) * r))
+                                             n.sin((90.0 - dec_p) * r) * \
+                                             n.cos((alpha_j - ra_p) * r))
+                                            print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra_p, dec_p, distance
                                 if(cfile == 'None'):
                                     MaskFunc(cutimage, c.size, line_s)
                                     maskimage = 'M_' + str(cutimage)[:-5] +\
