@@ -67,15 +67,9 @@ XML_NAME         sex.xml        # Filename for XML output
 
 #------------------------------ Check Image ----------------------------------
 
-CHECKIMAGE_TYPE  SEGMENTATION           # can be NONE, BACKGROUND, BACKGROUND_RMS,
+CHECKIMAGE_TYPE  APERTURES           # can be NONE, BACKGROUND, BACKGROUND_RMS,
                                 # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
                                 # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
                                 # or APERTURES
 CHECKIMAGE_NAME  check.fits     # Filename for the check-image
 
-#-------------------------------- WEIGHTing ----------------------------------
-
-WEIGHT_TYPE      MAP_RMS           # type of WEIGHTing: NONE, BACKGROUND,
-                                # MAP_RMS, MAP_VAR or MAP_WEIGHT
-WEIGHT_IMAGE     %(whtimage)s    # weight-map filename
-WEIGHT_GAIN      N              # modulate gain (E/ADU) with weights? (Y/N)

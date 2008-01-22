@@ -1,8 +1,6 @@
 import sys, pyfits
 from pylab import *
-from matplotlib.numerix import fromstring, argsort, take, array, resize
-import random, numarray.random_array,numarray.mlab
-
+import numpy as n
 
 class PlotFunc:
     """The class for plotting"""
@@ -59,8 +57,8 @@ def plot_profile(cutimage, outimage, maskimage):
     ymin = min(min(mag), min(mag1))
     ymax = max(max(mag), max(mag1))
     sc1.set_ylim(ymax, ymin)
-    Dx=abs(sc1.get_xlim()[0]-sc1.get_xlim()[1])
-    Dy=abs(sc1.get_ylim()[0]-sc1.get_ylim()[1])
+    Dx = abs(sc1.get_xlim()[0]-sc1.get_xlim()[1])
+    Dy = abs(sc1.get_ylim()[0]-sc1.get_ylim()[1])
     sc1.set_aspect(Dx/Dy)
     xlabel(r'Radius', size='medium')
     ylabel(r'Surface Brightness', size='medium')
@@ -74,34 +72,36 @@ def plot_profile(cutimage, outimage, maskimage):
     model = f[2].data
     residual = f[3].data
     f.close()
+    size = galaxy.shape[0]
     subplot(231)
     title('Original Galaxy')
-    anorm = normalize(0.0,.04)
-    image1=imshow(numarray.mlab.rot90(numarray.swapaxes(galaxy,0,1)),norm=anorm)
+    anorm = normalize(galaxy.min() + (galaxy.max()-galaxy.min())/ 60.0, \
+            galaxy.max() - (galaxy.max() - galaxy.min()) / 1.1)
+#    anorm = normalize(0.0,.04)
+    image1 = imshow(n.fliplr(galaxy), norm=anorm, cmap=cm.jet, \
+                  extent=[0, size, 0, size])
     image1.autoscale()
     subplot(232)
     title('Model Galaxy')
-    image1=imshow(numarray.mlab.rot90(numarray.swapaxes(model,0,1)),norm=anorm)
+    image1 = imshow(n.fliplr(model),norm=anorm, cmap=cm.jet, \
+                  extent=[0, size, 0, size])
     image1.autoscale()
     subplot(233)
     title('Residual')
-    image1=imshow(numarray.mlab.rot90(numarray.swapaxes(residual,0,1)),norm=anorm)
+    image1 = imshow(n.fliplr(residual), norm=anorm, cmap=cm.jet, \
+                  extent=[0, size, 0, size])
     image1.autoscale()
-    minvalue = image1.norm.vmin
-    maxvalue = image1.norm.vmax
-    histrange = (maxvalue - minvalue) / 10.0
-    # this is an inset axes over the main axes
 #    a = axes([0, 0, 150, 150], axisbg='y')
     subplot(235)
-    n, bins, patches = hist(residual, 100, normed=0)
-    nMaxArg = n.argmax()
+    nn, bins, patches = hist(residual, 100, normed=0)
+    nMaxArg = nn.argmax()
     if(nMaxArg < 16):
         ArgInc = nMaxArg
     else:
         ArgInc = 16
-    print trapz(bins,n)
+    print trapz(bins, nn)
 
-    nMax = max(n) 
+    nMax = max(nn) 
     binmin = bins[nMaxArg-ArgInc]
     binmax = bins[nMaxArg+ArgInc]
     axis([binmin, binmax, 0.0, nMax])
@@ -111,10 +111,11 @@ def plot_profile(cutimage, outimage, maskimage):
 #    setp(a, xticks=[], yticks=[])
     subplot(236)
     title('Mask')
-    f_mask=pyfits.open(maskimage)
+    f_mask = pyfits.open(maskimage)
     mask = f_mask[0].data 
     f_mask.close()
-    image1=imshow(numarray.mlab.rot90(numarray.swapaxes(mask,0,1)),norm=anorm)
+    image1 = imshow(n.fliplr(mask), norm=anorm, cmap=cm.jet, \
+                  extent=[0, size, 0, size])
     image1.autoscale()
     savefig('P_' + str(cutimage)[:-4] + 'png')
     figure()

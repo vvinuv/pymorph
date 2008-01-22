@@ -1,14 +1,14 @@
 """Configure file for automation"""
 imagefile = 'j8f647-1-1_drz_sci.fits'
 whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'goods_sex.cat'           #The sextractor catalogue which has 
+sex_cata = 'j8f647_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'abhi_goods_first.cat'         #catalogue of galaxies from
+clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = ''
-psflist = ('psf_1216424-1202057.fits', 'psf_1216434-1200395.fits', 'psf_1216434-1200395.fits')        #List of psf containg their 
+psflist = ('psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-1202057.fits','psf_1216487-1201246.fits','psf_1216504-1202104.fits')   #List of psf containg their 
                                       #position information in the 
                                       #header (RA_TARG, DEC_TARG). 
                                       #Make psf with the names as here 
@@ -38,15 +38,17 @@ shiftdec =  0.0                       #If the image WCS is not same as the
                                       #in the frame in not LINEAR! and it 
                                       #can leads to detect wrong objects
 pixelscale = 0.045                    #Pixel scale (arcsec/pixel)
-galcut = True                        #True if we provide cutouts
 H0 = 71                               #Hubble parameter
 WM = 0.27                             #Omega matter
 WV = 0.73                             #Omega Lambda
-repeat = False                        #Repeat the pipeline manually
 back_extraction_radius = 15.0
 #back_ini_xcntr = 32.0 
 #back_ini_ycntr = 22.0
 angle = 180.0
-decompose = False
-galfit = True   #Always keep this True as it is not functional yet!
+repeat = False                        #Repeat the pipeline manually
+galcut = False                        #True if we provide cutouts
+decompose = True
+galfit = True #Always keep this True as it is not functional yet!
 cas = True
+GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
+SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'

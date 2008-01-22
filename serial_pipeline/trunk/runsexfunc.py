@@ -2,7 +2,7 @@ import os
 import config as c
 
 class RunSex:
-    """The class for making mask for GALFIT """
+    """The class for running SExtractor """
     def __init__(self, cutimage, whtimage):
         self.cutimage = cutimage
         self.whtimage = whtimage

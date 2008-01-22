@@ -6,7 +6,8 @@ from os.path import exists
 import sys
 import csv
 import pyfits
-import numarray as n
+import numpy as n
+#import numarray as n
 from pyraf import iraf
 import config as c
 from maskfunc import *
@@ -57,27 +58,28 @@ def main():
         print whtfile, "I/O error(%s): %s" % (errno, strerror)
         pass
     psflist = c.psflist
-    try:        #The function which will update the psf header if the psf files
+    if(c.decompose):
+        try:   #The function which will update the psf header if the psf files
                 #are the specified format
-        for element in psflist:
-            ra1 = float(str(element)[4:6])
-            ra2 = float(str(element)[6:8])
-            ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
-            dec1 = float(str(element)[11:-10])
-            dec2 = float(str(element)[-10:-8])
-            dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
-            ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
-            if dec1 < 0.0:
-                dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
-            else:
-                dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
-            print element
-            iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
-                       update='yes')
-            iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
-                       update='yes')
-    except:
-        pass
+            for element in psflist:
+                ra1 = float(str(element)[4:6])
+                ra2 = float(str(element)[6:8])
+                ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
+                dec1 = float(str(element)[11:-10])
+                dec2 = float(str(element)[-10:-8])
+                dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
+                ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
+                if dec1 < 0.0:
+                    dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
+                else:
+                    dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
+                #print element
+                iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
+                           update='yes')
+                iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
+                           update='yes')
+        except:
+            pass
     def pa(x):
         """ The function which will bring position angle 
          measured by sextrator in the range -90 and 90"""		
@@ -106,10 +108,12 @@ def main():
                 dec= header['DEC_TARG']
             p.close()
 #		d = sqrt((ra - alpha_j) ** 2.0 + (dec - delta_j) ** 2.0)
-            d = n.arccos(n.cos((90.0 - delta_j) * r) * n.cos((90.0 - dec) *\
-                r) + n.sin((90.0 - delta_j) * r) *  n.sin((90.0 - dec) * r) * \
-                n.cos((alpha_j - ra) * r))
-            print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra, dec, d
+#            d = n.arccos(n.cos((90.0 - delta_j) * r) * n.cos((90.0 - dec) *\
+#                r) + n.sin((90.0 - delta_j) * r) *  n.sin((90.0 - dec) * r) * \
+#                n.cos((alpha_j - ra) * r))
+            d = n.sqrt((delta_j - dec)**2.0 + ((alpha_j-ra)*n.sin((0.5) *\
+                (delta_j+dec)))**2.0)
+            #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra, dec, d
             if(d < distance):
                 psffile = element
                 distance = d
@@ -127,7 +131,7 @@ def main():
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
                          'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
                          'run', 'C', 'C_err', 'A', 'A_err', 'S', 'S_err', \
-                         'G', 'M', 'Comments'])
+                         'G', 'M', 'distance', 'Comments'])
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
@@ -139,7 +143,6 @@ def main():
                                          #in the first line in the clus_cata
     pdb = {}                        #The parameter dictionary
     psfcounter = 0                  #For getting psf in the case of unknown ra
-                                    #and dec
     for line_j in obj_file:
         try:
             values = line_j.split()
@@ -217,30 +220,41 @@ def main():
                         pass
             else:
                 cfile = 'None'
-            try:
-                ximg = pdb["ximg"]
-            except:
-                if(c.galcut == True):
+            print gimg
+            if(c.galcut == True):
                     ggimg = pyfits.open(gimg)
                     ggimage = ggimg[0].data
                     ggimg.close()
-                    c.size = ggimage.shape[0] 
+                    c.size = ggimage.shape[0]
+            try:
+                ximg = float(pdb["ximg"])
+            except:
+                if(c.galcut == True):
                     ximg = c.size / 2.0
                 else:
                     ximg = -9999
             try:
-                yimg = pdb["yimg"]
+                yimg = float(pdb["yimg"])
             except:
                 if(c.galcut == True):
                     yimg = c.size / 2.0
                 else:
                     yimg = -9999
+            try:
+                bxcntr = float(pdb["bxcntr"])
+            except:
+                bxcntr = 9999
+            try:
+                bycntr = float(pdb["bycntr"])
+            except:
+                bycntr = 9999
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
                     pass
                 else: 
                     RunSex(gimg, wimg)
+            
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -268,7 +282,7 @@ def main():
                         ycntr  = 9999
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
-                       abs(xcntr - ximg) < 3.5 and abs(ycntr - yimg) < 3.5):
+                       abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
                         f_err = open('error.log', 'a') 
                         if(c.galcut == True):
                             cutimage = gimg
@@ -290,7 +304,7 @@ def main():
                         try:
                             if(c.repeat == False and c.galcut == False):
                                 z1 = image[ymin:ymax,xmin:xmax]
-                                hdu = pyfits.PrimaryHDU(z1.astype(Float32))
+                                hdu = pyfits.PrimaryHDU(z1.astype(n.float32))
                                 try:
                                     hdu.header.update('RA_TARG', alpha_j)
                                     hdu.header.update('DEC_TARG', delta_j)
@@ -302,7 +316,7 @@ def main():
                                     if exists(whtfile): 
                                         z2 = weight[ymin:ymax,xmin:xmax]
                                         hdu = pyfits.PrimaryHDU(z2.astype\
-                                              (Float32))
+                                              (n.float32))
                                         hdu.writeto(whtimage)
                                 if(c.galcut == False):
                                     xcntr_o  = xcntr #x center of the object
@@ -382,7 +396,8 @@ def main():
                                                       '.fits'
                                     try:
                                         caSgm = casgm(cutimage, ell_mask_file,\
-                                              xcntr, ycntr, eg, pos_ang, sky)
+                                                xcntr, ycntr, bxcntr, bycntr, \
+                                                eg, pos_ang, sky)
                                         C = caSgm[0]
                                         C_err = caSgm[1]
                                         A = caSgm[2]
@@ -458,7 +473,7 @@ def main():
                                              + n.sin((90.0 - delta_j) * r) *  \
                                              n.sin((90.0 - dec_p) * r) * \
                                              n.cos((alpha_j - ra_p) * r))
-                                            print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra_p, dec_p, distance
+                                            #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra_p, dec_p, distance
                                 if(cfile == 'None'):
                                     MaskFunc(cutimage, c.size, line_s)
                                     maskimage = 'M_' + str(cutimage)[:-5] +\

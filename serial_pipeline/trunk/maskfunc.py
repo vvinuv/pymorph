@@ -1,5 +1,5 @@
 import os, sys, pyfits
-import numarray as n
+import numpy as n
 import config as c
 
 class MaskFunc:
@@ -17,15 +17,19 @@ def mask(cutimage, size, line_s):
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
     x = n.reshape(n.arange(size*size),(size,size)) % size
-    x = x.astype(n.Float32)
+    x = x.astype(n.float32)
     y = n.reshape(n.arange(size*size),(size,size)) / size
-    y = y.astype(n.Float32)
+    y = y.astype(n.float32)
     values = line_s.split()
     mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
-    xcntr = size / 2.0 + 1.0 + xcntr_o - int(xcntr_o)
-    ycntr = size / 2.0 + 1.0 + ycntr_o - int(ycntr_o)
+    if c.galcut:
+        xcntr = xcntr_o
+        ycntr = ycntr_o
+    else:
+        xcntr = size / 2.0 + 1.0 + xcntr_o - int(xcntr_o)
+        ycntr = size / 2.0 + 1.0 + ycntr_o - int(ycntr_o)
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
@@ -64,5 +68,5 @@ def mask(cutimage, size, line_s):
                     z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass	
-    hdu = pyfits.PrimaryHDU(z.astype(n.Float32))
+    hdu = pyfits.PrimaryHDU(z.astype(n.float32))
     hdu.writeto(mask_file)

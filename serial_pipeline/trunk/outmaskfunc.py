@@ -1,5 +1,5 @@
 import os, sys, pyfits
-import numarray as n
+import numpy as n
 import config as c
 
 class OutMaskFunc:
@@ -17,9 +17,9 @@ def mask(outimage, size, line_s):
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
     x = n.reshape(n.arange(size*size),(size,size)) % size
-    x = x.astype(n.Float32)
+    x = x.astype(n.float32)
     y = n.reshape(n.arange(size*size),(size,size)) / size
-    y = y.astype(n.Float32)
+    y = y.astype(n.float32)
     values = line_s.split()
     mask_file = 'OEM_' + str(outimage)[:-5] + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
@@ -83,5 +83,5 @@ def mask(outimage, size, line_s):
                     z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass	
-    hdu = pyfits.PrimaryHDU(z.astype(n.Float32))
+    hdu = pyfits.PrimaryHDU(z.astype(n.float32))
     hdu.writeto(mask_file)

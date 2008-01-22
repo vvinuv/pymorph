@@ -43,7 +43,6 @@ def fit_elli(clus_id, line_s):
 
 
 def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
-	
     iraf.stsdas(_doprint=0)
     iraf.tables(_doprint=0)
     iraf.stsdas.analysis(_doprint=0)
