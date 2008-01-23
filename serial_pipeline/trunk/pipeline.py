@@ -132,8 +132,8 @@ def main():
                          're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
                          'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
-                         'run', 'C', 'C_err', 'A', 'A_err', 'S', 'S_err', \
-                         'G', 'M', 'distance', 'Comments'])
+                         'Goodness', 'run', 'C', 'C_err', 'A', 'A_err', 'S', \
+                         'S_err', 'G', 'M', 'distance', 'Comments'])
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
@@ -580,20 +580,32 @@ def main():
                                               + 'png'):	
                                         os.system('rm ''P_' + str(cutimage)\
                                                    [6:-4] + 'png''')
-                                    PlotFunc(cutimage, outimage, maskimage)
+                                    GoodNess = PlotFunc(cutimage, outimage, \
+                                               maskimage, skysig)
+                                    Goodness = GoodNess.plot_profile
                                 except:
                                     f_err.writelines(['Error in plotting. '])
                                     if(maskimage == 'None'):
                                         f_err.writelines(['Could not find '\
                                                           'Mask image\n'])
                                     run = 0	
+                                    Goodness = 9999
                                 try:	
-                                    write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, C, C_err, A, A_err, S, S_err, G, M)
+                                    write_params(cutimage, distance, alpha1, \
+                                                 alpha2, alpha3, delta1, \
+                                                 delta2, delta3, z, Goodness, \
+                                                 C, C_err, A, A_err, S, S_err, \
+                                                 G, M)
 #                                f_err.writelines(['(((((((((( Successful', \
  #                                                     ' ))))))))))\n'])
                                 except:
                                     try:
-                                        write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999)
+                                        write_params(cutimage, distance, alpha1,\
+                                                     alpha2, alpha3, delta1, \
+                                                     delta2, delta3, z, \
+                                                     Goodness, 9999, 9999, 9999,\
+                                                     9999, 9999, 9999, 9999, \
+                                                     9999)
                                     except:
                                         f_err.writelines(['Error in writing '\
                                                           'html\n'])

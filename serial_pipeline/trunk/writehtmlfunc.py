@@ -6,7 +6,7 @@ import config as c
 
 class WriteHtmlFunc:
     """The class which will write html and csv output"""
-    def __init__(self, cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, C, C_err, A, A_err, S, S_err, G, M):
+    def __init__(self, cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
         self.cutimage     = cutimage
         self.distance     = distance
         self.alpha1       = alpha1
@@ -16,6 +16,7 @@ class WriteHtmlFunc:
         self.delta2       = delta2
         self.delta3       = delta3
         self.z            = z
+        self.Goodness     = Goodness
         self.C            = C
         self.C_err        = C_err
         self.A            = A
@@ -24,9 +25,9 @@ class WriteHtmlFunc:
         self.S_err        = S_err
         self.G            = G
         self.M            = M
-        self.write_params = write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, C, C_err, A, A_err, S, S_err, G, M)
+        self.write_params = write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
 
-def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, C, C_err, A, A_err, S, S_err, G, M):
+def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
 
     outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
     outfile.writelines(['<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 \
@@ -57,9 +58,9 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
             values = line.split() 
             try: 
                 if(str(values[0]) == 'Input'):
-                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">\
-                                        <TH> Image </TH> <TD align="left">\
-                                        &nbsp;&nbsp;&nbsp;', str(cutimage), \
+                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">',\
+                                        '<TH> Image </TH> <TD align="left">', \
+                                        '&nbsp;&nbsp;&nbsp;', str(cutimage), \
                                         '&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;', \
                                         '<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=', str(alpha_j)[:6], 'd&amp;lat=', str(delta_j)[:6], 'd&amp;radius=5.0&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A>', \
                                         '</TD> <TH> RA </TH> <TD>', \
@@ -67,27 +68,33 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                                         ' ',str(alpha3), '</TD> </TR> \n' ])
 
                 if(str(values[0]) == 'Init.'):
-                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">\
-                                        <TH> Init. par. file </TH> \
-                                        <TD align="left">&nbsp;&nbsp;&nbsp;', \
-                                        str(values[4]), '</TD> <TH> Dec </TH> \
-                                        <TD>', str(delta1), ' ', str(delta2),\
+                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">',\
+                                        '<TH> Init. par. file </TH>', \
+                                        '<TD align="left">&nbsp;&nbsp;&nbsp;', \
+                                        str(values[4]), '</TD> <TH> Dec </TH>', \
+                                        '<TD>', str(delta1), ' ', str(delta2),\
                                         ' ',str(delta3), '</TD> </TR> \n' ])		
                 if(str(values[0]) == 'Restart'):
-                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">\
-                                        <TH> Restart file </TH> \
-                                        <TD align="left">&nbsp;&nbsp;&nbsp;', \
-                                        str(values[3]), '</TD> <TH> z </TH>\
-                                        <TD>', str(z), '</TD></TR>\n' ])
+                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">',\
+                                        '<TH> Restart file </TH>', \
+                                        '<TD align="left">&nbsp;&nbsp;&nbsp;', \
+                                        str(values[3]), '</TD> <TH> z </TH>',\
+                                        '<TD>', str(z), '</TD></TR>\n' ])
                 if(str(values[0]) == 'Chi^2/nu'):
                     chi2nu = float(values[2])
                     outfile.writelines(['<TR align="center" bgcolor=',\
-                                        '"#99CCFF"> <TH> &chi; <sup> 2',\
-                                        ' </sup> / &nu; </TH> \
-                                        <TD align="left">&nbsp;&nbsp;&nbsp;', \
-                                        str(values[2]),'</TD> <TH> Separation\
-                                        between <br> psf and image </TH>\
-                                        <TD>', str(round(distance, 3))[:5],\
+                                        '"#99CCFF"> <TD COLSPAN=2> ', \
+                                        '<TABLE BORDER="0" align="center" ', \
+                                        'cellspacing=1 width="100%"><TR><TH> ',\
+                                        '&chi; <sup> 2',\
+                                        ' </sup> / &nu; </TH> \n',\
+                                        '<TD align="left">', \
+                                        str(values[2]), '</TD> <TH> ', \
+                                        'Goodness</TH><TD>', str(Goodness)[:4],\
+                                        '</TD></TR></TABLE></TD><TH>', \
+                                        'Separation ',\
+                                        'between <br> psf and image </TH>',\
+                                        '<TD>', str(round(distance, 3))[:5],\
                                         ' arc sec</TD></TR>\n' ])
                 if(str(values[0]) == 'sersic' and object == 1):
                     mag_b = float(values[4])
@@ -130,26 +137,29 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
         galid = str(cutimage)[:-5]
         BD = 10**(-0.4 * ( mag_b - mag_d))
         BT = 1.0 / (1.0 + 1.0 / BD)
-        writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, run, C, C_err, A, A_err, S, S_err, G, M, distance])
+        writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance])
         f_res.close()
+    if chi2nu <= 1.8 and Goodness >= 0.75:
+        img_notify = 'goodfit.gif'
+    else:
+        img_notify = 'badfit.gif'
     outfile.writelines(['</TABLE> \n'])
     #outfile.writelines(['<CENTER><IMG SRC="plot_', str(files)[6:-4], 'png"></CENTER>'])
     outfile.writelines(['<TABLE BORDER="0" align="center" cellspacing=1',\
-                        ' width="100%"> \n \
-                        <TR align="center"> <TD ROWSPAN=2><IMG SRC="P_', \
-                        str(cutimage)[:-4], 'png" alt="plot"></TD> <TD  \
-                        bgcolor="#CCFFFF"> \
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-                        &nbsp;&nbsp;</TD> </TR> \n',\
-                        ' <TR align="center" bgcolor="#99CCFF"> <TD> \
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-                        &nbsp;&nbsp;</TD> </TR> \n </TABLE> \n'])
+                        ' width="100%"> \n ',\
+                        '<TR align="center"> <TD ROWSPAN=2><IMG SRC="P_', \
+                        str(cutimage)[:-4], 'png" alt="plot"></TD> <TD ',  \
+                        'bgcolor="#CCFFFF"> <IMG SRC="', str(img_notify), \
+                        '" alt="plot1"></TD> </TR> \n',\
+                        ' <TR align="center" bgcolor="#99CCFF"> <TD> ',\
+                        '<IMG SRC="color.gif" alt="plot1"> </TD> </TR> \n'\
+                        '</TABLE> \n'])
     outfile.writelines(['<TABLE BORDER="0" align="center" cellspacing=1',\
                         ' width="100%"> \n'])	
-    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TH> Component \
-                         <TH> xc <TH> yc <TH> mag <TH> radius <br> (pixels)\
-                         <TH> radius <br> (kpc) <TH> n <TH> ellipticity\
-                         <TH> pa <TH> box/disk </TH> </TR> \n'])
+    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TH> Component', \
+                         ' <TH> xc <TH> yc <TH> mag <TH> radius <br> (pixels)',\
+                         ' <TH> radius <br> (kpc) <TH> n <TH> ellipticity', \
+                         ' <TH> pa <TH> box/disk </TH> </TR> \n'])
     object = 1
     object_err = 1
     if exists('fit.log'):
@@ -162,8 +172,8 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                                             '"#99CCFF"> <TD>', str(values[0]), \
                                             ' </TD> <TD> ', \
                                             str(values[2])[1:-1],' </TD> <TD> '\
-                                            , str(values[3])[:-1],' </TD> <TD> \
-                                            ', str(values[4]), ' </TD> <TD> ',\
+                                            , str(values[3])[:-1],' </TD> <TD> '\
+                                            , str(values[4]), ' </TD> <TD> ',\
                                             str(values[5]), ' </TD> <TD> ', \
                                             ' ', ' </TD> <TD> ',\
                                             str(values[6]), ' </TD> <TD> ', \
@@ -186,8 +196,8 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                         object += 1
 
                 if(str(values[0]) == 'expdisk'):
-                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">\
-                                         <TD>', str(values[0]), \
+                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">',\
+                                        ' <TD>', str(values[0]), \
                                         ' </TD> <TD> ', str(values[2])[1:-1],\
                                         ' </TD> <TD> ', str(values[3])[:-1], \
                                         ' </TD> <TD> ', str(values[4]), \
@@ -200,8 +210,8 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                                         ' </TD>  </TR> \n'])
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err > 1):
-                        outfile.writelines(['<TR align="center" \
-                                            bgcolor="#CCFFFF"> <TD>', ' ' , \
+                        outfile.writelines(['<TR align="center" ', \
+                                            'bgcolor="#CCFFFF"> <TD>', ' ' , \
                                             ' </TD> <TD> ',\
                                             str(values[0])[1:-1], \
                                             ' </TD> <TD> ', \
@@ -231,8 +241,8 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                                             ' </TD> </TR> \n' ])
                         object_err += 1
                     if(str(a) == 'expdisk'):
-                        outfile.writelines(['<TR align="center" \
-                                            bgcolor="#CCFFFF"> <TD>', ' ' , \
+                        outfile.writelines(['<TR align="center" ',\
+                                            'bgcolor="#CCFFFF"> <TD>', ' ' , \
                                             ' </TD> <TD> ',\
                                             str(values[0])[1:-1], \
                                             ' </TD> <TD> ',\
@@ -248,10 +258,10 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
                 a=values[0]				
             except:
                 pass
-    outfile.writelines(['<TR align="center" bgcolor="#99CCFF"> <TH> \
-                         Concentration <TH> Asymmetry <TH> Clumpness <TH>\
-                         Gini Coefficient <TH> M20 \
-                         <TH> B/D <TH> B/T </TH> </TR> \n'])
+    outfile.writelines(['<TR align="center" bgcolor="#99CCFF"> <TH> ',\
+                        'Concentration <TH> Asymmetry <TH> Clumpness <TH>', \
+                        'Gini Coefficient <TH> M20 ',\
+                        '<TH> B/D <TH> B/T </TH> </TR> \n'])
     outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TD>',\
                          str(C)[:5], ' </TD> <TD> ', str(A)[:5], \
                         ' </TD> <TD> ', str(S)[:5], ' </TD> <TD> ', str(G)[:5],\

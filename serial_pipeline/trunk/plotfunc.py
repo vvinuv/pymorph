@@ -1,14 +1,17 @@
 import sys, pyfits
 from pylab import *
 import numpy as n
+import numpy.core.ma as ma
 
 class PlotFunc:
     """The class for plotting"""
-    def __init__(self, cutimage, outimage, maskimage):
+    def __init__(self, cutimage, outimage, maskimage, skysig):
         self.cutimage  = cutimage
         self.outimage  = outimage
         self.maskimage = maskimage
-        self.plot_profile = plot_profile(cutimage, outimage, maskimage)
+        self.skysig = skysig
+        self.plot_profile = plot_profile(cutimage, outimage, maskimage, skysig)
+        return
 
 def get_data(ticker):
     """ Returns the values from the ellipse output table"""
@@ -33,7 +36,7 @@ def get_data(ticker):
     c1 = get_ticker(ticker)
     return c1
 
-def plot_profile(cutimage, outimage, maskimage):
+def plot_profile(cutimage, outimage, maskimage, skysig):
     data = get_data('E_' + str(cutimage)[:-4] + 'txt')
     data1 = get_data('OE_' + str(cutimage)[:-4] + 'txt')
     sma = data.sma		#sma from ellise fitting
@@ -72,28 +75,37 @@ def plot_profile(cutimage, outimage, maskimage):
     model = f[2].data
     residual = f[3].data
     f.close()
+    f_mask = pyfits.open(maskimage)
+    mask = f_mask[0].data 
+    f_mask.close()
     size = galaxy.shape[0]
     subplot(231)
     title('Original Galaxy')
-    anorm = normalize(galaxy.min() + (galaxy.max()-galaxy.min())/ 60.0, \
-            galaxy.max() - (galaxy.max() - galaxy.min()) / 1.1)
-#    anorm = normalize(0.0,.04)
-    image1 = imshow(n.fliplr(galaxy), norm=anorm, cmap=cm.jet, \
+#    anorm = normalize(galaxy.min() + (galaxy.max()-galaxy.min())/ 60.0, \
+#            galaxy.max() - (galaxy.max() - galaxy.min()) / 1.1)
+    anorm = normalize(0.01,.2)
+    print skysig, galaxy.min(), galaxy.max()
+#    anorm = normalize(0.0, skysig / 2.0)
+    image1 = imshow(n.fliplr(galaxy), \
                   extent=[0, size, 0, size])
     image1.autoscale()
     subplot(232)
     title('Model Galaxy')
-    image1 = imshow(n.fliplr(model),norm=anorm, cmap=cm.jet, \
+    image1 = imshow(n.fliplr(model), cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
     subplot(233)
     title('Residual')
-    image1 = imshow(n.fliplr(residual), norm=anorm, cmap=cm.jet, \
+    image1 = imshow(n.fliplr(residual), cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
+    maskedresidual = ma.masked_array(residual, mask)
+    residual = ma.filled(maskedresidual, value=0.0)
 #    a = axes([0, 0, 150, 150], axisbg='y')
     subplot(235)
     nn, bins, patches = hist(residual, 100, normed=0)
+    goodness = float(nn[n.where(abs(bins) <= skysig)].sum()) / \
+               float(nn.sum())
     nMaxArg = nn.argmax()
     if(nMaxArg < 16):
         ArgInc = nMaxArg
@@ -102,8 +114,8 @@ def plot_profile(cutimage, outimage, maskimage):
     print trapz(bins, nn)
 
     nMax = max(nn) 
-    binmin = bins[nMaxArg-ArgInc]
-    binmax = bins[nMaxArg+ArgInc]
+    binmin = bins[nMaxArg - ArgInc]
+    binmax = bins[nMaxArg + ArgInc]
     axis([binmin, binmax, 0.0, nMax])
     setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     grid(True)
@@ -111,11 +123,9 @@ def plot_profile(cutimage, outimage, maskimage):
 #    setp(a, xticks=[], yticks=[])
     subplot(236)
     title('Mask')
-    f_mask = pyfits.open(maskimage)
-    mask = f_mask[0].data 
-    f_mask.close()
     image1 = imshow(n.fliplr(mask), norm=anorm, cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
     savefig('P_' + str(cutimage)[:-4] + 'png')
-    figure()
+#    figure()
+    return goodness

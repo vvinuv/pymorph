@@ -49,6 +49,6 @@ repeat = False                        #Repeat the pipeline manually
 galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
-cas = True
+cas = False
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
