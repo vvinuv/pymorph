@@ -19,6 +19,8 @@ from plotfunc import *
 from writehtmlfunc import *
 from runsexfunc import *
 from casgm import *
+from bkgdfunc import *
+
 
 def main():
     imagefile = c.imagefile
@@ -26,7 +28,7 @@ def main():
     sex_cata = c.sex_cata
     clus_cata = c.clus_cata
     out_cata = c.out_cata
-    size = c.size/2
+    size = c.size / 2  #The keyword size NOT c.size will be used only in the case of galcut = False
     threshold = c.threshold
     thresh_area = c.thresh_area
     if exists('index.html'):
@@ -75,9 +77,9 @@ def main():
                     dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
                 #print element
                 iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
-                           update='yes')
+                           show='no', update='yes')
                 iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
-                           update='yes')
+                           show='no', update='yes')
         except:
             pass
     def pa(x):
@@ -333,6 +335,27 @@ def main():
                                 if(eg<=0.05):
                                     eg = 0.07
                                 major_axis = float(values[14])
+                                try:
+                                #The following function provide the center of blank sky region and the sky sigma
+                                    ElliMaskFunc(cutimage, c.size, line_s, 0)
+                                    try:
+                                        Bkgd_Params = BkgdFunc(cutimage, \
+                                                xcntr, ycntr, bxcntr, bycntr, \
+                                                eg, pos_ang, sky)
+                                        bxcntr = Bkgd_Params.bkgd[0]
+                                        bycntr = Bkgd_Params.bkgd[1]
+                                        skysig = Bkgd_Params.bkgd[2]
+                                    except:
+                                        f_err.writelines(['Could not',\
+                                                  ' find the sky'\
+                                                  ' sigma and mean\n'])
+
+                                except:
+                                    f_err.writelines(['Could not create mask ',\
+                                                  'for casgm to find the sky'\
+                                                  ' sigma and mean. Remove '\
+                                                   'if BMask.fits exists\n'])
+
                                 #major axis of the object
                                 if(c.decompose):
                                     try:
@@ -386,49 +409,42 @@ def main():
                             run = 0
                         if(c.cas):
                             try:
-                                ElliMaskFunc(cutimage, c.size, line_s, 0)
-                                try:
-                                    if(c.decompose == False):
-                                        ElliMaskFunc(cutimage, c.size, \
+                                if(c.decompose == False):
+                                    ElliMaskFunc(cutimage, c.size, \
                                                          line_s, 1)
-                                    ell_mask_file = 'EM_' + \
-                                                      str(cutimage)[:-5] + \
-                                                      '.fits'
-                                    try:
-                                        caSgm = casgm(cutimage, ell_mask_file,\
+                                ell_mask_file = 'EM_' + \
+                                                  str(cutimage)[:-5] + \
+                                                  '.fits'
+                                try:
+                                    caSgm = casgm(cutimage, ell_mask_file,\
                                                 xcntr, ycntr, bxcntr, bycntr, \
-                                                eg, pos_ang, sky)
-                                        C = caSgm[0]
-                                        C_err = caSgm[1]
-                                        A = caSgm[2]
-                                        A_err = caSgm[3]
-                                        S = caSgm[4]
-                                        S_err = caSgm[5]
-                                        G = caSgm[6]
-                                        M = caSgm[7]
-                                        print C, C_err, A, A_err, S, S_err, G,M
-                                        if(c.decompose == False):
-                                            f_res = open("result.csv", "ab")
-                                            writer = csv.writer(f_res)
-                                            GalId = str(cutimage)[:-5]
-                                            writer.writerow([GalId, alpha_j, \
+                                                eg, pos_ang, sky, skysig)
+                                    C = caSgm[0]
+                                    C_err = caSgm[1]
+                                    A = caSgm[2]
+                                    A_err = caSgm[3]
+                                    S = caSgm[4]
+                                    S_err = caSgm[5]
+                                    G = caSgm[6]
+                                    M = caSgm[7]
+                                    print C, C_err, A, A_err, S, S_err, G,M
+                                    if(c.decompose == False):
+                                        f_res = open("result.csv", "ab")
+                                        writer = csv.writer(f_res)
+                                        GalId = str(cutimage)[:-5]
+                                        writer.writerow([GalId, alpha_j, \
                                             delta_j, z, C, C_err, A, A_err, S, \
                                             S_err, G, M])
-                                            f_res.close()
-                                        f_err.writelines(['(((((CASGM '\
-                                                          'Successful)))))'])
-                                    except:
-                                        f_err.writelines(['The CASGM module',\
+                                        f_res.close()
+                                    f_err.writelines(['(((((CASGM '\
+                                                      'Successful)))))'])
+                                except:
+                                    f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
 
-                                except:
-                                    f_err.writelines(['Could not make mask ',\
-                                                      'image for casgm\n'])
                             except:
-                                f_err.writelines(['Could not create mask ',\
-                                                  'for casgm to find the sky'\
-                                                  ' sigma and mean. Remove '\
-                                                   'if BMask.fits exists\n'])
+                                f_err.writelines(['Could not make mask ',\
+                                                      'image for casgm\n'])
                         f_err.close()
                         os.system('rm -f BMask.fits MRotated.fits \
                                   MaskedGalaxy.fits Rotated.fits')

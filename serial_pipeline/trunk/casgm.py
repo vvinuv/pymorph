@@ -12,7 +12,7 @@ from pyraf import iraf
 
 class CasGm:
     """The class which will find CASGM parameters"""
-    def __init__(self, cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
+    def __init__(self, cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky, skysig):
         self.cutimage   = cutimage
         self.maskimage  = maskimage
         self.xcntr = xcntr
@@ -22,10 +22,11 @@ class CasGm:
         self.eg = eg
         self.pa = pa
         self.sky = sky
-        self.casgm = casgm(cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky)
+        self.skysig = skysig
+        self.casgm = casgm(cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky, skysig)
         return
 
-def casgm(cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
+def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg, pa, sky, skysig):
     xcntr = xcntr-1 #this is because python index statrs from 0
     ycntr = ycntr-1
     angle = c.angle
@@ -40,55 +41,6 @@ def casgm(cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
 #    print cutimage
     nxpts = z.shape[0]
     nypts = z.shape[1]
-
-    #The function which will find the blank region 
-    if (bxcntr != 9999 and bycntr != 9999):
-        back_ini_xcntr = bxcntr #initial x coordinate of
-        back_ini_ycntr = bycntr #blank portion center
-        back_region = z[int(bycntr - back_extraction_radius):int(bycntr + \
-                      back_extraction_radius), int(bxcntr -\
-                      back_extraction_radius):int(bxcntr + \
-                      back_extraction_radius)]
-        skysig = back_region.std()
-    else:
-        f = pyfits.open("BMask.fits")
-        bgmask = f[0].data
-        f.close()
-        bgmaskedgalaxy = ma.masked_array(z, bgmask)
-        bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
-        skysig = im.standard_deviation(bgmaskedgalaxy1d)
-        sky_iter = ma.average(bgmaskedgalaxy1d)
-        skysig_iter = skysig * 3.0
-        x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) % nypts
-        x = x.astype(n.float32)
-        y = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts
-        y = y.astype(n.float32)
-        countback = 1 #After some iteration the following loop quits
-        FLAG_BACK = FLAG_BACK1 = 0
-        while FLAG_BACK1 == 0:
-            bxcntr = back_extraction_radius
-            for i in range((nxpts - int(2 * back_extraction_radius)) / 4):
-                bycntr = back_extraction_radius
-                for j in range((nypts - int(2 * back_extraction_radius)) / 4):
-#                print bxcntr, bycntr, FLAG_BACK1, FLAG_BACK
-                    if(FLAG_BACK1 == 0):
-                        tx = x - bxcntr
-                        ty = y - bycntr
-                        R = n.sqrt(tx**2.0 + ty**2.0)
-                        bmax = n.abs(z[n.where(R <= back_extraction_radius)] \
-                               - sky_iter).max()
-                        if(bmax < skysig_iter and FLAG_BACK == 0):
-                            FLAG_BACK = 1
-                            FLAG_BACK1 = 1
-                            back_ini_xcntr = bxcntr
-                            back_ini_ycntr = bycntr
-                    bycntr += 4.0
-                bxcntr += 4.0
-            skysig_iter *= 1.3
-            print countback
-            if countback == 3:
-                FLAG_BACK1 = 1
-            countback += 1
     f_err = open('error.log', 'a')
     try:
         print "back_ini_xcntr, back_ini_ycntr", back_ini_xcntr, back_ini_ycntr

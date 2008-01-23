@@ -72,7 +72,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     NYPTS = z.shape[1]
     #r50=c.r50
     center_rad = 0.01 * r50
-    print 'center_rad', center_rad 
+#    print 'center_rad', center_rad 
 #    center_rad = 0.5#0.01*r50 The centering correction has to be done by calculating asymmetric parameters at different points 0.1% of r50 away around the center
     flag_center = 0 #flag_center=1 if the program finds the exact center else center=0
 	#extraction_radius=total_rad ie. 1.5 times the radius at eta=0.2
