@@ -11,7 +11,11 @@ from ginifunc_modi import *
 from pyraf import iraf
 
 class CasGm:
-    """The class which will find CASGM parameters"""
+    """The class which will find CASGM parameters. The algorithm for each 
+       parameters can be found in the corresponding class files. This will 
+       also write a file agm_result_with_radius.csv which gives the Asymmetry
+       Gini Coefficient and M20 parameters at different radius from the center
+       of the galaxy"""
     def __init__(self, cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky, skysig):
         self.cutimage   = cutimage
         self.maskimage  = maskimage
@@ -182,7 +186,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 #        mo=moment(gin.segmentation, xcntr, ycntr)
 #        M=mo.moment_of_light[0]
 #        print "MOMENT ",M
-        f_tmp = open("tmp_result_with_radius.csv", "ab")
+        f_tmp = open("agm_result_with_radius.csv", "ab")
         f_tmp.writelines([str(cutimage)[1:-8], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]),'\n'])
         f_tmp.close()
 

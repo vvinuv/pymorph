@@ -3,7 +3,8 @@ from math import *
 import config as c
 
 class CosmoCal:
-#    """Cosmology Calculator Univ is General, use Ho, Wm and given Wv"""
+    """This will return the age of the Universe in Gyr, comoving radial 
+       distance in units of c/H0 and kpc/pixel_scale of the image"""
     def __init__(self, z, H0, WM, WV, pixelscale):
         self.z = float(z)    # redshift
         self.H0 = float(H0) # Hubble constant

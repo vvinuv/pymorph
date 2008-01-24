@@ -1,5 +1,5 @@
-from numarray import *
-import numarray.nd_image as image
+import numpy as n
+import ndimage as im
 
 class gini:
 	"""gini coefficient"""

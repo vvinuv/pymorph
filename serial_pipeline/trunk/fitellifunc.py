@@ -3,7 +3,10 @@ from pyraf import iraf
 import config as c
 
 class FitElliFunc:
-    """The class which will run ellipse task automatically"""
+    """The class which will run ellipse task automatically. This will not
+       keep any parameter fixed during the fit. The output of the ellipse
+       fit will be E_+string(galid).txt for the galaxy and 
+       OE_+string(galid).txt for the model galaxy"""
     def __init__(self, clus_id, line_s):
         self.clus_id   = clus_id
         self.line_s    = line_s
@@ -43,6 +46,7 @@ def fit_elli(clus_id, line_s):
 
 
 def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
+    """The function resposible for fit ellipse"""
     iraf.stsdas(_doprint=0)
     iraf.tables(_doprint=0)
     iraf.stsdas.analysis(_doprint=0)

@@ -1,7 +1,30 @@
 import numpy as n
 import pyfits
 class concentration:
-	"""concentration parameter"""		
+	"""The class for finding concentration parameter. The algorithm used
+            here is as follows
+            1. It calculates the average light at different radii. i.e., 
+               the average light in an annular ring at different radii. 
+ 
+            2. It calculates the average light inside the apertures of 
+               different radii.  
+ 
+            3. From the above two it calculates the petrosian eta(r)  value. 
+               Petrosian ratio at a radius r from the center of an object 
+               to be the ratio of the local surface brightness in an annulus 
+               at r to the mean surface brightness within r
+	 				eta(r) =  I(r) / <I(r)>
+            4. Find the radius at which the Petrosian equal to  0.2 
+ 
+            5. Compute the light inside the aperture of radius 1.5 times the   
+               Petrosian radius, that contains more than 90% of the galaxy's 
+               total light. 
+ 
+            6. Find the 20%, 50% and 80% light radii. Linear interpolation 
+               is used for this.
+
+            7. Compute concentration parameter as 5*log(r(80%)/r(20%)) 		
+ """		
 	def __init__(self, z, xcntr, ycntr, nxpts, nypts, pa, eg, background):
 		self.z			= z
 		self.xcntr		= xcntr

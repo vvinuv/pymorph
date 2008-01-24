@@ -6,7 +6,13 @@ from os.path import exists
 
 
 class ConfigFunc:
-    """The class making configuration file for GALFIT and this will run GALFIT"""
+    """The class making configuration file for GALFIT. The configuration file 
+       consists of bulge and disk component of the object and only Sersic 
+       component for the neighbours, if any. The sky is always fixed and has
+       the value of SExtractor. The disk/boxy parameter is also fixed to zero.
+       The initial value for Sersic index 'n' is 4.The configuration file has 
+       the name G_string(galid).in. The output image has the name 
+       O_string(galid).fits"""
     def __init__(self, cutimage, whtimage, size, line_s, psffile):
         self.cutimage = cutimage
         self.line_s  = line_s

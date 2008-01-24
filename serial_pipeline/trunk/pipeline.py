@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""This is the python pipeline for GALFIT """
+"""This is the python pipeline for Morphological parameters of galaxy"""
 
 import os
 from os.path import exists
@@ -7,7 +7,6 @@ import sys
 import csv
 import pyfits
 import numpy as n
-#import numarray as n
 from pyraf import iraf
 import config as c
 from maskfunc import *
@@ -69,7 +68,8 @@ def main():
                 ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
                 dec1 = float(str(element)[11:-10])
                 dec2 = float(str(element)[-10:-8])
-                dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
+                dec3 = float(str(element)[-8:-6]) + \
+                       float(str(element)[-6]) / 10.0
                 ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
                 if dec1 < 0.0:
                     dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
@@ -96,7 +96,10 @@ def main():
         return pos_ang
 
     def psf_select(alpha_j, delta_j):					
-        """This function will select the nearest psf from the psflist"""
+        """This function will select the nearest psf from the psflist.
+           The distance is calculated by using the following equation
+           d = Sqrt((dec_a - dec_b) ^ 2 + ((ra_a - ra_b) * sin(0.5) * 
+           (dec_a - dec_b)) ^ 2.0 )"""
         distance = 9999.0
         psffile = 'test.fits'
         psflist = c.psflist
@@ -511,7 +514,8 @@ def main():
                                         os.system('rm fit.log')
                                 #Here the user should tell the location of the GALFIT excutable                     
                                     if(c.galfit):
-                                        cmd = str(c.GALFIT_PATH) + ' ' + config_file
+                                        cmd = str(c.GALFIT_PATH) + ' ' + \
+                                                  config_file
                                         os.system(cmd)
 
 #                                        os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')

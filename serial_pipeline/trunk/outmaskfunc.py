@@ -3,7 +3,8 @@ import numpy as n
 import config as c
 
 class OutMaskFunc:
-    """The class for making mask for GALFIT """
+    """The class for making mask for output image from GALFIT to run ellipse.
+       The file name of the mask is OEM_string(galid).fits"""
     def __init__(self, outimage, size, line_s):
         self.outimage = outimage
         self.size = size

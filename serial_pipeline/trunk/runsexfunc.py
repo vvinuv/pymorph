@@ -2,7 +2,8 @@ import os
 import config as c
 
 class RunSex:
-    """The class for running SExtractor """
+    """The class for running SExtractor, if the pipeline doesn't find any
+       SExtractor catalogue. It uses the default.* files for doing that. """
     def __init__(self, cutimage, whtimage):
         self.cutimage = cutimage
         self.whtimage = whtimage

@@ -5,7 +5,9 @@ from cosmocal import *
 import config as c
 
 class WriteHtmlFunc:
-    """The class which will write html and csv output"""
+    """The class which will write html and csv output. This class will also 
+       check whether the fit is good or bad using the Chisq and Goodness value
+       It will also notify the goodness/badness of fit"""
     def __init__(self, cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
         self.cutimage     = cutimage
         self.distance     = distance

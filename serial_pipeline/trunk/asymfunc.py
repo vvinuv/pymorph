@@ -1,12 +1,35 @@
 import os
 import numpy as n	
 import numpy.core.ma as ma
-import numpy.numarray.mlab as mla
 import pyfits
 from pyraf import iraf
 
 class asymmetry:
-    """asymmetry parameter"""		
+    """Finding Asymmetry parameter. The algorithm is as follows
+       1. Rotate the galaxy through 180 degrees about its center. Bilinear 
+          interpolation was used to find out the rotated image.
+
+       2. Extract a circular region of the image of size 1.5 times the 
+          Petrosian radius of the galaxy.
+
+       3. Find the residue of the two images and find the asymmetry value 
+                  A = Sum(abs(I_0 - I_r) / Sum(I_0) 
+          where I_0 is the galaxy pixel value and I_r is that of rotated image
+
+        4. Centering correction: 
+	  a. Asymmetry is computed for centers at the surrounding eight points 
+             in a 3X3 grid
+	  b. This procedure repeats until a minimum is found for the asymmetry.
+
+        5. Noise correction:
+	  a. The uncorrelated noise can be corrected by substracting the 
+             asymmetry of the background.
+
+        6. The final formula to compute asymmetry is 			
+	  A = min(Sum(abs(I_0 - I_r) / Sum(abs(I_0)) 
+              - min(Sum(abs(B_0 - B_r) / Sum(abs(I_0))
+        where B_0 is the background pixel value and I_r is that of rotated 
+        background"""		
     def __init__(self, cutimage, maskimage, ini_xcntr, ini_ycntr, pa, eg, r50, extraction_radius, background, angle, flag_image, ABS_ZSUM):
         self.cutimage		= cutimage
         self.maskimage          = maskimage

@@ -6,7 +6,20 @@ import convolve as conv
 #import scipy
 #import scipy.signal
 class clumpness:
-	"""clumpness parameter"""
+	"""The clumpness parameter and the algorithm used as follows
+           1. The image is smoothed by a boxcar of width 
+              0.25 * r(Petrosian parameter= 0.2)
+
+           2. The smoothness is computed with the radius 1.5 by using
+				S = 10 * Sum(I_0-I_S) / Sum(I_0)
+            where I_0 is the galaxy pixels and I_S that of smoothed image
+           3. Compute the average smoothness of the background and subtract 
+              from S. 
+
+           4. The inner region of the galaxy is not considered in the 
+              computation of S as these are often unresolved.
+
+           5. Use only the positive pixels for the computation."""
 	def __init__(self,z,ini_xcntr,ini_ycntr,pa,eg,extraction_radius,sigma,background,flag_image):
 		self.z			= z
 		self.ini_xcntr		= ini_xcntr

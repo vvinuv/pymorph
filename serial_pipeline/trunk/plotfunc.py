@@ -4,7 +4,15 @@ import numpy as n
 import numpy.core.ma as ma
 
 class PlotFunc:
-    """The class for plotting"""
+    """The class for plotting. It will plot the galaxy image, the model galaxy
+       and the residual image. It also plot the histogram of residual image 
+       and compute the Goodness parameter out of it. It is defind as the ratio 
+       of number pixels within n times sky sigma around zero value to the total
+       number of pixels. The writehtmlfunc.py will check whether the fit is
+       good or bad according to some conditions. This will also plot the 1D
+       profile of the galaxy and model galaxy from ellipse fitting. The other
+       plot it gives is the mask image. After plotting it saves the image
+       as png file with name P_string(galid).png"""
     def __init__(self, cutimage, outimage, maskimage, skysig):
         self.cutimage  = cutimage
         self.outimage  = outimage

@@ -3,7 +3,9 @@ import numpy as n
 import config as c
 
 class MaskFunc:
-    """The class for making mask for GALFIT """
+    """The class for making mask for GALFIT. It uses the masking conditions 
+       from config.py. The output mask image will have the name
+       M_string(galid).fits """
     def __init__(self, cutimage, size, line_s):
         self.cutimage = cutimage
         self.size = size

@@ -1,5 +1,5 @@
-from numarray import *
-import numarray.nd_image as im
+import numpy as n
+import ndimage as im
 class bgnd:
 	"""background parameters"""
 	def __init__(self,z,back_ini_xcntr,back_ini_ycntr,back_extraction_radius):

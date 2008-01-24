@@ -5,7 +5,21 @@ from momentfunc import *
 import convolve as conv
 
 class gini:
-	"""gini coefficient"""
+	"""Calculate gini coefficient at different radii. This will also call 
+           the function to compute M20. The algorithm is as follows
+
+           1. Find the pixels in the image which belong to the galaxy, ie. make
+              a segmentation map. This can be done by smoothing the image by a 
+               boxcar of size r/5 
+
+           2. The surface brightness at r, μ is measured and pixels in the 
+              smoothed image with flux values greater than μ and less than 
+              10 is assigned to the galaxy.  is the sky deviation and 
+              which removes any remaining cosmic rays or spurious noise 
+              pixels in the image and are not included in the segmentation map.
+
+           3. The Gini coefficient can be computed by the equation
+             G = (1 / Avg(X) * n * (n-1)) * Sum over pixel[(2 * i - n -1 ) * X] """
 	def __init__(self,z,ini_xcntr,ini_ycntr,pa,eg,r20,r80,extraction_radius,background,skysig):
 		self.z			= z
 		self.ini_xcntr		= ini_xcntr
@@ -34,7 +48,9 @@ def gauss_kern(size, sizey=None):
 
 
 def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r80,extraction_radius,sigma,skysig,lower):
+	"""This function is resposible for find the segmentation map"""
 	def gini_coef(I):
+		"""This will calculate Gini Coefficient"""
 		oneD_I=n.reshape(I,(1,-1))
 		sorted_I=n.sort(oneD_I)
 		sorted_I=sorted_I[n.where(sorted_I>0)]

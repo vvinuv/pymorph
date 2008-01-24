@@ -5,7 +5,8 @@ import numpy as n
 import config as c
 
 class ElliMaskFunc:
-    """The class for making mask for ellipse task"""
+    """The class for making mask for ellipse task. This will mask all the 
+       neibour objects using the masking conditions in config.py"""
     def __init__(self, cutimage, size, line_s, galflag):
         self.cutimage = cutimage
         self.size = size

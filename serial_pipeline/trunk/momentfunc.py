@@ -3,7 +3,26 @@ import numpy as n
 import numpy.core.ma as ma
 
 class moment:
-	"""moment calculation"""
+	"""This clas is for moment calculation. The algorithm used here is as 
+           follows
+           1. The total second-order moment M_tot is the flux in each pixel 
+              f_i multiplied by the squared distance to the center of the 
+              galaxy, summed over all the galaxy pixels assigned by the 
+              segmentation map.
+
+              M_tot = Sum(f_i * [(x_i - x_c)^2 + (y_i - y_c)^2])
+  
+              Where xc, yc is the galaxy’s center.
+
+           2. The center is computed by finding xc, yc such that M_tot is 
+              minimized.
+
+           3. Define M20 as the brightest 20% of the galaxy’s flux.
+
+           4. To compute M20, sort the pixels by flux, sum M_i over the 
+              brightest pixels until the sum of the brightest pixels equals 20%
+              of the total galaxy flux, and then normalize by M_tot.
+           """
 	def __init__(self, z, ini_xcntr, ini_ycntr):
 		self.z			= z
 		self.ini_xcntr		= ini_xcntr
