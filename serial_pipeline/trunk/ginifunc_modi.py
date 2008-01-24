@@ -10,16 +10,18 @@ class gini:
 
            1. Find the pixels in the image which belong to the galaxy, ie. make
               a segmentation map. This can be done by smoothing the image by a 
-               boxcar of size r/5 
+               boxcar of size r(\eta)/5 
 
-           2. The surface brightness at r, μ is measured and pixels in the 
-              smoothed image with flux values greater than μ and less than 
-              10 is assigned to the galaxy.  is the sky deviation and 
-              which removes any remaining cosmic rays or spurious noise 
-              pixels in the image and are not included in the segmentation map.
+           2. The surface brightness at r(\eta), I_(\eta) is measured and 
+              pixels in the smoothed image with flux values greater than 
+              I_(\eta) and less than 10(\sigma) is assigned to the galaxy. 
+              \sigma is the sky deviation and which removes any remaining 
+              cosmic rays or spurious noise pixels in the image and are not 
+              included in the segmentation map.
 
            3. The Gini coefficient can be computed by the equation
-             G = (1 / Avg(X) * n * (n-1)) * Sum over pixel[(2 * i - n -1 ) * X] """
+             G = (1 / Avg(X) * n * (n-1)) * Sum over pixel[(2 * i - n -1 ) * X] 
+           """
 	def __init__(self,z,ini_xcntr,ini_ycntr,pa,eg,r20,r80,extraction_radius,background,skysig):
 		self.z			= z
 		self.ini_xcntr		= ini_xcntr

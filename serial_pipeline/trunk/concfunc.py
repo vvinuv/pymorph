@@ -9,11 +9,11 @@ class concentration:
             2. It calculates the average light inside the apertures of 
                different radii.  
  
-            3. From the above two it calculates the petrosian eta(r)  value. 
+            3. From the above two it calculates the petrosian eta(r) value. 
                Petrosian ratio at a radius r from the center of an object 
                to be the ratio of the local surface brightness in an annulus 
                at r to the mean surface brightness within r
-	 				eta(r) =  I(r) / <I(r)>
+                             eta(r) =  I(r) / <I(r)>
             4. Find the radius at which the Petrosian equal to  0.2 
  
             5. Compute the light inside the aperture of radius 1.5 times the   
@@ -24,7 +24,7 @@ class concentration:
                is used for this.
 
             7. Compute concentration parameter as 5*log(r(80%)/r(20%)) 		
- """		
+        """		
 	def __init__(self, z, xcntr, ycntr, nxpts, nypts, pa, eg, background):
 		self.z			= z
 		self.xcntr		= xcntr

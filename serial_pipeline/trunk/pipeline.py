@@ -136,7 +136,7 @@ def main():
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
                          'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
                          'Goodness', 'run', 'C', 'C_err', 'A', 'A_err', 'S', \
-                         'S_err', 'G', 'M', 'distance', 'Comments'])
+                         'S_err', 'G', 'M', 'distance', 'fit', 'Comments'])
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
@@ -595,7 +595,8 @@ def main():
                                     run = 0	
                                     Goodness = 9999
                                 try:	
-                                    write_params(cutimage, distance, alpha1, \
+                                    write_params(cutimage, xcntr, ycntr, \
+                                                 distance, alpha1, \
                                                  alpha2, alpha3, delta1, \
                                                  delta2, delta3, z, Goodness, \
                                                  C, C_err, A, A_err, S, S_err, \
@@ -604,7 +605,8 @@ def main():
  #                                                     ' ))))))))))\n'])
                                 except:
                                     try:
-                                        write_params(cutimage, distance, alpha1,\
+                                        write_params(cutimage, xcntr, ycntr, \
+                                                     distance, alpha1,\
                                                      alpha2, alpha3, delta1, \
                                                      delta2, delta3, z, \
                                                      Goodness, 9999, 9999, 9999,\

@@ -70,3 +70,8 @@ cas = False
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
+
+###----The following conditions are used to classify fit goo/bad----###
+chi2sq = 1.9
+Goodness = 0.69
+center_deviation = 75.0

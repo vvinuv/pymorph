@@ -8,8 +8,10 @@ class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
-    def __init__(self, cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+    def __init__(self, cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
         self.cutimage     = cutimage
+        self.xcntr        = xcntr
+        self.ycntr        = ycntr
         self.distance     = distance
         self.alpha1       = alpha1
         self.alpha2       = alpha2
@@ -27,18 +29,14 @@ class WriteHtmlFunc:
         self.S_err        = S_err
         self.G            = G
         self.M            = M
-        self.write_params = write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
+        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
 
-def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
-
+def write_params(cutimage, distance, xcntr, ycntr, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+    Goodness = float(str(round(Goodness, 3))[:5])
+    f_tpl = open('default.html', 'r')
+    template = f_tpl.read()
+    f_tpl.close()
     outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
-    outfile.writelines(['<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 \
-                         Transitional//EN">\n'])
-    outfile.writelines(['<HTML> \n <HEAD> \n <meta http-equiv\
-                         ="Content-Type" content="text/html; charset=utf-8">\
-                         <title>Pipeline Result</title> \n </HEAD><BODY> \n'])
-    outfile.writelines(['<TABLE BORDER="0" align="center" cellspacing=1',\
-                        ' width="100%"> \n'])
     alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
     delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
     if(c.repeat == False):
@@ -60,44 +58,15 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
             values = line.split() 
             try: 
                 if(str(values[0]) == 'Input'):
-                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">',\
-                                        '<TH> Image </TH> <TD align="left">', \
-                                        '&nbsp;&nbsp;&nbsp;', str(cutimage), \
-                                        '&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;', \
-                                        '<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=', str(alpha_j)[:6], 'd&amp;lat=', str(delta_j)[:6], 'd&amp;radius=5.0&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A>', \
-                                        '</TD> <TH> RA </TH> <TD>', \
-                                        str(alpha1), ' ', str(alpha2),\
-                                        ' ',str(alpha3), '</TD> </TR> \n' ])
-
+                    alpha_ned = str(alpha_j)[:6]
+                    delta_ned = str(delta_j)[:6]
                 if(str(values[0]) == 'Init.'):
-                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">',\
-                                        '<TH> Init. par. file </TH>', \
-                                        '<TD align="left">&nbsp;&nbsp;&nbsp;', \
-                                        str(values[4]), '</TD> <TH> Dec </TH>', \
-                                        '<TD>', str(delta1), ' ', str(delta2),\
-                                        ' ',str(delta3), '</TD> </TR> \n' ])		
+                    initial_conf = str(values[4])
                 if(str(values[0]) == 'Restart'):
-                    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF">',\
-                                        '<TH> Restart file </TH>', \
-                                        '<TD align="left">&nbsp;&nbsp;&nbsp;', \
-                                        str(values[3]), '</TD> <TH> z </TH>',\
-                                        '<TD>', str(z), '</TD></TR>\n' ])
+                    restart_conf = str(values[3])
                 if(str(values[0]) == 'Chi^2/nu'):
                     chi2nu = float(values[2])
-                    outfile.writelines(['<TR align="center" bgcolor=',\
-                                        '"#99CCFF"> <TD COLSPAN=2> ', \
-                                        '<TABLE BORDER="0" align="center" ', \
-                                        'cellspacing=1 width="100%"><TR><TH> ',\
-                                        '&chi; <sup> 2',\
-                                        ' </sup> / &nu; </TH> \n',\
-                                        '<TD align="left">', \
-                                        str(values[2]), '</TD> <TH> ', \
-                                        'Goodness</TH><TD>', str(Goodness)[:4],\
-                                        '</TD></TR></TABLE></TD><TH>', \
-                                        'Separation ',\
-                                        'between <br> psf and image </TH>',\
-                                        '<TD>', str(round(distance, 3))[:5],\
-                                        ' arc sec</TD></TR>\n' ])
+                    Distance = str(round(distance, 3))[:5]
                 if(str(values[0]) == 'sersic' and object == 1):
                     mag_b = float(values[4])
                     re = float(values[5])
@@ -129,151 +98,151 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
             re_err_kpc = phy_parms[3] * re_err
             rd_kpc = phy_parms[3] * rd
             rd_err_kpc = phy_parms[3] * rd_err
-        run = 1
-        if exists('result.csv'):
-            for line_res in csv.reader(open('result.csv').readlines()[1:]):    
-                if(str(line_res[0]) == cutimage[:-5]):
-                    run += 1
-        f_res = open("result.csv", "ab")
-        writer = csv.writer(f_res)
-        galid = str(cutimage)[:-5]
         BD = 10**(-0.4 * ( mag_b - mag_d))
         BT = 1.0 / (1.0 + 1.0 / BD)
-        writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance])
-        f_res.close()
-    if chi2nu <= 1.8 and Goodness >= 0.75:
-        img_notify = 'goodfit.gif'
-    else:
-        img_notify = 'badfit.gif'
-    outfile.writelines(['</TABLE> \n'])
-    #outfile.writelines(['<CENTER><IMG SRC="plot_', str(files)[6:-4], 'png"></CENTER>'])
-    outfile.writelines(['<TABLE BORDER="0" align="center" cellspacing=1',\
-                        ' width="100%"> \n ',\
-                        '<TR align="center"> <TD ROWSPAN=2><IMG SRC="P_', \
-                        str(cutimage)[:-4], 'png" alt="plot"></TD> <TD ',  \
-                        'bgcolor="#CCFFFF"> <IMG SRC="', str(img_notify), \
-                        '" alt="plot1"></TD> </TR> \n',\
-                        ' <TR align="center" bgcolor="#99CCFF"> <TD> ',\
-                        '<IMG SRC="color.gif" alt="plot1"> </TD> </TR> \n'\
-                        '</TABLE> \n'])
-    outfile.writelines(['<TABLE BORDER="0" align="center" cellspacing=1',\
-                        ' width="100%"> \n'])	
-    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TH> Component', \
-                         ' <TH> xc <TH> yc <TH> mag <TH> radius <br> (pixels)',\
-                         ' <TH> radius <br> (kpc) <TH> n <TH> ellipticity', \
-                         ' <TH> pa <TH> box/disk </TH> </TR> \n'])
+    pngfile = 'P_' + str(cutimage)[:-4] + 'png'
     object = 1
     object_err = 1
+    Neighbour_Sersic = ''
     if exists('fit.log'):
         for line in open('fit.log','r'): 
             values = line.split() 
             try: 
                 if(str(values[0]) == 'sersic'):
                     if object > 1:
-                        outfile.writelines(['<TR align="center" bgcolor=',\
-                                            '"#99CCFF"> <TD>', str(values[0]), \
-                                            ' </TD> <TD> ', \
-                                            str(values[2])[1:-1],' </TD> <TD> '\
-                                            , str(values[3])[:-1],' </TD> <TD> '\
-                                            , str(values[4]), ' </TD> <TD> ',\
-                                            str(values[5]), ' </TD> <TD> ', \
-                                            ' ', ' </TD> <TD> ',\
-                                            str(values[6]), ' </TD> <TD> ', \
-                                            str(values[7]), ' </TD> <TD> ', \
-                                            str(values[8]), ' </TD> <TD> ', \
-                                            str(values[9]), ' </TD> </TR> \n'])
+                        Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                           '<TR align="center" bgcolor=' + \
+                                           '"#99CCFF"><TD>' + str(values[0]) + \
+                                           ' </TD> <TD> ' + \
+                                           str(values[2])[1:-1] + '</TD> <TD> '\
+                                           + str(values[3])[:-1] + \
+                                           ' </TD> <TD> ' + str(values[4]) + \
+                                           ' </TD> <TD> ' + \
+                                           str(values[5]) + ' </TD> <TD> ' + \
+                                           ' ' + ' </TD> <TD> ' + \
+                                           str(values[6]) + ' </TD> <TD> ' +\
+                                           str(values[7]) + ' </TD> <TD> ' +\
+                                           str(values[8]) + ' </TD> <TD> ' + \
+                                           str(values[9]) + ' </TD> </TR>'
                     if object == 1:
-                        outfile.writelines(['<TR align="center" bgcolor=',\
-                                            '"#99CCFF"> <TD>', str(values[0]), \
-                                            ' </TD> <TD> ', \
-                                            str(values[2])[1:-1],' </TD> <TD> '\
-                                            , str(values[3])[:-1],' </TD> <TD> \
-                                            ', str(values[4]), ' </TD> <TD> ',\
-                                            str(values[5]), ' </TD> <TD> ', \
-                                            str(round(re_kpc, 3))[:5], '</TD> <TD> ',\
-                                            str(values[6]), ' </TD> <TD> ', \
-                                            str(values[7]), ' </TD> <TD> ', \
-                                            str(values[8]), ' </TD> <TD> ', \
-                                            str(values[9]), ' </TD> </TR> \n'])
+                        bulge_xcntr = float(str(values[2])[1:-1])
+                        bulge_ycntr = float(str(values[3])[:-1])
+                        Object_Sersic = '<TD>' + str(values[0]) + '</TD> <TD> '\
+                                        + str(values[2])[1:-1] + ' </TD> <TD> '\
+                                        + str(values[3])[:-1] + ' </TD> <TD> ' \
+                                        + str(values[4]) + ' </TD> <TD> ' \
+                                        + str(values[5]) +  ' </TD> <TD> ' + \
+                                        str(round(re_kpc, 3))[:5] +'</TD> <TD>'\
+                                        + str(values[6]) + ' </TD> <TD> ' \
+                                        + str(values[7]) + ' </TD> <TD> ' \
+                                        + str(values[8]) + ' </TD> <TD> ' \
+                                        + str(values[9]) + ' </TD>'
                         object += 1
-
                 if(str(values[0]) == 'expdisk'):
-                    outfile.writelines(['<TR align="center" bgcolor="#99CCFF">',\
-                                        ' <TD>', str(values[0]), \
-                                        ' </TD> <TD> ', str(values[2])[1:-1],\
-                                        ' </TD> <TD> ', str(values[3])[:-1], \
-                                        ' </TD> <TD> ', str(values[4]), \
-                                        ' </TD> <TD> ', str(values[5]), \
-                                        ' </TD> <TD> ', str(round(rd_kpc, 3))[:5],  \
-                                        ' </TD> <TD> ', ' ',  \
-                                        ' </TD> <TD> ', str(values[6]), \
-                                        ' </TD> <TD> ', str(values[7]), \
-                                        ' </TD> <TD> ', str(values[8]), \
-                                        ' </TD>  </TR> \n'])
+                    disk_xcntr = float(str(values[2])[1:-1])
+                    disk_ycntr = float(str(values[3])[:-1])
+                    Object_Exp = '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
+                                 str(values[2])[1:-1] + ' </TD> <TD> ' + \
+                                 str(values[3])[:-1] + ' </TD> <TD> ' + \
+                                 str(values[4]) + ' </TD> <TD> ' + \
+                                 str(values[5]) +  ' </TD> <TD> ' + \
+                                 str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                 ' ' + ' </TD> <TD> ' + str(values[6]) +  \
+                                 ' </TD> <TD> ' + str(values[7]) + \
+                                 ' </TD> <TD> ' + str(values[8]) + ' </TD>'
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err > 1):
-                        outfile.writelines(['<TR align="center" ', \
-                                            'bgcolor="#CCFFFF"> <TD>', ' ' , \
-                                            ' </TD> <TD> ',\
-                                            str(values[0])[1:-1], \
-                                            ' </TD> <TD> ', \
-                                            str(values[1])[:-1], \
-                                            ' </TD> <TD> ', str(values[2]), \
-                                            ' </TD> <TD> ', str(values[3]), \
-                                            ' </TD> <TD> ', ' ', \
-                                            ' </TD> <TD> ', str(values[4]), \
-                                            ' </TD> <TD> ', str(values[5]), \
-                                            ' </TD> <TD> ', str(values[6]), \
-                                            ' </TD> <TD> ', str(values[7]), \
-                                            ' </TD> </TR> \n' ])
+                        Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                           '<TR align="center" ' + \
+                                           'bgcolor="#CCFFFF"> <TD>' + ' ' + \
+                                           ' </TD> <TD> ' + \
+                                           str(values[0])[1:-1] + \
+                                           ' </TD> <TD> ' + \
+                                           str(values[1])[:-1] + \
+                                           ' </TD> <TD> ' + str(values[2]) + \
+                                           ' </TD> <TD> ' + str(values[3]) + \
+                                           ' </TD> <TD> ' + ' ' + \
+                                           ' </TD> <TD> ' + str(values[4]) + \
+                                           ' </TD> <TD> ' + str(values[5]) + \
+                                           ' </TD> <TD> ' + str(values[6]) + \
+                                           ' </TD> <TD> ' + str(values[7]) + \
+                                           ' </TD> </TR> '
                     if(str(a) == 'sersic' and object_err == 1):
-                        outfile.writelines(['<TR align="center" \
-                                            bgcolor="#CCFFFF"> <TD>', ' ' , \
-                                            ' </TD> <TD> ',\
-                                            str(values[0])[1:-1], \
-                                            ' </TD> <TD> ', \
-                                            str(values[1])[:-1], \
-                                            ' </TD> <TD> ', str(values[2]), \
-                                            ' </TD> <TD> ', str(values[3]), \
-                                            ' </TD> <TD> ', str(round(re_err_kpc, 3))[:5], \
-                                            ' </TD> <TD> ', str(values[4]), \
-                                            ' </TD> <TD> ', str(values[5]), \
-                                            ' </TD> <TD> ', str(values[6]), \
-                                            ' </TD> <TD> ', str(values[7]), \
-                                            ' </TD> </TR> \n' ])
+                        Object_Sersic_err = '<TD>' + ' ' + '</TD> <TD>' + \
+                                            str(values[0])[1:-1] + '</TD> <TD>'\
+                                            + str(values[1])[:-1] + \
+                                            ' </TD> <TD> ' + str(values[2]) + \
+                                            ' </TD> <TD> ' + str(values[3]) + \
+                                            ' </TD> <TD> ' + \
+                                            str(round(re_err_kpc, 3))[:5] + \
+                                            ' </TD> <TD> ' + str(values[4]) + \
+                                            ' </TD> <TD> ' + str(values[5]) + \
+                                            ' </TD> <TD> ' + str(values[6]) + \
+                                            ' </TD> <TD> ' + str(values[7]) + \
+                                            ' </TD>'
                         object_err += 1
                     if(str(a) == 'expdisk'):
-                        outfile.writelines(['<TR align="center" ',\
-                                            'bgcolor="#CCFFFF"> <TD>', ' ' , \
-                                            ' </TD> <TD> ',\
-                                            str(values[0])[1:-1], \
-                                            ' </TD> <TD> ',\
-                                            str(values[1])[:-1], \
-                                            ' </TD> <TD> ', str(values[2]), \
-                                            ' </TD> <TD> ', str(values[3]), \
-                                            ' </TD> <TD> ', str(round(rd_err_kpc, 3))[:5], \
-                                            ' </TD> <TD> ', ' ' , \
-                                            ' </TD> <TD> ', str(values[4]), \
-                                            ' </TD> <TD> ', str(values[5]), \
-                                            ' </TD> <TD> ', str(values[6]), \
-                                            ' </TD> </TR> \n' ])
+                        Object_Exp_err = '<TD>' + ' ' + '</TD> <TD>' + \
+                                         str(values[0])[1:-1] + '</TD> <TD>'\
+                                         + str(values[1])[:-1] + \
+                                         ' </TD> <TD> ' + str(values[2]) + \
+                                         ' </TD> <TD> ' + str(values[3]) + \
+                                         ' </TD> <TD> ' + \
+                                         str(round(rd_err_kpc, 3))[:5] + \
+                                         ' </TD> <TD> ' + ' ' + \
+                                         ' </TD> <TD> ' + str(values[4]) + \
+                                         ' </TD> <TD> ' + str(values[5]) + \
+                                         ' </TD> <TD> ' + str(values[6]) + \
+                                         ' </TD>'
                 a=values[0]				
             except:
                 pass
-    outfile.writelines(['<TR align="center" bgcolor="#99CCFF"> <TH> ',\
-                        'Concentration <TH> Asymmetry <TH> Clumpness <TH>', \
-                        'Gini Coefficient <TH> M20 ',\
-                        '<TH> B/D <TH> B/T </TH> </TR> \n'])
-    outfile.writelines(['<TR align="center" bgcolor="#CCFFFF"> <TD>',\
-                         str(C)[:5], ' </TD> <TD> ', str(A)[:5], \
-                        ' </TD> <TD> ', str(S)[:5], ' </TD> <TD> ', str(G)[:5],\
-                        ' </TD> <TD> ', str(M)[:5], ' </TD> <TD> ', str(BD)[:5]\
-                        , ' </TD> <TD> ', str(BT)[:5], ' </TD> </TR> \n' ])
-
-    outfile.write('</TABLE> \n')		
-    outfile.write('</BODY></HTML> \n')
+    wC = str(C)[:5]
+    wA = str(A)[:5]
+    wS = str(S)[:5]
+    wG = str(G)[:5]
+    wM = str(M)[:5]
+    wBD = str(BD)[:5]
+    wBT = str(BT)[:5]
+    error_mesg1 = ''
+    error_mesg2 = ''
+    error_mesg3 = ''
+    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
+        abs(bulge_xcntr - xcntr) <= c.center_deviation and \
+        abs(bulge_ycntr - ycntr) <= c.center_deviation and \
+        abs(disk_xcntr - xcntr) <= c.center_deviation and \
+        abs(disk_xcntr - xcntr) <= c.center_deviation:
+        img_notify = 'goodfit.gif'
+        good_fit = 1
+    else:
+        if chi2nu > c.chi2sq:
+            error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
+        if Goodness < c.Goodness:
+            error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
+        if abs(bulge_xcntr - xcntr) > c.center_deviation or \
+             abs(bulge_ycntr - ycntr) > c.center_deviation or \
+             abs(disk_xcntr - xcntr) > c.center_deviation or \
+             abs(disk_xcntr - xcntr) > c.center_deviation:
+            error_mesg3 = str(error_mesg3) + 'Fake Center!'
+        img_notify = 'badfit.gif'
+        good_fit = 0
+    outfile.write(template %vars())
     outfile.close()
+    run = 1
+    to_remove = len(c.rootname) + 2
+    if exists('result.csv'):
+        for line_res in csv.reader(open('result.csv').readlines()[1:]):    
+            if(str(line_res[0]) == cutimage[to_remove:-5]):
+                run += 1
+    f_res = open("result.csv", "ab")
+    writer = csv.writer(f_res)
+    galid = str(cutimage)[to_remove:-5]
+    writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance, good_fit])
+    f_res.close()
+
     outfile1 = open('galfit.html', 'w')
+    outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
+                   ' Transitional//EN">')
     outfile1.write('<HTML><HEAD> \n')
     outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
                     URL=file:///Vstr/vstr/vvinuv/june-july07/',\
@@ -287,4 +256,5 @@ def write_params(cutimage, distance, alpha1, alpha2, alpha3, delta1, delta2, del
     except:
         pass
     outfile1.close()
+#write_params('I_EDCSNJ1216453-1201176.fits', 60.0, 60.0, 47.86, 12, 34, 45, -12, 46, 34.6, 0.67, 0.9887, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999)
 

@@ -62,26 +62,20 @@ def mask(cutimage, size, line_s, galflag):
             eg = 1.0 - axis_rat
             one_minus_eg_sq    = (1.0-eg)**2.0
             if(abs(xcntr_n - xcntr_o) < size/2.0 and \
-               abs(ycntr_n - ycntr_o) < size/2.0):
-                if(abs(xcntr_n - xcntr_o) >= major_axis * threshold or \
-                   abs(ycntr_n - ycntr_o) >= major_axis * threshold):
-#            if(abs(xcntr_n - xcntr_o) < size/2.0 and \
-#               abs(ycntr_n - ycntr_o) < size/2.0 and \
-#               abs(ycntr_n - ycntr_o) > major_axis * threshold and \
-#               area < thresh_area and \
-#               xcntr_n != xcntr_o and ycntr_n != ycntr_o and galflag == 1):
-                    if((xcntr_o - xcntr_n) < 0):
-                        xn = xcntr + abs(xcntr_n - xcntr_o)
-                    if((ycntr_o - ycntr_n) < 0):
-                        yn = ycntr + abs(ycntr_n - ycntr_o)
-                    if((xcntr_o - xcntr_n) > 0):
-                        xn = xcntr - (xcntr_o -xcntr_n)
-                    if((ycntr_o - ycntr_n) > 0):
-                        yn = ycntr - (ycntr_o -ycntr_n)
-                    tx = (x - xn + 0.5) * co + (y - yn + 0.5) * si
-                    ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
-                    R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-                    z[n.where(R<=mask_reg*maj_axis)] = 1
+               abs(ycntr_n - ycntr_o) < size/2.0 and \
+               xcntr_n != xcntr_o and ycntr_n != ycntr_o and galflag == 1):
+                if((xcntr_o - xcntr_n) < 0):
+                    xn = xcntr + abs(xcntr_n - xcntr_o)
+                if((ycntr_o - ycntr_n) < 0):
+                    yn = ycntr + abs(ycntr_n - ycntr_o)
+                if((xcntr_o - xcntr_n) > 0):
+                    xn = xcntr - (xcntr_o -xcntr_n)
+                if((ycntr_o - ycntr_n) > 0):
+                    yn = ycntr - (ycntr_o -ycntr_n)
+                tx = (x - xn + 0.5) * co + (y - yn + 0.5) * si
+                ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
+                R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
+                z[n.where(R<=mask_reg*maj_axis)] = 1
             if(abs(xcntr_n - xcntr_o) < size/2.0 and \
                abs(ycntr_n - ycntr_o) < size/2.0 and galflag == 0):  
                 if((xcntr_o - xntr_n) < 0):
