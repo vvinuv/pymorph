@@ -94,17 +94,17 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     anorm = normalize(0.01,.2)
     print skysig, galaxy.min(), galaxy.max()
 #    anorm = normalize(0.0, skysig / 2.0)
-    image1 = imshow(n.fliplr(galaxy), \
+    image1 = imshow(n.flipud(galaxy), \
                   extent=[0, size, 0, size])
     image1.autoscale()
     subplot(232)
     title('Model Galaxy')
-    image1 = imshow(n.fliplr(model), cmap=cm.jet, \
+    image1 = imshow(n.flipud(model), cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
     subplot(233)
     title('Residual')
-    image1 = imshow(n.fliplr(residual), cmap=cm.jet, \
+    image1 = imshow(n.flipud(residual), cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
     maskedresidual = ma.masked_array(residual, mask)
