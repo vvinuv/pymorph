@@ -31,9 +31,9 @@ class WriteHtmlFunc:
         self.M            = M
         self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
 
-def write_params(cutimage, distance, xcntr, ycntr, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
     Goodness = float(str(round(Goodness, 3))[:5])
-    f_tpl = open('default.html', 'r')
+    f_tpl = open('pymorph/default.html', 'r')
     template = f_tpl.read()
     f_tpl.close()
     outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
@@ -211,7 +211,7 @@ def write_params(cutimage, distance, xcntr, ycntr, alpha1, alpha2, alpha3, delta
         abs(bulge_xcntr - xcntr) <= c.center_deviation and \
         abs(bulge_ycntr - ycntr) <= c.center_deviation and \
         abs(disk_xcntr - xcntr) <= c.center_deviation and \
-        abs(disk_xcntr - xcntr) <= c.center_deviation:
+        abs(disk_ycntr - ycntr) <= c.center_deviation:
         img_notify = 'goodfit.gif'
         good_fit = 1
     else:
@@ -222,7 +222,7 @@ def write_params(cutimage, distance, xcntr, ycntr, alpha1, alpha2, alpha3, delta
         if abs(bulge_xcntr - xcntr) > c.center_deviation or \
              abs(bulge_ycntr - ycntr) > c.center_deviation or \
              abs(disk_xcntr - xcntr) > c.center_deviation or \
-             abs(disk_xcntr - xcntr) > c.center_deviation:
+             abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
         img_notify = 'badfit.gif'
         good_fit = 0

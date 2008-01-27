@@ -50,8 +50,12 @@ def mask(cutimage, size, line_s):
             sky      = float(values[10]) #sky
             pos_ang = float(values[11]) - 90.0 #position angle
             axis_rat = 1.0/float(values[12]) #axis ration b/a
+            si = n.sin(pos_ang * n.pi / 180.0)
+            co = n.cos(pos_ang * n.pi / 180.0)
             area = float(values[13])
             maj_axis = float(values[14])#major axis of neighbour
+            eg = 1.0 - axis_rat
+            one_minus_eg_sq    = (1.0-eg)**2.0
             if(abs(xcntr_n - xcntr_o) < size/2.0 and abs(ycntr_n - ycntr_o) \
                < size/2.0 and area < thresh_area):
                 if(abs(xcntr_n - xcntr_o) >= major_axis * threshold or \
@@ -68,22 +72,25 @@ def mask(cutimage, size, line_s):
                     ty = y - yn + 0.5
                     R = n.sqrt(tx**2.0 + ty**2.0)
                     z[n.where(R<=mask_reg*maj_axis)] = 1
-            if(abs(xcntr_n - xcntr_o) > size/2.0 and \
-               abs(xcntr_n - xcntr_o) < size/2.0 + 20.0 and \
-               abs(ycntr_n - ycntr_o) > size/2.0 and \
-               abs(ycntr_n - ycntr_o) < size/2.0 + 20.0):
-                if((xcntr_o - xcntr_n) < 0): 
-                    xn = xcntr + abs(xcntr_n - xcntr_o)
-                if((ycntr_o - ycntr_n) < 0): 
-                    yn = ycntr + abs(ycntr_n - ycntr_o)
-                if((xcntr_o - xcntr_n) > 0): 
-                    xn = xcntr - (xcntr_o - xcntr_n)
-                if((ycntr_o - ycntr_n) > 0): 
-                    yn = ycntr - (ycntr_o - ycntr_n)
-                tx = x - xn + 0.5 
-                ty = y - yn + 0.5 
-                R = n.sqrt(tx**2.0 + ty**2.0)
-                z[n.where(R<=mask_reg*maj_axis)] = 1
+            if(abs(xcntr_n - xcntr_o) < size/2.0 + 30.0 and \
+               abs(ycntr_n - ycntr_o) < size/2.0 + 30.0):
+               if(abs(xcntr_n - xcntr_o) >= size/2.0 or \
+                   abs(ycntr_n - ycntr_o) >= size/2.0):
+                    if((xcntr_o - xcntr_n) < 0): 
+                        xn = xcntr + abs(xcntr_n - xcntr_o)
+                    if((ycntr_o - ycntr_n) < 0): 
+                        yn = ycntr + abs(ycntr_n - ycntr_o)
+                    if((xcntr_o - xcntr_n) > 0): 
+                        xn = xcntr - (xcntr_o - xcntr_n)
+                    if((ycntr_o - ycntr_n) > 0): 
+                        yn = ycntr - (ycntr_o - ycntr_n)
+                    tx = (x - xn + 0.5) * co + (y - yn + 0.5) * si
+                    ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
+                    R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
+#                    tx = x - xn + 0.5 
+#                    ty = y - yn + 0.5 
+#                    R = n.sqrt(tx**2.0 + ty**2.0)
+                    z[n.where(R <= 2.0 * mask_reg * maj_axis)] = 1
         except:
             pass	
     hdu = pyfits.PrimaryHDU(z.astype(n.float32))

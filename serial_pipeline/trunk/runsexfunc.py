@@ -13,9 +13,9 @@ def sex(cutimage, whtimage):
     sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
     if(whtimage == 'None'):
-        f_tpl = open('default_wow.sex','r')
+        f_tpl = open('pymorph/default_wow.sex','r')
     else:
-        f_tpl = open('default.sex','r')
+        f_tpl = open('pymorph/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
     sex_conf = str(sex_cata) + '.sex'

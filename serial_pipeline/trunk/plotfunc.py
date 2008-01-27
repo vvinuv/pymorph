@@ -92,7 +92,7 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
 #    anorm = normalize(galaxy.min() + (galaxy.max()-galaxy.min())/ 60.0, \
 #            galaxy.max() - (galaxy.max() - galaxy.min()) / 1.1)
     anorm = normalize(0.01,.2)
-    print skysig, galaxy.min(), galaxy.max()
+#    print skysig, galaxy.min(), galaxy.max()
 #    anorm = normalize(0.0, skysig / 2.0)
     image1 = imshow(n.flipud(galaxy), \
                   extent=[0, size, 0, size])
@@ -131,7 +131,7 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
 #    setp(a, xticks=[], yticks=[])
     subplot(236)
     title('Mask')
-    image1 = imshow(n.fliplr(mask), norm=anorm, cmap=cm.jet, \
+    image1 = imshow(n.flipud(mask), norm=anorm, cmap=cm.jet, \
                   extent=[0, size, 0, size])
     image1.autoscale()
     savefig('P_' + str(cutimage)[:-4] + 'png')
