@@ -158,7 +158,12 @@ def main():
             try:
                 gal_id = pdb["gal_id"]
             except:
-                gal_id = pdb["gimg"][:-5] #id will be filename without .fits
+                try:
+                    gal_id = pdb["gimg"][:-5] #id will be filename without .fits
+                except:
+                    print "No image or gal_id found in the object catalogue. \
+                           Exiting"
+                    os._exit(0)
             try:
                 alpha1 = float(pdb["ra1"])
             except:
@@ -190,7 +195,10 @@ def main():
             try:
                 gimg = pdb["gimg"]    #Galaxy cutout
             except:
-                gimg = 'None'
+                if exists('I' + str(c.rootname) + '_' + str(gal_id) + '.fits'):
+                    gimg = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits'
+                else: 
+                    gimg = 'None'
             try:
                 wimg = pdb["wimg"]   #Weight cut
             except:
@@ -253,6 +261,7 @@ def main():
                 bycntr = float(pdb["bycntr"])
             except:
                 bycntr = 9999
+            print '1'
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
@@ -494,11 +503,21 @@ def main():
                                              n.cos((alpha_j - ra_p) * r))
                                             #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra_p, dec_p, distance
                                 if(cfile == 'None'):
-                                    MaskFunc(cutimage, c.size, line_s)
+                                    if c.manual_mask:
+                                        ManualMaskManager(cutimage)
+                                    else:
+                                        MaskFunc(cutimage, c.size, line_s)
                                     maskimage = 'M_' + str(cutimage)[:-5] +\
                                                 '.fits'
                                 else:
                                     maskimage = mimg
+                                    if exists(mimg):
+                                        pass
+                                    else:
+                                        if c.manual_mask:
+                                            ManualMask(cutimage)
+                                        else:
+                                            MaskFunc(cutimage, c.size, line_s)
                                 try:
                                     if(cfile == 'None'):
                                         ConfigFunc(cutimage, whtimage, c.size,\
@@ -594,7 +613,7 @@ def main():
                                                           'Mask image\n'])
                                     run = 0	
                                     Goodness = 9999
-                                try:	
+                                try:
                                     write_params(cutimage, xcntr, ycntr, \
                                                  distance, alpha1, \
                                                  alpha2, alpha3, delta1, \

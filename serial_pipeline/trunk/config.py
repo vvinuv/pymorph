@@ -2,7 +2,7 @@
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f647-1-1_drz_sci.fits'
 whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'j8f647_sex.cat'           #The sextractor catalogue which has 
+sex_cata = 'j8f647_sex.cat.1'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
@@ -23,6 +23,7 @@ psflist = ('psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-
 mag_zero = 25.256                     #magnitude zero point
 
 ###----Conditions for Masking----###
+manual_mask = 0
 mask_reg = 2.5
 thresh_area = 400.0
 threshold = 2.0                       #Masking will start for neighbours 
@@ -61,8 +62,8 @@ back_extraction_radius = 15.0
 angle = 180.0
 
 ###----Fitting modes----###
-repeat = False                        #Repeat the pipeline manually
-galcut = False                        #True if we provide cutouts
+repeat = True                        #Repeat the pipeline manually
+galcut = True                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = False
@@ -74,4 +75,4 @@ SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9
 Goodness = 0.69
-center_deviation = 75.0
+center_deviation = 6.0
