@@ -68,6 +68,22 @@ def mask(cutimage, size, line_s):
                     ty = y - yn + 0.5
                     R = n.sqrt(tx**2.0 + ty**2.0)
                     z[n.where(R<=mask_reg*maj_axis)] = 1
+            if(abs(xcntr_n - xcntr_o) > size/2.0 and \
+               abs(xcntr_n - xcntr_o) < size/2.0 + 20.0 and \
+               abs(ycntr_n - ycntr_o) > size/2.0 and \
+               abs(ycntr_n - ycntr_o) < size/2.0 + 20.0):
+                if((xcntr_o - xcntr_n) < 0): 
+                    xn = xcntr + abs(xcntr_n - xcntr_o)
+                if((ycntr_o - ycntr_n) < 0): 
+                    yn = ycntr + abs(ycntr_n - ycntr_o)
+                if((xcntr_o - xcntr_n) > 0): 
+                    xn = xcntr - (xcntr_o - xcntr_n)
+                if((ycntr_o - ycntr_n) > 0): 
+                    yn = ycntr - (ycntr_o - ycntr_n)
+                tx = x - xn + 0.5 
+                ty = y - yn + 0.5 
+                R = n.sqrt(tx**2.0 + ty**2.0)
+                z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass	
     hdu = pyfits.PrimaryHDU(z.astype(n.float32))
