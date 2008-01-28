@@ -116,13 +116,15 @@ def main():
 #            d = n.arccos(n.cos((90.0 - delta_j) * r) * n.cos((90.0 - dec) *\
 #                r) + n.sin((90.0 - delta_j) * r) *  n.sin((90.0 - dec) * r) * \
 #                n.cos((alpha_j - ra) * r))
-            d = n.sqrt((delta_j - dec)**2.0 + ((alpha_j-ra)*n.sin((0.5) *\
-                (delta_j+dec)))**2.0)
+#            d = n.sqrt((delta_j - dec)**2.0 + ((alpha_j-ra)*n.sin((0.5) *\
+#                (delta_j+dec)))**2.0)
+            d = n.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
+                n.cos(delta_j * r))**2.0)
             #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra, dec, d
             if(d < distance):
                 psffile = element
                 distance = d
-        return psffile, distance
+        return psffile, distance * 3600.0
 
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
     if exists('result.csv'):
@@ -495,12 +497,20 @@ def main():
                                         if(ra_p == 9999 or dec_p == 9999):
                                             distance = 9999
                                         else:
-                                            distance = n.arccos(n.cos((90.0 - \
-                                                delta_j) \
-                                             * r) * n.cos((90.0 - dec_p) * r) \
-                                             + n.sin((90.0 - delta_j) * r) *  \
-                                             n.sin((90.0 - dec_p) * r) * \
-                                             n.cos((alpha_j - ra_p) * r))
+#                                            distance = n.sqrt((delta_j - \
+#                                            dec)**2.0 + ((alpha_j - ra) * \
+#                                            n.sin((0.5) *\
+#                                            (delta_j + dec)))**2.0)
+                                            distance = 3600.0*n.sqrt((delta_j\
+                                                       - dec_p)**2.0 + \
+                                                       ((alpha_j - ra_p) * \
+                                                       n.cos(delta_j * r))**2.0)
+#                                            distance = n.arccos(n.cos((90.0 - \
+ #                                               delta_j) \
+ #                                            * r) * n.cos((90.0 - dec_p) * r) \
+  #                                           + n.sin((90.0 - delta_j) * r) *  \
+  #                                           n.sin((90.0 - dec_p) * r) * \
+  #                                           n.cos((alpha_j - ra_p) * r))
                                             #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra_p, dec_p, distance
                                 if(cfile == 'None'):
                                     if c.manual_mask:

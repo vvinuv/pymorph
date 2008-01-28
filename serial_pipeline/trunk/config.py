@@ -66,7 +66,7 @@ repeat = True                        #Repeat the pipeline manually
 galcut = True                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
-cas = False
+cas = True
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 

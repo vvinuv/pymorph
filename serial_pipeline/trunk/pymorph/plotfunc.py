@@ -119,7 +119,7 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
         ArgInc = nMaxArg
     else:
         ArgInc = 16
-    print trapz(bins, nn)
+#    print trapz(bins, nn)
 
     nMax = max(nn) 
     binmin = bins[nMaxArg - ArgInc]
