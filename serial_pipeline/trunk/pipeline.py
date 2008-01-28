@@ -423,12 +423,19 @@ def main():
                             run = 0
                         if(c.cas):
                             try:
-                                if(c.decompose == False):
-                                    ElliMaskFunc(cutimage, c.size, \
-                                                         line_s, 1)
                                 ell_mask_file = 'EM_' + \
                                                   str(cutimage)[:-5] + \
                                                   '.fits'
+                                if(c.decompose == False):
+                                    if c.repeat:
+                                        if exists(ell_mask_file):
+                                            pass
+                                        else:
+                                            ElliMaskFunc(cutimage, c.size, \
+                                                         line_s, 1)
+                                    else:
+                                        ElliMaskFunc(cutimage, c.size, \
+                                                         line_s, 1)
                                 try:
                                     caSgm = casgm(cutimage, ell_mask_file,\
                                                 xcntr, ycntr, bxcntr, bycntr, \
