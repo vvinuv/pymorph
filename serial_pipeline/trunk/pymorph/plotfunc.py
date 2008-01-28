@@ -91,22 +91,19 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     title('Original Galaxy')
 #    anorm = normalize(galaxy.min() + (galaxy.max()-galaxy.min())/ 60.0, \
 #            galaxy.max() - (galaxy.max() - galaxy.min()) / 1.1)
-    anorm = normalize(0.01,.2)
+#    anorm = normalize(0.01,.2)
 #    print skysig, galaxy.min(), galaxy.max()
-#    anorm = normalize(0.0, skysig / 2.0)
+    anorm = normalize(galaxy.min(), 3.0*skysig)
     image1 = imshow(n.flipud(galaxy), \
-                  extent=[0, size, 0, size])
-    image1.autoscale()
+                  extent=[0, size, 0, size], norm=anorm)
     subplot(232)
     title('Model Galaxy')
     image1 = imshow(n.flipud(model), cmap=cm.jet, \
-                  extent=[0, size, 0, size])
-    image1.autoscale()
+                  extent=[0, size, 0, size], norm=anorm)
     subplot(233)
     title('Residual')
     image1 = imshow(n.flipud(residual), cmap=cm.jet, \
-                  extent=[0, size, 0, size])
-    image1.autoscale()
+                  extent=[0, size, 0, size], norm=anorm)
     maskedresidual = ma.masked_array(residual, mask)
     residual = ma.filled(maskedresidual, value=0.0)
 #    a = axes([0, 0, 150, 150], axisbg='y')
@@ -133,7 +130,6 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     title('Mask')
     image1 = imshow(n.flipud(mask), norm=anorm, cmap=cm.jet, \
                   extent=[0, size, 0, size])
-    image1.autoscale()
     savefig('P_' + str(cutimage)[:-4] + 'png')
 #    figure()
     close()
