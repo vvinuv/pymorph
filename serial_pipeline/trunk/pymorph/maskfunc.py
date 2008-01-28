@@ -48,7 +48,7 @@ def mask(cutimage, size, line_s):
             mag    = float(values[7]) #Magnitude
             radius = float(values[9]) #Half light radius
             sky      = float(values[10]) #sky
-            pos_ang = float(values[11]) - 90.0 #position angle
+            pos_ang = float(values[11])  #position angle
             axis_rat = 1.0/float(values[12]) #axis ration b/a
             si = n.sin(pos_ang * n.pi / 180.0)
             co = n.cos(pos_ang * n.pi / 180.0)
@@ -68,10 +68,14 @@ def mask(cutimage, size, line_s):
                         xn = xcntr - (xcntr_o - xcntr_n)
                     if((ycntr_o - ycntr_n) > 0):
                         yn = ycntr - (ycntr_o - ycntr_n)
-                    tx = x - xn + 0.5 
-                    ty = y - yn + 0.5
-                    R = n.sqrt(tx**2.0 + ty**2.0)
+#                    tx = x - xn + 0.5 
+#                    ty = y - yn + 0.5
+#                    R = n.sqrt(tx**2.0 + ty**2.0)
+                    tx = (x - xn + 0.5) * co + (y - yn + 0.5) * si
+                    ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
+                    R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                     z[n.where(R<=mask_reg*maj_axis)] = 1
+
             if(abs(xcntr_n - xcntr_o) < size/2.0 + 30.0 and \
                abs(ycntr_n - ycntr_o) < size/2.0 + 30.0):
                if(abs(xcntr_n - xcntr_o) >= size/2.0 or \

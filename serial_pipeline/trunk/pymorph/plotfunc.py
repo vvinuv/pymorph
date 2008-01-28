@@ -136,4 +136,5 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     image1.autoscale()
     savefig('P_' + str(cutimage)[:-4] + 'png')
 #    figure()
+    close()
     return goodness

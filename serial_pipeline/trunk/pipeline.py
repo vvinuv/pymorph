@@ -124,7 +124,7 @@ def main():
             if(d < distance):
                 psffile = element
                 distance = d
-        return psffile, distance * 3600.0
+        return psffile, distance 
 
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
     if exists('result.csv'):
@@ -235,7 +235,8 @@ def main():
                         pass
             else:
                 cfile = 'None'
-            print gimg
+            if c.galcut:
+                print 'Image is ', gimg
             if(c.galcut == True):
                     ggimg = pyfits.open(gimg)
                     ggimage = ggimg[0].data
@@ -263,7 +264,6 @@ def main():
                 bycntr = float(pdb["bycntr"])
             except:
                 bycntr = 9999
-            print '1'
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
@@ -448,7 +448,8 @@ def main():
                                     S_err = caSgm[5]
                                     G = caSgm[6]
                                     M = caSgm[7]
-                                    print C, C_err, A, A_err, S, S_err, G,M
+                                    print 'C, C_err, A, A_err, S, S_err, G,'\
+                                    ' M ', C, C_err, A, A_err, S, S_err, G, M
                                     if(c.decompose == False):
                                         f_res = open("result.csv", "ab")
                                         writer = csv.writer(f_res)

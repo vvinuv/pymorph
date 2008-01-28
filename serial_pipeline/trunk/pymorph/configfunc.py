@@ -66,7 +66,7 @@ def conf(cutimage, whtimage, size, line_s, psffile):
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
                   ' photometric zeropoint\n'])
-    f.writelines(['O) both			# Display type',\
+    f.writelines(['O) regular			# Display type',\
                   ' (regular, curses, both)\n'])
     f.writelines(['P) 0			# Create output image only?',\
                   ' (1=yes; 0=optimize)\n'])

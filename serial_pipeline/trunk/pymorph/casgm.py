@@ -75,8 +75,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     else:
         sigma=0.25*extraction_radius/1.5
 
-        print "EXTRACTION RADIUS ",r20, r50, r80, con.total_rad
-        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
+        print "r20, r50, r80, EXTRACTION RADIUS ",r20, r50, r80, con.total_rad
+#        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
         
         ########################
         #   ASYMMETRY          #
@@ -115,10 +115,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                 ASY_ERROR = round(ASY_ERROR, 4)    
             except:
                 ASY_ERROR = 9999
-            print "ASYMMETRY, ERROR and flag_out A_wo_back BA A20 A20_ZSUM", \
-                   ASY, ASY_ERROR, asy.image_asymm[5], asy.image_asymm[0], \
-                   back_asy.image_asymm[0], asy_r20.image_asymm[0],\
-                   asy_r20_zsum.image_asymm[0]
+#            print "ASYMMETRY, ERROR and flag_out A_wo_back BA A20 A20_ZSUM", \
+#                   ASY, ASY_ERROR, asy.image_asymm[5], asy.image_asymm[0], \
+#                   back_asy.image_asymm[0], asy_r20.image_asymm[0],\
+#                   asy_r20_zsum.image_asymm[0]
         except:
             ASY = ASY_ERROR = 9999 
         ########################
@@ -159,7 +159,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                 ERROR_SMOO = round(ERROR_SMOO, 4)
             except:
                 ERROR_SMOO = 9999
-            print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
+#            print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
         except:
              S = ERROR_SMOO = 9999
 
@@ -168,7 +168,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         ########################
 
         extraction_radius = con.total_rad
-        print skysig
+        print 'sky sigma ', skysig
         gin = gini(z, xcntr, ycntr, 0, 0, r20, r80, extraction_radius, sky, skysig)
 #        gini_coef = gin.gini_coef
 	gini_coef = gin.segmentation
@@ -187,7 +187,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 #        M=mo.moment_of_light[0]
 #        print "MOMENT ",M
         f_tmp = open("agm_result_with_radius.csv", "ab")
-        f_tmp.writelines([str(cutimage)[1:-8], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]),'\n'])
+        to_remove = len(c.rootname) + 2
+        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]),'\n'])
         f_tmp.close()
 
         return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, gini_coef[0], gini_coef[4]

@@ -110,7 +110,7 @@ def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r80,extractio
         G20 = gini_coef(I20)
 	mo3=moment(I20, ini_xcntr, ini_ycntr)
 	M_20 = mo3.moment_of_light[0]
-	print G, G_res, G80, G20, M, M_res, M80, M_20
+#	print G, G_res, G80, G20, M, M_res, M80, M_20
 	return G, G_res, G80, G20, M, M_res, M80, M_20
 
 #f=pyfits.open('n5585_lR.fits')

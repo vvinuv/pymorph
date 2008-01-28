@@ -47,7 +47,7 @@ class concentration:
 #	calculating the eta parameter
 #		print self.divide_r,self.r,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius
 		self.total_rad = eta_radius_fnc(self.divide_r,self.r,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius)
-		print self.total_rad
+#		print self.total_rad
 		if(self.total_rad == 9999):
 			self.concen=9999
 			self.error_con=9999
@@ -104,7 +104,7 @@ class concentration:
 			self.error_ratio=n.sqrt((self.r80/self.r20)**2*((alpha80[1]/self.r80)**2+(alpha20[1]/self.r20)**2))
 			self.error_con=5*self.error_ratio/(self.r80/self.r20)
 		#econcen = 5*log10 (r80/r20) - 5*log10 ((r80-0.5)/(r20+0.5)) This is the way Conselice finds error in concentration
-			print self.concen, self.error_con
+#			print self.concen, self.error_con
 
 #------This function returns r------#
 
@@ -181,7 +181,7 @@ def eta_radius_fnc(divide_r, r, nxpts, nypts, background, incr, eta_radius):
 			if(eta < 0.2 and nn == 0):
 				FLAG_ETA = 1
 				print "Finding eta radius failed. \
-                                       Exiting program"
+                                       Exiting CASGM function"
 				eta_radius_corre = 9999
 #				os._exit(0)
 			elif(eta < 0.2 and nn > 0):
