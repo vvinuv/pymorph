@@ -245,8 +245,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta
                    ' Transitional//EN">')
     outfile1.write('<HTML><HEAD> \n')
     outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
-                    URL=file:///Vstr/vstr/vvinuv/june-july07/',\
-                    'pipeline/galfit.html"> \n'])
+                    URL=galfit.html"> \n'])
     outfile1.write('</HEAD> \n')
     outfile = 'R_' + str(cutimage)[:-4] + 'html'
     try:
