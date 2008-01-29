@@ -72,6 +72,7 @@ cas = True
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
+PYMORPH_PATH = '/home/vinu/factory/cl1216-1201/j8f647/pymorph'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9

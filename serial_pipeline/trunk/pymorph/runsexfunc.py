@@ -12,10 +12,11 @@ class RunSex:
 def sex(cutimage, whtimage):
     sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
+    pymorph_path = c.PYMORPH_PATH
     if(whtimage == 'None'):
-        f_tpl = open('pymorph/default_wow.sex','r')
+        f_tpl = open(str(c.PYMORPH_PATH) + '/default_wow.sex','r')
     else:
-        f_tpl = open('pymorph/default.sex','r')
+        f_tpl = open(str(c.PYMORPH_PATH) + '/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
     sex_conf = str(sex_cata) + '.sex'
