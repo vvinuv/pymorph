@@ -43,6 +43,7 @@ def conf(cutimage, whtimage, size, line_s, psffile):
     sky	 = float(values[10]) #sky 
     pos_ang = float(values[11]) - 90.0 #position angle
     axis_rat = 1.0/float(values[12]) #axis ration b/a
+    area_o = float(values[13])   # object's area
     major_axis = float(values[14])	#major axis of the object
     #Write configuration file
     f.write('# IMAGE PARAMETERS\n')
@@ -114,10 +115,12 @@ def conf(cutimage, whtimage, size, line_s, psffile):
             sky      = float(values[10]) #sky
             pos_ang = float(values[11]) - 90.0 #position angle
             axis_rat = 1.0/float(values[12]) #axis ration b/a
-            area = float(values[13])
+            area_n = float(values[13]) # neighbour area
             maj_axis = float(values[14])#major axis of neighbour
-            if(abs(xcntr_n - xcntr_o) < major_axis * threshold and \
-               abs(ycntr_n - ycntr_o) < major_axis * threshold and \
+            if(abs(xcntr_n - xcntr_o) <= (major_axis + maj_axis) * \
+               threshold and \
+               abs(ycntr_n - ycntr_o) <= (major_axis  + maj_axis) * \
+               threshold and area_n >= thresh_area * area_o and \
                xcntr_n != xcntr_o and ycntr_n != ycntr_o):
                 if((xcntr_o - xcntr_n) < 0):
                     xn = xcntr + abs(xcntr_n - xcntr_o)
@@ -145,37 +148,6 @@ def conf(cutimage, whtimage, size, line_s, psffile):
                               ' (< 0) or boxiness (> 0)\n'])
                 f.writelines([' Z) 0 	           	# output',\
                               ' image (see above)\n\n\n'])
-            elif(abs(xcntr_n - xcntr_o) < size/2.0 - 1.0 and \
-                 abs(ycntr_n- ycntr_o) < size/2.0 - 1.0 and \
-                 area >= thresh_area):
-                if(abs(xcntr_n - xcntr_o) >= major_axis * threshold or \
-                   abs(ycntr_n - ycntr_o) >= major_axis):
-                    if((xcntr_o - xcntr_n) < 0):
-                        xn = xcntr + abs(xcntr_n - xcntr_o)
-                    if((ycntr_o - ycntr_n) < 0):
-                        yn = ycntr + abs(ycntr_n - ycntr_o)
-                    if((xcntr_o - xcntr_n) > 0):
-                        xn = xcntr - (xcntr_o - xcntr_n)
-                    if((ycntr_o - ycntr_n) > 0):
-                        yn = ycntr - (ycntr_o - ycntr_n)
-                    f.writelines([' 0) sersic               # Object type\n'])
-                    f.writelines([' 1) ', str(xn), ' ', str(yn), \
-                                 ' 1 1  # position x, y [pixel]\n'])
-                    f.writelines([' 3) ', str(mag), ' 1     	#',\
-                                  ' total magnitude\n'])
-                    f.writelines([' 4) ', str(radius), ' 1  	',\
-                                  '	# R_e [Pixels]\n'])
-                    f.writelines([' 5) 4.0 1        	#Sersic',\
-                                  ' exponent (deVauc=4, expdisk=1)\n'])
-                    f.writelines([' 8) ', str(axis_rat), ' 1     ',\
-                                  ' # axis ratio (b/a)\n'])
-                    f.writelines([' 9) ', str(pos_ang), ' 1 	       ',\
-                                  ' # position angle (PA)  [Degrees:',\
-                                  ' Up=0, Left=90]\n'])
-                    f.writelines(['10) 0.0 0         	# diskiness (< 0)',\
-                                  ' or boxiness (> 0)\n'])
-                    f.writelines([' Z) 0 	           	',\
-                                  ' # output image (see above)\n\n\n'])
         except:
             pass
     f.close()

@@ -2,7 +2,7 @@
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f647-1-1_drz_sci.fits'
 whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'j8f647_sex.cat.1'           #The sextractor catalogue which has 
+sex_cata = 'j8f647_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
@@ -10,7 +10,7 @@ clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
 
 ###----Specify the output names of images and catalogues----###
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
-rootname = ''
+rootname = 'j8f647'
 
 ###----Psf list----###
 psflist = ('psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-1202057.fits','psf_1216487-1201246.fits','psf_1216504-1202104.fits')   
@@ -24,13 +24,14 @@ mag_zero = 25.256                     #magnitude zero point
 
 ###----Conditions for Masking----###
 manual_mask = 0
-mask_reg = 2.5
-thresh_area = 400.0
-threshold = 2.0                       #Masking will start for neighbours 
-                                      #whose distace from the object greater 
-                                      #than threshold * semi-major axis of 
+mask_reg = 2.0
+thresh_area = 0.2
+threshold = 3.0                       #Masking will be done for neighbours 
+                                      #whose semimajor*threshold overlaps with 
+                                      #threshold * semi-major axis of 
                                       #the object and area of the neighbour 
-                                      #less than thresh_area sq.pixel. 
+                                      #less than thresh_area * object area in
+                                      #sq.pixel. 
                                       #The masking will be for a circular 
                                       #region of radius mask_reg*semi-major 
                                       #axis of the nighbour with respect to 
@@ -62,8 +63,8 @@ back_extraction_radius = 15.0
 angle = 180.0
 
 ###----Fitting modes----###
-repeat = True                        #Repeat the pipeline manually
-galcut = True                        #True if we provide cutouts
+repeat = False                        #Repeat the pipeline manually
+galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
@@ -74,5 +75,5 @@ SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9
-Goodness = 0.69
-center_deviation = 6.0
+Goodness = 0.80
+center_deviation = 5.0
