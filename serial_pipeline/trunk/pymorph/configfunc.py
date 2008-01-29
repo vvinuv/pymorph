@@ -31,7 +31,17 @@ def conf(cutimage, whtimage, size, line_s, psffile):
     outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
     mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
     config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
-    contrain_file = str(cutimage)[:-5] + '.con'
+    constrain_file = str(cutimage)[:-5] + '.con'
+    if exists(constrain_file):
+        pass
+    else:
+        f_constrain = open(constrain_file,'w')
+        f_constrain.write('1        n        0.2 to 20.0  \n')
+        f_constrain.write('1        x        -4.0      4.0\n')
+        f_constrain.write('1        y        -4.0      4.0\n')
+        f_constrain.write('2        x        -4.0      4.0\n')
+        f_constrain.write('2        y        -4.0      4.0\n')
+        f_constrain.close()
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
@@ -59,7 +69,7 @@ def conf(cutimage, whtimage, size, line_s, psffile):
                   ' to data\n'])
     f.writelines(['F) ', str(mask_file), '		# Bad pixel',
                   ' mask(FITS image or ASCII coord list)\n'])
-    f.writelines(['G) ', str(contrain_file), '       # File with parameter',\
+    f.writelines(['G) ', str(constrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
     f.writelines(['H) 1 ', str(size), ' 1 ', str(size), '		#',\
                   ' Image region to fit (xmin xmax ymin ymax)\n'])
