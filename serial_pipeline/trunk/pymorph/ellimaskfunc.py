@@ -3,6 +3,7 @@ import sys
 import pyfits
 import numpy as n
 import config as c
+import ndimage as im
 
 class ElliMaskFunc:
     """The class for making mask for ellipse task. This will mask all the 
@@ -40,9 +41,30 @@ def mask(cutimage, size, line_s, galflag):
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
     sky	 = float(values[10]) #sky 
-    pos_ang = float(values[11]) - 90.0 #position angle
+    pos_ang = float(values[11]) #position angle
     axis_rat = 1.0 / float(values[12]) #axis ration b/a
-    major_axis = float(values[14])	#major axis of the object
+    area_o = float(values[13]) # object area
+    major_axis 	= float(values[14])	#major axis of the object
+    eg = 1.0 - axis_rat
+    one_minus_eg_sq    = (1.0 - eg)**2.0
+    si = n.sin(pos_ang * n.pi / 180.0)
+    co = n.cos(pos_ang * n.pi / 180.0)
+    tx = (x - xcntr + 0.5) * co + (y - ycntr + 0.5) * si
+    ty = (xcntr - 0.5 -x) * si + (y - ycntr + 0.5) * co
+    R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
+    tmp_mask = n.zeros((size, size))
+    f = pyfits.open(cutimage)
+    galaxy = f[0].data
+    f.close()
+    startR = 3.0
+    while startR < size/2.0:
+        galaxymax = galaxy[n.where(R < startR)].max()
+        tmp_mask[n.where(galaxy > galaxymax)] = 1
+        galaxy[n.where(tmp_mask == 1)] = 0.0
+        galaxy[n.where(R < startR)] = 0.0
+        startR += 1.0
+    tmp_mask = im.binary_fill_holes(tmp_mask)
+    tmp_mask = im.binary_erosion(tmp_mask)
     z = n.zeros((size,size))		
 #    print z
     for line_j in open(sex_cata,'r'):
@@ -96,6 +118,10 @@ def mask(cutimage, size, line_s, galflag):
         except:
             i=1
     if(galflag):
+        hdu = pyfits.PrimaryHDU(z.astype(n.float32))
+        hdu.writeto("TmpElliMask.fits")
+        z = z + tmp_mask
+        z[n.where(z > 0)] = 1
         hdu = pyfits.PrimaryHDU(z.astype(n.float32))
         hdu.writeto(mask_file)
     else:

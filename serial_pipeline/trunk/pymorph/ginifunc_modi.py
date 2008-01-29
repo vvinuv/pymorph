@@ -22,19 +22,20 @@ class gini:
            3. The Gini coefficient can be computed by the equation
              G = (1 / Avg(X) * n * (n-1)) * Sum over pixel[(2 * i - n -1 ) * X] 
            """
-	def __init__(self,z,ini_xcntr,ini_ycntr,pa,eg,r20,r80,extraction_radius,background,skysig):
+	def __init__(self,z,ini_xcntr,ini_ycntr,pa,eg,r20,r50,r80,extraction_radius,background,skysig):
 		self.z			= z
 		self.ini_xcntr		= ini_xcntr
 		self.ini_ycntr		= ini_ycntr
 		self.extraction_radius	= extraction_radius
 		self.r20		= r20
+                self.r50                = r50
 		self.r80		= r80
 		self.pa			= pa
 		self.eg			= eg
 		self.background		= background
 		self.skysig		= skysig
 		self.sigma		= 0.2*self.extraction_radius/1.5#the size of the boxcar
-		self.segmentation	= segmentation(self.z,self.ini_xcntr,self.ini_ycntr,self.pa,self.eg,self.background,self.r20,self.r80,self.extraction_radius,self.sigma,self.skysig,1)
+		self.segmentation	= segmentation(self.z,self.ini_xcntr,self.ini_ycntr,self.pa,self.eg,self.background,self.r20,self.r50,self.r80,self.extraction_radius,self.sigma,self.skysig,1)
 #		self.gini_coef		= gini_coef(self.segmentation)
 
 
@@ -49,7 +50,7 @@ def gauss_kern(size, sizey=None):
 	return g / g.sum()
 
 
-def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r80,extraction_radius,sigma,skysig,lower):
+def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r50,r80,extraction_radius,sigma,skysig,lower):
 	"""This function is resposible for find the segmentation map"""
 	def gini_coef(I):
 		"""This will calculate Gini Coefficient"""
@@ -106,12 +107,17 @@ def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r80,extractio
 	mo2=moment(I80, ini_xcntr, ini_ycntr)
 	M80 = mo2.moment_of_light[0]
 
+        I50=n.where(R>r50,0,zextract)
+        G50 = gini_coef(I50)
+        mo3=moment(I50, ini_xcntr, ini_ycntr)
+        M_50 = mo3.moment_of_light[0]
+
 	I20=n.where(R>r20,0,zextract)
         G20 = gini_coef(I20)
-	mo3=moment(I20, ini_xcntr, ini_ycntr)
-	M_20 = mo3.moment_of_light[0]
+	mo4=moment(I20, ini_xcntr, ini_ycntr)
+	M_20 = mo4.moment_of_light[0]
 #	print G, G_res, G80, G20, M, M_res, M80, M_20
-	return G, G_res, G80, G20, M, M_res, M80, M_20
+	return G, G_res, G80, G50, G20, M, M_res, M80, M_50, M_20
 
 #f=pyfits.open('n5585_lR.fits')
 #z=f[0].data

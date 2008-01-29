@@ -109,7 +109,7 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
 #    a = axes([0, 0, 150, 150], axisbg='y')
     subplot(235)
     nn, bins, patches = hist(residual, 100, normed=0)
-    goodness = float(nn[n.where(abs(bins) <= skysig)].sum()) / \
+    goodness = float(nn[n.where(abs(bins) <= skysig / 2.0)].sum()) / \
                float(nn.sum())
     nMaxArg = nn.argmax()
     if(nMaxArg < 16):

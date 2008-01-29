@@ -61,7 +61,7 @@ def mask(cutimage, size, line_s):
         startR += 1.0
     tmp_mask = im.binary_fill_holes(tmp_mask)
     tmp_mask = im.binary_erosion(tmp_mask)
-    f = pyfits.open('EM_' + str(cutimage))
+    f = pyfits.open('TmpElliMask.fits')
     ellip_mask = f[0].data
     f.close()
     tmp_mask[n.where(ellip_mask == 1)] = 0
@@ -109,3 +109,7 @@ def mask(cutimage, size, line_s):
     z[n.where(z > 0)] = 1
     hdu = pyfits.PrimaryHDU(z.astype(n.float32))
     hdu.writeto(mask_file)
+    try:
+        os.remove('TmpElliMask.fits')
+    except:
+        pass

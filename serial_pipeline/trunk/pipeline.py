@@ -437,7 +437,7 @@ def main():
                                         ElliMaskFunc(cutimage, c.size, \
                                                          line_s, 1)
                                 try:
-                                    caSgm = casgm(cutimage, ell_mask_file,\
+                                    caSgm = casgm(cutimage, 'TmpElliMask.fits',\
                                                 xcntr, ycntr, bxcntr, bycntr, \
                                                 eg, pos_ang, sky, skysig)
                                     C = caSgm[0]

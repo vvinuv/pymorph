@@ -1,4 +1,5 @@
 import pyfits,os,time,sys
+from os.path import exists
 import numpy as n
 import numpy.core.ma as ma
 import ndimage as im
@@ -169,7 +170,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 
         extraction_radius = con.total_rad
         print 'sky sigma ', skysig
-        gin = gini(z, xcntr, ycntr, 0, 0, r20, r80, extraction_radius, sky, skysig)
+        gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, extraction_radius, sky, skysig)
 #        gini_coef = gin.gini_coef
 	gini_coef = gin.segmentation
 #        print "GINI COEFFI ",gini_coef
@@ -186,9 +187,15 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 #        mo=moment(gin.segmentation, xcntr, ycntr)
 #        M=mo.moment_of_light[0]
 #        print "MOMENT ",M
-        f_tmp = open("agm_result_with_radius.csv", "ab")
         to_remove = len(c.rootname) + 2
-        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]),'\n'])
+        if exists("agm_result_with_radius.csv"):
+            pass
+        else:
+            f_tmp = open("agm_result_with_radius.csv", "ab")
+            f_tmp.writelines(['gal_id,C,C_err,A,A_err,A_flag,image_A,back_A,A_20,A_20_with_zsum,S,S_err,r20,r50,r80,extraction_radius,G,G_res,G80,G50,G20,M,M_res,M80,M50,M20\n'])
+            f_tmp.close()
+        f_tmp = open("agm_result_with_radius.csv", "ab")
+        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
         f_tmp.close()
 
         return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, gini_coef[0], gini_coef[4]
