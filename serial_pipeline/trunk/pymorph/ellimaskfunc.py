@@ -122,8 +122,8 @@ def mask(cutimage, size, line_s, galflag):
         except:
             i=1
     if(galflag):
-        if exists(("TmpElliMask1.fits"):
-            os.remove(("TmpElliMask1.fits")
+        if exists("TmpElliMask1.fits"):
+            os.remove("TmpElliMask1.fits")
         else:
             pass
         hdu = pyfits.PrimaryHDU(z1.astype(n.float32))
