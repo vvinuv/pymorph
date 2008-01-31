@@ -1,4 +1,5 @@
 import os
+from os.path import exists
 import sys
 import pyfits
 import numpy as n
@@ -66,6 +67,7 @@ def mask(cutimage, size, line_s, galflag):
     tmp_mask = im.binary_fill_holes(tmp_mask)
     tmp_mask = im.binary_erosion(tmp_mask)
     z = n.zeros((size,size))		
+    z1 = n.zeros((size,size))
 #    print z
     for line_j in open(sex_cata,'r'):
         try:
@@ -98,6 +100,7 @@ def mask(cutimage, size, line_s, galflag):
                 ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                 z[n.where(R<=mask_reg*maj_axis)] = 1
+                z1[n.where(R<=2*mask_reg*maj_axis)] = 1
             if(abs(xcntr_n - xcntr_o) < size/2.0 and \
                abs(ycntr_n - ycntr_o) < size/2.0 and galflag == 0):  
                 if((xcntr_o - xntr_n) < 0):
@@ -115,9 +118,16 @@ def mask(cutimage, size, line_s, galflag):
                 ty = (xn - 0.5 -x) * si + (y - yn + 0.5) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                 z[n.where(R<=mask_reg*maj_axis*2.0)] = 1
+                z1[n.where(R<=2*mask_reg*maj_axis)] = 1
         except:
             i=1
     if(galflag):
+        if exists(("TmpElliMask1.fits"):
+            os.remove(("TmpElliMask1.fits")
+        else:
+            pass
+        hdu = pyfits.PrimaryHDU(z1.astype(n.float32))
+        hdu.writeto("TmpElliMask1.fits")
         hdu = pyfits.PrimaryHDU(z.astype(n.float32))
         hdu.writeto("TmpElliMask.fits")
         z = z + tmp_mask

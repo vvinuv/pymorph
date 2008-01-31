@@ -61,7 +61,7 @@ def mask(cutimage, size, line_s):
         startR += 1.0
     tmp_mask = im.binary_fill_holes(tmp_mask)
     tmp_mask = im.binary_erosion(tmp_mask)
-    f = pyfits.open('TmpElliMask.fits')
+    f = pyfits.open('TmpElliMask1.fits')
     ellip_mask = f[0].data
     f.close()
     tmp_mask[n.where(ellip_mask == 1)] = 0
