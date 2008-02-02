@@ -45,36 +45,60 @@ def get_data(ticker):
     return c1
 
 def plot_profile(cutimage, outimage, maskimage, skysig):
-    data = get_data('E_' + str(cutimage)[:-4] + 'txt')
-    data1 = get_data('OE_' + str(cutimage)[:-4] + 'txt')
-    sma = data.sma		#sma from ellise fitting
-    flux = data.flux	#Flux at various sma
-    flux_err =data.flux_err	#Error in Flux
-    mag = data.mag		#Magnitude at various sma
-    mag_uerr = data.mag_uerr	#Upper error in magnitude
-    mag_lerr = data.mag_lerr	#lower error in Magnitude
-    sma1 = data1.sma		#sma from ellise fitting
-    flux1 = data1.flux	#Flux at various sma
-    flux_err1 =data1.flux_err	#Error in Flux
-    mag1 = data1.mag		#Magnitude at various sma
-    mag_uerr1 = data1.mag_uerr	#Upper error in magnitude
-    mag_lerr1 = data1.mag_lerr	#lower error in Magnitude
+    clf()
+    try:
+        data = get_data('E_' + str(cutimage)[:-4] + 'txt')
+        sma = data.sma		#sma from ellise fitting
+        flux = data.flux	#Flux at various sma
+        flux_err =data.flux_err	#Error in Flux
+        mag = data.mag		#Magnitude at various sma
+        mag_uerr = data.mag_uerr	#Upper error in magnitude
+        mag_lerr = data.mag_lerr	#lower error in Magnitude
+    except:
+        pass
+    try:
+        data1 = get_data('OE_' + str(cutimage)[:-4] + 'txt')
+        sma1 = data1.sma		#sma from ellise fitting
+        flux1 = data1.flux	#Flux at various sma
+        flux_err1 =data1.flux_err	#Error in Flux
+        mag1 = data1.mag		#Magnitude at various sma
+        mag_uerr1 = data1.mag_uerr	#Upper error in magnitude
+        mag_lerr1 = data1.mag_lerr	#lower error in Magnitude
+    except:
+        pass
     sc1=subplot(234)
     #sc1.scatter(sma, mag, s=10, alpha=0.75, c='r')
-    sc1.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3) 
+    try:
+        sc1.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3) 
+    except:
+        pass
     #fmt point type, ecolor point color, ms, point size
     #sc1.errorbar(sma1, mag1, [mag_uerr1,mag_lerr1], fmt='o',ecolor='g', ms=3)
-    sc1.plot(sma1, mag1,color='g',lw=2)
-    ymin = min(min(mag), min(mag1))
-    ymax = max(max(mag), max(mag1))
-    sc1.set_ylim(ymax, ymin)
-    Dx = abs(sc1.get_xlim()[0]-sc1.get_xlim()[1])
-    Dy = abs(sc1.get_ylim()[0]-sc1.get_ylim()[1])
-    sc1.set_aspect(Dx/Dy)
-    xlabel(r'Radius', size='medium')
-    ylabel(r'Surface Brightness', size='medium')
-    title('1-D Profile Comparison')
-    grid(True)
+    try:
+        sc1.plot(sma1, mag1,color='g',lw=2)
+        ymin = min(min(mag), min(mag1))
+        ymax = max(max(mag), max(mag1))
+        sc1.set_ylim(ymax, ymin)
+    except:
+        try:
+            ymin = min(mag)
+            ymax = max(mag)
+            sc1.set_ylim(ymax, ymin) 
+        except:
+            pass
+    try:
+        Dx = abs(sc1.get_xlim()[0]-sc1.get_xlim()[1])
+        Dy = abs(sc1.get_ylim()[0]-sc1.get_ylim()[1])
+        sc1.set_aspect(Dx/Dy)
+    except:
+        pass
+    try:
+        xlabel(r'Radius', size='medium')
+        ylabel(r'Surface Brightness', size='medium')
+        title('1-D Profile Comparison')
+        grid(True)
+    except:
+        pass
     #savefig('plot_' + str(cutimage)[6:-4] + 'png')
     #colorbar()
     #show()
@@ -105,12 +129,19 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     image1 = imshow(n.flipud(residual), cmap=cm.jet, \
                   extent=[0, size, 0, size], norm=anorm)
     maskedresidual = ma.masked_array(residual, mask)
-    residual = ma.filled(maskedresidual, value=0.0)
+    residual = ma.filled(maskedresidual, value=9999)
+    colorbar(shrink=0.90)
+    valid_pixels = ma.count(maskedresidual)
+    print 'valid_pixels', valid_pixels
+    pixels_in_skysig = residual[n.where(abs(residual) <= skysig / 2.0)].size
+    print 'pixels_in_skysig', pixels_in_skysig
+    goodness = pixels_in_skysig / float(valid_pixels)
+    hist_mask = n.zeros((size, size))
+    hist_mask[n.where(abs(residual) > skysig)] = 1
+    hist_res = ma.masked_array(residual, hist_mask)
 #    a = axes([0, 0, 150, 150], axisbg='y')
     subplot(235)
-    nn, bins, patches = hist(residual, 100, normed=0)
-    goodness = float(nn[n.where(abs(bins) <= skysig / 2.0)].sum()) / \
-               float(nn.sum())
+    nn, bins, patches = hist(hist_res, 100, normed=0)
     nMaxArg = nn.argmax()
     if(nMaxArg < 16):
         ArgInc = nMaxArg
@@ -127,9 +158,12 @@ def plot_profile(cutimage, outimage, maskimage, skysig):
     title('Difference Histogram')
 #    setp(a, xticks=[], yticks=[])
     subplot(236)
-    title('Mask')
-    image1 = imshow(n.flipud(mask), norm=anorm, cmap=cm.jet, \
-                  extent=[0, size, 0, size])
+    try:
+        title('Mask')
+        image1 = imshow(n.flipud(mask), cmap=cm.jet, \
+                        extent=[0, size, 0, size])
+    except:
+        pass
     savefig('P_' + str(cutimage)[:-4] + 'png')
 #    figure()
     close()

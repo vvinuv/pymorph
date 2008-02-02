@@ -224,7 +224,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta
              abs(disk_xcntr - xcntr) > c.center_deviation or \
              abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
-        img_notify = str(c.PYMORPH_PATH) + 'badfit.gif'
+        img_notify = str(c.PYMORPH_PATH) + '/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())
     outfile.close()

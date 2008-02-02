@@ -290,12 +290,12 @@ def main():
                         alpha_s = 9999
                         delta_s = 9999
                     sex_id = values[0]
-                    if(c.galcut == True):
-                        xcntr  = float(values[1])
-                        ycntr  = float(values[2])
-                    else:
-                        xcntr  = 9999
-                        ycntr  = 9999
+#                    if(c.galcut == True):
+                    xcntr  = float(values[1])
+                    ycntr  = float(values[2])
+#                    else:
+#                        xcntr  = 9999
+#                        ycntr  = 9999
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
                        abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
@@ -359,6 +359,7 @@ def main():
                                         bxcntr = Bkgd_Params.bkgd[0]
                                         bycntr = Bkgd_Params.bkgd[1]
                                         skysig = Bkgd_Params.bkgd[2]
+                                        print skysig
                                     except:
                                         f_err.writelines(['Could not',\
                                                   ' find the sky'\
@@ -615,7 +616,7 @@ def main():
                                 run = 0
 #                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
 #                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
-                            if(run == 1):
+                            if(run == 1 or run == 0):
                                 try:
                                     if exists('P_' + str(cutimage)[6:-4] \
                                               + 'png'):	
