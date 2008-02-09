@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys, pyfits
 from pylab import *
 import numpy as n
@@ -54,12 +55,14 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         residual = f[3].data
         f.close()
         anorm = normalize(galaxy.min(), 3.0*skysig) #Color normalization
-        residual0 = residual
         #Read mask
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
         f_mask.close()
         size = galaxy.shape[0]
+        residual0 = residual
+        Chi2Image = residual**2.0 / abs(galaxy)
+        MaskedChi2Image = ma.masked_array(Chi2Image, mask)
         maskedModel = ma.masked_array(model, mask)
         model = ma.filled(maskedModel, value=9999)
         #The calculations for Goodness is starting here
@@ -94,11 +97,14 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
 #                         galaxy[n.where(R <= TempRad)].sum()) * \
 #                         (ma.count(maskedresidual[n.where(R <= StartRad)]) -\
 #                          ma.count(maskedresidual[n.where(R <= TempRad)])))
-            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
-                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
-                         TempRad)])))**2.0 / \
-                         (galaxy[n.where(R <= StartRad)].sum() - \
-                         galaxy[n.where(R <= TempRad)].sum())
+#            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
+#                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
+#                         TempRad)])))**2.0 / \
+#                         (galaxy[n.where(R <= StartRad)].sum() - \
+#                         galaxy[n.where(R <= TempRad)].sum())
+            Chi2NuEle = (ma.sum(abs(MaskedChi2Image[n.where(R <= \
+                         StartRad)])))**2.0 / \
+                         (ma.count(MaskedChi2Image[n.where(R <= StartRad)]))
             try:
                 Chi2Nu.append(float(Chi2NuEle))
                 Chi2NuRad.append(StartRad)
@@ -106,6 +112,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
                 pass
             TempRad = StartRad
             StartRad += 1.0
+        print max(Chi2Nu), min(Chi2Nu)
     except:
         pass
     try:
@@ -140,18 +147,14 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         for i in range(len(sma)):
             for j in range(len(sma1)):
                 if sma[i] == sma1[j]:
-                    try:
-                        SmaCommon.append(sma[i])
-                        MagDev.append(mag[i] - mag1[j])
-                        FluxErr = n.sqrt((flux_err[i] / flux[i])**2.0 + \
-                                  (flux_err1[j]/flux1[j])**2.0)
-                        MagLErr.append((n.log10(flux[i]/flux1[j]) - \
-                                        n.log10((flux[i]/flux1[j]) - FluxErr)) \
-                                        * -2.5)
-                        MagUErr.append((n.log10((flux[i]/flux1[j]) + FluxErr) -\
-                                       (n.log10(flux[i]/flux1[j]))) * -2.5) 
-                    except:
-                        pass
+                    SmaCommon.append(sma[i])
+                    MagDev.append(mag[i] - mag1[j])
+                    FluxErr = n.sqrt((flux_err[i] / flux[i])**2.0 + \
+                              (flux_err1[j]/flux1[j])**2.0)
+                    MagLErr.append((n.log10(flux[i]/flux1[j]) - \
+                                   n.log10((flux[i]/flux1[j]) - FluxErr)) * -2.5)
+                    MagUErr.append((n.log10((flux[i]/flux1[j]) + FluxErr) - \
+                                   (n.log10(flux[i]/flux1[j]))) * -2.5) 
     except:
         pass
     #Plotting Starts
@@ -219,12 +222,41 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
                          fmt='o',ecolor='r', ms=3)
                 ylabel('Magnitude Deviation', size='medium')
                 xlabel('Radius', size='medium')
+                AX2 = twinx()
+                ylabel('Chi2', size='medium', rotation=270)
+                AX2 = twiny()
+                plot(Chi2NuRad, Chi2Nu, color='g', lw=2)
+                AX2.yaxis.tick_right()
+                majorLocator   = MultipleLocator(0.1)
+                majorLocator   = MultipleLocator(20)
+                AX2.xaxis.set_major_locator(majorLocator)
+#                AX2.xaxis.tick_top()
+                AX2.set_ylim(min(Chi2Nu), max(Chi2Nu))
                 grid(True)
-                Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
-                Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
-                axLM.set_aspect(Dx/Dy)
+#                Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
+#                Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
+#                axLM.set_aspect(Dx/Dy)
             except:
-                pass
+                try:
+                    errorbar(SmaCommon, MagDev, [MagUErr, MagLErr], \
+                             fmt='o',ecolor='r', ms=3)
+                    axLM.set_xlim(0, max(SmaCommon))
+                    xlabel(r'Radius', size='medium')
+                    grid(True)
+                    Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
+                    Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
+                    axLM.set_aspect(Dx/Dy)
+                except:        
+                    try:
+                        plot(Chi2NuRad, Chi2Nu, color='g', lw=2)
+                        axLM.set_xlim(0, max(Chi2NuRad))
+                        xlabel(r'Radius', size='medium')
+                        grid(True)
+                        Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
+                        Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
+                        axLM.set_aspect(Dx/Dy)
+                    except:
+                        pass
         elif GalEll:
             ymin = min(mag)
             ymax = max(mag)
@@ -237,9 +269,14 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
             ylabel(r'Surface Brightness', size='medium')
             title('1-D Profile Comparison')
             grid(True)
-            Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
-            Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
-            axLL.set_aspect(Dx/Dy)
+            axLM = axes(rect5)
+            try:
+                plot(Chi2NuRad, Chi2Nu, color='g', lw=2)
+                axLM.set_xlim(0, max(Chi2NuRad))
+                xlabel(r'Radius', size='medium')
+                grid(True)
+            except:
+                pass
         elif ModelEll:
             ymin = min(mag1)
             ymax = max(mag1)
@@ -252,12 +289,18 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
             ylabel(r'Surface Brightness', size='medium')
             title('1-D Profile Comparison')
             grid(True)
-            Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
-            Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
-            axLL.set_aspect(Dx/Dy)
+            axLM = axes(rect5)
+            try:
+                plot(Chi2NuRad, Chi2Nu, color='g', lw=2)
+                axLM.set_xlim(0, max(Chi2NuRad))
+                xlabel(r'Radius', size='medium')
+                grid(True)
+            except:
+                pass
     except:
         pass     
 #    show()
     savefig('P_' + str(cutimage)[:-4] + 'png')
     return goodness
-#PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.02)
+
+PlotFunc('Ij8f646_EDCSNJ1216462-1200073.fits', 'O_Ij8f646_EDCSNJ1216462-1200073.fits', 'M_Ij8f646_EDCSNJ1216462-1200073.fits', 61.0, 61.0, 0.06)
