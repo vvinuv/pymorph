@@ -188,6 +188,9 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         binmax = bins[nMaxArg + ArgInc]
         axis([binmin, binmax, 0.0, nMax])
         setp(patches, 'facecolor', 'g', 'alpha', 0.75)
+        xticks((binmin, binmin /2.0, 0.0, binmax/2.0, binmax),\
+                (str(binmin)[:5], str(binmin /2.0)[:5], str(0.0)[:3], \
+                 str(binmax/2.0)[:5], str(binmax)[:5]))
         grid(True)
         title('Difference Histogram')
         Dx = abs(axLR.get_xlim()[0]-axLR.get_xlim()[1])
