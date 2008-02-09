@@ -138,11 +138,12 @@ def main():
                          'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
                          'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
                          'Goodness', 'run', 'C', 'C_err', 'A', 'A_err', 'S', \
-                         'S_err', 'G', 'M', 'distance', 'fit', 'Comments'])
+                         'S_err', 'G', 'M', 'distance', 'fit', 'flag', \
+                         'Comments'])
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
-                         'Comments'])
+                         'flag', 'Comments'])
         f_res.close()
     f_cat = open(out_cata,'w')
     obj_file = open(clus_cata,'r')  #The file contains the objects of interest
@@ -370,7 +371,7 @@ def main():
                                                   'for casgm to find the sky'\
                                                   ' sigma and mean. Remove '\
                                                    'if BMask.fits exists\n'])
-
+                                Flag = 0
                                 #major axis of the object
                                 if(c.decompose):
                                     try:
@@ -404,16 +405,19 @@ def main():
                                                            'or err  or ',\
                                                           'test.tab exists\n'])
                                                 run = 0
+                                                Flag = Flag + 4
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(cutimage),'.pl or ',\
                                                        str(ell_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
+                                            Flag = Flag + 2
                                     except:
                                         f_err.writelines(['Error in making '\
                                                      'mask for ellipse task\n'])
                                         run = 0
+                                        Flag = Flag + 1
                             except:
                                 f_err.writelines(['The file ', str(whtimage), \
                                                   ' exists\n'])	
@@ -464,10 +468,12 @@ def main():
                                 except:
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
+                                    Flag = Flag + 16
 
                             except:
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
+                                Flag = Flag + 8
                         f_err.close()
                         os.system('rm -f BMask.fits MRotated.fits \
                                   MaskedGalaxy.fits Rotated.fits')
@@ -596,24 +602,29 @@ def main():
                                                       'GALFIT MIGHT BE '\
                                                       'CRASHED\n'])
                                                 run = 0
+                                                Flag = Flag + 512
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(outimage),'.pl or ',\
                                                        str(out_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
+                                            Flag = Flag + 256
                                     except:
                                         f_err.writelines(['Error in making '\
                                                 'out mask for ellipse task\n'])
                                         run = 0 
+                                        Flag = Flag + 128
                                 except:
                                     f_err.writelines(['Error in writing',\
                                                       ' configuration file\n'])	
                                     run = 0
+                                    Flag = Flag + 64
                             except:
                                 f_err.writelines(['Error in making mask for '\
                                                   'galfit\n'])
                                 run = 0
+                                Flag = Flag + 32
 #                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
 #                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
                             if(run == 1 or run == 0):
@@ -623,7 +634,7 @@ def main():
                                         os.system('rm ''P_' + str(cutimage)\
                                                    [6:-4] + 'png''')
                                     GoodNess = PlotFunc(cutimage, outimage, \
-                                               maskimage, skysig)
+                                               maskimage, xcntr, ycntr, skysig)
                                     Goodness = GoodNess.plot_profile
                                 except:
                                     f_err.writelines(['Error in plotting. '])
@@ -632,13 +643,14 @@ def main():
                                                           'Mask image\n'])
                                     run = 0	
                                     Goodness = 9999
+                                    Flag = Flag + 1024
                                 try:
                                     write_params(cutimage, xcntr, ycntr, \
                                                  distance, alpha1, \
                                                  alpha2, alpha3, delta1, \
                                                  delta2, delta3, z, Goodness, \
                                                  C, C_err, A, A_err, S, S_err, \
-                                                 G, M)
+                                                 G, M, Flag)
 #                                f_err.writelines(['(((((((((( Successful', \
  #                                                     ' ))))))))))\n'])
                                 except:
@@ -649,7 +661,7 @@ def main():
                                                      delta2, delta3, z, \
                                                      Goodness, 9999, 9999, 9999,\
                                                      9999, 9999, 9999, 9999, \
-                                                     9999)
+                                                     9999, Flag)
                                     except:
                                         f_err.writelines(['Error in writing '\
                                                           'html\n'])

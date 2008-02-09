@@ -69,6 +69,7 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
     iraf.geompar.maxsma=sma*5.0
     iraf.geompar.step=0.1
     iraf.geompar.recente="no"
+    iraf.geompar.xylearn="no"
     iraf.unlearn('controlpar')
     iraf.controlpar.conver=0.05
     iraf.controlpar.minit=10
@@ -85,7 +86,7 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
     iraf.samplepar.lsclip=3
     iraf.samplepar.nclip=0
     iraf.samplepar.fflag=0.5
-    iraf.magpar.mag0=0
+    iraf.magpar.mag0=c.mag_zero
     iraf.magpar.refer=1
     iraf.magpar.zerolev=0
     iraf.ellipse("".join(input), output="test", interac="no",Stdout="ellip", \

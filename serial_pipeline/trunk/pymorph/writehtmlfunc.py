@@ -8,7 +8,7 @@ class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
-    def __init__(self, cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+    def __init__(self, cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
         self.cutimage     = cutimage
         self.xcntr        = xcntr
         self.ycntr        = ycntr
@@ -29,9 +29,10 @@ class WriteHtmlFunc:
         self.S_err        = S_err
         self.G            = G
         self.M            = M
-        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
+        self.Flag         = Flag
+        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag)
 
-def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
     Goodness = float(str(round(Goodness, 3))[:5])
     f_tpl = open(str(c.PYMORPH_PATH) + '/default.html', 'r')
     template = f_tpl.read()
@@ -217,13 +218,16 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta
     else:
         if chi2nu > c.chi2sq:
             error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
+            Flag = Flag + 2048
         if Goodness < c.Goodness:
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
+            Flag = Flag + 4096
         if abs(bulge_xcntr - xcntr) > c.center_deviation or \
              abs(bulge_ycntr - ycntr) > c.center_deviation or \
              abs(disk_xcntr - xcntr) > c.center_deviation or \
              abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
+            Flag = Flag + 8192
         img_notify = str(c.PYMORPH_PATH) + '/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())
@@ -237,7 +241,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta
     f_res = open("result.csv", "ab")
     writer = csv.writer(f_res)
     galid = str(cutimage)[to_remove:-5]
-    writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance, good_fit])
+    writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance, good_fit, Flag])
     f_res.close()
 
     outfile1 = open('galfit.html', 'w')
