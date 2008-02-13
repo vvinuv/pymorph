@@ -155,7 +155,9 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
     except:
         pass
     #Plotting Starts
-    figure(1, figsize(8.0, 4.6))
+    print '1'
+    figure(1, figsize=(8.0, 4.6))
+    print '2'
     rect1 = [0.125, 0.5, 0.225, 1.5*0.225]
     rect2 = [3.25*0.125, 0.5, 0.225, 1.5*0.225]
     rect3 = [5.5*0.125, 0.5, 0.225, 1.5*0.225]
