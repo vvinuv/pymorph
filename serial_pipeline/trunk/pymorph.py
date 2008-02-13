@@ -288,8 +288,14 @@ def main():
                         alpha_s = float(values[3]) - (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
                         delta_s = float(values[4]) - (c.shiftdec) 
                     else:
-                        alpha_s = 9999
-                        delta_s = 9999
+                        try:
+                            alpha_j = float(values[3])
+                            delta_j = float(values[4])
+                            alpha_s = 9999
+                            delta_s = 9999 
+                        except:
+                            alpha_s = 9999
+                            delta_s = 9999 
                     sex_id = values[0]
 #                    if(c.galcut == True):
                     xcntr  = float(values[1])
@@ -301,6 +307,7 @@ def main():
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
                        abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
                         f_err = open('error.log', 'a') 
+                        print alpha_j, alpha_s 
                         if(c.galcut == True):
                             cutimage = gimg
                             whtimage = wimg
@@ -484,7 +491,7 @@ def main():
                         if(c.decompose):
                             try:
                                 if(c.repeat == False and cfile == 'None'):
-                                    if(alpha_j == -9999 or delta_j == -9999):
+                                    if(alpha_s == 9999 or delta_s == 9999):
                                         psffile = c.psflist[psfcounter]
                                         distance = 9999
                                         psfcounter += 1
@@ -494,7 +501,7 @@ def main():
                                         distance = psf_select(alpha_j, delta_j)\
                                                   [1] * 60.0 * 60.0
                                 else:
-                                    if(alpha_j == -9999 or delta_j == -9999):
+                                    if(alpha_s == 9999 or delta_s == 9999):
                                         distance = 9999
                                     else:
                                         p=pyfits.open(pfile)
@@ -646,9 +653,8 @@ def main():
                                     Flag = Flag + 1024
                                 try:
                                     write_params(cutimage, xcntr, ycntr, \
-                                                 distance, alpha1, \
-                                                 alpha2, alpha3, delta1, \
-                                                 delta2, delta3, z, Goodness, \
+                                                 distance, alpha_j, \
+                                                 delta_j, z, Goodness, \
                                                  C, C_err, A, A_err, S, S_err, \
                                                  G, M, Flag)
 #                                f_err.writelines(['(((((((((( Successful', \
@@ -656,10 +662,9 @@ def main():
                                 except:
                                     try:
                                         write_params(cutimage, xcntr, ycntr, \
-                                                     distance, alpha1,\
-                                                     alpha2, alpha3, delta1, \
-                                                     delta2, delta3, z, \
-                                                     Goodness, 9999, 9999, 9999,\
+                                                     distance, alpha_j,\
+                                                     delta_j, z, Goodness, \
+                                                     9999, 9999, 9999,\
                                                      9999, 9999, 9999, 9999, \
                                                      9999, Flag)
                                     except:

@@ -8,17 +8,13 @@ class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
-    def __init__(self, cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
+    def __init__(self, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
         self.cutimage     = cutimage
         self.xcntr        = xcntr
         self.ycntr        = ycntr
         self.distance     = distance
-        self.alpha1       = alpha1
-        self.alpha2       = alpha2
-        self.alpha3       = alpha3
-        self.delta1       = delta1
-        self.delta2       = delta2
-        self.delta3       = delta3
+        self.alpha_j      = alpha_j
+        self.delta_j      = delta_j
         self.z            = z
         self.Goodness     = Goodness
         self.C            = C
@@ -30,16 +26,50 @@ class WriteHtmlFunc:
         self.G            = G
         self.M            = M
         self.Flag         = Flag
-        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag)
+        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag)
 
-def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta1, delta2, delta3, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
+def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
     Goodness = float(str(round(Goodness, 3))[:5])
     f_tpl = open(str(c.PYMORPH_PATH) + '/default.html', 'r')
     template = f_tpl.read()
     f_tpl.close()
     outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
-    alpha_j = (alpha1 + (alpha2 + alpha3 / 60.0) / 60.0) * 15.0
-    delta_j = delta1 - (delta2 + delta3 / 60.0) / 60.0
+    ra1 = int(float(alpha_j) / 15.0)
+    ra2 = int((float(alpha_j) / 15.0 - int(float(alpha_j) / 15.0))*60.0)
+    ra3 = (((float(alpha_j) / 15.0 - int(float(alpha_j) / 15.0))*60.0) - ra2) * 60.0
+    dec1 = int(float(delta_j))
+    dec2 = abs(int((float(delta_j) - dec1) * 60.0))
+    dec3 = (abs(((float(delta_j) - dec1) * 60.0)) - dec2) * 60.0
+    if ra1 < 10:
+        alpha1 = '0' + str(ra1)
+    else:
+        alpha1 = ra1
+    if ra2 < 10:
+        alpha2 = '0' + str(ra2)
+    else:
+        alpha2 = ra2
+    if ra3 < 10:
+        alpha3 = '0' + str(int(ra3))
+    else:
+        alpha3 = int(ra3)
+    if abs(dec1) < 10:
+        delta1 = '0' + str(dec1)
+    if dec1 > 0:
+        try:
+            delta1 = '+' + str(delta1)
+        except:
+            delta1 = '+' + str(dec1)
+    else:
+        pass
+    if dec2 < 10:
+        delta2 = '0' + str(dec2)
+    else:
+        delta2 = dec2
+    if dec3 < 10:
+        delta3 = '0' + str(int(dec3))
+    else:
+        delta3 = int(dec3)
+    print delta1, delta2, delta3, alpha1, alpha2, alpha3
     if(c.repeat == False):
         for line_i in fileinput.input("index.html",inplace =1):
             line_i = line_i.strip()
@@ -259,5 +289,5 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha1, alpha2, alpha3, delta
     except:
         pass
     outfile1.close()
-#write_params('I_EDCSNJ1216453-1201176.fits', 60.0, 60.0, 47.86, 12, 34, 45, -12, 46, 34.6, 0.67, 0.9887, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999)
+#write_params('I_EDCSNJ1216453-1201176.fits', 60.0, 60.0, 47.86, 188.6875, -12.7763, 0.67, 0.9887, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 1024)
 
