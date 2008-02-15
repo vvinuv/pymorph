@@ -43,15 +43,15 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     if ra1 < 10:
         alpha1 = '0' + str(ra1)
     else:
-        alpha1 = ra1
+        alpha1 = str(ra1)
     if ra2 < 10:
         alpha2 = '0' + str(ra2)
     else:
-        alpha2 = ra2
+        alpha2 = str(ra2)
     if ra3 < 10:
-        alpha3 = '0' + str(int(ra3))
+        alpha3 = '0' + str(ra3)[:3]
     else:
-        alpha3 = int(ra3)
+        alpha3 = str(ra3)[:4]
     if abs(dec1) < 10:
         delta1 = '0' + str(dec1)
     if dec1 > 0:
@@ -66,9 +66,9 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     else:
         delta2 = dec2
     if dec3 < 10:
-        delta3 = '0' + str(int(dec3))
+        delta3 = '0' + str(dec3)[:3]
     else:
-        delta3 = int(dec3)
+        delta3 = str(dec3)[:4]
     print delta1, delta2, delta3, alpha1, alpha2, alpha3
     if(c.repeat == False):
         for line_i in fileinput.input("index.html",inplace =1):
