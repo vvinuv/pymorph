@@ -734,7 +734,6 @@ def selectpsf(ImG, CaT):
                 x2 = int(xcntr) - (size/2)
                 y1 = int(ycntr) + (size/2)
                 y2 = int(ycntr) - (size/2)
-                print size, x1, x2, y1, y2
                 ra1 = int(float(values[3]) / 15.0)
                 ra2 = int((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0)
                 ra3 = (((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0) - ra2) * 60.0
@@ -783,6 +782,8 @@ def selectpsf(ImG, CaT):
         except:
             pass
     PsfList = []
+    print 'Checking Started. You can just visually check the psf. You can do', \
+          'the thorough checking later'
     for element in psff:
         os.system('ds9 -zscale -zoom 2.0 ' + str(element))
         write = raw_input("Do you need the previous one? ")
@@ -793,7 +794,12 @@ def selectpsf(ImG, CaT):
                 os.remove(element)
             except:
                 pass
-    finish = 1
+    print 'Final Checking Started. If you are using psfselect = 2, be '\
+          'carefull!!! This is your last chance for selecting psf. '\
+          'Select ONLY GOOD psf. Press "y" to accept the previous psf. '\
+          'ENTER to go to the next one. This will continue until you press '\
+          '"0" when it asked Finished? ALL THE BEST!'
+    finish = 1 
     while finish:
         for element in PsfList:
             os.system('ds9 -zscale -zoom 2.0 ' + str(element))
