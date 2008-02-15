@@ -13,6 +13,11 @@ out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = 'j8f647'
 
 ###----Psf list----###
+psfselect = 0                         #0 => No psfselection
+                                      #1 => Only Select psf 
+                                      #2 => Select psf and run pipeline
+                                      #Recommended: Run with '1' and then run
+                                      #pipeline
 psflist = ['psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-1202057.fits','psf_1216487-1201246.fits','psf_1216504-1202104.fits']   
                                       #List of psf containg their 
                                       #position information in the 
@@ -72,7 +77,7 @@ cas = True
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
-PYMORPH_PATH = '/home/vinu/factory/cl1216-1201/j8f647/pymorph'
+PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9                          #< chi2sq

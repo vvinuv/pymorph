@@ -407,9 +407,11 @@ def main():
                                                      str(cutimage)[:-4] + 'txt'
                                                 if os.access(ell_out, os.F_OK):
                                                     os.remove(ell_out)
+                                                print 'trying'
                                                 run_elli(cutimage, ell_out,\
-                                                             xcntr, ycntr, eg, \
-                                                            pos_ang, major_axis)
+                                                         xcntr, ycntr, eg, \
+                                                         pos_ang, major_axis)
+                                                print 'OK'
                                             except:
                                                 f_err.writelines(['Error '\
                                                            'in ellipse ',\
@@ -501,7 +503,21 @@ def main():
                                 if(c.repeat == False and cfile == 'None'):
                                     if(alpha_s == 9999 or delta_s == 9999):
                                         psffile = c.psflist[psfcounter]
-                                        distance = 9999
+                                        try:
+                                            p=pyfits.open(pfile)
+                                            header = p[0].header
+                                            if(header.has_key('RA_TARG')):
+                                                ra_p = header['RA_TARG']
+                                            if (header.has_key('DEC_TARG')):
+                                                dec_p = header['DEC_TARG']
+                                            p.close()
+                                            r = 3.14159265 / 180.0
+                                            distance = 3600.0*n.sqrt((delta_j\
+                                                       - dec_p)**2.0 + \
+                                                       ((alpha_j - ra_p) * \
+                                                       n.cos(delta_j * r))**2.0)
+                                        except:
+                                            distance = 9999
                                         psfcounter += 1
                                     else:
                                         psffile = psf_select(alpha_j, delta_j)\
@@ -701,8 +717,157 @@ def main():
         except:
             pass
     f_cat.close()
+def selectpsf(ImG, CaT):
+    psff = []
+    im = pyfits.open(ImG)
+    image = im[0].data
+    im.close()
+    for line in open(CaT,'r'):
+        values = line.split()
+        try:
+            if float(values[16]) >= 0.8:
+                xcntr = float(values[1]) - 1
+                ycntr = float(values[2]) - 1
+                #size of the psf is 8 times the sigma assuming the star has 
+                #Gaussian profile
+                size = n.floor(float(values[16]) / 2.35) * 8  
+                x1 = int(xcntr) + (size/2)
+                x2 = int(xcntr) - (size/2)
+                y1 = int(ycntr) + (size/2)
+                y2 = int(ycntr) - (size/2)
+                ra1 = int(float(values[3]) / 15.0)
+                ra2 = int((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0)
+                ra3 = (((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0) - ra2) * 60.0
+                dec1 = int(float(values[4]))
+                dec2 = abs(int((float(values[4]) - dec1) * 60.0))
+                dec3 = (abs(((float(values[4]) - dec1) * 60.0)) - dec2) * 60.0
+                if ra1 < 10:
+                    ra11 = '0' + str(ra1)
+                else:
+                    ra11 = str(ra1)
+                if ra2 < 10:
+                    ra22 = '0' + str(ra2)
+                else:
+                    ra22 = str(ra2)
+                if ra3 < 10:
+                    ra33 = '0' + (str(n.round(ra3, 1))[:3]).split('.')[0] + \
+                                 (str(n.round(ra3, 1))[:3]).split('.')[1] 
+                else:
+                    ra33 = (str(n.round(ra3, 1))[:4]).split('.')[0] + \
+                           (str(n.round(ra3, 1))[:4]).split('.')[1]
+                if abs(dec1) < 10:
+                    if dec1 < 0.0:
+                        dec11 = '-0' + str(abs(dec1))
+                    else:
+                        dec11 = '+0' + str(abs(dec1))
+                else:
+                    if dec1 < 0.0:
+                        dec11 = str(dec1)
+                    else:
+                        dec11 = '+' + str(dec1)
+                if dec2 < 10:
+                    dec22 = '0' + str(dec2)
+                else:
+                    dec22 = str(dec2)
+                if dec3 < 10:
+                    dec33 = '0' + (str(n.round(dec3, 1))[:3]).split('.')[0] +\
+                                  (str(n.round(dec3, 1))[:3]).split('.')[1]
+                else:
+                    dec33 = (str(n.round(dec3, 1))[:4]).split('.')[0] +\
+                            (str(n.round(dec3, 1))[:4]).split('.')[1]
+                psffile = 'psf_' + str(ra11) + str(ra22) + str(ra33) + str(dec11) +str(dec22) + str(dec33) + '.fits'
+                psff.append(psffile)
+                psf = image[y2:y1, x2:x1]
+                hdu = pyfits.PrimaryHDU(psf.astype(n.float32))
+                hdu.writeto(psffile)
+        except:
+            pass
+    PsfList = []
+    for element in psff:
+        os.system('ds9 -zscale -zoom 2.0 ' + str(element))
+        write = raw_input("Do you need the previous one? ")
+        if write == 'y':
+            PsfList.append(element)
+        else:
+            try:
+                os.remove(element)
+            except:
+                pass
+    finish = 1
+    while finish:
+        for element in PsfList:
+            os.system('ds9 -zscale -zoom 2.0 ' + str(element))
+            write = raw_input("Do you REALLY need the previous one? ") 
+            if write == 'y':
+                fff = open('psflist.list', 'ab')
+                fff.writelines([str(element), '\n'])
+                fff.close()
+            else:
+                try:
+                    os.remove(element)
+                except:
+                    pass
 
-main()
+if __name__ == '__main__':
+    sex_cata = c.sex_cata
+    def runpsfselect():
+        if(c.galcut):   #Given galaxy cutouts
+            obj_file = open(c.clus_cata,'r') 
+            pnames = obj_file.readline().split() 
+            pdb = {}                        #The parameter dictionary
+            for line_j in obj_file:
+                try:
+                    values = line_j.split()
+                    k = 0
+                    for pname in pnames:
+                        pdb[pname] = values[k]
+                        k += 1
+                    try:
+                        gal_id = pdb["gal_id"]
+                    except:
+                        try:
+                            gal_id = pdb["gimg"][:-5]
+                        except:
+                            print "No image or gal_id found in the object \
+                                  catalogue. Exiting"
+                            os._exit(0)
+                    try:
+                        gimg = pdb["gimg"]    #Galaxy cutout
+                    except:
+                        if exists('I' + str(c.rootname) + '_' \
+                                   + str(gal_id) + '.fits'):
+                            gimg = 'I' + str(c.rootname) + '_' \
+                                    + str(gal_id) + '.fits'
+                        else:
+                            print "No image found. Exiting"
+                            os._exit(0)
+                    try:
+                        wimg = pdb["wimg"]   #Weight cut
+                    except:
+                        wimg = 'None'
+                    if exists(sex_cata): 
+                        pass
+                    else:
+                        RunSex(gimg, wimg)
+                    try:
+                        selectpsf(gimg, sex_cata)
+                    except:
+                        pass
+                    if os.access(sex_cata, os.F_OK):
+                        os.remove(sex_cata)
+                except:
+                    pass
+            obj_file.close()  
+        else:
+            selectpsf(c.imagefile, sex_cata)
+    if c.psfselect == 2:
+        runpsfselect()
+        c.psflist = '@psflist.list'
+        main()
+    elif c.psfselect == 1:
+        runpsfselect()
+    elif c.psfselect == 0:
+        main()
 #Filename conventions
 #Suppose imagefile = j8f645-1-1_drz_sci.fits
 #and gal_id = 9999, then
