@@ -27,6 +27,14 @@ def main():
     sex_cata = c.sex_cata
     clus_cata = c.clus_cata
     out_cata = c.out_cata
+    try:
+        if c.psflist.startswith('@'):
+            psffi = open(c.psflist.split('@')[1], 'r')
+            c.psflist = []
+            for pline in psffi: 
+                c.psflist.append(pline.split()[0])
+    except:
+        pass       
     size = c.size / 2  #The keyword size NOT c.size will be used only in the case of galcut = False
     threshold = c.threshold
     thresh_area = c.thresh_area
