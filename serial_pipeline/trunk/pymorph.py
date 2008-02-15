@@ -407,11 +407,9 @@ def main():
                                                      str(cutimage)[:-4] + 'txt'
                                                 if os.access(ell_out, os.F_OK):
                                                     os.remove(ell_out)
-                                                print 'trying'
                                                 run_elli(cutimage, ell_out,\
                                                          xcntr, ycntr, eg, \
                                                          pos_ang, major_axis)
-                                                print 'OK'
                                             except:
                                                 f_err.writelines(['Error '\
                                                            'in ellipse ',\
@@ -725,16 +723,18 @@ def selectpsf(ImG, CaT):
     for line in open(CaT,'r'):
         values = line.split()
         try:
-            if float(values[16]) >= 0.8:
+            if float(values[16]) >= 0.8 and float(values[13]) > 40.0 and \
+                float(values[14]) < 50.0:
                 xcntr = float(values[1]) - 1
                 ycntr = float(values[2]) - 1
                 #size of the psf is 8 times the sigma assuming the star has 
                 #Gaussian profile
-                size = n.floor(float(values[16]) / 2.35) * 8  
+                size = n.floor(float(values[14])) * 20  
                 x1 = int(xcntr) + (size/2)
                 x2 = int(xcntr) - (size/2)
                 y1 = int(ycntr) + (size/2)
                 y2 = int(ycntr) - (size/2)
+                print size, x1, x2, y1, y2
                 ra1 = int(float(values[3]) / 15.0)
                 ra2 = int((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0)
                 ra3 = (((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0) - ra2) * 60.0
@@ -799,14 +799,23 @@ def selectpsf(ImG, CaT):
             os.system('ds9 -zscale -zoom 2.0 ' + str(element))
             write = raw_input("Do you REALLY need the previous one? ") 
             if write == 'y':
+                PsfList.remove(element)
                 fff = open('psflist.list', 'ab')
                 fff.writelines([str(element), '\n'])
                 fff.close()
             else:
-                try:
-                    os.remove(element)
-                except:
-                    pass
+                pass
+        fi = raw_input("Finished? ") 
+        if fi == '0' or fi == '1':
+            finish = int(fi)
+            if finish == 0:
+                for element in PsfList:
+                    try:
+                        os.remove(element)
+                    except:
+                        pass
+        else:
+            finish = 1
 
 if __name__ == '__main__':
     sex_cata = c.sex_cata
