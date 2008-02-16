@@ -273,6 +273,10 @@ def main():
                 bycntr = float(pdb["bycntr"])
             except:
                 bycntr = 9999
+            try:
+                c.mag_zero = float(pdb["mzero"])
+            except:
+                c.mag_zero = c.mag_zero
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
@@ -314,8 +318,10 @@ def main():
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
                        abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
+                        if(alpha_j == -9999 and delta_j == -9999):
+                            alpha_j = alpha_s
+                            delta_j = delta_s
                         f_err = open('error.log', 'a') 
-                        print alpha_j, alpha_s 
                         if(c.galcut == True):
                             cutimage = gimg
                             whtimage = wimg
@@ -357,7 +363,7 @@ def main():
                                     ycntr = size + 1.0 + ycntr_o - int(ycntr_o)
                                 mag    = float(values[7]) #Magnitude
                                 radius = float(values[9]) #Half light radius
-                                mag_zero = 25.256 #magnitude zero point
+                                mag_zero = c.mag_zero #magnitude zero point
                                 sky  = float(values[10]) #sky
                                 pos_ang = pa(values[11])
                                 axis_rat = 1.0 / float(values[12]) #axis ration b/a
@@ -786,9 +792,18 @@ def selectpsf(ImG, CaT):
           'the thorough checking later'
     for element in psff:
         os.system('ds9 -zscale -zoom 2.0 ' + str(element))
-        write = raw_input("Do you need the previous one? ")
+        write = raw_input("Do you need the previous one? ('y' if yes, 'c'"\
+                          " to cancel psf checking)" )
         if write == 'y':
             PsfList.append(element)
+            psff.remove(element)
+        elif write == 'c':
+            for element1 in psff:
+                try:
+                    os.remove(element1)
+                except:
+                    pass
+            break
         else:
             try:
                 os.remove(element)
@@ -825,6 +840,18 @@ def selectpsf(ImG, CaT):
 
 if __name__ == '__main__':
     sex_cata = c.sex_cata
+    if exists(sex_cata):
+        pass
+    elif(c.galcut == False):
+        print 'The SExtractor catalogue for your frame is NOT found. ' \
+              'One is making using the default values. It is always '\
+              'recommended to make SExtractor catalogue by YOURSELF as '\
+              'the pipeline keep the sky value at the SExtractor value '\
+              'during the decomposition.'
+        if exists(c.whtfile):
+            RunSex(c.imagefile, c.whtfile)
+        else:
+            RunSex(c.imagefile, 'None')
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
             obj_file = open(c.clus_cata,'r') 
@@ -883,21 +910,3 @@ if __name__ == '__main__':
         runpsfselect()
     elif c.psfselect == 0:
         main()
-#Filename conventions
-#Suppose imagefile = j8f645-1-1_drz_sci.fits
-#and gal_id = 9999, then
-#cutimage = image_j8f645_9999.fits, the cut out of the galaxy
-#whtimage = wht_j8f645_9999.fits, correspoding weight image for the cuts
-#maskfile = mask_j8f645_9999.fits, galfit mask
-#ell_mask_file = ell_mask_j8f645_9999.fits, mask for ellipse task
-#ell_mask_j8f645_9999.fits will be converted to ell_mask_j8f645_9999.fits.pl for ellipse task
-#config_file = gal_j8f645_9999.in , configuration file for GALFIT
-#The ouput image from galfit out_j8f645_9999.fits
-#The parameters from galfit is image_j8f645_9999.txt, if use the modified GALFIT by Vinu Vikram
-#The output parametrs will be append to the file fit2.log
-#The process status of the pipeline can be seen in the file error.log
-#The ellipse task output of input image elli_j8f645_9999.txt
-#The ellipse task output of output image out_elli_j8f645_9999.txt
-#The plot of input, output, residue images and the 1-D profile comparison can be seen in plot_j8f645_9999.png
-#The html output including the figures and parameters will be in the file result_j8f645_9999.html
-#The index file of all the fit will be in index.html
