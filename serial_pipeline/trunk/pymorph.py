@@ -408,7 +408,7 @@ def main():
                                             os.remove(plfile)
                                         try:
                                             iraf.imcopy(ell_mask_file, \
-                                                       plfile)
+                                                       plfile, verbose='no')
                                             try:
                                                 ell_out = 'E_' + \
                                                      str(cutimage)[:-4] + 'txt'
@@ -417,6 +417,9 @@ def main():
                                                 run_elli(cutimage, ell_out,\
                                                          xcntr, ycntr, eg, \
                                                          pos_ang, major_axis)
+                                                if os.access(plfile, os.F_OK):
+                                                    os.remove(plfile)
+
                                             except:
                                                 f_err.writelines(['Error '\
                                                            'in ellipse ',\
@@ -610,13 +613,17 @@ def main():
                                         out_mask_file = 'OEM_' + \
                                                          str(outimage)[:-5] + \
                                                         '.fits'
-                                        outplfile = str(outimage) + '.pl'
+                                        outplfile = 'S' + str(outimage) + '.pl'
                                         if os.access(outplfile, os.F_OK):
                                             os.remove(outplfile)
                                         try:
+                                            outmodel = 'S' + outimage 
+                                            iraf.imcopy(outimage + '[2]', \
+                                                       outmodel, verbose='no')
+                                            iraf.flpr()
                                             iraf.imcopy(out_mask_file, \
-                                                       outplfile)
-
+                                                       outplfile, verbose='no')
+                                            iraf.flpr()
                                             try:
                                                 ell_output = 'OE_' + \
                                                      str(cutimage)[:-4] + 'txt'
@@ -637,13 +644,18 @@ def main():
                                                 except:
                                                     MoX = xcntr
                                                     MoY = ycntr
-                                                outmodel = outimage + '[2]'  
                                                 run_elli(outmodel, ell_output,\
                                                          MoX, MoY, eg, \
                                                          pos_ang, major_axis)
+                                                iraf.flpr()
+                                                for myfile in [outplfile, \
+                                                               outmodel]:
+                                                    if os.access(myfile, \
+                                                                 os.F_OK):
+                                                        os.remove(myfile) 
                                             except:
-                                                f_err.writelines(['Error in \
-                                                           ellipse '\
+                                                f_err.writelines(['Error in '\
+                                                          'ellipse '\
                                                           'task. Check ', \
                                                           'whether ' ,\
                                                            str(ell_output) ,\

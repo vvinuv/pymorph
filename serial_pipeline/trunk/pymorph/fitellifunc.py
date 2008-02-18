@@ -89,6 +89,7 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
     iraf.magpar.mag0=c.mag_zero
     iraf.magpar.refer=1
     iraf.magpar.zerolev=0
+    iraf.unlearn('ellipse')
     iraf.ellipse("".join(input), output="test", interac="no",Stdout="ellip", \
                  Stderr="err")
     iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \
