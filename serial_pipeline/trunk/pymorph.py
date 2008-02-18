@@ -8,6 +8,7 @@ import csv
 import pyfits
 import numpy as n
 from pyraf import iraf
+from ndimage import center_of_mass
 import config as c
 from maskfunc import *
 from configfunc import *
@@ -622,9 +623,23 @@ def main():
                                                 if os.access(ell_output, \
                                                              os.F_OK):
                                                     os.remove(ell_output)  
+                                                try:
+                                                    FMo=pyfits.open(outimage)
+                                                    MoDel = f[2].data
+                                                    FMo.close()
+                                                    MoShapX = MoDel.shape[0] /2
+                                                    MoShapY = MoDel.shape[1] /2
+                                                    MoCen = center_of_mass( \
+                                                    MoDel[MoShapY-5:MoShapY+5, \
+                                                          MoShapX-5:MoShapX+5])
+                                                    MoX = MoShapX + MoCen[1] -5
+                                                    MoY = MoShapY + MoCen[0] -5
+                                                except:
+                                                    MoX = xcntr
+                                                    MoY = ycntr
                                                 outmodel = outimage + '[2]'  
                                                 run_elli(outmodel, ell_output,\
-                                                         xcntr, ycntr, eg, \
+                                                         MoX, MoY, eg, \
                                                          pos_ang, major_axis)
                                             except:
                                                 f_err.writelines(['Error in \
