@@ -35,8 +35,22 @@ def main():
             for pline in psffi: 
                 c.psflist.append(pline.split()[0])
     except:
-        pass       
-    size = c.size / 2  #The keyword size NOT c.size will be used only in the case of galcut = False
+        pass     
+    ReSize = c.size[0]
+    try:
+        VarSize = c.size[1]
+    except:
+        if ReSize:
+            VarSize = 1
+    try:
+        FracRad = c.size[2]  
+    except:
+        FracRad = 20
+    if VarSize == 0:
+        try:
+            FixSize = c.size[3]
+        except:
+            FixSize = 120
     threshold = c.threshold
     thresh_area = c.thresh_area
     if exists('index.html'):
@@ -209,7 +223,9 @@ def main():
             except:
                 if exists('I' + str(c.rootname) + '_' + str(gal_id) + '.fits'):
                     gimg = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits'
-                else: 
+                elif exists(str(gal_id) + '.fits'): 
+                    gimg = str(gal_id) + '.fits'
+                else:
                     gimg = 'None'
             try:
                 wimg = pdb["wimg"]   #Weight cut
@@ -251,19 +267,20 @@ def main():
                     ggimg = pyfits.open(gimg)
                     ggimage = ggimg[0].data
                     ggimg.close()
-                    c.size = ggimage.shape[0]
+                    SizeXX = ggimage.shape[0]
+                    SizeYY = ggimage.shape[1]
             try:
                 ximg = float(pdb["ximg"])
             except:
                 if(c.galcut == True):
-                    ximg = c.size / 2.0
+                    ximg = SizeXX / 2.0
                 else:
                     ximg = -9999
             try:
                 yimg = float(pdb["yimg"])
             except:
                 if(c.galcut == True):
-                    yimg = c.size / 2.0
+                    yimg = SizeYY / 2.0
                 else:
                     yimg = -9999
             try:
@@ -319,24 +336,61 @@ def main():
                     if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
                        abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
+                        mag    = float(values[7]) #Magnitude
+                        radius = float(values[9]) #Half light radius
+                        mag_zero = c.mag_zero #magnitude zero point
+                        sky  = float(values[10]) #sky
+                        pos_ang = pa(values[11])
+                        axis_rat = 1.0 / float(values[12]) #axis ration b/a
+                        eg = 1 - axis_rat
+                        ArcR = pos_ang * (3.14 / 180.0)
+                        if(eg<=0.05):
+                            eg = 0.07
+                        major_axis = float(values[14])
                         if(alpha_j == -9999 and delta_j == -9999):
                             alpha_j = alpha_s
                             delta_j = delta_s
                         f_err = open('error.log', 'a') 
                         if(c.galcut == True):
-                            cutimage = gimg
-                            whtimage = wimg
+                            if ReSize:
+                                cutimage = 'I' + gimg
+                                whtimage = 'I' + wimg
+                            else:
+                                cutimage = gimg
+                                whtimage = wimg                
                         else:
                             cutimage = 'I' + str(c.rootname) + '_' + \
                                         str(gal_id) + '.fits'
                             whtimage = 'W' + str(c.rootname) + '_' + \
                                         str(gal_id) + '.fits'
-                            xcntr  = float(values[1])
-                            ycntr  = float(values[2])
-                            xmin = int(xcntr) - (size + 1)
-                            ymin = int(ycntr) - (size + 1)
-                            xmax = int(xcntr) + (size - 1)
-                            ymax = int(ycntr) + (size - 1)
+                        SizeX = major_axis * FracRad * abs(n.cos(ArcR)) + \
+                             axis_rat * major_axis * FracRad * abs(n.sin(ArcR)) 
+                        SizeY = major_axis * FracRad * abs(n.sin(ArcR)) + \
+                             axis_rat * major_axis * FracRad * abs(n.cos(ArcR))
+                        print SizeX, SizeY, pos_ang
+                        if c.galcut:
+                            if Resize:
+                                if VarSize:
+                                    pass
+                                else:
+                                    SizeX = FixSize
+                                    SizeY = FixSize
+                            else:
+                                SizeX = SizeXX
+                                SizeY = SizeYY
+                        else:
+                            if VarSize:
+                                pass
+                            else:
+                                SizeX = FixSize
+                                SizeY = FixSize        
+                        xcntr  = float(values[1])
+                        ycntr  = float(values[2])
+                        xmin = int(xcntr - (SizeX / 2 + 1))
+                        ymin = int(ycntr - (SizeY / 2 + 1))
+                        xmax = int(xcntr + (SizeX / 2 - 1))
+                        ymax = int(ycntr + (SizeY / 2 - 1))
+                        print xmin, ymin, xmax, ymax
                         f_err.writelines(['\n\n###########   ', str(gal_id), \
                                           '   ###########\n'])
                         run = 1 #run =1 when pipeline runs sucessfuly
@@ -350,6 +404,17 @@ def main():
                                 except:
                                     pass
                                 hdu.writeto(cutimage)
+                                
+                            if(c.repeat == False and c.galcut and ReSize):
+                                ZcuT = pyfits.open(gimg)
+                                ZcuT1 = ZcuT[ymin:ymax,xmin:xmax]
+                                hdu = pyfits.PrimaryHDU(ZcuT1.astype(n.float32))
+                                try:
+                                    hdu.header.update('RA_TARG', alpha_j)
+                                    hdu.header.update('DEC_TARG', delta_j)
+                                except:
+                                    pass
+                                hdu.writeto(cutimage)
                             try:
                                 if(c.repeat == False and c.galcut == False):
                                     if exists(whtfile): 
@@ -357,24 +422,29 @@ def main():
                                         hdu = pyfits.PrimaryHDU(z2.astype\
                                               (n.float32))
                                         hdu.writeto(whtimage)
-                                if(c.galcut == False):
-                                    xcntr_o  = xcntr #x center of the object
-                                    ycntr_o  = ycntr #y center of the object
-                                    xcntr = size + 1.0 + xcntr_o - int(xcntr_o)
-                                    ycntr = size + 1.0 + ycntr_o - int(ycntr_o)
-                                mag    = float(values[7]) #Magnitude
-                                radius = float(values[9]) #Half light radius
-                                mag_zero = c.mag_zero #magnitude zero point
-                                sky  = float(values[10]) #sky
-                                pos_ang = pa(values[11])
-                                axis_rat = 1.0 / float(values[12]) #axis ration b/a
-                                eg = 1 - axis_rat
-                                if(eg<=0.05):
-                                    eg = 0.07
-                                major_axis = float(values[14])
+                                if(c.repeat == False and c.galcut and ReSize):
+                                    if exists(whtfile):
+                                        WZcuT = pyfits.open(wimg)
+                                        WZcuT1 = WZcuT[ymin:ymax,xmin:xmax]
+                                        hdu = pyfits.PrimaryHDU(WZcuT1.astype\
+                                                                (n.float32))
+                                        hdu.writeto(whtimage)
+                                Gal = pyfits.open(cutimage)
+                                GalaxyCuT = Gal[0].data
+                                Gal.close()
+                                GalaxyCuT = n.swapaxes(GalaxyCuT, 0, 1) 
+                                SizeX = GalaxyCuT.shape[0]
+                                SizeY = GalaxyCuT.shape[1]
+                                CenterS = center_of_mass( \
+                                        GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
+                                                  SizeY / 2 - 5:SizeY / 2 + 5])
+                                xcntr = SizeX / 2 + CenterS[1] - 5
+                                ycntr = SizeY / 2 + CenterS[0] - 5
+                                print cutimage,xcntr, ycntr, SizeX, SizeY
                                 try:
-                                #The following function provide the center of blank sky region and the sky sigma
-                                    ElliMaskFunc(cutimage, c.size, line_s, 0)
+                                #The following function provide the center of blank sky region and the sky sigma    
+                                    ElliMaskFunc(cutimage, xcntr, ycntr, \
+                                                 SizeX, SizeY, line_s, 0)
                                     try:
                                         Bkgd_Params = BkgdFunc(cutimage, \
                                                 xcntr, ycntr, bxcntr, bycntr, \
@@ -398,8 +468,9 @@ def main():
                                 if(c.decompose):
                                     try:
                                         if(c.repeat == False):
-                                            ElliMaskFunc(cutimage, c.size, \
-                                                         line_s, 1)
+                                            ElliMaskFunc(cutimage, xcntr, \
+                                                         ycntr, SizeX, \
+                                                         SizeY, line_s, 1)
                                         ell_mask_file = 'EM_' + \
                                                          str(cutimage)[:-5] + \
                                                         '.fits'
@@ -461,11 +532,12 @@ def main():
                                         if exists(ell_mask_file):
                                             pass
                                         else:
-                                            ElliMaskFunc(cutimage, c.size, \
-                                                         line_s, 1)
+                                            ElliMaskFunc(cutimage, xcntr, \
+                                                         ycntr, SizeX, \
+                                                         SizeY, line_s, 1)
                                     else:
-                                        ElliMaskFunc(cutimage, c.size, \
-                                                         line_s, 1)
+                                        ElliMaskFunc(cutimage, xcntr, ycntr,\
+                                                     SizeX, SizeY, line_s, 1)
                                 try:
                                     caSgm = casgm(cutimage, 'TmpElliMask.fits',\
                                                 xcntr, ycntr, bxcntr, bycntr, \
@@ -570,7 +642,8 @@ def main():
                                     if c.manual_mask:
                                         ManualMaskManager(cutimage)
                                     else:
-                                        MaskFunc(cutimage, c.size, line_s)
+                                        MaskFunc(cutimage, xcntr, ycntr, \
+                                                 SizeX, SizeY, line_s)
                                     maskimage = 'M_' + str(cutimage)[:-5] +\
                                                 '.fits'
                                 else:
@@ -581,11 +654,13 @@ def main():
                                         if c.manual_mask:
                                             ManualMask(cutimage)
                                         else:
-                                            MaskFunc(cutimage, c.size, line_s)
+                                            MaskFunc(cutimage, xcntr, ycntr, \
+                                                     SizeX, SizeY, line_s)
                                 try:
                                     if(cfile == 'None'):
-                                        ConfigFunc(cutimage, whtimage, c.size,\
-                                                   line_s, psffile)
+                                        ConfigFunc(cutimage, whtimage,  xcntr,\
+                                                   ycntr, SizeX, \
+                                                   SizeY, line_s, psffile)
                                         config_file = 'G_' + \
                                                        str(cutimage)[:-5]+ '.in'
                                         outimage = 'O_' + str(cutimage)
@@ -608,8 +683,9 @@ def main():
                                     f_fit.close()
                                     try:
                                         if(c.repeat == False):
-                                            OutMaskFunc(outimage, c.size, \
-                                                       line_s)
+                                            OutMaskFunc(outimage, xcntr, \
+                                                        ycntr,  SizeX, \
+                                                        SizeY, line_s)
                                         out_mask_file = 'OEM_' + \
                                                          str(outimage)[:-5] + \
                                                         '.fits'
@@ -762,11 +838,11 @@ def selectpsf(ImG, CaT):
                 ycntr = float(values[2]) - 1
                 #size of the psf is 8 times the sigma assuming the star has 
                 #Gaussian profile
-                size = n.floor(float(values[14])) * 20  
-                x1 = int(xcntr) + (size/2)
-                x2 = int(xcntr) - (size/2)
-                y1 = int(ycntr) + (size/2)
-                y2 = int(ycntr) - (size/2)
+                PsfSize = n.floor(float(values[14])) * 20  
+                x1 = int(xcntr) + (PsfSize/2)
+                x2 = int(xcntr) - (PsfSize/2)
+                y1 = int(ycntr) + (PsfSize/2)
+                y2 = int(ycntr) - (PsfSize/2)
                 ra1 = int(float(values[3]) / 15.0)
                 ra2 = int((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0)
                 ra3 = (((float(values[3]) / 15.0 - int(float(values[3]) / 15.0))*60.0) - ra2) * 60.0

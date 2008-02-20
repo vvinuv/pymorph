@@ -43,7 +43,7 @@ threshold = 3.0                       #Masking will be done for neighbours
                                       #the center of the neightbour.
 
 ###Size of the cut out and search conditions---###
-size = 120                            #size of the stamp image
+size = [0, 0, 20, 120]                #size of the stamp image
 shiftra = 0.0 
 shiftdec =  0.0                       #If the image WCS is not same as the 
                                       #coordinate given in the clus_cata, 
@@ -73,6 +73,7 @@ galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
+components = ['bulge', 'disk']
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 

@@ -54,12 +54,17 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         residual = f[3].data
         f.close()
         anorm = normalize(galaxy.min(), 3.0*skysig) #Color normalization
-        residual0 = residual
         #Read mask
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
         f_mask.close()
-        size = galaxy.shape[0]
+        galaxy = n.swapaxes(galaxy, 0, 1)
+        model = n.swapaxes(model, 0, 1)
+        residual = n.swapaxes(residual, 0, 1)
+        mask = n.swapaxes(mask, 0, 1)
+        residual0 = residual
+        NXPTS = galaxy.shape[0]
+        NYPTS = galaxy.shape[1]
         maskedModel = ma.masked_array(model, mask)
         model = ma.filled(maskedModel, value=9999)
         #The calculations for Goodness is starting here
@@ -71,13 +76,13 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         pixels_in_skysig = residual[n.where(abs(residual) <= skysig / 2.0)].size
         print 'pixels_in_skysig', pixels_in_skysig
         goodness = pixels_in_skysig / float(valid_pixels)
-        hist_mask = n.zeros((size, size))
+        hist_mask = n.zeros((NXPTS, NYPTS))
         hist_mask[n.where(abs(residual) > 2.0 * skysig)] = 1
         hist_res = ma.masked_array(residual, hist_mask)
         #The procedure for chi2nu wrt radius is starting here
-        x = n.reshape(n.arange(size*size),(size,size)) % size
+        x = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
         x = x.astype(n.float32)
-        y = n.reshape(n.arange(size*size),(size,size)) / size
+        y = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) / NYPTS
         y = y.astype(n.float32)
         tx = x - xcntr + 0.5
         ty = y - ycntr + 0.5
@@ -86,7 +91,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         Chi2NuRad = []
         StartRad = 2.0
         TempRad = 0.0
-        while StartRad <= size:
+        while StartRad <= max(NXPTS / 2.0, NYPTS / 2.0):
 #            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
 #                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
 #                         TempRad)])))**2.0 / \
@@ -165,16 +170,16 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
     rect7 = [0.125, 0.075, 0.225, 1.5*0.225]
     try:
         axUL = axes(rect1)
-        image1 = imshow(n.flipud(galaxy), \
-                        extent=[0, size, 0, size], norm=anorm)
+        image1 = imshow(n.flipud(n.swapaxes(galaxy, 0, 1)), \
+                        extent=[0, NXPTS, 0, NYPTS], norm=anorm)
         title('Original Galaxy')
         axUM = axes(rect2)
-        image1 = imshow(n.flipud(model), cmap=cm.jet, \
-                        extent=[0, size, 0, size], norm=anorm)
+        image1 = imshow(n.flipud(n.swapaxes(model, 0, 1)), cmap=cm.jet, \
+                        extent=[0, NXPTS, 0, NYPTS], norm=anorm)
         title('Model Galaxy + Mask')
         axUR = axes(rect3)
-        image1 = imshow(n.flipud(residual0), cmap=cm.jet, \
-                        extent=[0, size, 0, size], norm=anorm)
+        image1 = imshow(n.flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
+                        extent=[0, NXPTS, 0, NYPTS], norm=anorm)
         title('Residual')
         axLR = axes(rect4)
         nn, bins, patches = hist(hist_res, 50, normed=0)

@@ -5,28 +5,29 @@ import config as c
 class OutMaskFunc:
     """The class for making mask for output image from GALFIT to run ellipse.
        The file name of the mask is OEM_string(galid).fits"""
-    def __init__(self, outimage, size, line_s):
+    def __init__(self, outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
         self.outimage = outimage
-        self.size = size
+        self.xcntr = xcntr
+        self.ycntr = ycntr
+        self.NXPTS = NXPTS
+        self.NYPTS = NYPTS
         self.line_s  = line_s
-        self.mask    = mask(outimage, size, line_s)
+        self.mask    = mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s)
 
-def mask(outimage, size, line_s):
+def mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
-    x = n.reshape(n.arange(size*size),(size,size)) % size
+    x = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) / NYPTS
     x = x.astype(n.float32)
-    y = n.reshape(n.arange(size*size),(size,size)) / size
+    y = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
     y = y.astype(n.float32)
     values = line_s.split()
     mask_file = 'OEM_' + str(outimage)[:-5] + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
-    xcntr = size / 2.0 + 1.0 + xcntr_o - int(xcntr_o)
-    ycntr = size / 2.0 + 1.0 + ycntr_o - int(ycntr_o)
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
@@ -35,7 +36,7 @@ def mask(outimage, size, line_s):
     axis_rat = 1.0 / float(values[12]) #axis ration b/a
     area_o = float(values[13])   # object's area
     major_axis = float(values[14])	#major axis of the object
-    z = n.zeros((size,size))
+    z = n.zeros((NXPTS, NYPTS))
     for line_j in open(sex_cata,'r'):
         try:
             values = line_j.split()
@@ -61,11 +62,11 @@ def mask(outimage, size, line_s):
                     xn = xcntr - (xcntr_o - xcntr_n)
                 if((ycntr_o - ycntr_n) > 0):
                     yn = ycntr - (ycntr_o - ycntr_n)
-                tx = x - xn + 0.5 
-                ty = y - yn + 0.5
+                tx = x - xn + 1.0 
+                ty = y - yn + 1.0
                 R = n.sqrt(tx**2.0 + ty**2.0)
                 z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass	
-    hdu = pyfits.PrimaryHDU(z.astype(n.float32))
+    hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto(mask_file)

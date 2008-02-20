@@ -28,6 +28,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
     if (header.has_key('sky')):
         sky = header['sky']
     f.close()
+    z = n.swapaxes(z, 0, 1)
 #    print cutimage
     nxpts = z.shape[0]
     nypts = z.shape[1]
@@ -48,9 +49,9 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
         skysig = im.standard_deviation(bgmaskedgalaxy1d)
         sky_iter = ma.average(bgmaskedgalaxy1d)
         skysig_iter = skysig * 3.0
-        x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) % nypts
+        x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts
         x = x.astype(n.float32)
-        y = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts
+        y = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) % nypts
         y = y.astype(n.float32)
         countback = 1 #After some iteration the following loop quits
         FLAG_BACK = FLAG_BACK1 = 0

@@ -13,20 +13,29 @@ class ConfigFunc:
        The initial value for Sersic index 'n' is 4.The configuration file has 
        the name G_string(galid).in. The output image has the name 
        O_string(galid).fits"""
-    def __init__(self, cutimage, whtimage, size, line_s, psffile):
+    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         self.cutimage = cutimage
         self.line_s  = line_s
 	self.whtimage = whtimage
-        self.size = size
-        self.conf    = conf(cutimage, whtimage, size, line_s, psffile)
+        self.xcntr = xcntr
+        self.ycntr = ycntr
+        self.NXPTS = NXPTS
+        self.NYPTS = NYPTS 
+        self.conf    = conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
 		
 
-def conf(cutimage, whtimage, size, line_s, psffile):
+def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
+    try:
+        ComP = c.components 
+    except:
+        ComP = ['bulge', 'disk']
+    if len(ComP) == 0:
+        ComP = ['bulge', 'disk']
     values = line_s.split()
     outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
     mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
@@ -45,8 +54,8 @@ def conf(cutimage, whtimage, size, line_s, psffile):
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
-    xcntr = size/2.0 + 1.0 + xcntr_o - int(xcntr_o)
-    ycntr = size/2.0 + 1.0 + ycntr_o - int(ycntr_o)
+#    xcntr = size/2.0 + 1.0 + xcntr_o - int(xcntr_o)
+#    ycntr = size/2.0 + 1.0 + ycntr_o - int(ycntr_o)
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
@@ -71,9 +80,9 @@ def conf(cutimage, whtimage, size, line_s, psffile):
                   ' mask(FITS image or ASCII coord list)\n'])
     f.writelines(['G) ', str(constrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
-    f.writelines(['H) 1 ', str(size), ' 1 ', str(size), '		#',\
+    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
                   ' Image region to fit (xmin xmax ymin ymax)\n'])
-    f.writelines(['I) ', str(size), ' ', str(size),	'		#',\
+    f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
                   ' photometric zeropoint\n'])
@@ -83,31 +92,38 @@ def conf(cutimage, whtimage, size, line_s, psffile):
                   ' (1=yes; 0=optimize)\n'])
     f.writelines(['S) 0			# Modify/create',\
                  ' objects interactively?\n\n\n'])
-    f.write('# Sersic function\n\n')
-    f.writelines([' 0) sersic		# Object type\n'])
-    f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1	#',\
-                  ' position x, y [pixel]\n'])
-    f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
-    f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
-    f.writelines([' 5) 4.0 1		#Sersic exponent',\
-                  ' (deVauc=4, expdisk=1)\n'])
-    f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
-    f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
-                  '[Degrees: Up=0, Left=90]\n'])
-    f.writelines(['10) 0.0 0		# diskiness (< 0) or boxiness (> 0)\n'])
-    f.writelines([' Z) 0 			# output image',\
-                  ' (see above)\n\n\n']) 
-    f.writelines(['# Exponential function\n\n'])
-    f.writelines([' 0) expdisk 		# Object type\n'])
-    f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
-                  ' position x, y [pixel]\n'])
-    f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
-    f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
-    f.writelines([' 8) ', str(axis_rat), ' 1     # axis ratio (b/a)\n'])
-    f.writelines([' 9) ', str(pos_ang), ' 1         	# position angle(PA) \
-                 [Degrees: Up=0, Left=90]\n'])
-    f.writelines(['10) 0.0 0         	# diskiness (< 0) or boxiness (> 0)\n']) 
-    f.writelines([' Z) 0             	# output image (see above)\n\n\n'])
+    if 'bulge' in ComP:
+        f.write('# Sersic function\n\n')
+        f.writelines([' 0) sersic		# Object type\n'])
+        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1	#',\
+                      ' position x, y [pixel]\n'])
+        f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
+        f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
+        f.writelines([' 5) 4.0 1		#Sersic exponent',\
+                      ' (deVauc=4, expdisk=1)\n'])
+        f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
+        f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
+                      '[Degrees: Up=0, Left=90]\n'])
+        f.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
+                      'boxiness (> 0)\n'])
+        f.writelines([' Z) 0 			# output image',\
+                      ' (see above)\n\n\n']) 
+    if 'disk' in ComP:
+        f.writelines(['# Exponential function\n\n'])
+        f.writelines([' 0) expdisk 		# Object type\n'])
+        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
+                      ' position x, y [pixel]\n'])
+        f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
+        f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
+        f.writelines([' 8) ', str(axis_rat), ' 1     # axis ratio (b/a)\n'])
+        f.writelines([' 9) ', str(pos_ang), ' 1         	# position '\
+                      'angle(PA) [Degrees: Up=0, Left=90]\n'])
+        f.writelines(['10) 0.0 0         	# diskiness (< 0) or '\
+                      'boxiness (> 0)\n']) 
+        f.writelines([' Z) 0             	# output image '\
+                      '(see above)\n\n\n'])
+    if 'point' in ComP:
+        f.writelines(['# Gaussian function\n\n'])
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
     f.writelines([' 1) ', str(sky), ' 0	# sky background [ADU counts\n'])

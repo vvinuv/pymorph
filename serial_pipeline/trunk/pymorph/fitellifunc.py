@@ -52,13 +52,6 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
     iraf.stsdas.analysis(_doprint=0)
     iraf.stsdas.analysis.isophote(_doprint=0)
     image_exist = 1
-#    if(str(input)[:3] == 'ima'):
-#        output = 'elli_' + input[6:-4] + 'txt' 
-#    if(str(input)[:3] == 'out'):
-#        output = 'out_elli_' + str(input)[4:-7] + 'txt'
-#    else:
-#        output = 'elli_' + input[:-5] + '.txt'
-	#unlearn geompar	controlpar samplepar magpar ellipse
     iraf.unlearn('geompar')
     iraf.geompar.x0=xcntr
     iraf.geompar.y0=ycntr

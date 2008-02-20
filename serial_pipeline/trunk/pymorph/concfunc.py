@@ -221,8 +221,8 @@ def eta_radius_fnc(divide_r, r, nxpts, nypts, background, incr, eta_radius):
 		temp_no_I_ave_radius = no_I_ave_radius
 		eta_radius += incr
 		if(eta_radius > n.min(nxpts, nypts) / 2.0):
-			print "The radius measurment exceeded the size \
-                               of the frame. Exiting program"
+			print 'The radius measurment exceeded the size '\
+                               'of the frame. Exiting CASGM module'
 			eta_radius_corre = 9999
 			FLAG_ETA = 1
 #			os._exit(0)
