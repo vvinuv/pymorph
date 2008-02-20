@@ -14,9 +14,9 @@ class MaskFunc:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS
         self.line_s  = line_s
-        self.mask    = mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s)
+        self.mask    = gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s)
 
-def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
+def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
@@ -104,8 +104,12 @@ def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
                     z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass
+    print 'h0'
     z = z + tmp_mask
     z[n.where(z > 0)] = 1
+    print 'hi'
+    z = im.binary_dilation(z, iterations=6)
+    z = im.binary_fill_holes(z)
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto(mask_file)
     try:

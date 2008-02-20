@@ -109,9 +109,9 @@ class concentration:
 #------This function returns r------#
 
 def return_r(nxpts,nypts,xcntr,ycntr,pa,eg,pixel_division):
-	divide_x=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))%(nypts*pixel_division))*(1/(pixel_division*1.0))
+	divide_x=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))/(nypts*pixel_division))*(1/(pixel_division*1.0))
 
-	divide_y=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))/(nypts*pixel_division))*(1/(pixel_division*1.0))
+	divide_y=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))%(nypts*pixel_division))*(1/(pixel_division*1.0))
 	
 	one_minus_eg_sq		= (1.0-eg)**2.0
 	co			= n.cos(pa * n.pi / 180.0)

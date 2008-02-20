@@ -1,3 +1,4 @@
+import os
 import numpy as n
 import pyfits
 from momentfunc import *
@@ -68,9 +69,9 @@ def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r50,r80,extra
 	NYPTS=zextract.shape[1]
 	co= n.cos(pa*n.pi/180.0)
 	si= n.sin(pa*n.pi/180.0)	
-	x=n.reshape(n.arange(NXPTS*NYPTS),(NXPTS,NYPTS))%NYPTS
+	x=n.reshape(n.arange(NXPTS*NYPTS),(NXPTS,NYPTS))/NYPTS
 	x = x.astype(n.float32)
-	y=n.reshape(n.arange(NXPTS*NYPTS),(NXPTS,NYPTS))/NYPTS
+	y=n.reshape(n.arange(NXPTS*NYPTS),(NXPTS,NYPTS))%NYPTS
 	y = y.astype(n.float32)
 	tx = (x-ini_xcntr)*co + (y-ini_ycntr)*si
 	ty = (ini_xcntr-x)*si + (y-ini_ycntr)*co
@@ -97,6 +98,9 @@ def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r50,r80,extra
 	f=pyfits.open('AResidual.fits')
 	res =  f[0].data
 	f.close()
+        res = n.swapaxes(res, 0, 1)
+	if os.access('AResidual.fits', os.F_OK):
+		os.remove('AResidual.fits')
 	res1=n.where(I == 0, 0, res)
 	G_res = gini_coef(res1)
 	mo1=moment(res, ini_xcntr, ini_ycntr)

@@ -43,6 +43,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     if (header.has_key('sky')):
         sky = header['sky']
     f.close()
+    z = n.swapaxes(z, 0, 1)
 #    print cutimage
     nxpts = z.shape[0]
     nypts = z.shape[1]
@@ -58,6 +59,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     f=pyfits.open(maskimage)
     mask = f[0].data
     f.close()
+    mask = n.swapaxes(mask, 0, 1)
     maskedgalaxy = ma.masked_array(z, mask)
     z = ma.filled(maskedgalaxy, value=0.0)
     ########################

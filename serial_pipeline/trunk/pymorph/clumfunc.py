@@ -34,9 +34,9 @@ class clumpness:
 		self.image_clumpness	= CLUMPNESS(self.z, self.ini_xcntr, self.ini_ycntr, self.pa, self.eg, self.background, self.extraction_radius, self.sigma, self.flag_image)
 
 def CLUMPNESS(z, ini_xcntr, ini_ycntr, pa, eg, background, extraction_radius, sigma, flag_image):
-	zextract = z[int(ini_ycntr - extraction_radius):int(ini_ycntr + \
-                   extraction_radius), int(ini_xcntr - extraction_radius): \
-                   int(ini_xcntr + extraction_radius)]
+	zextract = z[int(ini_xcntr - extraction_radius):int(ini_xcntr + \
+                   extraction_radius), int(ini_ycntr - extraction_radius): \
+                   int(ini_ycntr + extraction_radius)]
 	NXPTS = zextract.shape[0]
 	NYPTS = zextract.shape[1]
 	#print NXPTS, NYPTS,ini_xcntr,ini_ycntr

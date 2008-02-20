@@ -68,6 +68,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     z = f[0].data
     z = z - background
     f.close()
+    z = n.swapaxes(z, 0, 1)
     iraf.rotate("".join(maskimage), output="MRotated.fits",\
                         rotation=180, xin = ini_xcntr + 1.0,\
                         yin = ini_ycntr + 1.0, \
@@ -83,13 +84,15 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     f=pyfits.open("MRotated.fits")
     mask1 = f[0].data
     f.close()
+    mask1 = n.swapaxes(mask1, 0, 1)
     f=pyfits.open(maskimage)
     mask2 = f[0].data
     f.close()
-    mask = mask1 * mask2
+    mask2 = n.swapaxes(mask2, 0, 1)
+    mask = mask1 + mask2
     maskedgalaxy = ma.masked_array(z, mask)
     z = ma.filled(maskedgalaxy, value = background)
-    hdu = pyfits.PrimaryHDU(z.astype(n.float32))
+    hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto('MaskedGalaxy.fits')
     NXPTS = z.shape[0]
     NYPTS = z.shape[1]
@@ -99,9 +102,9 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
 #    center_rad = 0.5#0.01*r50 The centering correction has to be done by calculating asymmetric parameters at different points 0.1% of r50 away around the center
     flag_center = 0 #flag_center=1 if the program finds the exact center else center=0
 	#extraction_radius=total_rad ie. 1.5 times the radius at eta=0.2
-    x = n.reshape(n.arange(NXPTS * NYPTS), (NXPTS, NYPTS)) % NYPTS
+    x = n.reshape(n.arange(NXPTS * NYPTS), (NXPTS, NYPTS)) / NYPTS
     x = x.astype(n.float32)
-    y = n.reshape(n.arange(NXPTS * NYPTS), (NXPTS, NYPTS)) / NYPTS
+    y = n.reshape(n.arange(NXPTS * NYPTS), (NXPTS, NYPTS)) % NYPTS
     y = y.astype(n.float32)
     nn = 0 #This nn is given here and the following loop run either it finds the minimum asymmetry or n=20
     while flag_center == 0:
@@ -140,6 +143,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
             f = pyfits.open("Rotated.fits")
             rz = f[0].data
             f.close()
+            rz = n.swapaxes(rz, 0, 1)
             res = z - rz
             for myfile in ['Rotated.fits', 'Residual.fits', 'AResidual.fits']:
                 if os.access(myfile, os.F_OK):
@@ -168,8 +172,9 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
             f = pyfits.open("Rotated.fits")
             rz = f[0].data
             f.close()
+            rz = n.swapaxes(rz, 0, 1)
             res = z - rz
-            hdu = pyfits.PrimaryHDU(res.astype(n.float32))
+            hdu = pyfits.PrimaryHDU(n.swapaxes(res, 0, 1).astype(n.float32))
             hdu.writeto('AResidual.fits')
             flag_center = 1
             rot_sum = rot_sum[index]

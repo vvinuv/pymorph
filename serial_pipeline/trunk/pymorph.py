@@ -42,13 +42,19 @@ def main():
     except:
         if ReSize:
             VarSize = 1
+        else:
+            VarSize = 0
+    try:
+        Square = c.size[3]
+    except:
+        Square = 1
     try:
         FracRad = c.size[2]  
     except:
         FracRad = 20
     if VarSize == 0:
         try:
-            FixSize = c.size[3]
+            FixSize = c.size[4]
         except:
             FixSize = 120
     threshold = c.threshold
@@ -367,9 +373,12 @@ def main():
                              axis_rat * major_axis * FracRad * abs(n.sin(ArcR)) 
                         SizeY = major_axis * FracRad * abs(n.sin(ArcR)) + \
                              axis_rat * major_axis * FracRad * abs(n.cos(ArcR))
-                        print SizeX, SizeY, pos_ang
+                        if Square:
+                            SizeX = max(SizeX, SizeY)
+                            SizeY = max(SizeX, SizeY)
+                        print SizeX, SizeY, pos_ang, 'hi', ReSize, VarSize
                         if c.galcut:
-                            if Resize:
+                            if ReSize:
                                 if VarSize:
                                     pass
                                 else:
@@ -384,6 +393,7 @@ def main():
                             else:
                                 SizeX = FixSize
                                 SizeY = FixSize        
+                        print SizeX, SizeY
                         xcntr  = float(values[1])
                         ycntr  = float(values[2])
                         xmin = int(xcntr - (SizeX / 2 + 1))
@@ -406,7 +416,9 @@ def main():
                                 hdu.writeto(cutimage)
                                 
                             if(c.repeat == False and c.galcut and ReSize):
-                                ZcuT = pyfits.open(gimg)
+                                fZcuT = pyfits.open(gimg)
+                                ZcuT = fZcuT[0].data
+                                fZcuT.close()
                                 ZcuT1 = ZcuT[ymin:ymax,xmin:xmax]
                                 hdu = pyfits.PrimaryHDU(ZcuT1.astype(n.float32))
                                 try:
@@ -423,8 +435,10 @@ def main():
                                               (n.float32))
                                         hdu.writeto(whtimage)
                                 if(c.repeat == False and c.galcut and ReSize):
-                                    if exists(whtfile):
-                                        WZcuT = pyfits.open(wimg)
+                                    if exists(wimg):
+                                        fWZcuT = pyfits.open(wimg)
+                                        WZcuT = fWZcuT[0].data
+                                        fWZcuT.close()
                                         WZcuT1 = WZcuT[ymin:ymax,xmin:xmax]
                                         hdu = pyfits.PrimaryHDU(WZcuT1.astype\
                                                                 (n.float32))
@@ -438,8 +452,11 @@ def main():
                                 CenterS = center_of_mass( \
                                         GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
                                                   SizeY / 2 - 5:SizeY / 2 + 5])
-                                xcntr = SizeX / 2 + CenterS[1] - 5
-                                ycntr = SizeY / 2 + CenterS[0] - 5
+                                if c.galcut and ReSize == 0:
+                                    pass
+                                else:
+                                    xcntr = SizeX / 2 + CenterS[1] - 5
+                                    ycntr = SizeY / 2 + CenterS[0] - 5
                                 print cutimage,xcntr, ycntr, SizeX, SizeY
                                 try:
                                 #The following function provide the center of blank sky region and the sky sigma    
@@ -566,7 +583,6 @@ def main():
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
                                     Flag = Flag + 16
-
                             except:
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])

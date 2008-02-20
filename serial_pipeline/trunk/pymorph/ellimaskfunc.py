@@ -17,9 +17,9 @@ class ElliMaskFunc:
         self.NYPTS = NYPTS
         self.line_s  = line_s
         self.galflag = galflag
-        self.mask    = mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag)
+        self.mask    = emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag)
 
-def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
+def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     clus_cata = c.out_cata
@@ -96,8 +96,8 @@ def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                 tx = (x - xn + 1.0) * co + (y - yn + 1.0) * si
                 ty = (xn - 1.0 -x) * si + (y - yn + 1.0) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-                z[n.where(R<=mask_reg*maj_axis)] = 1
-                z1[n.where(R<=2*mask_reg*maj_axis)] = 1
+                z[n.where(R <= mask_reg * maj_axis)] = 1
+                z1[n.where(R <= 2 * mask_reg * maj_axis)] = 1
             if(abs(xcntr_n - xcntr_o) < NXPTS / 2.0 and \
                abs(ycntr_n - ycntr_o) < NYPTS / 2.0 and galflag == 0):  
                 if((xcntr_o - xntr_n) < 0):
@@ -114,8 +114,7 @@ def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                 tx = (x - xn + 1.0) * co + (y - yn + 1.0) * si
                 ty = (xn - 1.0 -x) * si + (y - yn + 1.0) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-                z[n.where(R <= mask_reg * maj_axis*2.0)] = 1
-                z1[n.where(R <= 2 * mask_reg * maj_axis)] = 1
+                z[n.where(R <= maj_axis * 3.0)] = 1
         except:
             i=1
     if(galflag):
@@ -125,10 +124,10 @@ def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             pass
         hdu = pyfits.PrimaryHDU(n.swapaxes(z1, 0, 1).astype(n.float32))
         hdu.writeto("TmpElliMask1.fits")
-        hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
-        hdu.writeto("TmpElliMask.fits")
         z = z + tmp_mask
         z[n.where(z > 0)] = 1
+        hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
+        hdu.writeto("TmpElliMask.fits")
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto(mask_file)
     else:
@@ -136,6 +135,8 @@ def mask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             os.remove("BMask.fits")
         except:
             pass
+        z = z + tmp_mask
+        z[n.where(z > 0)] = 1
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto("BMask.fits")
 #line = '1    193.378    158.284 214.8573569 +56.7789966      3555934     3804.634   8.8786   0.0012     36.075     1433.745 -54.4    1.668    19672    38.968  16  0.00'
