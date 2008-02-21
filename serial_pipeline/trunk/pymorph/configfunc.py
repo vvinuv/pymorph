@@ -21,10 +21,11 @@ class ConfigFunc:
         self.ycntr = ycntr
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
-        self.conf    = conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
+        self.psffile = psffile
+        self.conff    = conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
 		
 
-def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
@@ -44,12 +45,20 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if exists(constrain_file):
         pass
     else:
-        f_constrain = open(constrain_file,'w')
-        f_constrain.write('1        n        0.2 to 20.0  \n')
-        f_constrain.write('1        x        -6.0      6.0\n')
-        f_constrain.write('1        y        -6.0      6.0\n')
-        f_constrain.write('2        x        -6.0      6.0\n')
-        f_constrain.write('2        y        -6.0      6.0\n')
+        f_constrain = open(constrain_file, 'ab')
+        cO = 1
+        for Co in ComP:
+            if Co == 'bulge':
+                f_constrain.write(str(cO) + '       n       0.2 to 20.0  \n')
+                f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
+                f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+            if Co == 'disk':
+                f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
+                f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+            if Co == 'point':
+                f_constrain.write(str(cO) + '       x       -2.0      2.0\n')
+                f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
+            cO += 1
         f_constrain.close()
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
@@ -108,6 +117,7 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n'])
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
+        c.Flag = c.Flag + 262144
     if 'disk' in ComP:
         f.writelines(['# Exponential function\n\n'])
         f.writelines([' 0) expdisk 		# Object type\n'])
@@ -122,6 +132,7 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n']) 
         f.writelines([' Z) 0             	# output image '\
                       '(see above)\n\n\n'])
+        c.Flag = c.Flag + 524288
     if 'point' in ComP:
         gmag = mag + 2.5 * log10(2.0)
         f.writelines(['# Gaussian function\n\n'])
@@ -137,6 +148,7 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n'])
         f.writelines([' Z) 0                    # output image '\
                       '(see above)\n\n\n'])
+        c.Flag = c.Flag + 1048576
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
     f.writelines([' 1) ', str(sky), ' 0	# sky background [ADU counts\n'])
@@ -144,6 +156,7 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                   ' Z) 0                  # output image\n\n\n'])
     f.writelines(['# Neighbour sersic function\n\n'])
+    isneighbour = 0
     for line_j in open(sex_cata,'r'):
         try:
             values = line_j.split()
@@ -187,9 +200,12 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                               ' (< 0) or boxiness (> 0)\n'])
                 f.writelines([' Z) 0 	           	# output',\
                               ' image (see above)\n\n\n'])
+                isneighbour = 1
         except:
             pass
     f.close()
+    if isneighbour:
+        c.Flag = c.Flag + 2097152
 #    f_fit = open('fit2.log','a')
 #    if exists('fit.log'):
 #        os.system('rm fit.log')

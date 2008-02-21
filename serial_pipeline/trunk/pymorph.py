@@ -436,7 +436,7 @@ def main():
                         f_err.writelines(['\n\n###########   ', str(gal_id), \
                                           '   ###########\n'])
                         run = 1 #run =1 when pipeline runs sucessfuly
-                        Flag = 0
+                        c.Flag = 0
                         try:
                             if(c.repeat == False and c.galcut == False):
                                 z1 = image[ymin:ymax,xmin:xmax]
@@ -455,19 +455,19 @@ def main():
                                 TX = ZcuT.shape[1]
                                 TY = ZcuT.shape[0]
                                 if(xmin < 0):
-                                    Flag = 16384 
+                                    c.Flag = 16384 
                                     xminOut = xmin
                                     xmin = 0
                                 if(ymin < 0):
-                                    Flag = Flag + 32768
+                                    c.Flag = c.Flag + 32768
                                     yminOut = ymin
                                     ymin = 0
                                 if(xmax > TX):
-                                    Flag = Flag + 65536
+                                    c.Flag = c.Flag + 65536
                                     xmaxOut = xmax
                                     xmax = TX
                                 if(ymax > TY):
-                                    Flag = Flag + 131072
+                                    c.Flag = c.Flag + 131072
                                     ymaxOut = ymax
                                     ymax = TY
                                 ZcuT1 = ZcuT[ymin:ymax,xmin:xmax]
@@ -587,19 +587,19 @@ def main():
                                                            'or err  or ',\
                                                           'test.tab exists\n'])
                                                 run = 0
-                                                Flag = Flag + 4
+                                                c.Flag = c.Flag + 4
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(cutimage),'.pl or ',\
                                                        str(ell_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
-                                            Flag = Flag + 2
+                                            c.Flag = c.Flag + 2
                                     except:
                                         f_err.writelines(['Error in making '\
                                                      'mask for ellipse task\n'])
                                         run = 0
-                                        Flag = Flag + 1
+                                        c.Flag = c.Flag + 1
                             except:
                                 f_err.writelines(['The file ', str(whtimage), \
                                                   ' exists\n'])	
@@ -651,11 +651,11 @@ def main():
                                 except:
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
-                                    Flag = Flag + 16
+                                    c.Flag = c.Flag + 16
                             except:
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
-                                Flag = Flag + 8
+                                c.Flag = c.Flag + 8
                         f_err.close()
                         os.system('rm -f BMask.fits MRotated.fits \
                                   MaskedGalaxy.fits Rotated.fits')
@@ -827,29 +827,29 @@ def main():
                                                       'GALFIT MIGHT BE '\
                                                       'CRASHED\n'])
                                                 run = 0
-                                                Flag = Flag + 512
+                                                c.Flag = c.Flag + 512
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(outimage),'.pl or ',\
                                                        str(out_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
-                                            Flag = Flag + 256
+                                            c.Flag = c.Flag + 256
                                     except:
                                         f_err.writelines(['Error in making '\
                                                 'out mask for ellipse task\n'])
                                         run = 0 
-                                        Flag = Flag + 128
+                                        c.Flag = c.Flag + 128
                                 except:
                                     f_err.writelines(['Error in writing',\
                                                       ' configuration file\n'])	
                                     run = 0
-                                    Flag = Flag + 64
+                                    c.Flag = c.Flag + 64
                             except:
                                 f_err.writelines(['Error in making mask for '\
                                                   'galfit\n'])
                                 run = 0
-                                Flag = Flag + 32
+                                c.Flag = c.Flag + 32
 #                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
 #                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
                             if(run == 1 or run == 0):
@@ -868,13 +868,13 @@ def main():
                                                           'Mask image\n'])
                                     run = 0	
                                     Goodness = 9999
-                                    Flag = Flag + 1024
+                                    c.Flag = c.Flag + 1024
                                 try:
                                     write_params(cutimage, xcntr, ycntr, \
                                                  distance, alpha_j, \
                                                  delta_j, z, Goodness, \
                                                  C, C_err, A, A_err, S, S_err, \
-                                                 G, M, Flag)
+                                                 G, M)
 #                                f_err.writelines(['(((((((((( Successful', \
  #                                                     ' ))))))))))\n'])
                                 except:
@@ -884,7 +884,7 @@ def main():
                                                      delta_j, z, Goodness, \
                                                      9999, 9999, 9999,\
                                                      9999, 9999, 9999, 9999, \
-                                                     9999, Flag)
+                                                     9999)
                                     except:
                                         f_err.writelines(['Error in writing '\
                                                           'html\n'])

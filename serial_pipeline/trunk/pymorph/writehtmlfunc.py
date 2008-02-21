@@ -8,7 +8,7 @@ class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
-    def __init__(self, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
+    def __init__(self, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
         self.cutimage     = cutimage
         self.xcntr        = xcntr
         self.ycntr        = ycntr
@@ -25,10 +25,9 @@ class WriteHtmlFunc:
         self.S_err        = S_err
         self.G            = G
         self.M            = M
-        self.Flag         = Flag
-        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag)
+        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
 
-def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
+def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
     try:
         ComP = c.components
     except:
@@ -156,8 +155,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             BD = 'nan'
             BT = 1.0
         elif 'disk' in ComP:
-            BD = 1.0
-            BT = 1.0
+            BD = 0.0
+            BT = 0.0
         else:
             BD = 'nan'
             BT = 'nan'
@@ -176,7 +175,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             values = line.split() 
             try: 
                 if(str(values[0]) == 'sersic'):
-                    if object > 1 or 'bulge' in ComP == False:
+                    if object > 1 or 'bulge' not in ComP:
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
                                           '<TR align="center" bgcolor=' + \
                                           '"#99CCFF"><TD>' + str(values[0]) + \
@@ -235,7 +234,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err > 1 or \
-                        'bulge' in ComP == False):
+                        str(a) == 'sersic'  and 'bulge' not in ComP):
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
                                            '<TR align="center" ' + \
                                            'bgcolor="#CCFFFF"> <TD>' + ' ' + \
@@ -331,16 +330,16 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     else:
         if chi2nu > c.chi2sq:
             error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-            Flag = Flag + 2048
+            c.Flag = c.Flag + 2048
         if Goodness < c.Goodness:
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-            Flag = Flag + 4096
+            c.Flag = c.Flag + 4096
         if abs(bulge_xcntr - xcntr) > c.center_deviation or \
              abs(bulge_ycntr - ycntr) > c.center_deviation or \
              abs(disk_xcntr - xcntr) > c.center_deviation or \
              abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
-            Flag = Flag + 8192
+            c.Flag = c.Flag + 8192
         img_notify = str(c.PYMORPH_PATH) + '/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())
@@ -381,7 +380,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
-                       M, distance, good_fit, Flag]:
+                       M, distance, good_fit, c.Flag]:
         ParamToWrite.append(otherparam)
     writer.writerow(ParamToWrite)
     f_res.close()
