@@ -2,9 +2,9 @@
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f647-1-1_drz_sci.fits'
 whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'model_sex.cat'           #The sextractor catalogue which has 
+sex_cata = 'j8f647_Sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'model.cat'         #catalogue of galaxies from
+clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
@@ -13,11 +13,13 @@ out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = 'j8f647'
 
 ###----Psf list----###
-psfselect = 0                         #0 => No psfselection
+psfselect = 1                         #0 => No psfselection
                                       #1 => Only Select psf 
                                       #2 => Select psf and run pipeline
                                       #Recommended: Run with '1' and then run
                                       #pipeline
+starsize = 20                         #psf image size will be startsize times 
+                                      #the SMA given by SExtractor
 #psflist = ['psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-1202057.fits','psf_1216487-1201246.fits','psf_1216504-1202104.fits']   
 psflist = '@psflist.list'
                                       #List of psf containg their 
@@ -45,7 +47,7 @@ threshold = 3.0                       #Masking will be done for neighbours
 
 ###---Size of the cut out and search conditions---###
 ###---size = [resize?, varsize?, fracrad, square?, fixsize]---###
-size = [1, 1, 6, 1, 120]              #size of the stamp image
+size = [0, 0, 6, 1, 120]              #size of the stamp image
 shiftra = 0.0 
 shiftdec =  0.0                       #If the image WCS is not same as the 
                                       #coordinate given in the clus_cata, 
@@ -71,11 +73,11 @@ angle = 180.0
 
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
-galcut = True                        #True if we provide cutouts
+galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
-components = ['bulge', 'disk']
+components = ['disk']
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
