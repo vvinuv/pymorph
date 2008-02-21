@@ -107,8 +107,10 @@ def main():
                 #print element
                 iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
                            show='no', update='yes')
+                iraf.flpr() 
                 iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
                            show='no', update='yes')
+                iraf.flpr()
         except:
             pass
     def pa(x):
@@ -154,7 +156,12 @@ def main():
                 psffile = element
                 distance = d
         return psffile, distance 
-
+    try:
+        ComP = c.components
+    except:
+        ComP = ['bulge', 'disk']
+    if len(ComP) == 0:
+        ComP = ['bulge', 'disk']
 #weight = where(weight1 > 0, 1.0 / sqrt(weight1), 0.0)
     if exists('result.csv'):
         pass
@@ -162,13 +169,33 @@ def main():
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         if(c.decompose):
-            writer.writerow(['Name','ra','dec','z','Ie','Ie_err','re(pixels)',\
-                         're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n',\
-                         'n_err','Id','Id_err','rd(pixels)','rd_err(pixels)',\
-                         'rd(kpc)', 'rd_err(kpc)', 'BD', 'BT', 'chi2nu', \
-                         'Goodness', 'run', 'C', 'C_err', 'A', 'A_err', 'S', \
-                         'S_err', 'G', 'M', 'distance', 'fit', 'flag', \
-                         'Comments'])
+            ParamToWrite = ['Name','ra','dec','z', 'Ie','Ie_err','re(pixels)',\
+                            're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n', \
+                            'n_err', 'Id','Id_err','rd(pixels)',\
+                            'rd_err(pixels)', 'rd(kpc)', 'rd_err(kpc)', 'BD', \
+                            'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm(kpc)', \
+                            'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
+                            'A_err', 'S', 'S_err', 'G', 'M', 'distance', \
+                            'fit', 'flag', 'Comments']
+#            if 'bulge' in ComP:
+#                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
+#                                  're(kpc)', 're_err(kpc)' ,'n', 'n_err']
+#                    ParamToWrite.append(bulgecomp)
+#            if 'disk' in ComP:
+#                for diskcomp in ['Id','Id_err','rd(pixels)','rd_err(pixels)', \
+#                                 'rd(kpc)', 'rd_err(kpc)']: 
+#                    ParamToWrite.append(diskcomp)
+#            if 'bulge' in ComP and 'disk' in ComP:
+#                ParamToWrite.append('BD')
+#                ParamToWrite.append('BT')
+#            if 'point' in ComP:
+#                ParamToWrite.append('Point')
+#                ParamToWrite.append('Point_err')
+#            for otherparam in ['chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A',\
+#                               'A_err', 'S', 'S_err', 'G', 'M', 'distance', \
+#                               'fit', 'flag', 'Comments']:
+#                ParamToWrite.append(otherparam)
+            writer.writerow(ParamToWrite)
         else:
             writer.writerow(['Name','ra','dec','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
@@ -538,6 +565,7 @@ def main():
                                         try:
                                             iraf.imcopy(ell_mask_file, \
                                                        plfile, verbose='no')
+                                            iraf.flpr()
                                             try:
                                                 ell_out = 'E_' + \
                                                      str(cutimage)[:-4] + 'txt'
@@ -548,7 +576,7 @@ def main():
                                                          pos_ang, major_axis)
                                                 if os.access(plfile, os.F_OK):
                                                     os.remove(plfile)
-
+                                                iraf.flpr()
                                             except:
                                                 f_err.writelines(['Error '\
                                                            'in ellipse ',\

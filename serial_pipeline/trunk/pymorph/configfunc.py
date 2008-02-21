@@ -129,7 +129,7 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(gmag), ' 1             # total magnitude\n'])
-        f.writelines([' 4) 0.50 0             #FWHM'])
+        f.writelines([' 4) 0.50 0             #FWHM\n'])
         f.writelines([' 8) 1 0     # axis ratio (b/a)\n'])
         f.writelines([' 9) 10.0 0                 # position '\
                       'angle(PA) [Degrees: Up=0, Left=90]\n'])

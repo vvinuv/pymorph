@@ -29,6 +29,12 @@ class WriteHtmlFunc:
         self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag)
 
 def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, Flag):
+    try:
+        ComP = c.components
+    except:
+        ComP = ['bulge', 'disk']
+    if len(ComP) == 0:
+        ComP = ['bulge', 'disk']
     Goodness = float(str(round(Goodness, 3))[:5])
     f_tpl = open(str(c.PYMORPH_PATH) + '/default.html', 'r')
     template = f_tpl.read()
@@ -104,6 +110,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'expdisk'):
                     mag_d = float(values[4])
                     rd = float(values[5])
+                if(str(values[0]) == 'gaussian'):
+                    mag_g = float(values[4])
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err == 1):
                         mag_b_err = float(values[2])
@@ -113,6 +121,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     if(str(a) == 'expdisk'):
                         mag_d_err = float(values[2])
                         rd_err = float(values[3])
+                    if(str(a) == 'gaussian'):
+                        mag_g_err = float(values[2])
                 a=values[0]				
             except:
                 pass
@@ -123,64 +133,109 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             rd_err_kpc = 9999
         else:
             phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
-            re_kpc = phy_parms[3] * re
-            re_err_kpc = phy_parms[3] * re_err
-            rd_kpc = phy_parms[3] * rd
-            rd_err_kpc = phy_parms[3] * rd_err
-        BD = 10**(-0.4 * ( mag_b - mag_d))
-        BT = 1.0 / (1.0 + 1.0 / BD)
+            if 'bulge' in ComP:
+                re_kpc = phy_parms[3] * re
+                re_err_kpc = phy_parms[3] * re_err
+            else:
+                re_kpc = 9999
+                re_err_kpc = 9999
+            if 'disk' in ComP:
+                rd_kpc = phy_parms[3] * rd
+                rd_err_kpc = phy_parms[3] * rd_err
+            else:
+                rd_kpc = 9999
+                rd_err_kpc = 9999
+            if 'point' in ComP:
+                fwhm_kpc = 0.5 * phy_parms[3]
+            else:
+                fwhm_kpc = 9999
+        if 'bulge' in ComP and 'disk' in ComP:
+            BD = 10**(-0.4 * ( mag_b - mag_d))
+            BT = 1.0 / (1.0 + 1.0 / BD)
+        elif 'bulge' in ComP:
+            BD = 'nan'
+            BT = 1.0
+        elif 'disk' in ComP:
+            BD = 1.0
+            BT = 1.0
+        else:
+            BD = 'nan'
+            BT = 'nan'
     pngfile = 'P_' + str(cutimage)[:-4] + 'png'
     object = 1
     object_err = 1
     Neighbour_Sersic = ''
+    Object_Sersic = ''
+    Object_Sersic_err = ''
+    Object_Exp = ''
+    Object_Exp_err = ''
+    Point_Vals = ''
+    Point_Vals_err = ''
     if exists('fit.log'):
         for line in open('fit.log','r'): 
             values = line.split() 
             try: 
                 if(str(values[0]) == 'sersic'):
-                    if object > 1:
+                    if object > 1 or 'bulge' in ComP == False:
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
-                                           '<TR align="center" bgcolor=' + \
-                                           '"#99CCFF"><TD>' + str(values[0]) + \
-                                           ' </TD> <TD> ' + \
-                                           str(values[2])[1:-1] + '</TD> <TD> '\
-                                           + str(values[3])[:-1] + \
-                                           ' </TD> <TD> ' + str(values[4]) + \
-                                           ' </TD> <TD> ' + \
-                                           str(values[5]) + ' </TD> <TD> ' + \
-                                           ' ' + ' </TD> <TD> ' + \
-                                           str(values[6]) + ' </TD> <TD> ' +\
-                                           str(values[7]) + ' </TD> <TD> ' +\
-                                           str(values[8]) + ' </TD> <TD> ' + \
-                                           str(values[9]) + ' </TD> </TR>'
-                    if object == 1:
+                                          '<TR align="center" bgcolor=' + \
+                                          '"#99CCFF"><TD>' + str(values[0]) + \
+                                          ' </TD> <TD> ' + \
+                                          str(values[2])[1:-1] + '</TD> <TD> '\
+                                          + str(values[3])[:-1] + \
+                                          ' </TD> <TD> ' + str(values[4]) + \
+                                          ' </TD> <TD> ' + \
+                                          str(values[5]) + ' </TD> <TD> ' + \
+                                          ' ' + ' </TD> <TD> ' + \
+                                          str(values[6]) + ' </TD> <TD> ' +\
+                                          str(values[7]) + ' </TD> <TD> ' +\
+                                          str(values[8]) + ' </TD> <TD> ' + \
+                                          str(values[9]) + ' </TD> </TR>'
+                    if object == 1 and 'bulge' in ComP:
                         bulge_xcntr = float(str(values[2])[1:-1])
                         bulge_ycntr = float(str(values[3])[:-1])
-                        Object_Sersic = '<TD>' + str(values[0]) + '</TD> <TD> '\
-                                        + str(values[2])[1:-1] + ' </TD> <TD> '\
-                                        + str(values[3])[:-1] + ' </TD> <TD> ' \
-                                        + str(values[4]) + ' </TD> <TD> ' \
-                                        + str(values[5]) +  ' </TD> <TD> ' + \
-                                        str(round(re_kpc, 3))[:5] +'</TD> <TD>'\
-                                        + str(values[6]) + ' </TD> <TD> ' \
-                                        + str(values[7]) + ' </TD> <TD> ' \
-                                        + str(values[8]) + ' </TD> <TD> ' \
-                                        + str(values[9]) + ' </TD>'
+                        Object_Sersic = '<TR align="center" ' +\
+                                        'bgcolor="#99CCFF">' +\
+                                       '<TD>' + str(values[0]) + '</TD> <TD> '\
+                                       + str(values[2])[1:-1] + ' </TD> <TD> '\
+                                       + str(values[3])[:-1] + ' </TD> <TD> ' \
+                                       + str(values[4]) + ' </TD> <TD> ' \
+                                       + str(values[5]) +  ' </TD> <TD> ' + \
+                                       str(round(re_kpc, 3))[:5] +'</TD> <TD>'\
+                                       + str(values[6]) + ' </TD> <TD> ' \
+                                       + str(values[7]) + ' </TD> <TD> ' \
+                                       + str(values[8]) + ' </TD> <TD> ' \
+                                       + str(values[9]) + ' </TD></TR>'
                         object += 1
                 if(str(values[0]) == 'expdisk'):
                     disk_xcntr = float(str(values[2])[1:-1])
                     disk_ycntr = float(str(values[3])[:-1])
-                    Object_Exp = '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
-                                 str(values[2])[1:-1] + ' </TD> <TD> ' + \
-                                 str(values[3])[:-1] + ' </TD> <TD> ' + \
-                                 str(values[4]) + ' </TD> <TD> ' + \
-                                 str(values[5]) +  ' </TD> <TD> ' + \
-                                 str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
-                                 ' ' + ' </TD> <TD> ' + str(values[6]) +  \
-                                 ' </TD> <TD> ' + str(values[7]) + \
-                                 ' </TD> <TD> ' + str(values[8]) + ' </TD>'
+                    Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
+                                '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
+                                str(values[2])[1:-1] + ' </TD> <TD> ' + \
+                                str(values[3])[:-1] + ' </TD> <TD> ' + \
+                                str(values[4]) + ' </TD> <TD> ' + \
+                                str(values[5]) +  ' </TD> <TD> ' + \
+                                str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                ' ' + ' </TD> <TD> ' + str(values[6]) +  \
+                                ' </TD> <TD> ' + str(values[7]) + \
+                                ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
+                if(str(values[0]) == 'gaussian'):
+                    point_xcntr = float(str(values[2])[1:-1])
+                    point_ycntr = float(str(values[3])[:-1])
+                    Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
+                                 '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
+                               str(values[2])[1:-1] + ' </TD> <TD> ' + \
+                               str(values[3])[:-1] + ' </TD> <TD> ' + \
+                               str(values[4]) + ' </TD> <TD> ' + \
+                               str(values[5]) +  ' </TD> <TD> ' + \
+                               str(round(fwhm_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                               ' ' + ' </TD> <TD> ' + str(values[6]) +  \
+                               ' </TD> <TD> ' + str(values[7]) + \
+                               ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
                 if(str(values[0])[:1] == '('):
-                    if(str(a) == 'sersic' and object_err > 1):
+                    if(str(a) == 'sersic' and object_err > 1 or \
+                        'bulge' in ComP == False):
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
                                            '<TR align="center" ' + \
                                            'bgcolor="#CCFFFF"> <TD>' + ' ' + \
@@ -196,22 +251,27 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                            ' </TD> <TD> ' + str(values[6]) + \
                                            ' </TD> <TD> ' + str(values[7]) + \
                                            ' </TD> </TR> '
-                    if(str(a) == 'sersic' and object_err == 1):
-                        Object_Sersic_err = '<TD>' + ' ' + '</TD> <TD>' + \
-                                            str(values[0])[1:-1] + '</TD> <TD>'\
-                                            + str(values[1])[:-1] + \
-                                            ' </TD> <TD> ' + str(values[2]) + \
-                                            ' </TD> <TD> ' + str(values[3]) + \
-                                            ' </TD> <TD> ' + \
-                                            str(round(re_err_kpc, 3))[:5] + \
-                                            ' </TD> <TD> ' + str(values[4]) + \
-                                            ' </TD> <TD> ' + str(values[5]) + \
-                                            ' </TD> <TD> ' + str(values[6]) + \
-                                            ' </TD> <TD> ' + str(values[7]) + \
-                                            ' </TD>'
+                    if(str(a) == 'sersic' and object_err == 1 and \
+                        'bulge' in ComP ):
+                        Object_Sersic_err = '<TR align="center" ' + \
+                                           'bgcolor="#CCFFFF">' + \
+                                           '<TD>' + ' ' + '</TD> <TD>' + \
+                                          str(values[0])[1:-1] + '</TD> <TD>'\
+                                           + str(values[1])[:-1] + \
+                                           ' </TD> <TD> ' + str(values[2]) + \
+                                           ' </TD> <TD> ' + str(values[3]) + \
+                                           ' </TD> <TD> ' + \
+                                           str(round(re_err_kpc, 3))[:5] + \
+                                           ' </TD> <TD> ' + str(values[4]) + \
+                                           ' </TD> <TD> ' + str(values[5]) + \
+                                           ' </TD> <TD> ' + str(values[6]) + \
+                                           ' </TD> <TD> ' + str(values[7]) + \
+                                           ' </TD></TR>'
                         object_err += 1
                     if(str(a) == 'expdisk'):
-                        Object_Exp_err = '<TD>' + ' ' + '</TD> <TD>' + \
+                        Object_Exp_err = '<TR align="center" ' + \
+                                         'bgcolor="#CCFFFF">' + \
+                                         '<TD>' + ' ' + '</TD> <TD>' + \
                                          str(values[0])[1:-1] + '</TD> <TD>'\
                                          + str(values[1])[:-1] + \
                                          ' </TD> <TD> ' + str(values[2]) + \
@@ -222,7 +282,22 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                          ' </TD> <TD> ' + str(values[4]) + \
                                          ' </TD> <TD> ' + str(values[5]) + \
                                          ' </TD> <TD> ' + str(values[6]) + \
-                                         ' </TD>'
+                                         ' </TD></TR>'
+                    if(str(a) == 'gaussian'):
+                        Point_Vals_err = '<TR align="center" ' + \
+                                         'bgcolor="#CCFFFF">' + \
+                                         '<TD>' + ' ' + '</TD> <TD>' + \
+                                         str(values[0])[1:-1] + '</TD> <TD>'\
+                                         + str(values[1])[:-1] + \
+                                         ' </TD> <TD> ' + str(values[2]) + \
+                                         ' </TD> <TD> ' + str(values[3]) + \
+                                         ' </TD> <TD> ' + \
+                                         str(0.0)[:5] + \
+                                         ' </TD> <TD> ' + ' ' + \
+                                         ' </TD> <TD> ' + str(values[4]) + \
+                                         ' </TD> <TD> ' + str(values[5]) + \
+                                         ' </TD> <TD> ' + str(values[6]) + \
+                                         ' </TD></TR>'
                 a=values[0]				
             except:
                 pass
@@ -236,6 +311,16 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg1 = ''
     error_mesg2 = ''
     error_mesg3 = ''
+    if 'bulge' in ComP:
+        pass
+    else:
+        bulge_xcntr = xcntr
+        bulge_ycntr = ycntr
+    if 'disk' in ComP:
+        pass
+    else:
+        disk_xcntr = xcntr
+        disk_ycntr = ycntr
     if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
         abs(bulge_xcntr - xcntr) <= c.center_deviation and \
         abs(bulge_ycntr - ycntr) <= c.center_deviation and \
@@ -269,7 +354,36 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     f_res = open("result.csv", "ab")
     writer = csv.writer(f_res)
     galid = str(cutimage)[to_remove:-5]
-    writer.writerow([galid, alpha_j, delta_j, z, mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, n, n_err, mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, BD, BT, chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G, M, distance, good_fit, Flag])
+    ParamToWrite = [galid, alpha_j, delta_j, z]
+    if 'bulge' in ComP:
+        for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
+                          n, n_err]:
+            ParamToWrite.append(bulgecomp)
+    else:
+        for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
+            ParamToWrite.append(bulgecomp)
+    if 'disk' in ComP:
+        for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc]:
+            ParamToWrite.append(diskcomp)
+    else:
+        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999]:
+            ParamToWrite.append(diskcomp)
+    ParamToWrite.append(BD)
+    ParamToWrite.append(BT)
+    if 'point' in ComP:
+        ParamToWrite.append(mag_g)
+        ParamToWrite.append(mag_g_err)
+        ParamToWrite.append(0.5)
+        ParamToWrite.append(fwhm_kpc)
+    else:
+        ParamToWrite.append(9999)
+        ParamToWrite.append(9999)
+        ParamToWrite.append(9999)
+        ParamToWrite.append(9999)
+    for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
+                       M, distance, good_fit, Flag]:
+        ParamToWrite.append(otherparam)
+    writer.writerow(ParamToWrite)
     f_res.close()
 
     outfile1 = open('galfit.html', 'w')
