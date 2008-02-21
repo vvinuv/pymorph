@@ -378,7 +378,6 @@ def main():
                         if Square:
                             SizeX = max(SizeX, SizeY)
                             SizeY = max(SizeX, SizeY)
-                        print SizeX, SizeY, pos_ang, ReSize, VarSize
                         if c.galcut:
                             if ReSize:
                                 if VarSize:
@@ -397,7 +396,6 @@ def main():
                                 SizeY = FixSize        
                         SizeXB = SizeX         #Bookkeeping the size
                         SizeYB = SizeY         #Bookkeeping the size
-                        print SizeX, SizeY
                         xcntr  = float(values[1])
                         ycntr  = float(values[2])
                         xmin = int(xcntr) - (SizeX / 2) - 1
@@ -408,7 +406,6 @@ def main():
                         yminOut = 0
                         xmaxOut = 0
                         ymaxOut = 0
-                        print xmin, ymin, xmax, ymax
                         f_err.writelines(['\n\n###########   ', str(gal_id), \
                                           '   ###########\n'])
                         run = 1 #run =1 when pipeline runs sucessfuly
@@ -476,9 +473,6 @@ def main():
                                 GalaxyCuT = n.swapaxes(GalaxyCuT, 0, 1) 
                                 SizeX = GalaxyCuT.shape[0]
                                 SizeY = GalaxyCuT.shape[1]
-                                CenterS = center_of_mass( \
-                                        GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
-                                                  SizeY / 2 - 5:SizeY / 2 + 5])
                                 if c.galcut and ReSize == 0:
                                     pass
                                 elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
@@ -500,6 +494,9 @@ def main():
                                     except:
                                         pass
                                 else:
+                                    CenterS = center_of_mass( \
+                                        GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
+                                                  SizeY / 2 - 5:SizeY / 2 + 5])
                                     xcntr = SizeX / 2 + CenterS[1] - 5
                                     ycntr = SizeY / 2 + CenterS[0] - 5
                                 print cutimage,xcntr, ycntr, SizeX, SizeY
@@ -770,13 +767,15 @@ def main():
                                                     FMo=pyfits.open(outimage)
                                                     MoDel = f[2].data
                                                     FMo.close()
+                                                    MoDel = n.swapaxes(MoDel, \
+                                                            0, 1)
                                                     MoShapX = MoDel.shape[0] /2
                                                     MoShapY = MoDel.shape[1] /2
                                                     MoCen = center_of_mass( \
-                                                    MoDel[MoShapY-5:MoShapY+5, \
-                                                          MoShapX-5:MoShapX+5])
-                                                    MoX = MoShapX + MoCen[1] -5
-                                                    MoY = MoShapY + MoCen[0] -5
+                                                    MoDel[MoShapX-5:MoShapX+5, \
+                                                          MoShapY-5:MoShapY+5])
+                                                    MoX = MoShapX + MoCen[0] -5
+                                                    MoY = MoShapY + MoCen[1] -5
                                                 except:
                                                     MoX = xcntr
                                                     MoY = ycntr

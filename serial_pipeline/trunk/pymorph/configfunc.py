@@ -3,7 +3,7 @@ import sys
 import pyfits
 import config as c
 from os.path import exists
-
+from numpy import log10
 
 class ConfigFunc:
     """The class making configuration file for GALFIT. The configuration file 
@@ -46,10 +46,10 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     else:
         f_constrain = open(constrain_file,'w')
         f_constrain.write('1        n        0.2 to 20.0  \n')
-        f_constrain.write('1        x        -4.0      4.0\n')
-        f_constrain.write('1        y        -4.0      4.0\n')
-        f_constrain.write('2        x        -4.0      4.0\n')
-        f_constrain.write('2        y        -4.0      4.0\n')
+        f_constrain.write('1        x        -6.0      6.0\n')
+        f_constrain.write('1        y        -6.0      6.0\n')
+        f_constrain.write('2        x        -6.0      6.0\n')
+        f_constrain.write('2        y        -6.0      6.0\n')
         f_constrain.close()
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
@@ -123,7 +123,20 @@ def conf(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' Z) 0             	# output image '\
                       '(see above)\n\n\n'])
     if 'point' in ComP:
+        gmag = mag + 2.5 * log10(2.0)
         f.writelines(['# Gaussian function\n\n'])
+        f.writelines([' 0) gaussian              # Object type\n'])
+        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
+                      ' position x, y [pixel]\n'])
+        f.writelines([' 3) ', str(gmag), ' 1             # total magnitude\n'])
+        f.writelines([' 4) 0.50 0             #FWHM'])
+        f.writelines([' 8) 1 0     # axis ratio (b/a)\n'])
+        f.writelines([' 9) 10.0 0                 # position '\
+                      'angle(PA) [Degrees: Up=0, Left=90]\n'])
+        f.writelines(['10) 0.0 0                # diskiness (< 0) or '\
+                      'boxiness (> 0)\n'])
+        f.writelines([' Z) 0                    # output image '\
+                      '(see above)\n\n\n'])
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
     f.writelines([' 1) ', str(sky), ' 0	# sky background [ADU counts\n'])
