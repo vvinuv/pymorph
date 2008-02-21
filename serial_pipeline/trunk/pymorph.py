@@ -373,10 +373,12 @@ def main():
                              axis_rat * major_axis * FracRad * abs(n.sin(ArcR)) 
                         SizeY = major_axis * FracRad * abs(n.sin(ArcR)) + \
                              axis_rat * major_axis * FracRad * abs(n.cos(ArcR))
+                        SizeX = int(SizeX)
+                        SizeY = int(SizeY)
                         if Square:
                             SizeX = max(SizeX, SizeY)
                             SizeY = max(SizeX, SizeY)
-                        print SizeX, SizeY, pos_ang, 'hi', ReSize, VarSize
+                        print SizeX, SizeY, pos_ang, ReSize, VarSize
                         if c.galcut:
                             if ReSize:
                                 if VarSize:
@@ -393,17 +395,24 @@ def main():
                             else:
                                 SizeX = FixSize
                                 SizeY = FixSize        
+                        SizeXB = SizeX         #Bookkeeping the size
+                        SizeYB = SizeY         #Bookkeeping the size
                         print SizeX, SizeY
                         xcntr  = float(values[1])
                         ycntr  = float(values[2])
-                        xmin = int(xcntr - (SizeX / 2 + 1))
-                        ymin = int(ycntr - (SizeY / 2 + 1))
-                        xmax = int(xcntr + (SizeX / 2 - 1))
-                        ymax = int(ycntr + (SizeY / 2 - 1))
+                        xmin = int(xcntr) - (SizeX / 2) - 1
+                        ymin = int(ycntr) - (SizeY / 2) - 1
+                        xmax = int(xcntr) + (SizeX / 2) - 1
+                        ymax = int(ycntr) + (SizeY / 2) - 1
+                        xminOut = 0
+                        yminOut = 0
+                        xmaxOut = 0
+                        ymaxOut = 0
                         print xmin, ymin, xmax, ymax
                         f_err.writelines(['\n\n###########   ', str(gal_id), \
                                           '   ###########\n'])
                         run = 1 #run =1 when pipeline runs sucessfuly
+                        Flag = 0
                         try:
                             if(c.repeat == False and c.galcut == False):
                                 z1 = image[ymin:ymax,xmin:xmax]
@@ -419,6 +428,24 @@ def main():
                                 fZcuT = pyfits.open(gimg)
                                 ZcuT = fZcuT[0].data
                                 fZcuT.close()
+                                TX = ZcuT.shape[1]
+                                TY = ZcuT.shape[0]
+                                if(xmin < 0):
+                                    Flag = 16384 
+                                    xminOut = xmin
+                                    xmin = 0
+                                if(ymin < 0):
+                                    Flag = Flag + 32768
+                                    yminOut = ymin
+                                    ymin = 0
+                                if(xmax > TX):
+                                    Flag = Flag + 65536
+                                    xmaxOut = xmax
+                                    xmax = TX
+                                if(ymax > TY):
+                                    Flag = Flag + 131072
+                                    ymaxOut = ymax
+                                    ymax = TY
                                 ZcuT1 = ZcuT[ymin:ymax,xmin:xmax]
                                 hdu = pyfits.PrimaryHDU(ZcuT1.astype(n.float32))
                                 try:
@@ -454,6 +481,24 @@ def main():
                                                   SizeY / 2 - 5:SizeY / 2 + 5])
                                 if c.galcut and ReSize == 0:
                                     pass
+                                elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
+                                     or ymaxOut != 0:
+                                    if xminOut != 0:
+                                        xcntr = SizeXB / 2.0 + xminOut
+                                    if yminOut != 0:
+                                        ycntr = SizeYB / 2.0 + xminOut 
+                                    if xmaxOut != 0:
+                                        xcntr = xcntr
+                                    if ymaxOut != 0:
+                                        ycntr = ycntr
+                                    try:
+                                        CenterS = center_of_mass( \
+                                            GalaxyCuT[xcntr - 3:xcntr + 3, \
+                                                      ycntr - 3:ycntr + 3])
+                                        xcntr = xcntr + CenterS[1] - 3
+                                        ycntr = ycntr + CenterS[0] - 3
+                                    except:
+                                        pass
                                 else:
                                     xcntr = SizeX / 2 + CenterS[1] - 5
                                     ycntr = SizeY / 2 + CenterS[0] - 5
@@ -480,7 +525,6 @@ def main():
                                                   'for casgm to find the sky'\
                                                   ' sigma and mean. Remove '\
                                                    'if BMask.fits exists\n'])
-                                Flag = 0
                                 #major axis of the object
                                 if(c.decompose):
                                     try:

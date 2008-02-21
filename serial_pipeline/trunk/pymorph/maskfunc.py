@@ -104,10 +104,8 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
                     z[n.where(R<=mask_reg*maj_axis)] = 1
         except:
             pass
-    print 'h0'
     z = z + tmp_mask
     z[n.where(z > 0)] = 1
-    print 'hi'
     z = im.binary_dilation(z, iterations=6)
     z = im.binary_fill_holes(z)
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
