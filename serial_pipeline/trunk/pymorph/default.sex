@@ -67,7 +67,7 @@ XML_NAME         sex.xml        # Filename for XML output
 
 #------------------------------ Check Image ----------------------------------
 
-CHECKIMAGE_TYPE  SEGMENTATION           # can be NONE, BACKGROUND, BACKGROUND_RMS,
+CHECKIMAGE_TYPE  APERTURES           # can be NONE, BACKGROUND, BACKGROUND_RMS,
                                 # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
                                 # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
                                 # or APERTURES

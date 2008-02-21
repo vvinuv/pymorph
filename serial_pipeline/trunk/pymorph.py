@@ -374,13 +374,13 @@ def main():
                        abs(delta_s - delta_j) < 0.00027/1.0 or \
                        abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
                         mag    = float(values[7]) #Magnitude
-                        radius = float(values[9]) #Half light radius
+                        halfradius = float(values[9]) #Half light radius
                         mag_zero = c.mag_zero #magnitude zero point
                         sky  = float(values[10]) #sky
-                        pos_ang = pa(values[11])
+                        pos_ang = pa(float(values[11]))
                         axis_rat = 1.0 / float(values[12]) #axis ration b/a
                         eg = 1 - axis_rat
-                        ArcR = pos_ang * (3.14 / 180.0)
+                        ArcR = float(values[11]) * (3.14 / 180.0)
                         if(eg<=0.05):
                             eg = 0.07
                         major_axis = float(values[14])
@@ -400,10 +400,10 @@ def main():
                                         str(gal_id) + '.fits'
                             whtimage = 'W' + str(c.rootname) + '_' + \
                                         str(gal_id) + '.fits'
-                        SizeX = major_axis * FracRad * abs(n.cos(ArcR)) + \
-                             axis_rat * major_axis * FracRad * abs(n.sin(ArcR)) 
-                        SizeY = major_axis * FracRad * abs(n.sin(ArcR)) + \
-                             axis_rat * major_axis * FracRad * abs(n.cos(ArcR))
+                        SizeX = halfradius * FracRad * abs(n.cos(ArcR)) + \
+                             axis_rat * halfradius * FracRad * abs(n.sin(ArcR)) 
+                        SizeY = halfradius * FracRad * abs(n.sin(ArcR)) + \
+                             axis_rat * halfradius * FracRad * abs(n.cos(ArcR))
                         SizeX = int(SizeX)
                         SizeY = int(SizeY)
                         if Square:
@@ -520,16 +520,16 @@ def main():
                                         CenterS = center_of_mass( \
                                             GalaxyCuT[xcntr - 3:xcntr + 3, \
                                                       ycntr - 3:ycntr + 3])
-                                        xcntr = xcntr + CenterS[1] - 3
-                                        ycntr = ycntr + CenterS[0] - 3
+                                        xcntr = xcntr + CenterS[0] - 3
+                                        ycntr = ycntr + CenterS[1] - 3
                                     except:
                                         pass
                                 else:
                                     CenterS = center_of_mass( \
                                         GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
                                                   SizeY / 2 - 5:SizeY / 2 + 5])
-                                    xcntr = SizeX / 2 + CenterS[1] - 5
-                                    ycntr = SizeY / 2 + CenterS[0] - 5
+                                    xcntr = SizeX / 2 + CenterS[0] - 5
+                                    ycntr = SizeY / 2 + CenterS[1] - 5
                                 print cutimage,xcntr, ycntr, SizeX, SizeY
                                 try:
                                 #The following function provide the center of blank sky region and the sky sigma    
