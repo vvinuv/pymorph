@@ -53,7 +53,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         model = f[2].data
         residual = f[3].data
         f.close()
-        anorm = normalize(galaxy.min(), 3.0*skysig) #Color normalization
+        anorm = normalize(galaxy.min(), 10.0*skysig) #Color normalization
         #Read mask
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
@@ -72,12 +72,12 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         residual = ma.filled(maskedresidual, value=9999)
         #colorbar(shrink=0.90)
         valid_pixels = ma.count(maskedresidual)
-        print 'valid_pixels', valid_pixels
+        print 'No of valid pixels >>> ', valid_pixels
         pixels_in_skysig = residual[n.where(abs(residual) <= skysig / 2.0)].size
-        print 'pixels_in_skysig', pixels_in_skysig
+        print 'No of pixels within sky sigma >>> ', pixels_in_skysig
         goodness = pixels_in_skysig / float(valid_pixels)
         hist_mask = n.zeros((NXPTS, NYPTS))
-        hist_mask[n.where(abs(residual) > 2.0 * skysig)] = 1
+        hist_mask[n.where(abs(residual) > 10.0 * skysig)] = 1
         hist_res = ma.masked_array(residual, hist_mask)
         #The procedure for chi2nu wrt radius is starting here
         x = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
@@ -87,11 +87,11 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         tx = x - xcntr + 0.5
         ty = y - ycntr + 0.5
         R = n.sqrt(tx**2.0 + ty**2.0)
-        Chi2Nu = []
-        Chi2NuRad = []
-        StartRad = 2.0
-        TempRad = 0.0
-        while StartRad <= max(NXPTS / 2.0, NYPTS / 2.0):
+#        Chi2Nu = []
+#        Chi2NuRad = []
+#        StartRad = 2.0
+#        TempRad = 0.0
+#        while StartRad <= max(NXPTS / 2.0, NYPTS / 2.0):
 #            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
 #                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
 #                         TempRad)])))**2.0 / \
@@ -99,18 +99,18 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
 #                         galaxy[n.where(R <= TempRad)].sum()) * \
 #                         (ma.count(maskedresidual[n.where(R <= StartRad)]) -\
 #                          ma.count(maskedresidual[n.where(R <= TempRad)])))
-            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
-                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
-                         TempRad)])))**2.0 / \
-                         (galaxy[n.where(R <= StartRad)].sum() - \
-                         galaxy[n.where(R <= TempRad)].sum())
-            try:
-                Chi2Nu.append(float(Chi2NuEle))
-                Chi2NuRad.append(StartRad)
-            except:
-                pass
-            TempRad = StartRad
-            StartRad += 1.0
+#            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
+#                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
+#                         TempRad)])))**2.0 / \
+#                         (galaxy[n.where(R <= StartRad)].sum() - \
+#                         galaxy[n.where(R <= TempRad)].sum())
+#            try:
+#                Chi2Nu.append(float(Chi2NuEle))
+#                Chi2NuRad.append(StartRad)
+#            except:
+#                pass
+#            TempRad = StartRad
+#            StartRad += 1.0
     except:
         pass
     try:
@@ -172,6 +172,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         axUL = axes(rect1)
         image1 = imshow(n.flipud(n.swapaxes(galaxy, 0, 1)), \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+        colorbar(shrink=1.0, format='%.2f')
         title('Original Galaxy')
         axUM = axes(rect2)
         image1 = imshow(n.flipud(n.swapaxes(model, 0, 1)), cmap=cm.jet, \
@@ -180,6 +181,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         axUR = axes(rect3)
         image1 = imshow(n.flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+        colorbar(shrink=1.0)
         title('Residual')
         axLR = axes(rect4)
         nn, bins, patches = hist(hist_res, 50, normed=0)

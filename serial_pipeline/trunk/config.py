@@ -13,7 +13,7 @@ out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = 'j8f647'
 
 ###----Psf list----###
-psfselect = 1                         #0 => No psfselection
+psfselect = 0                         #0 => No psfselection
                                       #1 => Only Select psf 
                                       #2 => Select psf and run pipeline
                                       #Recommended: Run with '1' and then run
@@ -47,7 +47,7 @@ threshold = 3.0                       #Masking will be done for neighbours
 
 ###---Size of the cut out and search conditions---###
 ###---size = [resize?, varsize?, fracrad, square?, fixsize]---###
-size = [0, 0, 6, 1, 120]              #size of the stamp image
+size = [0, 1, 4, 0, 120]              #size of the stamp image
 shiftra = 0.0 
 shiftdec =  0.0                       #If the image WCS is not same as the 
                                       #coordinate given in the clus_cata, 
@@ -58,7 +58,7 @@ shiftdec =  0.0                       #If the image WCS is not same as the
                                       #correct objects. Remember: Shift 
                                       #in the frame is not LINEAR! and it 
                                       #can leads to detect wrong objects
-
+searchrad = '1arc'                    #The search radius  
 ###----Parameters for calculating the physical parameters of galaxy----###
 pixelscale = 0.045                    #Pixel scale (arcsec/pixel)
 H0 = 71                               #Hubble parameter
@@ -77,7 +77,7 @@ galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
-components = ['disk']
+components = ['bulge', 'disk']
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 

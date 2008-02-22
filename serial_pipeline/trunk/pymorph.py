@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""This is the python pipeline for Morphological parameters of galaxy"""
+"""PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Written by Vinu Vikram in collaboration with 
+Yogesh Wadadekar and Ajit K. Kembhavi. 2008 Feb"""
 
 import os
 import time
@@ -72,7 +73,7 @@ def main():
             img = pyfits.open(imagefile)
             image = img[0].data
             img.close()
-            print imagefile
+            print "imagefile >>> ", imagefile
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
@@ -82,7 +83,7 @@ def main():
                 wht = pyfits.open(whtfile)
                 weight = wht[0].data
                 wht.close()
-                print whtfile
+                print "whtfile >>> ", whtfile
         else:
            print 'No weight image found\n'
     except IOError, (errno, strerror):
@@ -221,8 +222,8 @@ def main():
                 try:
                     gal_id = pdb["gimg"][:-5] #id will be filename without .fits
                 except:
-                    print "No image or gal_id found in the object catalogue. \
-                           Exiting"
+                    print "No image or gal_id found in the object catalogue." \
+                          "Exiting"
                     os._exit(0)
             try:
                 alpha1 = float(pdb["ra1"])
@@ -299,7 +300,7 @@ def main():
             else:
                 cfile = 'None'
             if c.galcut:
-                print 'Image is ', gimg
+                print 'Image is >>> ', gimg
             if(c.galcut == True):
                     ggimg = pyfits.open(gimg)
                     ggimage = ggimg[0].data
@@ -370,9 +371,21 @@ def main():
 #                    else:
 #                        xcntr  = 9999
 #                        ycntr  = 9999
-                    if(abs(alpha_j - alpha_s) < 0.00027/1.0 and \
-                       abs(delta_s - delta_j) < 0.00027/1.0 or \
-                       abs(xcntr - ximg) < 10.5 and abs(ycntr - yimg) < 10.5):
+                    try:
+                        SearchRad = c.searchrad
+                    except:
+                        SearchRad = '1arc'
+                    if SearchRad.endswith('arc'):
+                        SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
+                        SeaPix = 10.0
+                    elif SearchRad.endswith('pix'):
+                        SeaPix = float(SearchRad[:-3])
+                        SeaDeg =  0.00027
+                    if(abs(alpha_j - alpha_s) < SeaDeg and \
+                       abs(delta_s - delta_j) < SeaDeg or \
+                       abs(xcntr - ximg) < SeaPix and \
+                       abs(ycntr - yimg) < SeaPix):
+                        print "SExtractor ID >>> ", values[0]
                         mag    = float(values[7]) #Magnitude
                         halfradius = float(values[9]) #Half light radius
                         mag_zero = c.mag_zero #magnitude zero point
@@ -429,7 +442,7 @@ def main():
                         SizeYB = SizeY         #Bookkeeping the size
                         xcntr  = float(values[1])
                         ycntr  = float(values[2])
-                        print 'xcntr, ycntr, SizeX, SizeY', xcntr, ycntr, SizeX, SizeY
+#                        print 'xcntr, ycntr, SizeX, SizeY', xcntr, ycntr, SizeX, SizeY
                         xmin = int(xcntr) - SizeX 
                         ymin = int(ycntr) - SizeY 
                         xmax = int(xcntr) + SizeX 
@@ -524,7 +537,7 @@ def main():
                                 else:
                                     xcntr = SizeX / 2 + xcntrFrac
                                     ycntr = SizeY / 2 + ycntrFrac
-                                print cutimage,xcntr, ycntr, SizeX, SizeY
+#                                print cutimage,xcntr, ycntr, SizeX, SizeY
                                 try:
                                 #The following function provide the center of blank sky region and the sky sigma    
                                     ElliMaskFunc(cutimage, xcntr, ycntr, \
@@ -536,7 +549,7 @@ def main():
                                         bxcntr = Bkgd_Params.bkgd[0]
                                         bycntr = Bkgd_Params.bkgd[1]
                                         skysig = Bkgd_Params.bkgd[2]
-                                        print skysig
+                                        print 'Sky Sigma >>> ', skysig
                                     except:
                                         f_err.writelines(['Could not',\
                                                   ' find the sky'\
@@ -635,7 +648,9 @@ def main():
                                     G = caSgm[6]
                                     M = caSgm[7]
                                     print 'C, C_err, A, A_err, S, S_err, G,'\
-                                    ' M ', C, C_err, A, A_err, S, S_err, G, M
+                                    ' M >>> ', str(C)[:5], str(C_err)[:5], \
+                                    str(A)[:5], str(A_err)[:5], str(S)[:5], \
+                                    str(S_err)[:5], str(G)[:5], str(M)[:5]
                                     if(c.decompose == False):
                                         f_res = open("result.csv", "ab")
                                         writer = csv.writer(f_res)
@@ -999,7 +1014,7 @@ def selectpsf(ImG, CaT):
             os.system('xpaset -p ds9 scale mode zscale')
             os.system('xpaset -p ds9 zoom to fit')
         else:
-            print 'The psf you have give is NOT exists.'
+            print 'The psf you have give is NOT exists!!!'
             pass
         write = raw_input("Do you need this psf? ('y' if yes, 'c'"\
                           " to cancel psf checking) " )
@@ -1033,7 +1048,7 @@ def selectpsf(ImG, CaT):
                 os.system('xpaset -p ds9 scale mode zscale')
                 os.system('xpaset -p ds9 zoom to fit')
             else:
-                print 'The psf you have give is NOT exists.'
+                print 'The psf you have give is NOT exists!!!'
                 pass
             write = raw_input("Do you REALLY need this psf? ('y' or," \
                               "'n' or press any key to continue) ") 
@@ -1096,8 +1111,8 @@ if __name__ == '__main__':
                         try:
                             gal_id = pdb["gimg"][:-5]
                         except:
-                            print "No image or gal_id found in the object \
-                                  catalogue. Exiting"
+                            print "No image or gal_id found in the object" \
+                                  "catalogue. Exiting"
                             os._exit(0)
                     try:
                         gimg = pdb["gimg"]    #Galaxy cutout

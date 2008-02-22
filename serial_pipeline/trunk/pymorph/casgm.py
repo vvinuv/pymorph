@@ -49,11 +49,12 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     nypts = z.shape[1]
     f_err = open('error.log', 'a')
     try:
-        print "back_ini_xcntr, back_ini_ycntr", back_ini_xcntr, back_ini_ycntr
+        print "Initial background Center >>> (", back_ini_xcntr, \
+               back_ini_ycntr, ")"
         casgmrun = 1
     except:
         casgmrun = 0
-        f_err.writelines(['Failed to find the background region\n'])
+        f_err.writelines(['Failed to find the background region!!!\n'])
     f_err.close()
     z = z - sky
     f=pyfits.open(maskimage)
@@ -78,7 +79,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     else:
         sigma=0.25*extraction_radius/1.5
 
-        print "r20, r50, r80, EXTRACTION RADIUS ",r20, r50, r80, con.total_rad
+        print "R20 R50 R80 Extraction Radius >>> ", str(r20)[:5], str(r50)[:5],\
+              str(r80)[:5],  str(con.total_rad)[:5]
 #        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
         
         ########################
@@ -171,7 +173,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         ########################
 
         extraction_radius = con.total_rad
-        print 'sky sigma ', skysig
+#        print 'sky sigma ', skysig
         gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, extraction_radius, sky, skysig)
 #        gini_coef = gin.gini_coef
 	gini_coef = gin.segmentation

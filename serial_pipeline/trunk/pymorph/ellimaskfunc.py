@@ -98,9 +98,9 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                 z[n.where(R <= mask_reg * maj_axis)] = 1
                 z1[n.where(R <= 2 * mask_reg * maj_axis)] = 1
-            if(abs(xcntr_n - xcntr_o) < NXPTS / 2.0 and \
-               abs(ycntr_n - ycntr_o) < NYPTS / 2.0 and galflag == 0):  
-                if((xcntr_o - xntr_n) < 0):
+            if(abs(xcntr_n - xcntr_o) < NXPTS / 2.0 + 30.0 and \
+               abs(ycntr_n - ycntr_o) < NYPTS / 2.0 + 30.0 and galflag == 0):  
+                if((xcntr_o - xcntr_n) < 0):
                     xn = xcntr + abs(xcntr_n - xcntr_o)
                 if((ycntr_o - ycntr_n) < 0):
                     yn = ycntr + abs(ycntr_n - ycntr_o)
@@ -108,13 +108,13 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                     xn = xcntr - (xcntr_o -xcntr_n)
                 if((ycntr_o - ycntr_n) > 0):
                     yn = ycntr - (ycntr_o -ycntr_n)
-                if(xcntr_n == xcntr_o and ycntr_n == ycntr_o):
+                if((xcntr_n - xcntr_o) == 0 and (ycntr_n - ycntr_o) == 0):
                     xn = xcntr 
                     yn = ycntr
                 tx = (x - xn + 1.0) * co + (y - yn + 1.0) * si
                 ty = (xn - 1.0 -x) * si + (y - yn + 1.0) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-                z[n.where(R <= maj_axis * 3.0)] = 1
+                z[n.where(R <= maj_axis * 2.5)] = 1
         except:
             i=1
     if(galflag):
@@ -137,8 +137,10 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             pass
         z = z + tmp_mask
         z[n.where(z > 0)] = 1
+        z = im.binary_dilation(z, iterations=15)
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto("BMask.fits")
+        os.system("cp BMask.fits B.fits")
 #line = '1    193.378    158.284 214.8573569 +56.7789966      3555934     3804.634   8.8786   0.0012     36.075     1433.745 -54.4    1.668    19672    38.968  16  0.00'
 #ElliMaskFunc('n5585_lR.fits', 313, line, 0)
 

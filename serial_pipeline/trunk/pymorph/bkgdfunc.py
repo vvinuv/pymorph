@@ -44,6 +44,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
         f = pyfits.open("BMask.fits")
         bgmask = f[0].data
         f.close()
+        bgmask = n.swapaxes(bgmask, 0, 1)
         bgmaskedgalaxy = ma.masked_array(z, bgmask)
         bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
         skysig = im.standard_deviation(bgmaskedgalaxy1d)
