@@ -429,10 +429,13 @@ def main():
                         SizeYB = SizeY         #Bookkeeping the size
                         xcntr  = float(values[1])
                         ycntr  = float(values[2])
-                        xmin = int(xcntr) - (SizeX / 2) - 1
-                        ymin = int(ycntr) - (SizeY / 2) - 1
-                        xmax = int(xcntr) + (SizeX / 2) - 1
-                        ymax = int(ycntr) + (SizeY / 2) - 1
+                        print 'xcntr, ycntr, SizeX, SizeY', xcntr, ycntr, SizeX, SizeY
+                        xmin = int(xcntr) - SizeX 
+                        ymin = int(ycntr) - SizeY 
+                        xmax = int(xcntr) + SizeX 
+                        ymax = int(ycntr) + SizeY
+                        xcntrFrac = xcntr - int(xcntr)
+                        ycntrFrac = ycntr - int(ycntr) 
                         xminOut = 0
                         yminOut = 0
                         xmaxOut = 0
@@ -509,27 +512,18 @@ def main():
                                 elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
                                      or ymaxOut != 0:
                                     if xminOut != 0:
-                                        xcntr = SizeXB / 2.0 + xminOut
+                                        xcntr = SizeXB + xminOut
                                     if yminOut != 0:
-                                        ycntr = SizeYB / 2.0 + xminOut 
+                                        ycntr = SizeYB + xminOut 
                                     if xmaxOut != 0:
                                         xcntr = xcntr
                                     if ymaxOut != 0:
                                         ycntr = ycntr
-                                    try:
-                                        CenterS = center_of_mass( \
-                                            GalaxyCuT[xcntr - 3:xcntr + 3, \
-                                                      ycntr - 3:ycntr + 3])
-                                        xcntr = xcntr + CenterS[0] - 3
-                                        ycntr = ycntr + CenterS[1] - 3
-                                    except:
-                                        pass
+                                    xcntr = xcntr + xcntrFrac
+                                    ycntr = ycntr + ycntrFrac
                                 else:
-                                    CenterS = center_of_mass( \
-                                        GalaxyCuT[SizeX / 2 - 5:SizeX / 2 + 5, \
-                                                  SizeY / 2 - 5:SizeY / 2 + 5])
-                                    xcntr = SizeX / 2 + CenterS[0] - 5
-                                    ycntr = SizeY / 2 + CenterS[1] - 5
+                                    xcntr = SizeX / 2 + xcntrFrac
+                                    ycntr = SizeY / 2 + ycntrFrac
                                 print cutimage,xcntr, ycntr, SizeX, SizeY
                                 try:
                                 #The following function provide the center of blank sky region and the sky sigma    
