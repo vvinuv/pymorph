@@ -106,7 +106,7 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
             pass
     z = z + tmp_mask
     z[n.where(z > 0)] = 1
-    z = im.binary_dilation(z, iterations=6)
+    z = im.binary_dilation(z, iterations=2)
     z = im.binary_fill_holes(z)
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto(mask_file)

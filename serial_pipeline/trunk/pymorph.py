@@ -72,6 +72,23 @@ def main():
         if(c.repeat == False and c.galcut == False):
             img = pyfits.open(imagefile)
             image = img[0].data
+            header0 = img[0].header
+            if (header0.has_key('EXPTIME')):
+                EXPTIME = header0['EXPTIME']
+            else:
+                EXPTIME = -9999
+            if (header0.has_key('RDNOISE')):
+                RDNOISE= header0['RDNOISE']
+            else:
+                RDNOISE = -9999
+            if (header0.has_key('GAIN')):
+                GAIN = header0['GAIN']
+            else:
+                GAIN = -9999
+            if (header0.has_key('NCOMBINE')):
+                NCOMBINE= header0['NCOMBINE']
+            else:
+                NCOMBINE = -9999
             img.close()
             print "imagefile >>> ", imagefile
     except IOError, (errno, strerror):
@@ -304,6 +321,23 @@ def main():
             if(c.galcut == True):
                     ggimg = pyfits.open(gimg)
                     ggimage = ggimg[0].data
+                    header0 = ggimg[0].header
+                    if (header0.has_key('EXPTIME')):
+                        EXPTIME = header0['EXPTIME']
+                    else:
+                        EXPTIME = -9999
+                    if (header0.has_key('RDNOISE')):
+                        RDNOISE= header0['RDNOISE']
+                    else:
+                        RDNOISE = -9999
+                    if (header0.has_key('GAIN')):
+                        GAIN = header0['GAIN']
+                    else:
+                        GAIN = -9999
+                    if (header0.has_key('NCOMBINE')):
+                        NCOMBINE= header0['NCOMBINE']
+                    else:
+                        NCOMBINE = -9999
                     ggimg.close()
                     SizeXX = ggimage.shape[0]
                     SizeYY = ggimage.shape[1]
@@ -466,6 +500,22 @@ def main():
                                     hdu.header.update('DEC_TARG', delta_j)
                                 except:
                                     pass
+                                if EXPTIME != -9999:
+                                    hdu.header.update('EXPTIME', EXPTIME)
+                                else:
+                                    pass
+                                if RDNOISE != -9999:
+                                    hdu.header.update('RDNOISE', RDNOISE)
+                                else:
+                                    pass
+                                if GAIN != -9999:
+                                    hdu.header.update('GAIN', GAIN)
+                                else:
+                                    pass
+                                if NCOMBINE != -9999:
+                                    hdu.header.update('NCOMBINE', NCOMBINE)
+                                else:
+                                    pass
                                 hdu.writeto(cutimage)
                                 
                             if(c.repeat == False and c.galcut and ReSize):
@@ -496,6 +546,22 @@ def main():
                                     hdu.header.update('RA_TARG', alpha_j)
                                     hdu.header.update('DEC_TARG', delta_j)
                                 except:
+                                    pass
+                                if EXPTIME != -9999:
+                                    hdu.header.update('EXPTIME', EXPTIME)
+                                else:
+                                    pass
+                                if RDNOISE != -9999:
+                                    hdu.header.update('RDNOISE', RDNOISE)
+                                else:
+                                    pass
+                                if GAIN != -9999:
+                                    hdu.header.update('GAIN', GAIN)
+                                else:
+                                    pass
+                                if NCOMBINE != -9999:
+                                    hdu.header.update('NCOMBINE', NCOMBINE)
+                                else:
                                     pass
                                 hdu.writeto(cutimage)
                             try:

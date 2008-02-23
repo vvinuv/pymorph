@@ -114,7 +114,7 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                 tx = (x - xn + 1.0) * co + (y - yn + 1.0) * si
                 ty = (xn - 1.0 -x) * si + (y - yn + 1.0) * co
                 R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-                z[n.where(R <= maj_axis * 2.5)] = 1
+                z[n.where(R <= maj_axis * 2.0)] = 1
         except:
             i=1
     if(galflag):

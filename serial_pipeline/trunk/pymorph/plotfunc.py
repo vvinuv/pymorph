@@ -53,7 +53,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         model = f[2].data
         residual = f[3].data
         f.close()
-        anorm = normalize(galaxy.min(), 10.0*skysig) #Color normalization
+        anorm = normalize(galaxy.min(), 12.0*skysig) #Color normalization
         #Read mask
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
@@ -73,11 +73,14 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         #colorbar(shrink=0.90)
         valid_pixels = ma.count(maskedresidual)
         print 'No of valid pixels >>> ', valid_pixels
-        pixels_in_skysig = residual[n.where(abs(residual) <= skysig / 2.0)].size
+        pixels_in_skysig = residual[n.where(abs(residual) <= skysig)].size
         print 'No of pixels within sky sigma >>> ', pixels_in_skysig
-        goodness = pixels_in_skysig / float(valid_pixels)
+        try:
+            goodness = pixels_in_skysig / float(valid_pixels)
+        except:
+            goodness = 9999
         hist_mask = n.zeros((NXPTS, NYPTS))
-        hist_mask[n.where(abs(residual) > 10.0 * skysig)] = 1
+        hist_mask[n.where(abs(residual) > 12.0 * skysig)] = 1
         hist_res = ma.masked_array(residual, hist_mask)
         #The procedure for chi2nu wrt radius is starting here
         x = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
@@ -172,16 +175,17 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         axUL = axes(rect1)
         image1 = imshow(n.flipud(n.swapaxes(galaxy, 0, 1)), \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
-        colorbar(shrink=1.0, format='%.2f')
+        colorbar(shrink=0.9, format='%.2f')
         title('Original Galaxy')
         axUM = axes(rect2)
         image1 = imshow(n.flipud(n.swapaxes(model, 0, 1)), cmap=cm.jet, \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+        colorbar(shrink=0.9, format='%.2f')
         title('Model Galaxy + Mask')
         axUR = axes(rect3)
         image1 = imshow(n.flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
-        colorbar(shrink=1.0)
+        colorbar(shrink=0.9)
         title('Residual')
         axLR = axes(rect4)
         nn, bins, patches = hist(hist_res, 50, normed=0)
@@ -269,7 +273,13 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
     except:
         pass     
 #    show()
-    savefig('P_' + str(cutimage)[:-4] + 'png')
-    close()
+    try:
+        savefig('P_' + str(cutimage)[:-4] + 'png')
+        close()
+    except:
+        try:
+            close()
+        except:
+            pass
     return goodness
 #PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.02)
