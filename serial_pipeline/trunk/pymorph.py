@@ -997,7 +997,7 @@ def selectpsf(ImG, CaT):
                     hdu.writeto(psffile)
             except:
                 pass
-    while len(c.psff) < 2 and AreaOfObj > 10:
+    while len(c.psff) < 5 and AreaOfObj > 10:
         FindPsf(AreaOfObj, CaT)
         AreaOfObj -= 5
     if len(c.psff) == 0:
@@ -1020,7 +1020,7 @@ def selectpsf(ImG, CaT):
                           " to cancel psf checking) " )
         if write == 'y':
             PsfList.append(element)
-            c.psff.remove(element)
+#            c.psff.remove(element)
         elif write == 'c':
             for element1 in c.psff:
                 try:
@@ -1059,6 +1059,10 @@ def selectpsf(ImG, CaT):
                 fff.close()
             if write == 'n':
                 TmpPsfList.append(element)
+                try:
+                    os.remove(element)
+                except:
+                    pass
             else:
                 pass
         for element in TmpPsfList:
