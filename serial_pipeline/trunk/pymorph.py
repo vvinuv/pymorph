@@ -650,7 +650,7 @@ def main():
                                                     os.remove(ell_out)
                                                 run_elli(cutimage, ell_out,\
                                                          xcntr, ycntr, eg, \
-                                                         pos_ang, major_axis)
+                                                      pos_ang, major_axis, sky)
                                                 if os.access(plfile, os.F_OK):
                                                     os.remove(plfile)
                                                 iraf.flpr()
@@ -888,7 +888,7 @@ def main():
                                                     MoY = ycntr
                                                 run_elli(outmodel, ell_output,\
                                                          MoX, MoY, eg, \
-                                                         pos_ang, major_axis)
+                                                     pos_ang, major_axis, sky)
                                                 iraf.flpr()
                                                 for myfile in [outplfile, \
                                                                outmodel]:
@@ -938,7 +938,7 @@ def main():
                                         os.system('rm ''P_' + str(cutimage)\
                                                    [6:-4] + 'png''')
                                     GoodNess = PlotFunc(cutimage, outimage, \
-                                               maskimage, xcntr, ycntr, skysig)
+                                          maskimage, xcntr, ycntr, sky, skysig)
                                     Goodness = GoodNess.plot_profile
                                 except:
                                     f_err.writelines(['Error in plotting. '])
@@ -1071,6 +1071,9 @@ def selectpsf(ImG, CaT):
                               "the psf name >>> ")
         c.psff.append(manualpsf)
     PsfList = []
+    TmPLST = []
+    for element in c.psff:
+        TmPLST.append(element)
     print 'Checking Started. You can just visually check the psf. You can do', \
           'the thorough checking later'
     for element in c.psff:
@@ -1086,9 +1089,10 @@ def selectpsf(ImG, CaT):
                           " to cancel psf checking) " )
         if write == 'y':
             PsfList.append(element)
+            TmPLST.remove(element)
 #            c.psff.remove(element)
         elif write == 'c':
-            for element1 in c.psff:
+            for element1 in TmPLST:
                 try:
                     os.remove(element1)
                 except:

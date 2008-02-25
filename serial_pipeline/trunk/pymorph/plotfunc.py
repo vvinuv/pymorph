@@ -13,14 +13,15 @@ class PlotFunc:
        profile of the galaxy and model galaxy from ellipse fitting. The other
        plot it gives is the mask image. After plotting it saves the image
        as png file with name P_string(galid).png"""
-    def __init__(self, cutimage, outimage, maskimage, xcntr, ycntr, skysig):
+    def __init__(self, cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
         self.cutimage  = cutimage
         self.outimage  = outimage
         self.maskimage = maskimage
         self.xcntr     = xcntr
         self.ycntr     = ycntr
+        self.sky       = sky
         self.skysig    = skysig
-        self.plot_profile = plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig)
+        self.plot_profile = plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig)
         return
 def get_data(ticker):
     """ Returns the values from the ellipse output table"""
@@ -45,7 +46,7 @@ def get_data(ticker):
     c1 = get_ticker(ticker)
     return c1
 
-def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
+def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
     try:
         #Read the GALFIT output
         f=pyfits.open(outimage)
@@ -53,7 +54,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         model = f[2].data
         residual = f[3].data
         f.close()
-        anorm = normalize(galaxy.min(), 12.0*skysig) #Color normalization
+        anorm = normalize(sky - 2*skysig , sky + 12.0*skysig) #Color normalization
         #Read mask
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
@@ -69,6 +70,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         model = ma.filled(maskedModel, value=9999)
         #The calculations for Goodness is starting here
         maskedresidual = ma.masked_array(residual, mask)
+        anormRes = normalize(-2 * skysig, 3 * skysig) 
         residual = ma.filled(maskedresidual, value=9999)
         #colorbar(shrink=0.90)
         valid_pixels = ma.count(maskedresidual)
@@ -184,7 +186,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
         title('Model Galaxy + Mask')
         axUR = axes(rect3)
         image1 = imshow(n.flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
-                        extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+                        extent=[0, NXPTS, 0, NYPTS], norm=anormRes)
         colorbar(shrink=0.9)
         title('Residual')
         axLR = axes(rect4)
@@ -273,13 +275,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, skysig):
     except:
         pass     
 #    show()
-    try:
-        savefig('P_' + str(cutimage)[:-4] + 'png')
-        close()
-    except:
-        try:
-            close()
-        except:
-            pass
+    savefig('P_' + str(cutimage)[:-4] + 'png')
+    close()
     return goodness
 #PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.02)

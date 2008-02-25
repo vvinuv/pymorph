@@ -1,6 +1,8 @@
 import sys,os
 from pyraf import iraf
 import config as c
+import pyfits
+import numpy as n
 
 class FitElliFunc:
     """The class which will run ellipse task automatically. This will not
@@ -45,8 +47,15 @@ def fit_elli(clus_id, line_s):
     run_elli(image_file, xcntr, ycntr, eg, pos_ang, major_axis)
 
 
-def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
-    """The function resposible for fit ellipse"""
+def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
+    """The function responsible for fit ellipse"""
+    EllGal = 'GalEllFit.fits'
+    fEl = pyfits.open(input)
+    GaLaXy = fEl[0].data
+    fEl.close()
+    GaLaXy = GaLaXy - sky
+    hdu = pyfits.PrimaryHDU(GaLaXy.astype(n.float32))
+    hdu.writeto(EllGal)
     iraf.stsdas(_doprint=0)
     iraf.tables(_doprint=0)
     iraf.stsdas.analysis(_doprint=0)
@@ -83,13 +92,13 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma):#,radd,background):
     iraf.magpar.refer=1
     iraf.magpar.zerolev=0
     iraf.unlearn('ellipse')
-    iraf.ellipse("".join(input), output="test", interac="no",Stdout="ellip", \
+    iraf.ellipse("".join(EllGal), output="test", interac="no",Stdout="ellip", \
                  Stderr="err")
     iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \
                 showrow="no", orig_row="no", showhdr="no", showunits="no", \
                 columns="SMA, INTENS, INT_ERR, MAG, MAG_LERR, MAG_UERR, \
                 TFLUX_E", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
-    for myfile in ['ellip','err','test.tab']:
+    for myfile in ['ellip','err','test.tab', EllGal]:
         if os.access(myfile,os.F_OK):
             os.remove(myfile)
