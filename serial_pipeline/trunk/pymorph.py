@@ -648,6 +648,9 @@ def main():
                                                      str(cutimage)[:-4] + 'txt'
                                                 if os.access(ell_out, os.F_OK):
                                                     os.remove(ell_out)
+                                                if os.access('GalEllFit.fits',\
+                                                             os.F_OK):
+                                                    os.remove('GalEllFit.fits')
                                                 run_elli(cutimage, ell_out,\
                                                          xcntr, ycntr, eg, \
                                                       pos_ang, major_axis, sky)
@@ -886,6 +889,9 @@ def main():
                                                 except:
                                                     MoX = xcntr
                                                     MoY = ycntr
+                                                if os.access('GalEllFit.fits',\
+                                                              os.F_OK):
+                                                    os.remove('GalEllFit.fits')
                                                 run_elli(outmodel, ell_output,\
                                                          MoX, MoY, eg, \
                                                      pos_ang, major_axis, sky)
