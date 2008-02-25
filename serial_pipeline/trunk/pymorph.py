@@ -999,6 +999,7 @@ def selectpsf(ImG, CaT):
     def FindPsf(AreaOfObj, CaT):
         for line in open(CaT,'r'):
             values = line.split()
+            BaKgR  = float(values[10])
             try:
                 if float(values[16]) >= 0.8 and float(values[13]) > AreaOfObj \
                    and float(values[14]) < 50.0:
@@ -1057,6 +1058,7 @@ def selectpsf(ImG, CaT):
                     psffile = 'psf_' + str(ra11) + str(ra22) + str(ra33) + str(dec11) +str(dec22) + str(dec33) + '.fits'
                     c.psff.append(psffile)
                     psf = image[y2:y1, x2:x1]
+                    psf = psf - BaKgR
                     if os.access(psffile, os.F_OK):
                         os.remove(psffile)
                     hdu = pyfits.PrimaryHDU(psf.astype(n.float32))
