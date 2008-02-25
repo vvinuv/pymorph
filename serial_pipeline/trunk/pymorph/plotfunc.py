@@ -165,7 +165,13 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
     except:
         pass
     #Plotting Starts
-    figure(1, figsize=(8.0, 4.6))
+    FigSize = [8.0, 4.6]
+    MatPlotParams = {'axes.titlesize': 10,
+                     'axes.labelsize': 10,
+                     'xtick.labelsize': 5,
+                     'ytick.labelsize': 5,
+                     'figure.figsize': FigSize}
+    rcParams.update(MatPlotParams)
     rect1 = [0.125, 0.5, 0.225, 1.5*0.225]
     rect2 = [3.25*0.125, 0.5, 0.225, 1.5*0.225]
     rect3 = [5.5*0.125, 0.5, 0.225, 1.5*0.225]
@@ -222,8 +228,8 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
             plot(sma1, mag1,color='g',lw=2)
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
-            xlabel(r'Radius', size='medium')
-            ylabel(r'Surface Brightness', size='medium')
+            xlabel(r'Radius')
+            ylabel(r'Surface Brightness')
             title('1-D Profile Comparison')
             grid(True)
             Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
@@ -234,8 +240,8 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
 #                xmax = max(max(SmaCommon), max(Chi2NuRad))
                 errorbar(SmaCommon, MagDev, [MagUErr, MagLErr], \
                          fmt='o',ecolor='r', ms=3)
-                ylabel('Magnitude Deviation', size='medium')
-                xlabel('Radius', size='medium')
+                ylabel('Magnitude Deviation')
+                xlabel('Radius')
                 grid(True)
                 Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
                 Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
@@ -250,8 +256,8 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
             errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3)
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
-            xlabel(r'Radius', size='medium')
-            ylabel(r'Surface Brightness', size='medium')
+            xlabel(r'Radius')
+            ylabel(r'Surface Brightness')
             title('1-D Profile Comparison')
             grid(True)
             Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
@@ -265,8 +271,8 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
             plot(sma1, mag1,color='g',lw=2)
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
-            xlabel(r'Radius', size='medium')
-            ylabel(r'Surface Brightness', size='medium')
+            xlabel(r'Radius')
+            ylabel(r'Surface Brightness')
             title('1-D Profile Comparison')
             grid(True)
             Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
@@ -278,4 +284,4 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
     savefig('P_' + str(cutimage)[:-4] + 'png')
     close()
     return goodness
-#PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.02)
+#PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.1, 0.02)
