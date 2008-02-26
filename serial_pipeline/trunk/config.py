@@ -1,8 +1,8 @@
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
-imagefile = 'j8f647-1-1_drz_sci.fits'
-whtfile = 'j8f647-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'j8f647_Sex.cat'           #The sextractor catalogue which has 
+imagefile = 'j8f648-1-1_drz_sci.fits'
+whtfile = 'j8f648-1-1_drz_rms.fits'   #The weight image. 
+sex_cata = 'j8f648_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
@@ -10,10 +10,10 @@ clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
 
 ###----Specify the output names of images and catalogues----###
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
-rootname = 'j8f647'
+rootname = 'j8f648'
 
 ###----Psf list----###
-psfselect = 0                         #0 => No psfselection
+psfselect = 1                         #0 => No psfselection
                                       #1 => Only Select psf 
                                       #2 => Select psf and run pipeline
                                       #Recommended: Run with '1' and then run
@@ -58,7 +58,7 @@ shiftdec =  0.0                       #If the image WCS is not same as the
                                       #correct objects. Remember: Shift 
                                       #in the frame is not LINEAR! and it 
                                       #can leads to detect wrong objects
-searchrad = '1arc'                    #The search radius  
+searchrad = '0.3arc'                    #The search radius  
 ###----Parameters for calculating the physical parameters of galaxy----###
 pixelscale = 0.045                    #Pixel scale (arcsec/pixel)
 H0 = 71                               #Hubble parameter
@@ -77,7 +77,10 @@ galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
-components = ['bulge', 'disk']
+
+###---Galfit Controls---###
+components = ['bulge', 'disk']        #The components to be fitted to the objec
+fixsky = 1                            #Fix sky at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
@@ -86,5 +89,5 @@ PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9                          #< chi2sq
-Goodness = 0.80                       #> Goodness
+Goodness = 0.60                       #> Goodness
 center_deviation = 5.0                #< abs(center - fitted center)

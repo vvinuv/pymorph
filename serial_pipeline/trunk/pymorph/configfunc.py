@@ -151,7 +151,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         c.Flag = c.Flag + 1048576
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(sky), ' 0	# sky background [ADU counts\n'])
+    f.writelines([' 1) ', str(sky),  str(c.fixsky), '	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                   ' Z) 0                  # output image\n\n\n'])

@@ -66,6 +66,21 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
         residual0 = residual
         NXPTS = galaxy.shape[0]
         NYPTS = galaxy.shape[1]
+#        The following can be used when we need to plot relative residual 
+#        image
+#
+#
+#        galzeromask = n.zeros((NXPTS, NYPTS))
+#        galzeromask[n.where(galaxy == 0.0)] = 1
+#        maskedGalaxy = ma.masked_array(galaxy, galzeromask)
+#        maskedGalaxy = ma.filled(maskedGalaxy, value=1)
+#        residual0 = (residual0 / maskedGalaxy) * 100.0
+#        residual0Avg = n.average(residual0)
+#        residual0Sig = n.std(residual0)
+#        anormRes = normalize(-0.05 * residual0Sig, \
+#                    0.05 * residual0Sig) 
+#
+#
         maskedModel = ma.masked_array(model, mask)
         model = ma.filled(maskedModel, value=9999)
         #The calculations for Goodness is starting here

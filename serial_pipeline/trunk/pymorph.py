@@ -1005,8 +1005,8 @@ def selectpsf(ImG, CaT):
     def FindPsf(AreaOfObj, CaT):
         for line in open(CaT,'r'):
             values = line.split()
-            BaKgR  = float(values[10])
             try:
+                BaKgR  = float(values[10])
                 if float(values[16]) >= 0.8 and float(values[13]) > AreaOfObj \
                    and float(values[14]) < 50.0:
                     xcntr = float(values[1]) - 1
@@ -1062,13 +1062,18 @@ def selectpsf(ImG, CaT):
                         dec33 = (str(n.round(dec3, 1))[:4]).split('.')[0] +\
                                 (str(n.round(dec3, 1))[:4]).split('.')[1]
                     psffile = 'psf_' + str(ra11) + str(ra22) + str(ra33) + str(dec11) +str(dec22) + str(dec33) + '.fits'
-                    c.psff.append(psffile)
-                    psf = image[y2:y1, x2:x1]
-                    psf = psf - BaKgR
-                    if os.access(psffile, os.F_OK):
-                        os.remove(psffile)
-                    hdu = pyfits.PrimaryHDU(psf.astype(n.float32))
-                    hdu.writeto(psffile)
+                    if psffile in c.psff:
+                        pass
+                    else:
+                        c.psff.append(psffile)
+                        psf = image[y2:y1, x2:x1]
+                        psf = psf - BaKgR
+                        if os.access(psffile, os.F_OK):
+                            os.remove(psffile)
+                        hdu = pyfits.PrimaryHDU(psf.astype(n.float32))
+                        hdu.header.update('XCNTR', int(xcntr))
+                        hdu.header.update('YCNTR', int(ycntr))
+                        hdu.writeto(psffile)
             except:
                 pass
     while len(c.psff) < 5 and AreaOfObj > 10:
@@ -1091,7 +1096,7 @@ def selectpsf(ImG, CaT):
             os.system('xpaset -p ds9 scale mode zscale')
             os.system('xpaset -p ds9 zoom to fit')
         else:
-            print 'The psf you have give is NOT exists!!!'
+            print 'The psf you have given does NOT exists!!!'
             pass
         write = raw_input("Do you need this psf? ('y' if yes, 'c'"\
                           " to cancel psf checking) " )
@@ -1116,8 +1121,20 @@ def selectpsf(ImG, CaT):
           'Select ONLY GOOD psf. Press "y" to accept the previous psf. '\
           'ENTER to go to the next one. This will continue until you press '\
           '"1" when it asked Finished? ALL THE BEST! \n'
-    finish = 0
-    TmpPsfList = []
+    UrPsfChk = raw_input("Do you want to use your own psf? Enter 'y' or " \
+                         "'n' >>> ")
+    if UrPsfChk == 'y':
+        UrPsf = raw_input("Enter your psf >>> ")
+        fff = open('psflist.list', 'ab')
+        fff.writelines([str(UrPsf), '\n'])
+        fff.close()
+        finish = 1
+        for element in PsfList:
+            if os.access(element, os.F_OK):
+                os.remove(element)
+    else:
+        finish = 0
+        TmpPsfList = []
     while finish == 0:
         for element in PsfList:
             if exists(element):
@@ -1126,7 +1143,7 @@ def selectpsf(ImG, CaT):
                 os.system('xpaset -p ds9 scale mode zscale')
                 os.system('xpaset -p ds9 zoom to fit')
             else:
-                print 'The psf you have give is NOT exists!!!'
+                print 'The psf you have given is NOT exists!!!'
                 pass
             write = raw_input("Do you REALLY need this psf? ('y' or," \
                               "'n' or press any key to continue) ") 
