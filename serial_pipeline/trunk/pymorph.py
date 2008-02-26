@@ -283,7 +283,7 @@ def main():
                 wimg = pdb["wimg"]   #Weight cut
             except:
                 if exists('W' + str(c.rootname) + '_' + str(gal_id) + '.fits'):
-                    gimg = 'W' + str(c.rootname) + '_' + str(gal_id) + '.fits'
+                    wimg = 'W' + str(c.rootname) + '_' + str(gal_id) + '.fits'
                 else:
                     wimg = 'None'
             try:
@@ -293,7 +293,10 @@ def main():
                     cfile = 'G_I' + str(c.rootname) + '_' + \
                              str(gal_id) + '.in'
                 elif(c.repeat == True and c.galcut == True):
-                    cfile = 'G_' + str(gimg)[:-5] + '.in'
+                    if ReSize:
+                        cfile = 'G_I' + str(gimg)[:-5] + '.in' 
+                    else:
+                        cfile = 'G_' + str(gimg)[:-5] + '.in'
                 else:
                     cfile = 'None'
             if exists(cfile):
@@ -367,6 +370,10 @@ def main():
                 c.mag_zero = float(pdb["mzero"])
             except:
                 c.mag_zero = c.mag_zero
+            try:
+                UserGivenPsf = pdb["star"]
+            else:
+                UserGivenPsf = 'NonSense'
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
@@ -749,9 +756,12 @@ def main():
                             try:
                                 if(c.repeat == False and cfile == 'None'):
                                     if(alpha_s == 9999 or delta_s == 9999):
-                                        psffile = c.psflist[psfcounter]
+                                        if UserGivenPsf == 'NonSense':
+                                            psffile = c.psflist[psfcounter]
+                                        else:
+                                            psffile = UserGivenPsf
                                         try:
-                                            p=pyfits.open(pfile)
+                                            p=pyfits.open(psffile)
                                             header = p[0].header
                                             if(header.has_key('RA_TARG')):
                                                 ra_p = header['RA_TARG']
@@ -1128,6 +1138,12 @@ def selectpsf(ImG, CaT):
         fff = open('psflist.list', 'ab')
         fff.writelines([str(UrPsf), '\n'])
         fff.close()
+        c.ValueS.append(UrPsf)
+        fwithpsf = open('CatWithPsf.cat', 'ab')
+        for v in c.ValueS:
+            fwithpsf.writelines([str(v), ' '])
+        fwithpsf.writelines(['\n'])
+        fwithpsf.close()
         finish = 1
         for element in PsfList:
             if os.access(element, os.F_OK):
@@ -1135,6 +1151,7 @@ def selectpsf(ImG, CaT):
     else:
         finish = 0
         TmpPsfList = []
+    UpdateCounter = 1
     while finish == 0:
         for element in PsfList:
             if exists(element):
@@ -1151,6 +1168,14 @@ def selectpsf(ImG, CaT):
                 TmpPsfList.append(element)
                 fff = open('psflist.list', 'ab')
                 fff.writelines([str(element), '\n'])
+                if UpdateCounter:
+                    c.ValueS.append(element)
+                    fwithpsf = open('CatWithPsf.cat', 'ab')
+                    for v in c.ValueS:
+                        fwithpsf.writelines([str(v), ' '])
+                    fwithpsf.writelines(['\n'])
+                    fwithpsf.close()
+                    UpdateCounter = 0
                 fff.close()
             if write == 'n':
                 TmpPsfList.append(element)
@@ -1196,10 +1221,22 @@ if __name__ == '__main__':
         if(c.galcut):   #Given galaxy cutouts
             obj_file = open(c.clus_cata,'r') 
             pnames = obj_file.readline().split() 
+            c.ValueS = []
+            for v in pnames:
+                c.ValueS.append(v)
+            c.ValueS.append('star')
+            fwithpsf = open('CatWithPsf.cat', 'ab')
+            for v in c.ValueS:
+                fwithpsf.writelines([str(v), ' '])
+            fwithpsf.writelines(['\n'])
+            fwithpsf.close()
             pdb = {}                        #The parameter dictionary
             for line_j in obj_file:
                 try:
                     values = line_j.split()
+                    c.ValueS = []
+                    for v in values:
+                        c.ValueS.append(v)
                     k = 0
                     for pname in pnames:
                         pdb[pname] = values[k]
@@ -1247,6 +1284,13 @@ if __name__ == '__main__':
                 except:
                     pass
             obj_file.close()  
+            AskForUpdate = ("Do you want to update the clus_cata? " \
+                            "('y' for yes)) "
+            if AskForUpdate == 'y':
+                cmd = 'mv CatWithPsf.cat ' + str(c.clus_cata)
+                os.system(cmd)
+            else:
+                pass
         else:
             selectpsf(c.imagefile, sex_cata)
     if c.psfselect == 2:
