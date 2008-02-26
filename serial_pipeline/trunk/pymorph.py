@@ -372,7 +372,7 @@ def main():
                 c.mag_zero = c.mag_zero
             try:
                 UserGivenPsf = pdb["star"]
-            else:
+            except:
                 UserGivenPsf = 'NonSense'
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
@@ -1285,7 +1285,7 @@ if __name__ == '__main__':
                     pass
             obj_file.close()  
             AskForUpdate = ("Do you want to update the clus_cata? " \
-                            "('y' for yes)) "
+                            "('y' for yes) ")
             if AskForUpdate == 'y':
                 cmd = 'mv CatWithPsf.cat ' + str(c.clus_cata)
                 os.system(cmd)
