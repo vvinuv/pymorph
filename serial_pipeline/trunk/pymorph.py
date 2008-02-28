@@ -91,6 +91,8 @@ def main():
                 NCOMBINE = -9999
             img.close()
             print "imagefile >>> ", imagefile
+            TX = image.shape[1]
+            TY = image.shape[0] 
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
@@ -394,8 +396,8 @@ def main():
                 try:
                     values = line_s.split()
                     if(c.galcut == False):
-                        alpha_s = float(values[3]) - (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
-                        delta_s = float(values[4]) - (c.shiftdec) 
+                        alpha_s = float(values[3]) #- (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
+                        delta_s = float(values[4]) # - (c.shiftdec) 
                     else:
                         try:
                             alpha_j = float(values[3])
@@ -500,6 +502,22 @@ def main():
                         c.Flag = 0
                         try:
                             if(c.repeat == False and c.galcut == False):
+                                if(xmin < 0):
+                                    c.Flag = 16384
+                                    xminOut = xmin
+                                    xmin = 0
+                                if(ymin < 0):
+                                    c.Flag = c.Flag + 32768
+                                    yminOut = ymin
+                                    ymin = 0
+                                if(xmax > TX):
+                                    c.Flag = c.Flag + 65536
+                                    xmaxOut = xmax
+                                    xmax = TX
+                                if(ymax > TY):
+                                    c.Flag = c.Flag + 131072
+                                    ymaxOut = ymax
+                                    ymax = TY
                                 z1 = image[ymin:ymax,xmin:xmax]
                                 hdu = pyfits.PrimaryHDU(z1.astype(n.float32))
                                 try:
@@ -1138,12 +1156,13 @@ def selectpsf(ImG, CaT):
         fff = open('psflist.list', 'ab')
         fff.writelines([str(UrPsf), '\n'])
         fff.close()
-        c.ValueS.append(UrPsf)
-        fwithpsf = open('CatWithPsf.cat', 'ab')
-        for v in c.ValueS:
-            fwithpsf.writelines([str(v), ' '])
-        fwithpsf.writelines(['\n'])
-        fwithpsf.close()
+        if(c.galcut):
+            c.ValueS.append(UrPsf)
+            fwithpsf = open('CatWithPsf.cat', 'ab')
+            for v in c.ValueS:
+                fwithpsf.writelines([str(v), ' '])
+            fwithpsf.writelines(['\n'])
+            fwithpsf.close()
         finish = 1
         for element in PsfList:
             if os.access(element, os.F_OK):
@@ -1168,14 +1187,15 @@ def selectpsf(ImG, CaT):
                 TmpPsfList.append(element)
                 fff = open('psflist.list', 'ab')
                 fff.writelines([str(element), '\n'])
-                if UpdateCounter:
-                    c.ValueS.append(element)
-                    fwithpsf = open('CatWithPsf.cat', 'ab')
-                    for v in c.ValueS:
-                        fwithpsf.writelines([str(v), ' '])
-                    fwithpsf.writelines(['\n'])
-                    fwithpsf.close()
-                    UpdateCounter = 0
+                if(c.galcut):
+                    if UpdateCounter:
+                        c.ValueS.append(element)
+                        fwithpsf = open('CatWithPsf.cat', 'ab')
+                        for v in c.ValueS:
+                            fwithpsf.writelines([str(v), ' '])
+                        fwithpsf.writelines(['\n'])
+                        fwithpsf.close()
+                        UpdateCounter = 0
                 fff.close()
             if write == 'n':
                 TmpPsfList.append(element)
@@ -1284,7 +1304,7 @@ if __name__ == '__main__':
                 except:
                     pass
             obj_file.close()  
-            AskForUpdate = ("Do you want to update the clus_cata? " \
+            AskForUpdate = raw_input("Do you want to update the clus_cata? " \
                             "('y' for yes) ")
             if AskForUpdate == 'y':
                 cmd = 'mv CatWithPsf.cat ' + str(c.clus_cata)

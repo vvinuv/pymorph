@@ -1,8 +1,8 @@
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
-imagefile = 'j8f648-1-1_drz_sci.fits'
-whtfile = 'j8f648-1-1_drz_rms.fits'   #The weight image. 
-sex_cata = 'j8f648_sex.cat'           #The sextractor catalogue which has 
+imagefile = 'j8f643-1-1_drz_sci.fits'
+whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. 
+sex_cata = 'j8f643_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
@@ -10,10 +10,10 @@ clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
 
 ###----Specify the output names of images and catalogues----###
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
-rootname = 'j8f648'
+rootname = 'j8f643'
 
 ###----Psf list----###
-psfselect = 1                         #0 => No psfselection
+psfselect = 0                         #0 => No psfselection
                                       #1 => Only Select psf 
                                       #2 => Select psf and run pipeline
                                       #Recommended: Run with '1' and then run
@@ -47,18 +47,9 @@ threshold = 3.0                       #Masking will be done for neighbours
 
 ###---Size of the cut out and search conditions---###
 ###---size = [resize?, varsize?, fracrad, square?, fixsize]---###
-size = [0, 1, 4, 0, 120]              #size of the stamp image
-shiftra = 0.0 
-shiftdec =  0.0                       #If the image WCS is not same as the 
-                                      #coordinate given in the clus_cata, 
-                                      #the appropriate shiftra and shiftdec  
-                                      #should be used. It will be better to 
-                                      #correct WCS using iraf command ccmap 
-                                      #so that the program can identify the 
-                                      #correct objects. Remember: Shift 
-                                      #in the frame is not LINEAR! and it 
-                                      #can leads to detect wrong objects
+size = [0, 1, 6, 1, 120]              #size of the stamp image
 searchrad = '0.3arc'                    #The search radius  
+
 ###----Parameters for calculating the physical parameters of galaxy----###
 pixelscale = 0.045                    #Pixel scale (arcsec/pixel)
 H0 = 71                               #Hubble parameter
@@ -80,7 +71,7 @@ cas = True
 
 ###---Galfit Controls---###
 components = ['bulge', 'disk']        #The components to be fitted to the objec
-fixsky = 1                            #Fix sky at SExtractor value
+fixsky = 0                            # = 0, Fix sky at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
