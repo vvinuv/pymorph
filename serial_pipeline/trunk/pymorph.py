@@ -616,19 +616,25 @@ def main():
                                 elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
                                      or ymaxOut != 0:
                                     if xminOut != 0:
-                                        xcntr = SizeXB + xminOut
+                                        xcntr = SizeXB + xminOut + xcntrFrac
+                                    else:
+                                        xcntr = SizeX / 2 + xcntrFrac
                                     if yminOut != 0:
-                                        ycntr = SizeYB + xminOut 
+                                        ycntr = SizeYB + yminOut 
+                                    else:
+                                        ycntr = SizeY / 2 + ycntrFrac
                                     if xmaxOut != 0:
-                                        xcntr = xcntr
+                                        xcntr = SizeXB + ycntrFrac 
+                                    else:
+                                        xcntr = SizeX / 2 + xcntrFrac
                                     if ymaxOut != 0:
-                                        ycntr = ycntr
-                                    xcntr = xcntr + xcntrFrac
-                                    ycntr = ycntr + ycntrFrac
+                                        ycntr = SizeXB + ycntrFrac
+                                    else:
+                                        ycntr = SizeY / 2 + ycntrFrac
                                 else:
                                     xcntr = SizeX / 2 + xcntrFrac
                                     ycntr = SizeY / 2 + ycntrFrac
-#                                print cutimage,xcntr, ycntr, SizeX, SizeY
+#                                print cutimage,xcntr, ycntr, SizeX, SizeY, xminOut, yminOut, xmaxOut, ymaxOut
                                 try:
                                 #The following function provide the center of blank sky region and the sky sigma    
                                     ElliMaskFunc(cutimage, xcntr, ycntr, \
@@ -1361,15 +1367,14 @@ if __name__ == '__main__':
         else:
             selectpsf(c.imagefile, sex_cata)
     if c.psfselect == 2:
-        FindAndFit()
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
         os.system('xpaset -p ds9 quit')
         c.psflist = '@psflist.list'
+        FindAndFit()
         main()
     elif c.psfselect == 1:
-        FindAndFit()
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
