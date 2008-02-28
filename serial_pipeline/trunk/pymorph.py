@@ -1225,6 +1225,53 @@ def selectpsf(ImG, CaT):
 
 if __name__ == '__main__':
     sex_cata = c.sex_cata
+    def FindAndFit():
+        if c.findandfit == 1:
+            magmin = raw_input("Enter Minimum Magnitude >>> ")
+            try:
+                magmin = float(magmin) * 1.0
+            except:
+                magmin = 9999
+            magmax = raw_input("Enter Maximum Magnitude >>> ")
+            try:
+                magmax = float(magmax) * 1.0
+            except:
+                magmax = -9999
+            stargal = raw_input("Enter galaxy classification (1 for star "\
+                                "and 0 is galaxy >>> ")
+            redshift = raw_input("Enter redshift, if you know >>> ")
+            try:
+                redshift = float(redshift)*1.0
+            except:
+                redshift = 9999
+            NewClusCata = open(c.clus_cata,'w')
+            if redshift == 9999:
+                NewClusCata.writelines(['gal_id ra1 dec1 mag\n'])
+            else:
+                NewClusCata.writelines(['gal_id ra1 dec1 mag z\n'])
+            for lineSex in open(sex_cata, 'r'):
+                ValueSex = lineSex.split()
+                try:
+                    if float(ValueSex[17]) > magmax and \
+                       float(ValueSex[17]) < magmin and \
+                       float(ValueSex[16]) < float(stargal):
+                        if redshift == 9999:
+                            NewClusCata.writelines([str(ValueSex[0]), ' ', \
+                                       str(float(ValueSex[3]) / 15.0), ' ', \
+                                       str(float(ValueSex[4])), ' ',\
+                                       str(ValueSex[17]), '\n'])
+                        else:
+                            NewClusCata.writelines([str(ValueSex[0]), ' ', \
+                                str(float(ValueSex[3]) / 15.0), ' ', \
+                                str(float(ValueSex[4])), \
+                                ' ', str(redshift), ' ', \
+                                str(ValueSex[17]), '\n'])
+                except:
+                    pass
+            NewClusCata.close()
+            c.searchrad = '0.05arc'
+        else:
+            pass
     if exists(sex_cata):
         pass
     elif(c.galcut == False):
@@ -1314,6 +1361,7 @@ if __name__ == '__main__':
         else:
             selectpsf(c.imagefile, sex_cata)
     if c.psfselect == 2:
+        FindAndFit()
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
@@ -1321,9 +1369,11 @@ if __name__ == '__main__':
         c.psflist = '@psflist.list'
         main()
     elif c.psfselect == 1:
+        FindAndFit()
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
         os.system('xpaset -p ds9 quit')
     elif c.psfselect == 0:
+        FindAndFit()
         main()

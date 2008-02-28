@@ -68,6 +68,7 @@ galcut = False                        #True if we provide cutouts
 decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
+findandfit = 0
 
 ###---Galfit Controls---###
 components = ['bulge', 'disk']        #The components to be fitted to the objec
