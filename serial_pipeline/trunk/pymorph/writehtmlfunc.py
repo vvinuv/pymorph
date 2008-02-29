@@ -3,12 +3,13 @@ import csv
 import fileinput
 from cosmocal import *
 import config as c
+import numpy as n
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
-    def __init__(self, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+    def __init__(self, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
         self.cutimage     = cutimage
         self.xcntr        = xcntr
         self.ycntr        = ycntr
@@ -25,9 +26,31 @@ class WriteHtmlFunc:
         self.S_err        = S_err
         self.G            = G
         self.M            = M
-        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M)
+        self.EXPTIME      = EXPTIME
+        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
 
-def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M):
+def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
+    lanczosG = 7
+    lanczos_coef = [0.99999999999980993, 676.5203681218851,\
+                    -1259.1392167224028, 771.32342877765313,\
+                    -176.61502916214059, 12.507343278686905, \
+                    -0.13857109526572012, 9.9843695780195716e-6,\
+                    1.5056327351493116e-7]
+    def Gamma(z):
+        """This is the Lanczos approximation for Gamma function"""
+        if z < 0.5:
+            return n.pi / (n.sin(n.pi*z)*Gamma(1-z))
+        else:
+            z -= 1
+            x = lanczos_coef[0]
+            for i in range(1, lanczosG + 2):
+                x += lanczos_coef[i]/(z + i)
+            t = z + lanczosG + 0.5
+            return n.sqrt(2*n.pi) * t**(z + 0.5) * n.exp(-t) * x
+    def bfunc(x):
+        """ This function gives value of b_n given the Sersic index"""
+        return 0.868242*x -0.142058 # Khosroshahi et al. 2000 approximation
+
     try:
         ComP = c.components
     except:
@@ -104,7 +127,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'sersic' and object == 1):
                     mag_b = float(values[4])
                     re = float(values[5])
-                    n = float(values[6])
+                    SersicIndex = float(values[6])
                     object += 1
                 if(str(values[0]) == 'expdisk'):
                     mag_d = float(values[4])
@@ -115,7 +138,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     if(str(a) == 'sersic' and object_err == 1):
                         mag_b_err = float(values[2])
                         re_err  = float(values[3])
-                        n_err = float(values[4])
+                        SersicIndexErr = float(values[4])
                         object_err += 1
                     if(str(a) == 'expdisk'):
                         mag_d_err = float(values[2])
@@ -300,6 +323,19 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 a=values[0]				
             except:
                 pass
+    if 'bulge' in ComP:
+        if EXPTIME == -9999:
+            EXPTIME = 1
+        else:
+            pass
+#        Ftot = EXPTIME * 10 ** ((mag_b - c.magzero) / -2.5)
+#        Ie_Avg = Ftot / (2.0 * 3.14 * re * re)
+#        MagInsideRe = -2.5  * n.log10(Ie_Avg / EXPTIME) + c.magzero
+        AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * re * re)
+        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + (2.17 * re_err / re)**2.0)
+    else:
+        MagInsideRe = 9999
+        AvgMagInsideReErr = 9999
     wC = str(C)[:5]
     wA = str(A)[:5]
     wS = str(S)[:5]
@@ -307,6 +343,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     wM = str(M)[:5]
     wBD = str(BD)[:5]
     wBT = str(BT)[:5]
+    wAvgMagInsideRe = str(AvgMagInsideRe)[:5]
     error_mesg1 = ''
     error_mesg2 = ''
     error_mesg3 = ''
@@ -356,10 +393,12 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     ParamToWrite = [galid, alpha_j, delta_j, z]
     if 'bulge' in ComP:
         for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
-                          n, n_err]:
+                          SersicIndex, SersicIndexErr, AvgMagInsideRe,\
+                          AvgMagInsideReErr]:
             ParamToWrite.append(bulgecomp)
     else:
-        for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
+        for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
+                          9999, 9999]:
             ParamToWrite.append(bulgecomp)
     if 'disk' in ComP:
         for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc]:

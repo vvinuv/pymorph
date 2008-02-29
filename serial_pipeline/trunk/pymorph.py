@@ -192,7 +192,8 @@ def main():
         if(c.decompose):
             ParamToWrite = ['Name','ra','dec','z', 'Ie','Ie_err','re(pixels)',\
                             're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n', \
-                            'n_err', 'Id','Id_err','rd(pixels)',\
+                            'n_err', '<Ie>', '<Ie_err>', 'Id', 'Id_err', \
+                            'rd(pixels)',\
                             'rd_err(pixels)', 'rd(kpc)', 'rd_err(kpc)', 'BD', \
                             'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm(kpc)', \
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
@@ -993,7 +994,7 @@ def main():
                                                  distance, alpha_j, \
                                                  delta_j, z, Goodness, \
                                                  C, C_err, A, A_err, S, S_err, \
-                                                 G, M)
+                                                 G, M, EXPTIME)
 #                                f_err.writelines(['(((((((((( Successful', \
  #                                                     ' ))))))))))\n'])
                                 except:
@@ -1003,7 +1004,7 @@ def main():
                                                      delta_j, z, Goodness, \
                                                      9999, 9999, 9999,\
                                                      9999, 9999, 9999, 9999, \
-                                                     9999)
+                                                     9999, EXPTIME)
                                     except:
                                         f_err.writelines(['Error in writing '\
                                                           'html\n'])
