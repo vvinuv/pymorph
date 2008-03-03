@@ -345,8 +345,8 @@ def main():
                     else:
                         NCOMBINE = -9999
                     ggimg.close()
-                    SizeXX = ggimage.shape[0]
-                    SizeYY = ggimage.shape[1]
+                    SizeXX = ggimage.shape[1]
+                    SizeYY = ggimage.shape[0]
             try:
                 ximg = float(pdb["ximg"])
             except:
