@@ -50,7 +50,6 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     def bfunc(x):
         """ This function gives value of b_n given the Sersic index"""
         return 0.868242*x -0.142058 # Khosroshahi et al. 2000 approximation
-
     try:
         ComP = c.components
     except:
