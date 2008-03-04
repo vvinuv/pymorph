@@ -196,7 +196,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             pass
         else:
             f_tmp = open("agm_result_with_radius.csv", "ab")
-            f_tmp.writelines(['gal_id', '\t', 'C_err', '\t', 'A', '\t', 'A_err', '\t', 'A_flag', '\t', 'image_A', '\t', 'back_A', '\t', 'A_20', '\t', 'A_20_with_zsum', '\t', 'S', '\t', 'S_err', '\t', 'r20', '\t', 'r50', '\t', 'r80', '\t', 'extraction_radius', '\t', 'G', '\t', 'G_res', '\t', 'G80', '\t', 'G50', '\t', 'G20', '\t', 'M', '\t', 'M_res', '\t', 'M80', '\t', 'M50', '\t', 'M20\n'])
+            f_tmp.writelines(['gal_id', '\t', 'C', '\t','C_err', '\t', 'A', '\t', 'A_err', '\t', 'A_flag', '\t', 'image_A', '\t', 'back_A', '\t', 'A_20', '\t', 'A_20_with_zsum', '\t', 'S', '\t', 'S_err', '\t', 'r20', '\t', 'r50', '\t', 'r80', '\t', 'extraction_radius', '\t', 'G', '\t', 'G_res', '\t', 'G80', '\t', 'G50', '\t', 'G20', '\t', 'M', '\t', 'M_res', '\t', 'M80', '\t', 'M50', '\t', 'M20\n'])
             f_tmp.close()
         f_tmp = open("agm_result_with_radius.csv", "ab")
         f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
