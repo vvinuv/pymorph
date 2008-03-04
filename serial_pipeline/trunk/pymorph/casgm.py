@@ -1,4 +1,5 @@
-import pyfits,os,time,sys
+import pyfits,os
+import csv
 from os.path import exists
 import numpy as n
 import numpy.core.ma as ma
@@ -36,7 +37,6 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     ycntr = ycntr-1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    tstart = time.clock() # Start clock to measure time
     f = pyfits.open(cutimage)
     z = f[0].data
     header = f[0].header
@@ -72,6 +72,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         r20 = con.r20
         r50 = con.r50
         r80 = con.r80
+        r90 = con.r90
     else:
         extraction_radius == 9999
     if(extraction_radius == 9999):
@@ -79,8 +80,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     else:
         sigma=0.25*extraction_radius/1.5
 
-        print "R20 R50 R80 Extraction Radius >>> ", str(r20)[:5], str(r50)[:5],\
-              str(r80)[:5],  str(con.total_rad)[:5]
+        print "R20 R50 R80 R90 Extraction Radius >>> ", str(r20)[:5], \
+              str(r50)[:5], str(r80)[:5], str(r90)[:5], str(con.total_rad)[:5]
 #        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
         
         ########################
@@ -196,10 +197,16 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             pass
         else:
             f_tmp = open("agm_result_with_radius.csv", "ab")
-            f_tmp.writelines(['gal_id', '\t', 'C', '\t','C_err', '\t', 'A', '\t', 'A_err', '\t', 'A_flag', '\t', 'image_A', '\t', 'back_A', '\t', 'A_20', '\t', 'A_20_with_zsum', '\t', 'S', '\t', 'S_err', '\t', 'r20', '\t', 'r50', '\t', 'r80', '\t', 'extraction_radius', '\t', 'G', '\t', 'G_res', '\t', 'G80', '\t', 'G50', '\t', 'G20', '\t', 'M', '\t', 'M_res', '\t', 'M80', '\t', 'M50', '\t', 'M20\n'])
+            tmp_writer = csv.writer(f_tmp)
+            tmp_ParamToWrite = ['gal_id','C','C_err','A','A_err','A_flag','image_A','back_A','A_20','A_20_with_zsum','S','S_err','r20','r50','r80','r90','extraction_radius','G','G_res','G80','G50','G20','M','M_res','M80','M50','M20']
+            tmp_writer.writerow(tmp_ParamToWrite)
+#            f_tmp.writelines(['gal_id', '\t', 'C', '\t','C_err', '\t', 'A', '\t', 'A_err', '\t', 'A_flag', '\t', 'image_A', '\t', 'back_A', '\t', 'A_20', '\t', 'A_20_with_zsum', '\t', 'S', '\t', 'S_err', '\t', 'r20', '\t', 'r50', '\t', 'r80', '\t', 'r90', '\t','extraction_radius', '\t', 'G', '\t', 'G_res', '\t', 'G80', '\t', 'G50', '\t', 'G20', '\t', 'M', '\t', 'M_res', '\t', 'M80', '\t', 'M50', '\t', 'M20\n'])
             f_tmp.close()
         f_tmp = open("agm_result_with_radius.csv", "ab")
-        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
+        tmp_writer = csv.writer(f_tmp)
+        tmp_ParamToWrite = [str(cutimage)[to_remove:-5], str(con.concen), str(con.error_con), str(ASY), str(ASY_ERROR), str(asy.image_asymm[5]), str(asy.image_asymm[0]), str(back_asy.image_asymm[0]), str(asy_r20.image_asymm[0]), str(asy_r20_zsum.image_asymm[0]), str(S), str(ERROR_SMOO), str(con.r20), str(con.r50), str(con.r80), str(con.r90), str(extraction_radius), str(gini_coef[0]), str(gini_coef[1]), str(gini_coef[2]), str(gini_coef[3]), str(gini_coef[4]), str(gini_coef[5]), str(gini_coef[6]), str(gini_coef[7]), str(gini_coef[8]), str(gini_coef[9])]
+        tmp_writer.writerow(tmp_ParamToWrite)
+#        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(con.r90), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
         f_tmp.close()
 
         return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, gini_coef[0], gini_coef[5]

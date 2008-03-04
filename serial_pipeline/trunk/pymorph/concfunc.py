@@ -55,12 +55,15 @@ class concentration:
 			self.total_I = self.divide_r[n.where(self.r<=self.total_rad)].sum()
 
 		#calculating the 20% (r20) light radius and 80% (r80) light radius
+			tempI90 = 0.0
 			tempI80 = 0.0
 			tempI50 = 0.0
 			tempI20 = 0.0
 			tempr20 = 0.0
 			tempr50 = 0.0
 			tempr80 = 0.0
+			tempr90 = 0.0
+			flag90 = 0
 			flag80 = 0
 			flag50 = 0
 			flag20 = 0 #this flags equal 1 when r80 and r20 find
@@ -69,15 +72,22 @@ class concentration:
 			I20 = 0.2 * self.total_I
 			I50 = 0.5 * self.total_I
 			I80 = 0.8 * self.total_I
+			I90 = 0.9 * self.total_I
 			ttempI20 = self.divide_r[n.where(self.r<=self.eta_radius-1.0)].sum()
 
-			while flag80==0 or flag50==0 or flag20==0:
+			while flag90==0 or flag80==0 or flag50==0 or flag20==0:
+				if(flag90==0):
+                                        tempI90 = self.divide_r[n.where(self.r<=orad)].sum()
 				if(flag80==0):
 					tempI80 = self.divide_r[n.where(self.r<=orad)].sum()
 				if(flag50==0):
 					tempI50 = self.divide_r[n.where(self.r<=orad)].sum()
 				if(flag20==0):
 					tempI20 = self.divide_r[n.where(self.r<=irad)].sum()
+                                if(flag90==0 and tempI90<I90):
+                                        flag90=1
+                                        alpha90=error(I90,tempI90,ttempI90,orad,self.total_I,self.total_rad,self.background)
+                                        self.r90=orad+alpha90[0]
 				if(flag80==0 and tempI80<I80):
 					flag80=1
 					alpha80=error(I80,tempI80,ttempI80,orad,self.total_I,self.total_rad,self.background)
@@ -92,6 +102,7 @@ class concentration:
 					self.r20=irad-self.incr+alpha20[0]
 				orad-=self.incr
 				irad+=self.incr
+                                ttempI90=tempI90
 				ttempI80=tempI80
 				ttempI50=tempI50
 				ttempI20=tempI20
@@ -99,6 +110,7 @@ class concentration:
 			self.r20_error=alpha20[1]
 			self.r50_error=alpha50[1]
 			self.r80_error=alpha80[1]
+                        self.r90_error=alpha90[1]
 			#calculate concentration parameter "concen"
 			self.concen=5*n.log10(self.r80/self.r20)
 			self.error_ratio=n.sqrt((self.r80/self.r20)**2*((alpha80[1]/self.r80)**2+(alpha20[1]/self.r20)**2))
