@@ -127,6 +127,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     mag_b = float(values[4])
                     re = float(values[5])
                     SersicIndex = float(values[6])
+                    SersicEllipticity = float(values[7])
                     object += 1
                 if(str(values[0]) == 'expdisk'):
                     mag_d = float(values[4])
@@ -138,6 +139,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                         mag_b_err = float(values[2])
                         re_err  = float(values[3])
                         SersicIndexErr = float(values[4])
+                        SersicEllipticityErr = float(values[5])
                         object_err += 1
                     if(str(a) == 'expdisk'):
                         mag_d_err = float(values[2])
@@ -330,8 +332,18 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
 #        Ftot = EXPTIME * 10 ** ((mag_b - c.magzero) / -2.5)
 #        Ie_Avg = Ftot / (2.0 * 3.14 * re * re)
 #        MagInsideRe = -2.5  * n.log10(Ie_Avg / EXPTIME) + c.magzero
-        AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * re * re)
-        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + (2.17 * re_err / re)**2.0)
+        try:
+              pixelscale = c.pixelscale
+        except:
+              pixelscale = 1
+        AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * pixelscale * \
+                      pixelscale * re * re * n.sqrt(1 - SersicEllipticity**2.0))
+#        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + (2.17 * re_err / re)**2.0)
+        AvgMagInsideReErr = (1.085 * n.sqrt((2 * re * re_err)**2.0 + \
+                            ((SersicEllipticity * SersicEllipticityErr) / \
+                             n.sqrt(1 - SersicEllipticity**2.0))**2.0)) / \
+                             (n.sqrt(1 - SersicEllipticity**2.0) * 2 * 3.14 * \
+                              re * re)
     else:
         MagInsideRe = 9999
         AvgMagInsideReErr = 9999

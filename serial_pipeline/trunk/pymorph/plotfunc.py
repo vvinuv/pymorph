@@ -298,6 +298,5 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
 #    show()
     savefig('P_' + str(cutimage)[:-4] + 'png')
     close()
-    print 'good', goodness
     return goodness
 #PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.1, 0.02)

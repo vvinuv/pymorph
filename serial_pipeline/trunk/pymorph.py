@@ -109,31 +109,60 @@ def main():
         print whtfile, "I/O error(%s): %s" % (errno, strerror)
         pass
     psflist = c.psflist
-    if(c.decompose):
-        try:   #The function which will update the psf header if the psf files
-                #are the specified format
-            for element in psflist:
-                ra1 = float(str(element)[4:6])
-                ra2 = float(str(element)[6:8])
-                ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
-                dec1 = float(str(element)[11:-10])
-                dec2 = float(str(element)[-10:-8])
-                dec3 = float(str(element)[-8:-6]) + \
-                       float(str(element)[-6]) / 10.0
-                ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
-                if dec1 < 0.0:
-                    dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
-                else:
-                    dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
-                #print element
-                iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
-                           show='no', update='yes')
-                iraf.flpr() 
-                iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no', \
-                           show='no', update='yes')
-                iraf.flpr()
+    def psfradec(element):
+        """The function which will update the psf header if the psf files
+           are the specified format"""
+        try:
+            ra1 = float(str(element)[4:6])
+            ra2 = float(str(element)[6:8])
+            ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
+            dec1 = float(str(element)[11:-10])
+            dec2 = float(str(element)[-10:-8])
+            dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
+            ra = (ra1 + (ra2 + ra3 / 60.0) / 60.0) * 15.0
+            if dec1 < 0.0:
+                dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
+            else:
+                dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
+            iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
+                               show='no', update='yes')
+            iraf.flpr()
+            iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no',\
+                       show='no', update='yes')
+            iraf.flpr()
         except:
             pass
+    def failedgalfit(WhichGalaxy):
+        f_fail = open("fit.log", "w")
+        f_fail.writelines(['-----------------------------------------------'\
+                            '------------------------------\n\n'])
+        f_fail.writelines(['Input image     : ', str(WhichGalaxy), '\n'])
+        f_fail.writelines(['Init. par. file : Failed! :(', '\n'])
+        f_fail.writelines(['Restart file    : Failed! :(', '\n'])
+        f_fail.writelines(['Output image    : Failed! :(', '\n\n'])
+        if 'bulge' in c.components:
+            f_fail.writelines([' sersic   : (9999, 9999)   9999   9999   9999'\
+                           '    9999   9999   9999', '\n'])
+            f_fail.writelines(['              (9999, 9999)   9999    9999'\
+                               '    9999    9999   9999   9999', '\n'])
+        if 'disk' in c.components:
+            f_fail.writelines([' expdisk   : (9999, 9999)   9999   9999'\
+                               '    9999   9999   9999', '\n'])
+            f_fail.writelines(['              (9999, 9999)   9999    9999'\
+                               '    9999   9999   9999', '\n'])
+        if 'point' in c.components:
+            f_fail.writelines([' gaussian   : (9999, 9999)   9999   9999'\
+                               '    9999   9999   9999', '\n'])
+            f_fail.writelines(['              (9999, 9999)   9999    9999'\
+                               '    9999   9999   9999', '\n'])
+        f_fail.writelines([' sky      : [9999, 9999]   9999   9999   '\
+                           '9999', '\n'])
+        f_fail.writelines(['                             9999   9999   9999\n'])
+        f_fail.writelines([' Chi^2 = 9999,  ndof = 9999\n'])
+        f_fail.writelines([' Chi^2/nu = 9999\n\n'])
+        f_fail.writelines(['-----------------------------------------------'\
+                            '------------------------------'])
+        f_fail.close()
     def pa(x):
         """ The function which will bring position angle 
          measured by sextrator in the range -90 and 90"""		
@@ -224,6 +253,7 @@ def main():
                          'flag', 'Comments'])
         f_res.close()
     f_cat = open(out_cata,'w')
+    f_failed = open('restart.cat', 'w')
     obj_file = open(clus_cata,'r')  #The file contains the objects of interest
     pnames = obj_file.readline().split() #The names of the parameters given 
                                          #in the first line in the clus_cata
@@ -778,6 +808,8 @@ def main():
                                 os.remove(ell_mask_file)
                         f_err = open('error.log', 'a') 
                         if(c.decompose):
+                            for psfelement in psflist:
+                                psfradec(psfelement)
                             try:
                                 if(c.repeat == False and cfile == 'None'):
                                     if(alpha_s == 9999 or delta_s == 9999):
@@ -785,6 +817,7 @@ def main():
                                             psffile = c.psflist[psfcounter]
                                         else:
                                             psffile = UserGivenPsf
+                                            psfradec(psffile)
                                         try:
                                             p=pyfits.open(psffile)
                                             header = p[0].header
@@ -810,6 +843,7 @@ def main():
                                     if(alpha_s == 9999 or delta_s == 9999):
                                         distance = 9999
                                     else:
+                                        psfradec(pfile)
                                         p=pyfits.open(pfile)
                                         header = p[0].header
                                         if(header.has_key('RA_TARG')):
@@ -895,14 +929,14 @@ def main():
                                         if os.access(outplfile, os.F_OK):
                                             os.remove(outplfile)
                                         try:
-                                            outmodel = 'S' + outimage 
-                                            iraf.imcopy(outimage + '[2]', \
-                                                       outmodel, verbose='no')
-                                            iraf.flpr()
                                             iraf.imcopy(out_mask_file, \
                                                        outplfile, verbose='no')
                                             iraf.flpr()
                                             try:
+                                                outmodel = 'S' + outimage 
+                                                iraf.imcopy(outimage + '[2]', \
+                                                       outmodel, verbose='no')
+                                                iraf.flpr()
                                                 ell_output = 'OE_' + \
                                                      str(cutimage)[:-4] + 'txt'
                                                 if os.access(ell_output, \
@@ -948,6 +982,7 @@ def main():
                                                       'CRASHED\n'])
                                                 run = 0
                                                 c.Flag = c.Flag + 512
+                                                failedgalfit(cutimage)
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(outimage),'.pl or ',\
@@ -1016,7 +1051,8 @@ def main():
 #iraf.imcopy(str(imagefile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', cutimage)	
 #iraf.imcopy(str(whtfile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', whtimage)	
 #					fitellifunc(gal_id, line_s)
-
+                            else:
+                                f_failed.write(line_j)
                             f_err.close()
                             f_cat.writelines([str(gal_id), ' '])
                             f_cat.write(line_s)
@@ -1031,6 +1067,7 @@ def main():
         except:
             pass
     f_cat.close()
+    f_failed.close()
 def selectpsf(ImG, CaT):
     c.psff = []
     im = pyfits.open(ImG)
