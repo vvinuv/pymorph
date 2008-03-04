@@ -221,9 +221,10 @@ def main():
         if(c.decompose):
             ParamToWrite = ['Name','ra','dec','z', 'Ie','Ie_err','re(pixels)',\
                             're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n', \
-                            'n_err', '<Ie>', '<Ie_err>', 'Id', 'Id_err', \
-                            'rd(pixels)',\
-                            'rd_err(pixels)', 'rd(kpc)', 'rd_err(kpc)', 'BD', \
+                            'n_err', '<Ie>', '<Ie_err>', 'eb', 'eb_err', \
+                            'Id', 'Id_err', 'rd(pixels)',\
+                            'rd_err(pixels)', 'rd(kpc)', 'rd_err(kpc)', \
+                            'ed', 'ed_err', 'BD', \
                             'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm(kpc)', \
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                             'A_err', 'S', 'S_err', 'G', 'M', 'distance', \

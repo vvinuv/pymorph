@@ -132,6 +132,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'expdisk'):
                     mag_d = float(values[4])
                     rd = float(values[5])
+                    DiskEllipticity = float(values[6])
                 if(str(values[0]) == 'gaussian'):
                     mag_g = float(values[4])
                 if(str(values[0])[:1] == '('):
@@ -144,6 +145,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     if(str(a) == 'expdisk'):
                         mag_d_err = float(values[2])
                         rd_err = float(values[3])
+                        DiskEllipticityErr = float(values[4])
                     if(str(a) == 'gaussian'):
                         mag_g_err = float(values[2])
                 a=values[0]				
@@ -339,11 +341,12 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * pixelscale * \
                       pixelscale * re * re * n.sqrt(1 - SersicEllipticity**2.0))
 #        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + (2.17 * re_err / re)**2.0)
-        AvgMagInsideReErr = (1.085 * n.sqrt((2 * re * re_err)**2.0 + \
+        AvgMagInsideReErr2 = (1.085 * n.sqrt((2 * re * re_err)**2.0 + \
                             ((SersicEllipticity * SersicEllipticityErr) / \
                              n.sqrt(1 - SersicEllipticity**2.0))**2.0)) / \
                              (n.sqrt(1 - SersicEllipticity**2.0) * 2 * 3.14 * \
                               re * re)
+        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + AvgMagInsideReErr2**2.0)
     else:
         MagInsideRe = 9999
         AvgMagInsideReErr = 9999
@@ -405,17 +408,19 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     if 'bulge' in ComP:
         for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
                           SersicIndex, SersicIndexErr, AvgMagInsideRe,\
-                          AvgMagInsideReErr]:
+                          AvgMagInsideReErr, SersicEllipticity, \
+                          SersicEllipticityErr]:
             ParamToWrite.append(bulgecomp)
     else:
         for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999]:
+                          9999, 9999, 9999, 9999]:
             ParamToWrite.append(bulgecomp)
     if 'disk' in ComP:
-        for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc]:
+        for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc,\
+                         DiskEllipticity, DiskEllipticityErr]:
             ParamToWrite.append(diskcomp)
     else:
-        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999]:
+        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
             ParamToWrite.append(diskcomp)
     ParamToWrite.append(BD)
     ParamToWrite.append(BT)
