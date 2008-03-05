@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Written by Vinu Vikram in collaboration with 
-Yogesh Wadadekar and Ajit K. Kembhavi. 2008 Feb"""
+"""PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
 import os
 import time
