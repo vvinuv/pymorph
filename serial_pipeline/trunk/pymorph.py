@@ -257,6 +257,9 @@ def main():
     obj_file = open(clus_cata,'r')  #The file contains the objects of interest
     pnames = obj_file.readline().split() #The names of the parameters given 
                                          #in the first line in the clus_cata
+    for FailedParam in pnames:
+        f_failed.writelines([str(FailedParam), ' '])
+    f_failed.writelines(['flag \n'])
     pdb = {}                        #The parameter dictionary
     psfcounter = 0                  #For getting psf in the case of unknown ra
     for line_j in obj_file:
@@ -531,22 +534,34 @@ def main():
                                           '   ###########\n'])
                         run = 1 #run =1 when pipeline runs sucessfuly
                         c.Flag = 0
+                        if c.repeat:
+                            c.Flag += 1
+                        else:
+                            pass
+                        if c.fitting[0]:
+                            c.Flag += 2
+                        else:
+                            pass
+                        if c.fitting[1]:
+                            c.Flag += 4
+                        else:
+                            pass
+                        if c.fitting[2]:
+                            c.Flag += 8
+                        else:
+                            pass
                         try:
                             if(c.repeat == False and c.galcut == False):
                                 if(xmin < 0):
-                                    c.Flag = 16384
                                     xminOut = xmin
                                     xmin = 0
                                 if(ymin < 0):
-                                    c.Flag = c.Flag + 32768
                                     yminOut = ymin
                                     ymin = 0
                                 if(xmax > TX):
-                                    c.Flag = c.Flag + 65536
                                     xmaxOut = xmax
                                     xmax = TX
                                 if(ymax > TY):
-                                    c.Flag = c.Flag + 131072
                                     ymaxOut = ymax
                                     ymax = TY
                                 z1 = image[ymin:ymax,xmin:xmax]
@@ -581,19 +596,15 @@ def main():
                                 TX = ZcuT.shape[1]
                                 TY = ZcuT.shape[0]
                                 if(xmin < 0):
-                                    c.Flag = 16384 
                                     xminOut = xmin
                                     xmin = 0
                                 if(ymin < 0):
-                                    c.Flag = c.Flag + 32768
                                     yminOut = ymin
                                     ymin = 0
                                 if(xmax > TX):
-                                    c.Flag = c.Flag + 65536
                                     xmaxOut = xmax
                                     xmax = TX
                                 if(ymax > TY):
-                                    c.Flag = c.Flag + 131072
                                     ymaxOut = ymax
                                     ymax = TY
                                 ZcuT1 = ZcuT[ymin:ymax,xmin:xmax]
@@ -646,6 +657,7 @@ def main():
                                     pass
                                 elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
                                      or ymaxOut != 0:
+                                    c.Flag += 16
                                     if xminOut != 0:
                                         xcntr = SizeXB + xminOut + xcntrFrac
                                     else:
@@ -729,19 +741,17 @@ def main():
                                                            'or err  or ',\
                                                           'test.tab exists\n'])
                                                 run = 0
-                                                c.Flag = c.Flag + 4
+                                                c.Flag += 32
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(cutimage),'.pl or ',\
                                                        str(ell_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
-                                            c.Flag = c.Flag + 2
                                     except:
                                         f_err.writelines(['Error in making '\
                                                      'mask for ellipse task\n'])
                                         run = 0
-                                        c.Flag = c.Flag + 1
                             except:
                                 f_err.writelines(['The file ', str(whtimage), \
                                                   ' exists\n'])	
@@ -795,11 +805,10 @@ def main():
                                 except:
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
-                                    c.Flag = c.Flag + 16
+                                    c.Flag += 64
                             except:
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
-                                c.Flag = c.Flag + 8
                         f_err.close()
                         os.system('rm -f BMask.fits MRotated.fits \
                                   MaskedGalaxy.fits Rotated.fits')
@@ -981,7 +990,7 @@ def main():
                                                       'GALFIT MIGHT BE '\
                                                       'CRASHED\n'])
                                                 run = 0
-                                                c.Flag = c.Flag + 512
+                                                c.Flag += 128
                                                 failedgalfit(cutimage)
                                         except:
                                             f_err.writelines(['Exists ',\
@@ -989,22 +998,18 @@ def main():
                                                        str(out_mask_file),\
                                                        ' does not exist\n'])  
                                             run = 0
-                                            c.Flag = c.Flag + 256
                                     except:
                                         f_err.writelines(['Error in making '\
                                                 'out mask for ellipse task\n'])
                                         run = 0 
-                                        c.Flag = c.Flag + 128
                                 except:
                                     f_err.writelines(['Error in writing',\
                                                       ' configuration file\n'])	
                                     run = 0
-                                    c.Flag = c.Flag + 64
                             except:
                                 f_err.writelines(['Error in making mask for '\
                                                   'galfit\n'])
                                 run = 0
-                                c.Flag = c.Flag + 32
 #                        if exists('plot_' + str(cutimage)[6:-4] + 'png'):	
 #                            os.system('rm ''plot_' + str(cutimage)[6:-4] + 'png''')
                             if(run == 1 or run == 0):
@@ -1023,7 +1028,7 @@ def main():
                                                           'Mask image\n'])
                                     run = 0	
                                     Goodness = 9999
-                                    c.Flag = c.Flag + 1024
+                                    c.Flag += 256
                                 try:
                                     write_params(cutimage, xcntr, ycntr, \
                                                  distance, alpha_j, \
@@ -1052,7 +1057,10 @@ def main():
 #iraf.imcopy(str(whtfile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', whtimage)	
 #					fitellifunc(gal_id, line_s)
                             else:
-                                f_failed.write(line_j)
+                                FailedValues = line_j.split()
+                                for FailedValue in FailedValues:
+                                    f_failed.writelines([str(FailedValue), ' '])
+                                f_failed.writelines([str(c.Flag), '\n'])
                             f_err.close()
                             f_cat.writelines([str(gal_id), ' '])
                             f_cat.write(line_s)

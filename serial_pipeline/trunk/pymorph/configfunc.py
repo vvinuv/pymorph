@@ -118,7 +118,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n'])
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
-        c.Flag = c.Flag + 262144
+        c.Flag += 512
     if 'disk' in ComP:
         f.writelines(['# Exponential function\n\n'])
         f.writelines([' 0) expdisk 		# Object type\n'])
@@ -134,7 +134,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n']) 
         f.writelines([' Z) 0             	# output image '\
                       '(see above)\n\n\n'])
-        c.Flag = c.Flag + 524288
+        c.Flag += 1024
     if 'point' in ComP:
         gmag = mag + 2.5 * log10(2.0)
         f.writelines(['# Gaussian function\n\n'])
@@ -150,7 +150,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       'boxiness (> 0)\n'])
         f.writelines([' Z) 0                    # output image '\
                       '(see above)\n\n\n'])
-        c.Flag = c.Flag + 1048576
+        c.Flag += 2048
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
     f.writelines([' 1) ', str(sky), '      ', str(c.fitting[2]), \
@@ -208,7 +208,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             pass
     f.close()
     if isneighbour:
-        c.Flag = c.Flag + 2097152
+        c.Flag  += 4096
 #    f_fit = open('fit2.log','a')
 #    if exists('fit.log'):
 #        os.system('rm fit.log')
