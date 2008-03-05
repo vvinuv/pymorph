@@ -381,7 +381,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     else:
         if chi2nu > c.chi2sq:
             error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-            c.Flag += 8192
+            if chi2nu != 9999:
+                c.Flag += 8192
         if Goodness < c.Goodness:
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
             c.Flag += 16384
@@ -390,7 +391,11 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
              abs(disk_xcntr - xcntr) > c.center_deviation or \
              abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
-            c.Flag += 32768
+            if bulge_xcntr == 9999 or bulge_ycntr == 9999 or \
+               disk_xcntr == 9999 or disk_ycntr == 9999:
+                pass
+            else:
+                c.Flag += 32768
         img_notify = str(c.PYMORPH_PATH) + '/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())

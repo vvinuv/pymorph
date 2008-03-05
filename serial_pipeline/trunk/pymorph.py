@@ -205,6 +205,43 @@ def main():
                 psffile = element
                 distance = d
         return psffile, distance 
+    def CrashHandlerToRemove(gal_id):
+        RemoveMe = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'W' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'E_I' + str(c.rootname) + '_' + str(gal_id) + '.txt ' +\
+                   'EM_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'G_I' + str(c.rootname) + '_' + str(gal_id) + '.in ' + \
+                   'M_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'OE_I' + str(c.rootname) + '_' + str(gal_id) + '.txt ' +\
+                 'OEM_O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                 'O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png '+\
+                 'R_I' + str(c.rootname) + '_' + str(gal_id) + '.html '+\
+                 'Tmp* ' + \
+                 'SO_I' + str(c.rootname) + '_' + str(gal_id) + '.fits '
+        LinuxCommand = 'rm -f ' + str(RemoveMe)
+        os.system(LinuxCommand)
+    def GetFlag(flagname):
+        FlagDict = dict([('REPEAT', 0),
+                         ('FIT_BULGE_CNTR', 1),
+                         ('FIT_DISK_CNTR', 2),
+                         ('FIT_SKY', 3),
+                         ('EXCEED_SIZE', 4),
+                         ('ELLIPSE_FAIL', 5),
+                         ('CASGM_FAIL', 6),
+                         ('GALFIT_FAIL', 7),
+                         ('PLOT_FAIL', 8),
+                         ('FIT_BULGE', 9),
+                         ('FIT_DISK', 10),
+                         ('FIT_POINT', 11),
+                         ('NEIGHBOUR_FIT', 12),
+                         ('LARGE_CHISQ', 13),
+                         ('SMALL_GOODNESS', 14),
+                         ('FAKE_CNTR', 15)])
+        return FlagDict[flagname]
+    def isset(flag, bit):
+         """Return True if the specified bit is set in the given bit mask"""
+        return (flag & (1 << bit)) != 0
     try:
         ComP = c.components
     except:
@@ -409,14 +446,28 @@ def main():
             try:
                 UserGivenPsf = pdb["star"]
             except:
-                UserGivenPsf = 'NonSense'
+                UserGivenPsf = 'None'
+            if c.crashhandler:
+                CrashHandlerToRemove(gal_id)
+                try:
+                    CrashFlag = float(pdb["flag"])
+                except:
+                    CrashFlag = 0
+                if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or \
+                   isset(CrashFlag, GetFlag("LARGE_CHISQ")):
+                    if c.fitting[2] == 0:
+                        c.fitting[2] = 1
+                    else:
+                        c.fitting[2] = 0
+                if isset(CrashFlag, GetFlag("FAKE_CNTR")):
+                    c.fitting[0] = 0
+                    c.fitting[1] = 0
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
                     pass
                 else: 
                     RunSex(gimg, wimg)
-            
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -822,7 +873,7 @@ def main():
                             try:
                                 if(c.repeat == False and cfile == 'None'):
                                     if(alpha_s == 9999 or delta_s == 9999):
-                                        if UserGivenPsf == 'NonSense':
+                                        if UserGivenPsf == 'None':
                                             psffile = c.psflist[psfcounter]
                                         else:
                                             psffile = UserGivenPsf
