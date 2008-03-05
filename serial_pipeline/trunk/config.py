@@ -71,8 +71,9 @@ cas = True
 findandfit = 0
 
 ###---Galfit Controls---###
-components = ['bulge', 'disk']        #The components to be fitted to the objec
-fixsky = 0                            # = 0, Fix sky at SExtractor value
+components = ['bulge', 'disk']        #The components to be fitted to the object
+###---fixing = [bulge_center, disk_center, sky]
+fitting = [0, 0, 0]                    # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 

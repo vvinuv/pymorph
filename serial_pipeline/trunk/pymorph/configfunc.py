@@ -104,7 +104,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if 'bulge' in ComP:
         f.write('# Sersic function\n\n')
         f.writelines([' 0) sersic		# Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1	#',\
+        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
+                      str(c.fitting[0]), ' ', str(c.fitting[0]), '   #',\
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
         f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
@@ -121,7 +122,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if 'disk' in ComP:
         f.writelines(['# Exponential function\n\n'])
         f.writelines([' 0) expdisk 		# Object type\n'])
-        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
+        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
+                      str(c.fitting[1]), ' ', str(c.fitting[1]), '    #',\
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
         f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
@@ -151,7 +153,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         c.Flag = c.Flag + 1048576
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(sky), '      ', str(c.fixsky), '	# sky background [ADU counts\n'])
+    f.writelines([' 1) ', str(sky), '      ', str(c.fitting[2]), \
+                  '	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                   ' Z) 0                  # output image\n\n\n'])
