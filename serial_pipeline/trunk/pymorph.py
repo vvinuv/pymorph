@@ -240,7 +240,7 @@ def main():
                          ('FAKE_CNTR', 15)])
         return FlagDict[flagname]
     def isset(flag, bit):
-         """Return True if the specified bit is set in the given bit mask"""
+        """Return True if the specified bit is set in the given bit mask"""
         return (flag & (1 << bit)) != 0
     try:
         ComP = c.components
@@ -451,14 +451,15 @@ def main():
                 CrashHandlerToRemove(gal_id)
                 try:
                     CrashFlag = float(pdb["flag"])
+                    CrashFlag = int(CrashFlag)
                 except:
                     CrashFlag = 0
                 if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or \
                    isset(CrashFlag, GetFlag("LARGE_CHISQ")):
-                    if c.fitting[2] == 0:
-                        c.fitting[2] = 1
-                    else:
+                    if isset(CrashFlag, GetFlag("FIT_SKY")):
                         c.fitting[2] = 0
+                    else:
+                        c.fitting[2] = 1
                 if isset(CrashFlag, GetFlag("FAKE_CNTR")):
                     c.fitting[0] = 0
                     c.fitting[1] = 0
@@ -989,49 +990,52 @@ def main():
                                         if os.access(outplfile, os.F_OK):
                                             os.remove(outplfile)
                                         try:
+                                            ell_output = 'OE_' + \
+                                                   str(cutimage)[:-4] + 'txt'
+                                            outmodel = 'S' + outimage
                                             iraf.imcopy(out_mask_file, \
                                                        outplfile, verbose='no')
                                             iraf.flpr()
-                                            try:
-                                                outmodel = 'S' + outimage 
-                                                iraf.imcopy(outimage + '[2]', \
+                                            iraf.imcopy(outimage + '[2]', \
                                                        outmodel, verbose='no')
-                                                iraf.flpr()
-                                                ell_output = 'OE_' + \
-                                                     str(cutimage)[:-4] + 'txt'
-                                                if os.access(ell_output, \
-                                                             os.F_OK):
-                                                    os.remove(ell_output)  
-                                                try:
-                                                    FMo=pyfits.open(outimage)
-                                                    MoDel = f[2].data
-                                                    FMo.close()
-                                                    MoDel = n.swapaxes(MoDel, \
-                                                            0, 1)
-                                                    MoShapX = MoDel.shape[0] /2
-                                                    MoShapY = MoDel.shape[1] /2
-                                                    MoCen = center_of_mass( \
-                                                    MoDel[MoShapX-5:MoShapX+5, \
-                                                          MoShapY-5:MoShapY+5])
-                                                    MoX = MoShapX + MoCen[0] -5
-                                                    MoY = MoShapY + MoCen[1] -5
-                                                except:
-                                                    MoX = xcntr
-                                                    MoY = ycntr
-                                                if os.access('GalEllFit.fits',\
-                                                              os.F_OK):
-                                                    os.remove('GalEllFit.fits')
-                                                run_elli(outmodel, ell_output,\
-                                                         MoX, MoY, eg, \
-                                                     pos_ang, major_axis, sky)
-                                                iraf.flpr()
-                                                for myfile in [outplfile, \
-                                                               outmodel]:
-                                                    if os.access(myfile, \
-                                                                 os.F_OK):
-                                                        os.remove(myfile) 
+                                            iraf.flpr()
+                                            if os.access(ell_output, \
+                                                         os.F_OK):
+                                                os.remove(ell_output)  
+                                            try:
+                                                FMo=pyfits.open(outimage)
+                                                MoDel = f[2].data
+                                                FMo.close()
+                                                MoDel = n.swapaxes(MoDel, \
+                                                        0, 1)
+                                                MoShapX = MoDel.shape[0] /2
+                                                MoShapY = MoDel.shape[1] /2
+                                                MoCen = center_of_mass( \
+                                                MoDel[MoShapX-5:MoShapX+5, \
+                                                      MoShapY-5:MoShapY+5])
+                                                MoX = MoShapX + MoCen[0] -5
+                                                MoY = MoShapY + MoCen[1] -5
                                             except:
-                                                f_err.writelines(['Error in '\
+                                                MoX = xcntr
+                                                MoY = ycntr
+                                            if os.access('GalEllFit.fits',\
+                                                          os.F_OK):
+                                                os.remove('GalEllFit.fits')
+                                            run_elli(outmodel, ell_output,\
+                                                     MoX, MoY, eg, \
+                                                pos_ang, major_axis, sky)
+                                            iraf.flpr()
+                                            for myfile in [outplfile, \
+                                                           outmodel]:
+                                                if os.access(myfile, \
+                                                             os.F_OK):
+                                                    os.remove(myfile) 
+                                        except:
+                                            f_err.writelines(['Exists ',\
+                                                       str(outimage),'.pl or ',\
+                                                       str(out_mask_file),\
+                                                       ' does not exist.\n'])  
+                                            f_err.writelines(['Error in '\
                                                           'ellipse '\
                                                           'task. Check ', \
                                                           'whether ' ,\
@@ -1040,14 +1044,8 @@ def main():
                                                       ' test.tab exists OR ',\
                                                       'GALFIT MIGHT BE '\
                                                       'CRASHED\n'])
-                                                run = 0
-                                                c.Flag += 128
-                                                failedgalfit(cutimage)
-                                        except:
-                                            f_err.writelines(['Exists ',\
-                                                       str(outimage),'.pl or ',\
-                                                       str(out_mask_file),\
-                                                       ' does not exist\n'])  
+                                            c.Flag += 128
+                                            failedgalfit(cutimage)
                                             run = 0
                                     except:
                                         f_err.writelines(['Error in making '\
@@ -1107,7 +1105,9 @@ def main():
 #iraf.imcopy(str(imagefile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', cutimage)	
 #iraf.imcopy(str(whtfile) + '[' + str(xmin) + ':' + str(xmax) + ',' + str(ymin) + ':' + str(ymax) + ']', whtimage)	
 #					fitellifunc(gal_id, line_s)
-                            else:
+                            if isset(c.Flag, GetFlag("GALFIT_FAIL")) or \
+                               isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
+                               isset(c.Flag, GetFlag("FAKE_CNTR")):
                                 FailedValues = line_j.split()
                                 for FailedValue in FailedValues:
                                     f_failed.writelines([str(FailedValue), ' '])
@@ -1471,6 +1471,10 @@ if __name__ == '__main__':
         c.psflist = '@psflist.list'
         FindAndFit()
         main()
+        if c.crashhandler:
+            os.system('mv restart.cat CRASH.CAT')
+            c.clus_cata = 'CRASH.CAT' 
+            main()
     elif c.psfselect == 1:
         os.system('ds9 &')
         time.sleep(2)
@@ -1479,3 +1483,8 @@ if __name__ == '__main__':
     elif c.psfselect == 0:
         FindAndFit()
         main()
+        if c.crashhandler:
+            os.system('mv restart.cat CRASH.CAT')
+            c.clus_cata = 'CRASH.CAT' 
+            main()
+
