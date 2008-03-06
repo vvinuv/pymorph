@@ -5,6 +5,7 @@ import os
 import time
 from os.path import exists
 import sys
+from getopt import getopt
 import csv
 import pyfits
 import numpy as n
@@ -1347,6 +1348,25 @@ def selectpsf(ImG, CaT):
 
 if __name__ == '__main__':
     sex_cata = c.sex_cata
+    options = getopt(sys.argv[1:], ' ', ['editconf', 'conv=', \
+                    'force', 'with-psf=', 'test', 'help'])
+    for opt, arg in options:
+        if opt == '--editconf':
+            SExtractorConf()
+        if opt == '--conv':
+            SExtractorConv = arg
+        if opt == '--force':
+            if exists(sex_cata):
+                os.remove(sex_cata)
+            else:
+                pass
+        if opt == '--with-psf':
+            SelectPsfAccoToThis               #Nearest/farthest psf
+        if opt == '--test':
+            TestingOption
+        if opt == '--help':
+            UsageOfPyMorph()
+            sys.exit()
     def FindAndFit():
         if c.findandfit == 1:
             magmin = raw_input("Enter Minimum Magnitude >>> ")
