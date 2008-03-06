@@ -207,6 +207,7 @@ def main():
         return psffile, distance 
     def CrashHandlerToRemove(gal_id):
         RemoveMe = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'I' + str(c.rootname) + '_' + str(gal_id) + '.con ' +\
                    'W' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
                    'E_I' + str(c.rootname) + '_' + str(gal_id) + '.txt ' +\
                    'EM_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
@@ -237,7 +238,9 @@ def main():
                          ('NEIGHBOUR_FIT', 12),
                          ('LARGE_CHISQ', 13),
                          ('SMALL_GOODNESS', 14),
-                         ('FAKE_CNTR', 15)])
+                         ('FAKE_CNTR', 15),
+                         ('BULGE_AT_LIMIT', 16),
+                         ('DISK_AT_LIMIT', 17)])
         return FlagDict[flagname]
     def isset(flag, bit):
         """Return True if the specified bit is set in the given bit mask"""
@@ -454,12 +457,26 @@ def main():
                     CrashFlag = int(CrashFlag)
                 except:
                     CrashFlag = 0
-                if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or \
-                   isset(CrashFlag, GetFlag("LARGE_CHISQ")):
+                if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or\
+                   isset(CrashFlag, GetFlag("BULGE_AT_LIMIT")) or \
+                   isset(CrashFlag, GetFlag("DISK_AT_LIMIT")):
                     if isset(CrashFlag, GetFlag("FIT_SKY")):
                         c.fitting[2] = 0
                     else:
                         c.fitting[2] = 1
+                    if isset(CrashFlag, GetFlag("FIT_BULGE_CNTR")) and\
+                       isset(CrashFlag, GetFlag("FIT_DISK_CNTR")):
+                        pass
+                    else:
+                        c.fitting[0] = 1
+                        c.fitting[1] = 1
+                if isset(CrashFlag, GetFlag("LARGE_CHISQ")):
+                    if isset(CrashFlag, GetFlag("FIT_BULGE_CNTR")) and\
+                       isset(CrashFlag, GetFlag("FIT_DISK_CNTR")):
+                        pass
+                    else:
+                        c.fitting[0] = 1
+                        c.fitting[1] = 1
                 if isset(CrashFlag, GetFlag("FAKE_CNTR")):
                     c.fitting[0] = 0
                     c.fitting[1] = 0
@@ -1107,7 +1124,9 @@ def main():
 #					fitellifunc(gal_id, line_s)
                             if isset(c.Flag, GetFlag("GALFIT_FAIL")) or \
                                isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
-                               isset(c.Flag, GetFlag("FAKE_CNTR")):
+                               isset(c.Flag, GetFlag("FAKE_CNTR")) or \
+                               isset(c.Flag, GetFlag("BULGE_AT_LIMIT")) or \
+                               isset(c.Flag, GetFlag("DISK_AT_LIMIT")):
                                 FailedValues = line_j.split()
                                 for FailedValue in FailedValues:
                                     f_failed.writelines([str(FailedValue), ' '])

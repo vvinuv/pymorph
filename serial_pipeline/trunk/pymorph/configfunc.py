@@ -43,18 +43,27 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
     constrain_file = str(cutimage)[:-5] + '.con'
     if exists(constrain_file):
-        pass
+        MakeConstrain = 0
     else:
-        f_constrain = open(constrain_file, 'ab')
+        f_constrain = open(constrain_file, 'w')
         cO = 1
+        MakeConstrain = 1
         for Co in ComP:
             if Co == 'bulge':
-                f_constrain.write(str(cO) + '       n       0.2 to 20.0  \n')
-                f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
-                f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+                f_constrain.write(str(cO) + '      n      0.1 to 20.0  \n')
+                f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
+                f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
+                f_constrain.write(str(cO) + '     mag     -100.0 to 100.0\n')
+                f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
+                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'disk':
                 f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
                 f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+                f_constrain.write(str(cO) + '     mag     -100.0 to 100.0\n')
+                f_constrain.write(str(cO) + '      rs      0.0 to 500.0\n')
+                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'point':
                 f_constrain.write(str(cO) + '       x       -2.0      2.0\n')
                 f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
@@ -160,6 +169,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                   ' Z) 0                  # output image\n\n\n'])
     f.writelines(['# Neighbour sersic function\n\n'])
     isneighbour = 0
+    f_constrain = open(constrain_file, 'ab')
     for line_j in open(sex_cata,'r'):
         try:
             values = line_j.split()
@@ -203,9 +213,17 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                               ' (< 0) or boxiness (> 0)\n'])
                 f.writelines([' Z) 0 	           	# output',\
                               ' image (see above)\n\n\n'])
+                if MakeConstrain:
+                    f_constrain.write(str(cO) + '      n      0.02 to 20.0  \n')
+                    f_constrain.write(str(cO) + '     mag    -100.0 to 100.0\n')
+                    f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
+                    f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+                    f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
+                    cO += 1
                 isneighbour = 1
         except:
             pass
+    f_constrain.close()
     f.close()
     if isneighbour:
         c.Flag  += 4096
