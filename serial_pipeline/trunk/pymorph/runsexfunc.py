@@ -28,9 +28,9 @@ def sex(cutimage, whtimage):
     SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
     if(whtimage == 'None'):
-        f_tpl = open(str(c.PYMORPH_PATH) + '/default_wow.sex','r')
+        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
     else:
-        f_tpl = open(str(c.PYMORPH_PATH) + '/default.sex','r')
+        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
     sex_conf = str(sex_cata) + '.sex'

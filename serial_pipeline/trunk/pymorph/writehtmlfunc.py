@@ -57,7 +57,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
     Goodness = float(str(round(Goodness, 3))[:5])
-    f_tpl = open(str(c.PYMORPH_PATH) + '/default.html', 'r')
+    f_tpl = open(str(c.PYMORPH_PATH) + '/html/default.html', 'r')
     template = f_tpl.read()
     f_tpl.close()
     outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
@@ -383,7 +383,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         abs(bulge_ycntr - ycntr) <= c.center_deviation and \
         abs(disk_xcntr - xcntr) <= c.center_deviation and \
         abs(disk_ycntr - ycntr) <= c.center_deviation:
-        img_notify = str(c.PYMORPH_PATH) + '/goodfit.gif'
+        img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
         good_fit = 1
     else:
         if chi2nu > c.chi2sq:
@@ -403,7 +403,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 pass
             else:
                 c.Flag += 32768
-        img_notify = str(c.PYMORPH_PATH) + '/badfit.gif'
+        img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())
     outfile.close()

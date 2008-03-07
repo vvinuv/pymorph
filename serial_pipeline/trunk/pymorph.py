@@ -1375,23 +1375,23 @@ def SExtractorConf():
           'gauss_3.0_5x5.conv(5) gauss_3.0_7x7.conv(6) gauss_4.0_7x7.conv(7) '\
           'gauss_5.0_9x9.conv(8) default(0)'
     SEx_FILTER_NAME  = raw_input('FILTER_NAME (default.conv) >>> ')
-    if len(SEx_FILTER_NAME) == 0 or float(SEx_FILTER_NAME) == 0:
+    if len(SEx_FILTER_NAME) == 0 or SEx_FILTER_NAME == '0':
         c.SEx_FILTER_NAME = 'default.conv'
-    elif SEx_FILTER_NAME == 1:
+    elif SEx_FILTER_NAME == '1':
         c.SEx_FILTER_NAME = 'gauss_1.5_3x3.conv'
-    elif SEx_FILTER_NAME == 2:
+    elif SEx_FILTER_NAME == '2':
         c.SEx_FILTER_NAME = 'gauss_2.0_3x3.conv'
-    elif SEx_FILTER_NAME == 3:
+    elif SEx_FILTER_NAME == '3':
         c.SEx_FILTER_NAME = 'gauss_2.0_5x5.conv'
-    elif SEx_FILTER_NAME == 4:
+    elif SEx_FILTER_NAME == '4':
         c.SEx_FILTER_NAME = 'gauss_2.5_5x5.conv'
-    elif SEx_FILTER_NAME == 5:
+    elif SEx_FILTER_NAME == '5':
         c.SEx_FILTER_NAME = 'gauss_3.0_5x5.conv'
-    elif SEx_FILTER_NAME == 6:
+    elif SEx_FILTER_NAME == '6':
         c.SEx_FILTER_NAME = 'gauss_3.0_7x7.conv'
-    elif SEx_FILTER_NAME == 7:
+    elif SEx_FILTER_NAME == '7':
         c.SEx_FILTER_NAME = 'gauss_4.0_7x7.conv'
-    elif SEx_FILTER_NAME == 8:
+    elif SEx_FILTER_NAME == '8':
         c.SEx_FILTER_NAME = 'gauss_5.0_9x9.conv'
     SEx_DEBLEND_NTHRESH = raw_input('DEBLEND_NTHRESH (32) >>> ')
     try:
@@ -1439,7 +1439,7 @@ def SExtractorConf():
     SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 def UsageOfPyMorph():
-    print "pymorph [--edit-conf[-e]] [--with-psf[-p]] [--force[-f]] "\
+    print "Usage: pymorph [--edit-conf[-e]] [--with-psf[-p]] [--force[-f]] "\
           "[--help[-h]] [--test[-t]] [--initial[-i]] [--size[-s]]"
     sys.exit(0)
 
@@ -1491,7 +1491,7 @@ if __name__ == '__main__':
                 PsfSize
             if opt in ('-t', '--test'):
                 TestingOption
-            if opt == ('-h', '--help'):
+            if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     def FindAndFit():
         if c.findandfit == 1:
