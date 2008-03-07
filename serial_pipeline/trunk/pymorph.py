@@ -1350,6 +1350,7 @@ def SExtractorConf():
     SEx_DETECT_MINAREA = raw_input("DETECT_MINAREA (6) >>> ")
     try:
         c.SEx_DETECT_MINAREA = float(SEx_DETECT_MINAREA)
+        c.SEx_DETECT_MINAREA = int(c.SEx_DETECT_MINAREA)
     except:
         c.SEx_DETECT_MINAREA = 6
     SEx_DETECT_THRESH = raw_input('DETECT_THRESH (1.5) >>> ')
@@ -1369,12 +1370,29 @@ def SExtractorConf():
         c.SEx_FILTER = 'Y'
     else:
         c.SEx_FILTER = SEx_FILTER
-    print c.SEx_FILTER
+    print 'Available options for convolve filter are gauss_1.5_3x3.conv(1) '\
+          'gauss_2.0_3x3.conv(2) gauss_2.0_5x5.conv(3) gauss_2.5_5x5.conv(4) '\
+          'gauss_3.0_5x5.conv(5) gauss_3.0_7x7.conv(6) gauss_4.0_7x7.conv(7) '\
+          'gauss_5.0_9x9.conv(8) default(0)'
     SEx_FILTER_NAME  = raw_input('FILTER_NAME (default.conv) >>> ')
-    if SEx_FILTER_NAME == '':
+    if len(SEx_FILTER_NAME) == 0 or float(SEx_FILTER_NAME) == 0:
         c.SEx_FILTER_NAME = 'default.conv'
-    else:
-        c.SEx_FILTER_NAME = SEx_FILTER_NAME
+    elif SEx_FILTER_NAME == 1:
+        c.SEx_FILTER_NAME = 'gauss_1.5_3x3.conv'
+    elif SEx_FILTER_NAME == 2:
+        c.SEx_FILTER_NAME = 'gauss_2.0_3x3.conv'
+    elif SEx_FILTER_NAME == 3:
+        c.SEx_FILTER_NAME = 'gauss_2.0_5x5.conv'
+    elif SEx_FILTER_NAME == 4:
+        c.SEx_FILTER_NAME = 'gauss_2.5_5x5.conv'
+    elif SEx_FILTER_NAME == 5:
+        c.SEx_FILTER_NAME = 'gauss_3.0_5x5.conv'
+    elif SEx_FILTER_NAME == 6:
+        c.SEx_FILTER_NAME = 'gauss_3.0_7x7.conv'
+    elif SEx_FILTER_NAME == 7:
+        c.SEx_FILTER_NAME = 'gauss_4.0_7x7.conv'
+    elif SEx_FILTER_NAME == 8:
+        c.SEx_FILTER_NAME = 'gauss_5.0_9x9.conv'
     SEx_DEBLEND_NTHRESH = raw_input('DEBLEND_NTHRESH (32) >>> ')
     try:
         c.SEx_DEBLEND_NTHRESH = float(SEx_DEBLEND_NTHRESH)
@@ -1418,9 +1436,12 @@ def SExtractorConf():
         c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     elif SEx_BACKPHOTO_TYPE == 'L':
         c.SEx_BACKPHOTO_TYPE = 'LOCAL'
-    print c.SEx_BACKPHOTO_TYPE
     SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
+def UsageOfPyMorph():
+    print "pymorph [--edit-conf[-e]] [--with-psf[-p]] [--force[-f]] "\
+          "[--help[-h]] [--test[-t]] [--initial[-i]] [--size[-s]]"
+    sys.exit(0)
 
 if __name__ == '__main__':
     try:
@@ -1451,11 +1472,14 @@ if __name__ == '__main__':
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
-        options, args = getopt(sys.argv[1:], "e:c:f:p:t:h", ['editconf', \
-                        'conv=', 'force', 'with-psf=', 'test', 'help'])
+        options, args = getopt(sys.argv[1:], "e:p:f:h:t:i:s", ['edit-conf', \
+                        'with-psf=', 'force', 'help', 'test',\
+                         'initial', 'size'])
         for opt, arg in options:
-            if opt in ('-c', '--editconf'):
+            if opt in ('-c', '--edit-conf'):
                 SExtractorConf()
+            if opt in ('-i', '--initial'):
+                DecideInitialParamers
             if opt in ('-f', '--force'):
                 if exists(sex_cata):
                     os.remove(sex_cata)
@@ -1463,11 +1487,12 @@ if __name__ == '__main__':
                     pass
             if opt in ('-p', '--with-psf'):
                 SelectPsfAccoToThis               #Nearest/farthest psf
+            if opt in ('-s', '--size'):
+                PsfSize
             if opt in ('-t', '--test'):
                 TestingOption
             if opt == ('-h', '--help'):
                 UsageOfPyMorph()
-                sys.exit()
     def FindAndFit():
         if c.findandfit == 1:
             magmin = raw_input("Enter Minimum Magnitude >>> ")
