@@ -12,15 +12,15 @@ PARAMETERS_NAME  %(pymorph_path)s/default.param  # name of the file containing c
 #------------------------------- Extraction ----------------------------------
  
 DETECT_TYPE      CCD            # CCD (linear) or PHOTO (with gamma correction)
-DETECT_MINAREA   6              # minimum number of pixels above threshold
-DETECT_THRESH    1.5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
-ANALYSIS_THRESH  1.5            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
+DETECT_MINAREA   %(SEx_DETECT_MINAREA)s              # minimum number of pixels above threshold
+DETECT_THRESH    %(SEx_DETECT_THRESH)s            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
+ANALYSIS_THRESH  %(SEx_ANALYSIS_THRESH)s            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
  
-FILTER           Y              # apply filter for detection (Y or N)?
-FILTER_NAME      %(pymorph_path)s/default.conv   # name of the file containing the filter
+FILTER           %(SEx_FILTER)s              # apply filter for detection (Y or N)?
+FILTER_NAME      %(pymorph_path)s/%(SEx_FILTER_NAME)s   # name of the file containing the filter
  
-DEBLEND_NTHRESH  32             # Number of deblending sub-thresholds
-DEBLEND_MINCONT  0.005          # Minimum contrast parameter for deblending
+DEBLEND_NTHRESH  %(SEx_DEBLEND_NTHRESH)s             # Number of deblending sub-thresholds
+DEBLEND_MINCONT  %(SEx_DEBLEND_MINCONT)s          # Minimum contrast parameter for deblending
  
 CLEAN            Y              # Clean spurious detections? (Y or N)?
 CLEAN_PARAM      1.0            # Cleaning efficiency
@@ -34,24 +34,24 @@ PHOT_APERTURES   5              # MAG_APER aperture diameter(s) in pixels
 PHOT_AUTOPARAMS  2.5, 3.5       # MAG_AUTO parameters: <Kron_fact>,<min_radius>
 PHOT_PETROPARAMS 2.0, 3.5       # MAG_PETRO parameters: <Petrosian_fact>,
                                 # <min_radius>
-PHOT_FLUXFRAC    0.5            # flux fraction[s] used for FLUX_RADIUS
+PHOT_FLUXFRAC    %(SEx_PHOT_FLUXFRAC)s            # flux fraction[s] used for FLUX_RADIUS
 SATUR_LEVEL      100000.0        # level (in ADUs) at which arises saturation
 MAG_ZEROPOINT    %(mag_zero)s            # magnitude zero-point
 MAG_GAMMA        4.0            # gamma of emulsion (for photographic scans)
-GAIN             1.0            # detector gain in e-/ADU
+GAIN             %(SEx_GAIN)s            # detector gain in e-/ADU
 PIXEL_SCALE      0            # size of pixel in arcsec (0=use FITS WCS info)
  
 #------------------------- Star/Galaxy Separation ----------------------------
  
-SEEING_FWHM      0.11            # stellar FWHM in arcsec
+SEEING_FWHM      %(SEx_SEEING_FWHM)s            # stellar FWHM in arcsec
 STARNNW_NAME     %(pymorph_path)s/default.nnw    # Neural-Network_Weight table filename
  
 #------------------------------ Background -----------------------------------
  
-BACK_SIZE        64             # Background mesh: <size> or <width>,<height>
-BACK_FILTERSIZE  3              # Background filter: <size> or <width>,<height>
+BACK_SIZE        %(SEx_BACK_SIZE)s             # Background mesh: <size> or <width>,<height>
+BACK_FILTERSIZE  %(SEx_BACK_FILTERSIZE)s              # Background filter: <size> or <width>,<height>
  
-BACKPHOTO_TYPE   GLOBAL         # can be GLOBAL or LOCAL
+BACKPHOTO_TYPE   %(SEx_BACKPHOTO_TYPE)s         # can be GLOBAL or LOCAL
  
 #--------------------- Memory (change with caution!) -------------------------
  
@@ -75,7 +75,7 @@ CHECKIMAGE_NAME  check.fits     # Filename for the check-image
 
 #-------------------------------- WEIGHTing ----------------------------------
 
-WEIGHT_TYPE      MAP_RMS           # type of WEIGHTing: NONE, BACKGROUND,
+WEIGHT_TYPE      %(SEx_WEIGHT_TYPE)s           # type of WEIGHTing: NONE, BACKGROUND,
                                 # MAP_RMS, MAP_VAR or MAP_WEIGHT
 WEIGHT_IMAGE     %(whtimage)s    # weight-map filename
 WEIGHT_GAIN      N              # modulate gain (E/ADU) with weights? (Y/N)

@@ -70,9 +70,8 @@ def main():
         indexfile.close()
     try:
         if(c.repeat == False and c.galcut == False):
-            img = pyfits.open(imagefile)
-            image = img[0].data
-            header0 = img[0].header
+            image = c.ImAgE
+            header0 = c.HeAdEr0
             if (header0.has_key('EXPTIME')):
                 EXPTIME = header0['EXPTIME']
             else:
@@ -89,10 +88,10 @@ def main():
                 NCOMBINE= header0['NCOMBINE']
             else:
                 NCOMBINE = -9999
-            img.close()
             print "imagefile >>> ", imagefile
             TX = image.shape[1]
-            TY = image.shape[0] 
+            TY = image.shape[0]
+            print EXPTIME, RDNOISE, GAIN, NCOMBINE 
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
@@ -412,8 +411,10 @@ def main():
                         RDNOISE = -9999
                     if (header0.has_key('GAIN')):
                         GAIN = header0['GAIN']
+                        c.SEx_GAIN = GAIN
                     else:
                         GAIN = -9999
+                        c.SEx_GAIN = 1
                     if (header0.has_key('NCOMBINE')):
                         NCOMBINE= header0['NCOMBINE']
                     else:
@@ -1345,28 +1346,128 @@ def selectpsf(ImG, CaT):
                         pass
         else:
             finish = 0
+def SExtractorConf():
+    SEx_DETECT_MINAREA = raw_input("DETECT_MINAREA (6) >>> ")
+    try:
+        c.SEx_DETECT_MINAREA = float(SEx_DETECT_MINAREA)
+    except:
+        c.SEx_DETECT_MINAREA = 6
+    SEx_DETECT_THRESH = raw_input('DETECT_THRESH (1.5) >>> ')
+    try:
+        c.SEx_DETECT_THRESH = float(SEx_DETECT_THRESH)
+    except:
+        c.SEx_DETECT_THRESH = 1.5
+    SEx_ANALYSIS_THRESH = raw_input('ANALYSIS_THRESH (1.5) >>> ')
+    try:
+        c.SEx_ANALYSIS_THRESH = float(SEx_ANALYSIS_THRESH)
+    except:
+        c.SEx_ANALYSIS_THRESH = 1.5
+    SEx_FILTER = raw_input('FILTER (Y/N) >>> ')
+    while SEx_FILTER != 'Y' and SEx_FILTER != 'N' and SEx_FILTER != '':
+        SEx_FILTER = raw_input('FILTER (Y/N) >>> ')
+    if len(SEx_FILTER) == 0:
+        c.SEx_FILTER = 'Y'
+    else:
+        c.SEx_FILTER = SEx_FILTER
+    print c.SEx_FILTER
+    SEx_FILTER_NAME  = raw_input('FILTER_NAME (default.conv) >>> ')
+    if SEx_FILTER_NAME == '':
+        c.SEx_FILTER_NAME = 'default.conv'
+    else:
+        c.SEx_FILTER_NAME = SEx_FILTER_NAME
+    SEx_DEBLEND_NTHRESH = raw_input('DEBLEND_NTHRESH (32) >>> ')
+    try:
+        c.SEx_DEBLEND_NTHRESH = float(SEx_DEBLEND_NTHRESH)
+        c.SEx_DEBLEND_NTHRESH = int(c.SEx_DEBLEND_NTHRESH)
+    except:
+        c.SEx_DEBLEND_NTHRESH = 32
+    SEx_DEBLEND_MINCONT = raw_input('DEBLEND_MINCONT (0.005) >>> ')
+    try:
+        c.SEx_DEBLEND_MINCONT = float(SEx_DEBLEND_MINCONT)
+    except:
+        c.SEx_DEBLEND_MINCONT = 0.005
+    SEx_PHOT_FLUXFRAC = raw_input('PHOT_FLUXFRAC (0.5) >>> ')
+    try:
+        c.SEx_PHOT_FLUXFRAC = float(SEx_PHOT_FLUXFRAC)
+    except:
+        c.SEx_PHOT_FLUXFRAC = 0.5
+    SEx_SEEING_FWHM = raw_input('SEEING_FWHM (0.11) >>> ')
+    try:
+        c.SEx_SEEING_FWHM = float(SEx_SEEING_FWHM )
+    except:
+        c.SEx_SEEING_FWHM = 0.11
+    SEx_BACK_SIZE = raw_input('BACK_SIZE (64) >>> ')
+    try:
+        c.SEx_BACK_SIZE = float(SEx_BACK_SIZE)
+        c.SEx_BACK_SIZE = int(c.SEx_BACK_SIZE)
+    except:
+        c.SEx_BACK_SIZE = 64
+    SEx_BACK_FILTERSIZE = raw_input('BACK_FILTERSIZE (3) >>> ')
+    try:
+        c.SEx_BACK_FILTERSIZE = float(SEx_BACK_FILTERSIZE)
+        c.SEx_BACK_FILTERSIZE = int(c.SEx_BACK_FILTERSIZE)
+    except:
+        c.SEx_BACK_FILTERSIZE = 3
+    SEx_BACKPHOTO_TYPE = raw_input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
+    while SEx_BACKPHOTO_TYPE != 'G' and SEx_BACKPHOTO_TYPE != 'L' \
+          and SEx_BACKPHOTO_TYPE != '':
+        SEx_BACKPHOTO_TYPE = raw_input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
+    if len(SEx_BACKPHOTO_TYPE) == 0:
+        c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
+    elif SEx_BACKPHOTO_TYPE == 'G':
+        c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
+    elif SEx_BACKPHOTO_TYPE == 'L':
+        c.SEx_BACKPHOTO_TYPE = 'LOCAL'
+    print c.SEx_BACKPHOTO_TYPE
+    SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
+    c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 
 if __name__ == '__main__':
-    sex_cata = c.sex_cata
-    options = getopt(sys.argv[1:], ' ', ['editconf', 'conv=', \
-                    'force', 'with-psf=', 'test', 'help'])
-    for opt, arg in options:
-        if opt == '--editconf':
-            SExtractorConf()
-        if opt == '--conv':
-            SExtractorConv = arg
-        if opt == '--force':
-            if exists(sex_cata):
-                os.remove(sex_cata)
+    try:
+        if(c.repeat == False and c.galcut == False):
+            img = pyfits.open(c.imagefile)
+            c.ImAgE = img[0].data
+            c.HeAdEr0 = img[0].header
+            if (c.HeAdEr0.has_key('GAIN')):
+                c.SEx_GAIN = header0['GAIN']
             else:
-                pass
-        if opt == '--with-psf':
-            SelectPsfAccoToThis               #Nearest/farthest psf
-        if opt == '--test':
-            TestingOption
-        if opt == '--help':
-            UsageOfPyMorph()
-            sys.exit()
+                c.SEx_GAIN = 1
+            img.close()
+    except IOError, (errno, strerror):
+        print imagefile, "I/O error(%s): %s" % (errno, strerror)
+        os._exit(0)
+    c.SEx_DETECT_MINAREA = 6
+    c.SEx_DETECT_THRESH = 1.5
+    c.SEx_ANALYSIS_THRESH = 1.5
+    c.SEx_FILTER = 'Y'
+    c.SEx_FILTER_NAME = 'default.conv'
+    c.SEx_DEBLEND_NTHRESH = 32
+    c.SEx_DEBLEND_MINCONT = 0.005
+    c.SEx_PHOT_FLUXFRAC = 0.5
+    c.SEx_SEEING_FWHM = 0.11
+    c.SEx_BACK_SIZE = 64
+    c.SEx_BACK_FILTERSIZE = 3
+    c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
+    c.SEx_WEIGHT_TYPE = 'MAP_RMS'
+    sex_cata = c.sex_cata
+    if len(sys.argv[1:]) > 0:
+        options, args = getopt(sys.argv[1:], "e:c:f:p:t:h", ['editconf', \
+                        'conv=', 'force', 'with-psf=', 'test', 'help'])
+        for opt, arg in options:
+            if opt in ('-c', '--editconf'):
+                SExtractorConf()
+            if opt in ('-f', '--force'):
+                if exists(sex_cata):
+                    os.remove(sex_cata)
+                else:
+                    pass
+            if opt in ('-p', '--with-psf'):
+                SelectPsfAccoToThis               #Nearest/farthest psf
+            if opt in ('-t', '--test'):
+                TestingOption
+            if opt == ('-h', '--help'):
+                UsageOfPyMorph()
+                sys.exit()
     def FindAndFit():
         if c.findandfit == 1:
             magmin = raw_input("Enter Minimum Magnitude >>> ")
@@ -1480,6 +1581,13 @@ if __name__ == '__main__':
                                    str(gal_id) + '.fits'
                         else:
                             wimg = 'None'
+                    GiMg = pyfit.open(gimg)
+                    headerGiMg = GiMg[0].header
+                    if (headerGiMg.has_key('GAIN')):
+                        c.SEx_GAIN = headerGiMg['GAIN']
+                    else:
+                        c.SEx_GAIN = 1
+                    GiMg.close()
                     if exists(sex_cata): 
                         pass
                     else:

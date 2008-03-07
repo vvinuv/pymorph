@@ -12,6 +12,20 @@ class RunSex:
 def sex(cutimage, whtimage):
     sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
+    SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA 
+    SEx_DETECT_THRESH = c.SEx_DETECT_THRESH
+    SEx_ANALYSIS_THRESH = c.SEx_ANALYSIS_THRESH 
+    SEx_FILTER = c.SEx_FILTER 
+    SEx_FILTER_NAME = c.SEx_FILTER_NAME 
+    SEx_DEBLEND_NTHRESH = c.SEx_DEBLEND_NTHRESH
+    SEx_DEBLEND_MINCONT = c.SEx_DEBLEND_MINCONT
+    SEx_PHOT_FLUXFRAC = c.SEx_PHOT_FLUXFRAC 
+    SEx_GAIN = c.SEx_GAIN
+    SEx_SEEING_FWHM = c.SEx_SEEING_FWHM 
+    SEx_BACK_SIZE = c.SEx_BACK_SIZE 
+    SEx_BACK_FILTERSIZE = c.SEx_BACK_FILTERSIZE 
+    SEx_BACKPHOTO_TYPE = c.SEx_BACKPHOTO_TYPE 
+    SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
     if(whtimage == 'None'):
         f_tpl = open(str(c.PYMORPH_PATH) + '/default_wow.sex','r')
