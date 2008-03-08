@@ -88,9 +88,6 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     iraf.samplepar.lsclip=3
     iraf.samplepar.nclip=0
     iraf.samplepar.fflag=0.5
-    iraf.magpar.mag0=c.mag_zero
-    iraf.magpar.refer=1
-    iraf.magpar.zerolev=0
     iraf.unlearn('ellipse')
     iraf.ellipse("".join(EllGal), output="test", interac="no",Stdout="ellip", \
                  Stderr="err")

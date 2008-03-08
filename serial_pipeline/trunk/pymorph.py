@@ -91,7 +91,6 @@ def main():
             print "imagefile >>> ", imagefile
             TX = image.shape[1]
             TY = image.shape[0]
-            print EXPTIME, RDNOISE, GAIN, NCOMBINE 
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
@@ -190,8 +189,12 @@ def main():
             header = p[0].header
             if (header.has_key('RA_TARG')):
                 ra = header['RA_TARG']
+            else:
+                ra = 9999
             if (header.has_key('DEC_TARG')):
                 dec= header['DEC_TARG']
+            else:
+                dec= 9999
             p.close()
 #		d = sqrt((ra - alpha_j) ** 2.0 + (dec - delta_j) ** 2.0)
 #            d = n.arccos(n.cos((90.0 - delta_j) * r) * n.cos((90.0 - dec) *\
@@ -923,10 +926,9 @@ def main():
                                             distance = 9999
                                         psfcounter += 1
                                     else:
-                                        psffile = psf_select(alpha_j, delta_j)\
-                                                  [0]
-                                        distance = psf_select(alpha_j, delta_j)\
-                                                  [1] * 60.0 * 60.0
+                                        psffile, distance = \
+                                               psf_select(alpha_j, delta_j)
+                                        distance = distance * 60.0 * 60.0
                                 else:
                                     if(alpha_s == 9999 or delta_s == 9999):
                                         distance = 9999
@@ -1478,6 +1480,7 @@ if __name__ == '__main__':
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
+    c.WhichPsf = 0
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
         options, args = getopt(sys.argv[1:], "e:p:f:h:t:i", ['edit-conf', \
@@ -1495,6 +1498,7 @@ if __name__ == '__main__':
                     pass
             if opt in ('-p', '--with-psf'):
                 c.WhichPsf = int(arg)               #Nearest/farthest psf
+                print c.WhichPsf
             if opt in ('-t', '--test'):
                 TestingOption
             if opt in ('-h', '--help'):
