@@ -180,6 +180,7 @@ def main():
            The distance is calculated by using the following equation
            d = Sqrt((dec_a - dec_b) ^ 2 + ((ra_a - ra_b) * sin(0.5) * 
            (dec_a - dec_b)) ^ 2.0 )"""
+        PsfDistanceDict = {}
         distance = 9999.0
         psffile = 'test.fits'
         psflist = c.psflist
@@ -200,10 +201,17 @@ def main():
 #                (delta_j+dec)))**2.0)
             d = n.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
                 n.cos(delta_j * r))**2.0)
+            PsfDistanceDict[element] = d
             #print 'alp dec alpsf decpsf d', alpha_j, delta_j, ra, dec, d
-            if(d < distance):
-                psffile = element
-                distance = d
+#            if(d < distance):
+#                psffile = element
+#                distance = d
+        ItemS = PsfDistanceDict.items()
+        ItemS = [(v, k) for (k, v) in ItemS]
+        ItemS.sort()
+        ItemS = [(k, v) for (v, k) in ItemS]
+        psffile = ItemS[c.WhichPsf][0]
+        distance = ItemS[c.WhichPsf][1]
         return psffile, distance 
     def CrashHandlerToRemove(gal_id):
         RemoveMe = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
@@ -1472,9 +1480,9 @@ if __name__ == '__main__':
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
-        options, args = getopt(sys.argv[1:], "e:p:f:h:t:i:s", ['edit-conf', \
+        options, args = getopt(sys.argv[1:], "e:p:f:h:t:i", ['edit-conf', \
                         'with-psf=', 'force', 'help', 'test',\
-                         'initial', 'size'])
+                         'initial'])
         for opt, arg in options:
             if opt in ('-c', '--edit-conf'):
                 SExtractorConf()
@@ -1486,9 +1494,7 @@ if __name__ == '__main__':
                 else:
                     pass
             if opt in ('-p', '--with-psf'):
-                SelectPsfAccoToThis               #Nearest/farthest psf
-            if opt in ('-s', '--size'):
-                PsfSize
+                c.WhichPsf = int(arg)               #Nearest/farthest psf
             if opt in ('-t', '--test'):
                 TestingOption
             if opt in ('-h', '--help'):
