@@ -1449,7 +1449,7 @@ def SExtractorConf():
     SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 def UsageOfPyMorph():
-    print "Usage: pymorph [--edit-conf[-e]] [--with-psf[-p]] [--force[-f]] "\
+    print "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
           "[--help[-h]] "
     sys.exit(0)
 
@@ -1481,8 +1481,8 @@ if __name__ == '__main__':
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     c.WhichPsf = 0
-    c.LMag = -100.0
-    c.UMag = 100.0
+    c.LMag = 100.0
+    c.UMag = -100.0
     c.LN = 0.1
     c.UN = 20.0
     c.LRe = 0.0
@@ -1492,8 +1492,8 @@ if __name__ == '__main__':
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
         try:
-            options, args = getopt(sys.argv[1:], "epfhti", ['edit-conf', \
-                        'with-psf=', 'force', 'help', 'test', 'initial'\
+            options, args = getopt(sys.argv[1:], "efhti", ['edit-conf', \
+                        'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
                         'lrd=', 'urd='])
         except GetoptError, err:
