@@ -50,18 +50,23 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         MakeConstrain = 1
         for Co in ComP:
             if Co == 'bulge':
-                f_constrain.write(str(cO) + '      n      0.1 to 20.0  \n')
+                f_constrain.write(str(cO) + '      n      ', str(c.LN), \
+                        ' to ', str(c.UN),  '\n')
                 f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
                 f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
-                f_constrain.write(str(cO) + '     mag     -100.0 to 100.0\n')
-                f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
+                f_constrain.write(str(cO) + '     mag     ', str(c.LMag), \
+                        ' to ', str(c.UMag), '\n')
+                f_constrain.write(str(cO) + '      re     ', str(c.LRe),\
+                        ' to ', str(c.URe), '\n')
                 f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
                 f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'disk':
                 f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
                 f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
-                f_constrain.write(str(cO) + '     mag     -100.0 to 100.0\n')
-                f_constrain.write(str(cO) + '      rs      0.0 to 500.0\n')
+                f_constrain.write(str(cO) + '     mag     ', str(c.LMag), \
+                        ' to ', str(c.UMag), '\n')
+                f_constrain.write(str(cO) + '      rs     ', str(c.LRd), \
+                        ' to ', str(c.URd), '\n')
                 f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
                 f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'point':

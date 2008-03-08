@@ -362,8 +362,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg2 = ''
     error_mesg3 = ''
     if 'bulge' in ComP:
-        if mag_b == 100.0 or mag_b == -100.0 or re == 500.0 or \
-           SersicIndex == 0.1 or SersicIndex == 20.0:
+        if mag_b == c.UMag or mag_b == c.LMag or re == c.URe or re == c.LRe or\
+           SersicIndex == c.LN or SersicIndex == c.UN:
             c.Flag += 65536
         else:
             pass
@@ -371,7 +371,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         bulge_xcntr = xcntr
         bulge_ycntr = ycntr
     if 'disk' in ComP:
-        if mag_d == 100.0 or mag_d == -100.0 or rd == 500.0:
+        if mag_d == c.UMag or mag_d == c.LMag or rd == c.LRd or rd == c.URd:
             c.Flag += 131072
         else:
             pass

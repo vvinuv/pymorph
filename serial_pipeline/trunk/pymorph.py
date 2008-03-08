@@ -1481,12 +1481,21 @@ if __name__ == '__main__':
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     c.WhichPsf = 0
+    c.LMag = -100.0
+    c.UMag = 100.0
+    c.LN = 0.1
+    c.UN = 20.0
+    c.LRe = 0.0
+    c.URe = 500.0
+    c.LRd = 0.0
+    c.URd = 500.0
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
         try:
-            options, args = getopt(sys.argv[1:], "e:p:f:h:t:i", ['edit-conf', \
-                        'with-psf=', 'force', 'help', 'test',\
-                         'initial'])
+            options, args = getopt(sys.argv[1:], "epfhti", ['edit-conf', \
+                        'with-psf=', 'force', 'help', 'test', 'initial'\
+                        'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
+                        'lrd=', 'urd='])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1504,6 +1513,23 @@ if __name__ == '__main__':
                 c.WhichPsf = int(arg)               #Nearest/farthest psf
             if opt in ('-t', '--test'):
                 TestingOption
+            if opt in ['--lmag']:
+                c.LMag = float(arg)
+            if opt in ['--umag']:
+                c.UMag = float(arg)
+            if opt in ['--ln']:
+                c.LN = float(arg)
+            if opt in ['--un']:
+                c.UN = float(arg)
+            if opt in ['--lre']:
+                c.LRe = float(arg)
+            if opt in ['--ure']:
+                c.URe = float(arg)
+                print c.URe
+            if opt in ['--lrd']:
+                c.LRd = float(arg)
+            if opt in ['--ure']:
+                c.URd = float(arg)
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     def FindAndFit():
