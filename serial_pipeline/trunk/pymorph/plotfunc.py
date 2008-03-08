@@ -2,6 +2,7 @@ import sys, pyfits
 from pylab import *
 import numpy as n
 import numpy.core.ma as ma
+import config as c
 
 class PlotFunc:
     """The class for plotting. It will plot the galaxy image, the model galaxy
@@ -138,7 +139,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
         sma = data.sma		#sma from ellise fitting
         flux = data.flux	#Flux at various sma
         flux_err =data.flux_err	#Error in Flux
-        mag = data.mag + c.mag_zero		#Magnitude at various sma
+        mag = data.mag + float(c.mag_zero)  #Magnitude at various sma
         mag_uerr = data.mag_uerr	#Upper error in magnitude
         mag_lerr = data.mag_lerr	#lower error in Magnitude
         GalEll = 1
@@ -150,7 +151,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
         sma1 = data1.sma		#sma from ellise fitting
         flux1 = data1.flux	#Flux at various sma
         flux_err1 =data1.flux_err	#Error in Flux
-        mag1 = data1.mag + c.mag_zero		#Magnitude at various sma
+        mag1 = data1.mag + float(c.mag_zero)  #Magnitude at various sma
         mag_uerr1 = data1.mag_uerr	#Upper error in magnitude
         mag_lerr1 = data1.mag_lerr	#lower error in Magnitude
         ModelEll = 1

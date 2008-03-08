@@ -5,7 +5,7 @@ import os
 import time
 from os.path import exists
 import sys
-from getopt import getopt
+from getopt import getopt, GetoptError
 import csv
 import pyfits
 import numpy as n
@@ -1450,7 +1450,7 @@ def SExtractorConf():
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 def UsageOfPyMorph():
     print "Usage: pymorph [--edit-conf[-e]] [--with-psf[-p]] [--force[-f]] "\
-          "[--help[-h]] [--test[-t]] [--initial[-i]] [--size[-s]]"
+          "[--help[-h]] "
     sys.exit(0)
 
 if __name__ == '__main__':
@@ -1483,9 +1483,13 @@ if __name__ == '__main__':
     c.WhichPsf = 0
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
-        options, args = getopt(sys.argv[1:], "e:p:f:h:t:i", ['edit-conf', \
+        try:
+            options, args = getopt(sys.argv[1:], "e:p:f:h:t:i", ['edit-conf', \
                         'with-psf=', 'force', 'help', 'test',\
                          'initial'])
+        except GetoptError, err:
+            print str(err) 
+            UsageOfPyMorph()
         for opt, arg in options:
             if opt in ('-c', '--edit-conf'):
                 SExtractorConf()
@@ -1498,7 +1502,6 @@ if __name__ == '__main__':
                     pass
             if opt in ('-p', '--with-psf'):
                 c.WhichPsf = int(arg)               #Nearest/farthest psf
-                print c.WhichPsf
             if opt in ('-t', '--test'):
                 TestingOption
             if opt in ('-h', '--help'):
