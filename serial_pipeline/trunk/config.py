@@ -69,11 +69,12 @@ decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
 findandfit = 0
+crashhandler = 1
 
 ###---Galfit Controls---###
-components = ['bulge', 'disk']        #The components to be fitted to the object
+components = ['bulge', 'disk']        #The components to be fitted to the objec
 ###---fixing = [bulge_center, disk_center, sky]
-fitting = [0, 0, 0]                    # = 0, Fix params at SExtractor value
+fitting = [1, 1, 0]                    # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
@@ -83,4 +84,4 @@ PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9                          #< chi2sq
 Goodness = 0.60                       #> Goodness
-center_deviation = 5.0                #< abs(center - fitted center)
+center_deviation = 3.0                #< abs(center - fitted center)

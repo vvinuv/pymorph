@@ -361,10 +361,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg1 = ''
     error_mesg2 = ''
     error_mesg3 = ''
+    error_mesg4 = ''
+    HitLimit = 1
     if 'bulge' in ComP:
         if mag_b == c.UMag or mag_b == c.LMag or re == c.URe or re == c.LRe or\
            SersicIndex == c.LN or SersicIndex == c.UN:
             c.Flag += 65536
+            HitLimit = 0
         else:
             pass
     else:
@@ -373,12 +376,14 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     if 'disk' in ComP:
         if mag_d == c.UMag or mag_d == c.LMag or rd == c.LRd or rd == c.URd:
             c.Flag += 131072
+            HitLimit = 0
         else:
             pass
     else:
         disk_xcntr = xcntr
         disk_ycntr = ycntr
-    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
+    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and 
+        HitLimit and \
         abs(bulge_xcntr - xcntr) <= c.center_deviation and \
         abs(bulge_ycntr - ycntr) <= c.center_deviation and \
         abs(disk_xcntr - xcntr) <= c.center_deviation and \
@@ -393,6 +398,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         if Goodness < c.Goodness:
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
             c.Flag += 16384
+        if HitLimit == 0:
+            error_mesg4 = str(error_mesg4) + 'One of the parameters hits limit!'
         if abs(bulge_xcntr - xcntr) > c.center_deviation or \
              abs(bulge_ycntr - ycntr) > c.center_deviation or \
              abs(disk_xcntr - xcntr) > c.center_deviation or \
