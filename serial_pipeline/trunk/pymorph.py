@@ -1489,13 +1489,14 @@ if __name__ == '__main__':
     c.URe = 500.0
     c.LRd = 0.0
     c.URd = 500.0
+    c.avoideme = 150.0
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
         try:
             options, args = getopt(sys.argv[1:], "efhti", ['edit-conf', \
                         'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
-                        'lrd=', 'urd='])
+                        'lrd=', 'urd=', 'with-out='])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1530,6 +1531,8 @@ if __name__ == '__main__':
                 c.LRd = float(arg)
             if opt in ['--ure']:
                 c.URd = float(arg)
+            if opt in ['--with-out']:
+                c.avoideme = float(arg)
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     def FindAndFit():

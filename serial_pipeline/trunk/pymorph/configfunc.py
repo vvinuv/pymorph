@@ -187,11 +187,15 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             axis_rat = 1.0/float(values[12]) #axis ration b/a
             area_n = float(values[13]) # neighbour area
             maj_axis = float(values[14])#major axis of neighbour
+            NotFitNeigh = 0
+            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoideme or \
+               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoideme:
+                NotFitNeigh = 1
             if(abs(xcntr_n - xcntr_o) <= (major_axis + maj_axis) * \
                threshold and \
                abs(ycntr_n - ycntr_o) <= (major_axis  + maj_axis) * \
                threshold and area_n >= thresh_area * area_o and \
-               xcntr_n != xcntr_o and ycntr_n != ycntr_o):
+               xcntr_n != xcntr_o and ycntr_n != ycntr_o and NotFitNeigh == 0):
                 if((xcntr_o - xcntr_n) < 0):
                     xn = xcntr + abs(xcntr_n - xcntr_o)
                 if((ycntr_o - ycntr_n) < 0):

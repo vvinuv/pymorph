@@ -101,8 +101,15 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             if not '</BODY></HTML>' in line_i:
                 print line_i    
         indexfile = open('index.html', 'a+')
-        indexfile.writelines(['<a href="R_',\
-                              str(cutimage)[:-5],'.html',\
+        NoImage = 1
+        for indexline in indexfile:
+            if cutimage in indexline:
+                NoImage = 0
+            else:
+                pass
+        if NoImage:
+            indexfile.writelines(['<a href="R_',\
+                                  str(cutimage)[:-5],'.html',\
                                   '"> ', str(cutimage)[:-5],\
                                   ' </a> <br>\n'])
         indexfile.writelines(['</BODY></HTML>\n'])
