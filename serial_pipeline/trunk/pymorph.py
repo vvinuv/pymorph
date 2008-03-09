@@ -1460,7 +1460,7 @@ if __name__ == '__main__':
             c.ImAgE = img[0].data
             c.HeAdEr0 = img[0].header
             if (c.HeAdEr0.has_key('GAIN')):
-                c.SEx_GAIN = header0['GAIN']
+                c.SEx_GAIN = HeAdEr0['GAIN']
             else:
                 c.SEx_GAIN = 1
             img.close()
