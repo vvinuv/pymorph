@@ -1496,7 +1496,7 @@ if __name__ == '__main__':
             options, args = getopt(sys.argv[1:], "efhti", ['edit-conf', \
                         'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
-                        'lrd=', 'urd=', 'with-out='])
+                        'lrd=', 'urd=', 'with-in='])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1531,7 +1531,7 @@ if __name__ == '__main__':
                 c.LRd = float(arg)
             if opt in ['--ure']:
                 c.URd = float(arg)
-            if opt in ['--with-out']:
+            if opt in ['--with-in']:
                 c.avoideme = float(arg)
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
