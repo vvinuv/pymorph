@@ -389,7 +389,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     else:
         disk_xcntr = xcntr
         disk_ycntr = ycntr
-    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and 
+    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
         HitLimit and \
         abs(bulge_xcntr - xcntr) <= c.center_deviation and \
         abs(bulge_ycntr - ycntr) <= c.center_deviation and \
