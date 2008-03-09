@@ -103,7 +103,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         indexfile = open('index.html', 'a+')
         NoImage = 1
         for indexline in indexfile:
-            if cutimage in indexline:
+            if cutimage[:-5] in indexline:
                 NoImage = 0
             else:
                 pass
@@ -369,6 +369,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg2 = ''
     error_mesg3 = ''
     error_mesg4 = ''
+    error_mesg5 = ''
     HitLimit = 1
     if 'bulge' in ComP:
         if mag_b == c.UMag or mag_b == c.LMag or re == c.URe or re == c.LRe or\
@@ -406,7 +407,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
             c.Flag += 16384
         if HitLimit == 0:
-            error_mesg4 = str(error_mesg4) + 'One of the parameters hits limit!'
+            error_mesg4 = str(error_mesg4) + 'One of the parameters'
+            error_mesg5 = str(error_mesg5) + '          hits limit!'
         if abs(bulge_xcntr - xcntr) > c.center_deviation or \
              abs(bulge_ycntr - ycntr) > c.center_deviation or \
              abs(disk_xcntr - xcntr) > c.center_deviation or \
