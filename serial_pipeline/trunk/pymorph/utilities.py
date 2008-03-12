@@ -1,5 +1,6 @@
 import MySQLdb as mysql
 import sys
+import datetime
 import config as c
 
 def WriteDb(ParamValues):
@@ -28,10 +29,16 @@ def WriteDb(ParamValues):
             DictParamWithType1[DBparam[0]] = 'varchar(500)'
         DictParamWithValue[DBparam[0]] = DBparam[1]
         AllParams.append(DBparam[0])
+    x=datetime.date.today()
+    yyyy, mm, dd = x.year, x.month, x.day
+    DaTe = str(yyyy) + '.' + str(mm) + str(dd)
+    AllParams.append('Date')
     AllParams.append('Version')
     AllParams.append('Filter')
+    DictParamWithType1['Date'] = 'varchar(50)' 
     DictParamWithType1['Version'] = 'float'
     DictParamWithType1['Filter'] = 'varchar(500)'
+    DictParamWithValue['Date'] = DaTe
     DictParamWithValue['Version'] = c.VERSION
     DictParamWithValue['Filter'] = c.FILTER
     if c.decompose:
@@ -94,7 +101,7 @@ def WriteDb(ParamValues):
         DictParamWithValue[Param] = ParamValues[ii]
         ii += 1
     for p in ParamToWrite:
-        AllParams.appeind(p)
+        AllParams.append(p)
     if c.FirstCreateDB:
         cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \
               DictParamWithType[p]) for p in AllParams]) + ")" 
