@@ -212,7 +212,6 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             con.concen = 9999
         else:
             pass
-        print con.concen
         if str(con.error_con) in ('nan', 'inf', '-inf', '-nan'):
             con.error_con = 9999
         else:

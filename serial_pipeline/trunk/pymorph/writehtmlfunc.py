@@ -468,6 +468,12 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(otherparam)
     writer.writerow(ParamToWrite)
     f_res.close()
+    #Remove any nan or inf from the parameter
+    for p in ParamToWrite:
+        if str(p) in ('nan', '-nan', 'inf', '-inf'):
+            ParamToWrite[ParamToWrite.index(p)] = 9999
+        else:
+            pass
     try:
         WriteDb(ParamToWrite)
     except:
