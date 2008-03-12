@@ -37,7 +37,6 @@ def WriteDb(ParamValues):
         cursor.execute(cmd)
         rows = cursor.fetchall()
         for row in rows:
-            print row
             if str(row[0]) == gal_id:
                 Total_Run += 1
             if str(row[0]) == gal_id and \

@@ -559,7 +559,15 @@ def main():
                        abs(ycntr - yimg) < SeaPix):
                         print "SExtractor ID >>> ", values[0]
                         mag    = float(values[7]) #Magnitude
+                        if c.UMag == -500.0:
+                            c.UMag = mag - 7.0
+                        if c.LMag == 500.0:
+                            c.LMag = mag + 7.0
                         halfradius = float(values[9]) #Half light radius
+                        if c.URe == 500.0:
+                            c.URe = halfradius * 10.0
+                        if c.URd == 500.0:
+                            c.URd = halfradius * 10.0
                         mag_zero = c.mag_zero #magnitude zero point
                         sky  = float(values[10]) #sky
                         pos_ang = pa(float(values[11]))
@@ -1503,8 +1511,8 @@ if __name__ == '__main__':
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     c.WhichPsf = 0
-    c.LMag = 100.0
-    c.UMag = -100.0
+    c.LMag = 500.0
+    c.UMag = -500.0
     c.LN = 0.1
     c.UN = 20.0
     c.LRe = 0.0
