@@ -4,6 +4,7 @@ import datetime
 import config as c
 
 def WriteDb(ParamValues):
+    gal_id = ParamValues[0]
     dba = c.database
     pwd = 'cluster'
     usr = c.usr
@@ -29,18 +30,42 @@ def WriteDb(ParamValues):
             DictParamWithType1[DBparam[0]] = 'varchar(500)'
         DictParamWithValue[DBparam[0]] = DBparam[1]
         AllParams.append(DBparam[0])
+    Total_Run = 1
+    try:
+        cmd = "SELECT Name from %s" % tbl
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        for row in rows:
+            if str(row[0]) == gal_id:
+                Total_Run += 1
+    except:
+        pass
+    Run = 1
+    try:
+        cmd = "SELECT Name, ObsID from %s" % tbl
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        for row in rows:
+            if str(row[0]) == gal_id and \
+               str(row[1]) == DictParamWithValue['ObsID']:
+                Run += 1
+    except:
+        pass
     x=datetime.date.today()
     yyyy, mm, dd = x.year, x.month, x.day
     DaTe = str(yyyy) + '.' + str(mm) + str(dd)
     AllParams.append('Date')
     AllParams.append('Version')
     AllParams.append('Filter')
+    AllParams.append('Total_Run')
     DictParamWithType1['Date'] = 'varchar(50)' 
     DictParamWithType1['Version'] = 'float'
     DictParamWithType1['Filter'] = 'varchar(500)'
+    DictParamWithType1['Total_Run'] = 'int'
     DictParamWithValue['Date'] = DaTe
     DictParamWithValue['Version'] = c.VERSION
     DictParamWithValue['Filter'] = c.FILTER
+    DictParamWithValue['Total_Run'] = Total_Run
     if c.decompose:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
                         'dec_':'float',\
@@ -102,6 +127,7 @@ def WriteDb(ParamValues):
         ii += 1
     for p in ParamToWrite:
         AllParams.append(p)
+    DictParamWithValue['run'] = Run
     if c.FirstCreateDB:
         cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \
               DictParamWithType[p]) for p in AllParams]) + ")" 
