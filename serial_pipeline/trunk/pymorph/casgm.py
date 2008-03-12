@@ -208,34 +208,39 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         tmp_writer.writerow(tmp_ParamToWrite)
 #        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(con.r90), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
         f_tmp.close()
-        try:
-            con.concen = float(con.concen)
-        except:
+        if str(con.concen) in ('nan', 'inf', '-inf', '-nan'):
             con.concen = 9999
-        try:
-            con.error_con = float(con.error_con)
-        except:
+        else:
+            pass
+        print con.concen
+        if str(con.error_con) in ('nan', 'inf', '-inf', '-nan'):
             con.error_con = 9999
-        try:
-            ASY = float(ASY)
-        except:
+        else:
+            pass
+        if str(ASY) in ('nan', 'inf', '-inf', '-nan'):
             ASY = 9999
-        try:
-            ASY_ERROR = float(ASY_ERROR)
-        except:
+        else:
+            pass
+        if str(ASY_ERROR) in ('nan', 'inf', '-inf', '-nan'):
             ASY_ERROR = 9999
-        try:
-            S = float(S)
-        except:
+        else:
+            pass
+        if str(S) in ('nan', 'inf', '-inf', '-nan'):
+            S = 9999
+        else:
+            pass
+        if str(ERROR_SMOO)  in ('nan', 'inf', '-inf', '-nan'):
             ERROR_SMOO = 9999
-        try:
-            gini_coef[0] = float(gini_coef[0])
-        except:
-            gini_coef[0] = 9999
-        try:
-            gini_coef[5] = float(gini_coef[5])
-        except:
-            gini_coef[5] = 9999
-        return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, gini_coef[0], gini_coef[5]
+        else:
+            pass
+        if str(gini_coef[0])  in ('nan', 'inf', '-inf', '-nan'):
+            Gini_Coef = 9999
+        else:
+            Gini_Coef = gini_coef[0]
+        if str(gini_coef[5])  in ('nan', 'inf', '-inf', '-nan'):
+            M20_coef = 9999
+        else:
+            M20_coef = float(gini_coef[5])
+        return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, Gini_Coef, M20_coef
 
 #CasGm('n5585_lR.fits', 'BMask.fits', 192.03, 157.42, 40.0, 40.0, 0.0, 0.0, 0.0)
