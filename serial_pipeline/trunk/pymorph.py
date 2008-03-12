@@ -1467,6 +1467,7 @@ def UsageOfPyMorph():
     sys.exit(0)
 
 if __name__ == '__main__':
+    c.FirstCreateDB = 1 #Won't create table when c.FirstCreateDB=0
     c.VERSION = 1.6
     c.FILTER = 'UNKNOWN'
     c.Filter = 'UNKNOWN'

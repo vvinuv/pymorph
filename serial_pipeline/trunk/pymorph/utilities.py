@@ -28,7 +28,12 @@ def WriteDb(ParamValues):
             DictParamWithType1[DBparam[0]] = 'varchar(500)'
         DictParamWithValue[DBparam[0]] = DBparam[1]
         AllParams.append(DBparam[0])
-
+    AllParams.append('Version')
+    AllParams.append('Filter')
+    DictParamWithType1['Version'] = 'float'
+    DictParamWithType1['Filter'] = 'varchar(500)'
+    DictParamWithValue['Version'] = c.VERSION
+    DictParamWithValue['Filter'] = c.FILTER
     if c.decompose:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
                         'dec_':'float',\
@@ -89,10 +94,12 @@ def WriteDb(ParamValues):
         DictParamWithValue[Param] = ParamValues[ii]
         ii += 1
     for p in ParamToWrite:
-        AllParams.append(p)
-    cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \
-          DictParamWithType[p]) for p in AllParams]) + ")" 
-    cursor.execute(cmd)
+        AllParams.appeind(p)
+    if c.FirstCreateDB:
+        cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \
+              DictParamWithType[p]) for p in AllParams]) + ")" 
+        cursor.execute(cmd)
+        c.FirstCreateDB = 0
     cmd = "INSERT INTO %s values (" % tbl 
     for p in AllParams:
         if DictParamWithType[p] in ('int', 'bigint', 'float'):
