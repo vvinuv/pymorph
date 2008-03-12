@@ -22,7 +22,10 @@ def WriteDb(ParamValues):
     AllParams = []
     for dbparam in c.dbparams:
         DBparam = dbparam.split(':')
-        DictParamWithType1[DBparam[0]] = 'varchar(500)'
+        try:
+            DictParamWithType1[DBparam[0]] = DBparam[2]
+        except:
+            DictParamWithType1[DBparam[0]] = 'varchar(500)'
         DictParamWithValue[DBparam[0]] = DBparam[1]
         AllParams.append(DBparam[0])
 

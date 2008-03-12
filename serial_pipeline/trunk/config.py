@@ -91,4 +91,4 @@ database = 'Cluster'
 table = 'cluster'
 usr = 'vinu'
 pword = 'cluster'
-dbparams = ['Cluster:cl1216-1201', 'ObsID:1']
+dbparams = ['Cluster:cl1216-1201', 'ObsID:1:int']

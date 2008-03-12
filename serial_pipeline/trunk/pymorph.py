@@ -251,7 +251,10 @@ def main():
                          ('SMALL_GOODNESS', 14),
                          ('FAKE_CNTR', 15),
                          ('BULGE_AT_LIMIT', 16),
-                         ('DISK_AT_LIMIT', 17)])
+                         ('DISK_AT_LIMIT', 17),
+                         ('ASYM_NOT_CONV', 18),
+                         ('ASYM_OUT_FRAME', 19),
+                         ('BACK_FAILED', 20)])
         return FlagDict[flagname]
     def isset(flag, bit):
         """Return True if the specified bit is set in the given bit mask"""
@@ -473,7 +476,7 @@ def main():
                 UserGivenPsf = pdb["star"]
             except:
                 UserGivenPsf = 'None'
-            if c.crashhandler:
+            if c.crashhandler and c.starthandle:
                 CrashHandlerToRemove(gal_id)
                 try:
                     CrashFlag = float(pdb["flag"])
@@ -1705,6 +1708,7 @@ if __name__ == '__main__':
         else:
             selectpsf(c.imagefile, sex_cata)
     if c.psfselect == 2:
+        c.starthandle = 0
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
@@ -1713,6 +1717,7 @@ if __name__ == '__main__':
         FindAndFit()
         main()
         if c.crashhandler:
+            c.starthandle = 1
             os.system('mv restart.cat CRASH.CAT')
             c.clus_cata = 'CRASH.CAT' 
             main()
@@ -1722,9 +1727,11 @@ if __name__ == '__main__':
         runpsfselect()
         os.system('xpaset -p ds9 quit')
     elif c.psfselect == 0:
+        c.starthandle = 0
         FindAndFit()
         main()
         if c.crashhandler:
+            c.starthandle = 1
             os.system('mv restart.cat CRASH.CAT')
             c.clus_cata = 'CRASH.CAT' 
             main()

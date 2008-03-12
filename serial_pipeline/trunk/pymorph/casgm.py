@@ -105,6 +105,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                                 back_ini_ycntr, 0, 0, r50, \
                                 back_extraction_radius, \
                                 sky, angle, 0, ABS_ZSUM)
+            if asy.image_asymm[4] > 20 or back_asy.image_asymm[4] > 20:
+                c.Flag += 262144
+            if asy.image_asymm[5] == 1:
+                c.Flag += 524288 
             try:
                 back_asy1 = asymmetry(cutimage, maskimage, back_ini_xcntr1, \
                             back_ini_ycntr1, 0, 0, r50,\

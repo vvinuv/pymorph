@@ -78,7 +78,8 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
                 bxcntr += 4.0
             skysig_iter *= 1.3
 #            print countback
-            if countback == 3:
+            if countback == 3 and FLAG_BACK1 == 0:
                 FLAG_BACK1 = 1
+                c.Flag += 1048576
             countback += 1
     return bxcntr, bycntr, skysig
