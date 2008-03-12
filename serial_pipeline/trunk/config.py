@@ -85,3 +85,10 @@ PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
 chi2sq = 1.9                          #< chi2sq
 Goodness = 0.60                       #> Goodness
 center_deviation = 3.0                #< abs(center - fitted center)
+
+###----Database Informations----###
+database = 'Cluster'
+table = 'cluster'
+usr = 'vinu'
+pword = 'cluster'
+dbparams = ['Cluster:cl1216-1201', 'ObsID:1']

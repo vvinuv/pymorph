@@ -890,7 +890,7 @@ def main():
                                         GalId = str(cutimage)[:-5]
                                         writer.writerow([GalId, alpha_j, \
                                             delta_j, z, C, C_err, A, A_err, S, \
-                                            S_err, G, M])
+                                            S_err, G, M, c.Flag])
                                         f_res.close()
                                     f_err.writelines(['(((((CASGM '\
                                                       'Successful)))))'])
@@ -1514,7 +1514,8 @@ if __name__ == '__main__':
             options, args = getopt(sys.argv[1:], "efhti", ['edit-conf', \
                         'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
-                        'lrd=', 'urd=', 'with-in=', 'with-filter='])
+                        'lrd=', 'urd=', 'with-in=', 'with-filter=', \
+                        'with-db='])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1553,6 +1554,8 @@ if __name__ == '__main__':
                 c.avoideme = float(arg)
             if opt in ['--with-filter']:
                 c.Filter = arg
+            if opt in ['--with-db']:
+                c.database = arg
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     if c.Filter == 'UNKNOWN':
