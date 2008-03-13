@@ -1184,13 +1184,13 @@ def selectpsf(ImG, CaT):
     im = pyfits.open(ImG)
     image = im[0].data
     im.close()
-    AreaOfObj = 40
-    def FindPsf(AreaOfObj, CaT):
+#    AreaOfObj = 40
+    def FindPsf(c.AreaOfObj, CaT):
         for line in open(CaT,'r'):
             values = line.split()
             try:
                 BaKgR  = float(values[10])
-                if float(values[16]) >= 0.8 and float(values[13]) > AreaOfObj \
+                if float(values[16]) >= 0.8 and float(values[13]) > c.AreaOfObj \
                    and float(values[14]) < 50.0:
                     xcntr = float(values[1]) - 1
                     ycntr = float(values[2]) - 1
@@ -1259,9 +1259,9 @@ def selectpsf(ImG, CaT):
                         hdu.writeto(psffile)
             except:
                 pass
-    while len(c.psff) < 5 and AreaOfObj > 10:
-        FindPsf(AreaOfObj, CaT)
-        AreaOfObj -= 5
+    while len(c.psff) < 5 and c.AreaOfObj > 10:
+        FindPsf(c.AreaOfObj, CaT)
+        c.AreaOfObj -= 5
     if len(c.psff) == 0:
         manualpsf = raw_input("Unfortunately, NO psf is found. Please enter "\
                               "the psf name >>> ")
