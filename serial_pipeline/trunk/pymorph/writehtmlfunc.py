@@ -2,7 +2,7 @@ from os.path import exists
 import csv
 import fileinput
 from cosmocal import *
-from utilities import WriteDb
+#from utilities import WriteDb
 import config as c
 import numpy as n
 
@@ -475,7 +475,15 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         else:
             pass
     try:
-        WriteDb(ParamToWrite)
+        from utilities import WriteDb
+        have_mysql = 1
+    except:
+        have_mysql = 0
+    try:
+        if have_mysql:
+            WriteDb(ParamToWrite)
+        else:
+            pass
     except:
         print 'No database can be created!'
     outfile1 = open('galfit.html', 'w')

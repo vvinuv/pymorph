@@ -95,6 +95,7 @@ def WriteDb(ParamValues):
                         'C_err':'float', 'A':'float', 'A_err':'float', \
                         'S':'float', 'S_err':'float', 'G':'float', 'M':'float',\
                         'distance':'float', 'fit':'int', 'flag':'bigint', \
+                        'Manual_flag':'int',\
                         'Comments':'varchar(1000)'}
         ParamToWrite = ['Name','ra','dec_','z', 'Ie','Ie_err','re_pixels',\
                         're_err_pixels', 're_kpc', 're_err_kpc' ,'n', \
@@ -105,7 +106,7 @@ def WriteDb(ParamValues):
                         'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                         'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                         'A_err', 'S', 'S_err', 'G', 'M', 'distance', \
-                        'fit', 'flag', 'Comments']
+                        'fit', 'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
@@ -113,7 +114,7 @@ def WriteDb(ParamValues):
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'int', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
-                     'float', 'int', 'bigint', 'varchar(500)']
+                     'float', 'int', 'bigint', 'int', 'varchar(500)']
        
     else:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
@@ -121,16 +122,18 @@ def WriteDb(ParamValues):
                         'z':'float', 'C':'float', 'C_err':'float', 'A':'float',\
                         'A_err':'float', 'S':'float', 'S_err':'float',\
                         'G':'float', 'M':'float', 'flag':'bigint', \
+                        'Manual_flag':'int',\
                         'Comments':'varchar(500)'}
         ParamToWrite = ['Name','ra','dec_','z', 'C', \
                         'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
-                        'flag', 'Comments']
+                        'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float','float', 'float', 'float',\
-                     'float', 'bigint', 'varchar(500)']
+                     'float', 'bigint', 'int', 'varchar(500)']
     DictParamWithType = {}  #Dictionary with Type
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
+    ParamValues.append(9999)
     ParamValues.append('None')
     ii = 0
     for Param in ParamToWrite:
