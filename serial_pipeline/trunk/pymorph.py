@@ -61,6 +61,10 @@ def main():
             FixSize = 120
     threshold = c.threshold
     thresh_area = c.thresh_area
+    try:
+        os.system('rm -f TmpElliMask.fits TmpElliMask1.fits')
+    except:
+        pass
     if exists('index.html'):
         pass
     else:
