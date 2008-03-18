@@ -810,6 +810,12 @@ def main():
                                             ElliMaskFunc(cutimage, xcntr, \
                                                          ycntr, SizeX, \
                                                          SizeY, line_s, 1)
+                                        elif exists('TmpElliMask.fits'):
+                                            pass
+                                        else:
+                                            ElliMaskFunc(cutimage, xcntr, \
+                                                         ycntr, SizeX, \
+                                                         SizeY, line_s, 1)
                                         ell_mask_file = 'EM_' + \
                                                          str(cutimage)[:-5] + \
                                                         '.fits'
