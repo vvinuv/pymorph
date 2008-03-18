@@ -476,14 +476,10 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             pass
     try:
         from utilities import WriteDb
-        have_mysql = 1
     except:
-        have_mysql = 0
+        print 'problem'
     try:
-        if have_mysql:
-            WriteDb(ParamToWrite)
-        else:
-            pass
+        WriteDb(ParamToWrite)
     except:
         print 'No database can be created!'
     outfile1 = open('galfit.html', 'w')

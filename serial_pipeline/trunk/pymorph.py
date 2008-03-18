@@ -1129,6 +1129,10 @@ def main():
                                     Goodness = 9999
                                     c.Flag += 256
                                 try:
+                                    EXPTIME = EXPTIME * 1.0
+                                except:
+                                    EXPTIME = 9999
+                                try:
                                     write_params(cutimage, xcntr, ycntr, \
                                                  distance, alpha_j, \
                                                  delta_j, z, Goodness, \
