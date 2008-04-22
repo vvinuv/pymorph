@@ -25,6 +25,7 @@ def sex(cutimage, whtimage):
     SEx_BACK_SIZE = c.SEx_BACK_SIZE 
     SEx_BACK_FILTERSIZE = c.SEx_BACK_FILTERSIZE 
     SEx_BACKPHOTO_TYPE = c.SEx_BACKPHOTO_TYPE 
+    SEx_BACKPHOTO_THICK = c.SEx_BACKPHOTO_THICK 
     SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
     if(whtimage == 'None'):
