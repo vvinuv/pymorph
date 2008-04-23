@@ -356,7 +356,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                               re * re)
         AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + AvgMagInsideReErr2**2.0)
     else:
-        MagInsideRe = 9999
+        AvgMagInsideRe = 9999
         AvgMagInsideReErr = 9999
     wC = str(C)[:5]
     wA = str(A)[:5]

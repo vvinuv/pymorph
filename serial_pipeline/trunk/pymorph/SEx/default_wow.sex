@@ -52,6 +52,7 @@ BACK_SIZE        %(SEx_BACK_SIZE)s             # Background mesh: <size> or <wid
 BACK_FILTERSIZE  %(SEx_BACK_FILTERSIZE)s              # Background filter: <size> or <width>,<height>
  
 BACKPHOTO_TYPE   %(SEx_BACKPHOTO_TYPE)s         # can be GLOBAL or LOCAL
+BACKPHOTO_THICK  %(SEx_BACKPHOTO_THICK)s        # for local background
  
 #--------------------- Memory (change with caution!) -------------------------
  
