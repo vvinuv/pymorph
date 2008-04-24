@@ -124,8 +124,13 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             pass
         hdu = pyfits.PrimaryHDU(n.swapaxes(z1, 0, 1).astype(n.float32))
         hdu.writeto("TmpElliMask1.fits")
-        z = z + tmp_mask
-        z[n.where(z > 0)] = 1
+	if c.NoMask:
+	    z[n.where(z > 0)] = 0
+        elif c.NormMask:
+            pass
+        else:
+            z = z + tmp_mask
+            z[n.where(z > 0)] = 1
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto("TmpElliMask.fits")
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
@@ -135,8 +140,13 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             os.remove("BMask.fits")
         except:
             pass
-        z = z + tmp_mask
-        z[n.where(z > 0)] = 1
+ 	if c.NoMask:
+	    z[n.where(z > 0)] = 0
+        elif c.NormMask:
+            pass
+        else:
+            z = z + tmp_mask
+            z[n.where(z > 0)] = 1
         z = im.binary_dilation(z, iterations=15)
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto("BMask.fits")

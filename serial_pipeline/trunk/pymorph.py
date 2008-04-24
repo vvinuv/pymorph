@@ -1543,6 +1543,8 @@ if __name__ == '__main__':
     c.URd = 500.0
     c.avoideme = 150.0
     c.AreaOfObj = 40.0 #Area of psf for selection
+    c.NoMask = 0
+    c.NormMask = 0
     sex_cata = c.sex_cata
     if len(sys.argv[1:]) > 0:
         try:
@@ -1550,7 +1552,7 @@ if __name__ == '__main__':
                         'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
                         'lrd=', 'urd=', 'with-in=', 'with-filter=', \
-                        'with-db=', 'with-area='])
+                        'with-db=', 'with-area=', 'no-mask', 'norm-mask'])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1593,6 +1595,10 @@ if __name__ == '__main__':
                 c.database = arg
             if opt in ['--with-area']:
                 c.AreaOfObj = float(arg)
+            if opt in ['--no-mask']:
+		c.NoMask = 1
+            if opt in ['--norm-mask']:
+		c.NormMask = 1
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     if c.Filter == 'UNKNOWN':
