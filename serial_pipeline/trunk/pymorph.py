@@ -1204,7 +1204,8 @@ def selectpsf(ImG, CaT):
             values = line.split()
             try:
                 BaKgR  = float(values[10])
-                if float(values[16]) >= 0.8 and float(values[13]) > AreaOfObj \
+                if float(values[16]) >= c.StarGalProb and \
+		   float(values[13]) > AreaOfObj \
                    and float(values[14]) < 50.0:
                     xcntr = float(values[1]) - 1
                     ycntr = float(values[2]) - 1
@@ -1543,6 +1544,7 @@ if __name__ == '__main__':
     c.URd = 500.0
     c.avoideme = 150.0
     c.AreaOfObj = 40.0 #Area of psf for selection
+    c.StarGalProb = 0.8
     c.NoMask = 0
     c.NormMask = 0
     sex_cata = c.sex_cata
@@ -1552,7 +1554,8 @@ if __name__ == '__main__':
                         'with-psf=', 'force', 'help', 'test', 'initial',\
                         'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
                         'lrd=', 'urd=', 'with-in=', 'with-filter=', \
-                        'with-db=', 'with-area=', 'no-mask', 'norm-mask'])
+                        'with-db=', 'with-area=', 'no-mask', 'norm-mask', \
+			'with-sg='])
         except GetoptError, err:
             print str(err) 
             UsageOfPyMorph()
@@ -1599,6 +1602,8 @@ if __name__ == '__main__':
 		c.NoMask = 1
             if opt in ['--norm-mask']:
 		c.NormMask = 1
+            if opt in ['--with-sg']:
+                c.StarGalProb = float(arg)
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     if c.Filter == 'UNKNOWN':
