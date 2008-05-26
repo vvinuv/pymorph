@@ -1483,12 +1483,12 @@ def SExtractorConf():
     elif SEx_BACKPHOTO_TYPE == 'L':
         c.SEx_BACKPHOTO_TYPE = 'LOCAL'
     if c.SEx_BACKPHOTO_TYPE == 'LOCAL':
-        SEx_BACKPHOTO_THICK = raw_input('BACKPHOTO_THICK (15) >>> ')
+        SEx_BACKPHOTO_THICK = raw_input('BACKPHOTO_THICK (24) >>> ')
     try:
         c.SEx_BACKPHOTO_THICK = float(SEx_BACKPHOTO_THICK)
 	c.SEx_BACKPHOTO_THICK = int(c.SEx_BACKPHOTO_THICK)
     except:
-        c.SEx_BACKPHOTO_THICK = 15
+        c.SEx_BACKPHOTO_THICK = 24
     SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 def UsageOfPyMorph():
@@ -1531,7 +1531,7 @@ if __name__ == '__main__':
     c.SEx_BACK_SIZE = 64
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
-    c.SEx_BACKPHOTO_THICK = 15
+    c.SEx_BACKPHOTO_THICK = 24
     c.SEx_WEIGHT_TYPE = 'MAP_RMS'
     c.WhichPsf = 0
     c.LMag = 500.0

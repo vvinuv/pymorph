@@ -165,6 +165,27 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' Z) 0                    # output image '\
                       '(see above)\n\n\n'])
         c.Flag += 2048
+
+#### BAR COMPONENT IMPLIMENTATION ####
+#    if 'bar' in ComP:
+#        f.write('# Sersic function\n\n')
+#        f.writelines([' 0) sersic		# Object type\n'])
+#        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
+#                      str(c.fitting[3]), ' ', str(c.fitting[3]), '   #',\
+#                      ' position x, y [pixel]\n'])
+#        f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
+#        f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
+#        f.writelines([' 5) 4.0 1		#Sersic exponent',\
+#                      ' (deVauc=4, expdisk=1)\n'])
+#        f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
+#        f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
+#                      '[Degrees: Up=0, Left=90]\n'])
+#        f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
+#                      'boxiness (> 0)\n'])
+#        f.writelines([' Z) 0 			# output image',\
+#                      ' (see above)\n\n\n']) 
+#        c.Flag += 512
+
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
     f.writelines([' 1) ', str(sky), '      ', str(c.fitting[2]), \
