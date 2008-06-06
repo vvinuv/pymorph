@@ -212,7 +212,8 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
         colorbar(shrink=0.9)
         title('Residual')
         axLR = axes(rect4)
-        nn, bins, patches = hist(hist_res, 50, normed=0)
+	hist_res1d = hist_res.compressed()
+        nn, bins, patches = hist(hist_res1d, 50, normed=0)
         nMaxArg = nn.argmax()
         if(nMaxArg < 16):
             ArgInc = nMaxArg
