@@ -78,15 +78,15 @@ def WriteDb(ParamValues):
     DictParamWithValue['Total_Run'] = Total_Run
     DictParamWithValue['rootname'] = c.rootname
     if c.decompose:
-        DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
+        DictParamWithType2 = {'Name':'varchar(500)', 'ra_':'float', \
                         'dec_':'float',\
                         'z':'float', 'Ie':'float','Ie_err':'float',\
-                        're_pixels':'float', 're_err_pixels':'float',\
+                        're_pix':'float', 're_err_pix':'float',\
                         're_kpc':'float', 're_err_kpc':'float' ,'n':'float', \
-                       'n_err':'float', 'Avg_Ie':'float', 'Avg_Ie_err':'float',\
+                       'n_err':'float', 'AvgIe':'float', 'AvgIe_err':'float',\
                         'eb':'float', 'eb_err':'float', \
-                        'Id':'float', 'Id_err':'float', 'rd_pixels':'float',\
-                        'rd_err_pixels':'float', 'rd_kpc':'float', \
+                        'Id':'float', 'Id_err':'float', 'rd_pix':'float',\
+                        'rd_err_pix':'float', 'rd_kpc':'float', \
                         'rd_err_kpc':'float', 'ed':'float', 'ed_err':'float', \
                         'BD':'float', 'BT':'float', 'Point':'float', \
                         'Point_err':'float', 'Pfwhm':'float', \
@@ -94,18 +94,20 @@ def WriteDb(ParamValues):
                         'Goodness':'float', 'run':'int', 'C':'float', \
                         'C_err':'float', 'A':'float', 'A_err':'float', \
                         'S':'float', 'S_err':'float', 'G':'float', 'M':'float',\
+                        'sky':'float', 'dis_modu':'float', \
                         'distance':'float', 'fit':'int', 'flag':'bigint', \
                         'Manual_flag':'int',\
                         'Comments':'varchar(1000)'}
-        ParamToWrite = ['Name','ra','dec_','z', 'Ie','Ie_err','re_pixels',\
-                        're_err_pixels', 're_kpc', 're_err_kpc' ,'n', \
-                        'n_err', 'Avg_Ie', 'Avg_Ie_err', 'eb', 'eb_err', \
-                        'Id', 'Id_err', 'rd_pixels',\
-                        'rd_err_pixels', 'rd_kpc', 'rd_err_kpc', \
+        ParamToWrite = ['Name','ra_','dec_','z', 'Ie','Ie_err','re_pix',\
+                        're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
+                        'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
+                        'Id', 'Id_err', 'rd_pix',\
+                        'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
                         'ed', 'ed_err', 'BD', \
                         'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                         'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
-                        'A_err', 'S', 'S_err', 'G', 'M', 'distance', \
+                        'A_err', 'S', 'S_err', 'G', 'M', 'sky', \
+                        'dis_modu', 'distance', \
                         'fit', 'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
@@ -114,6 +116,7 @@ def WriteDb(ParamValues):
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'int', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
+		     'float', 'float',\
                      'float', 'int', 'bigint', 'int', 'varchar(500)']
        
     else:
