@@ -143,6 +143,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     DiskEllipticity = float(values[6])
                 if(str(values[0]) == 'gaussian'):
                     mag_g = float(values[4])
+                if(str(values[0]) == 'sky'):
+                    galfit_sky = float(values[4])
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err == 1):
                         mag_b_err = float(values[2])
@@ -464,7 +466,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
-                       M, distance, good_fit, c.Flag]:
+                       M, galfit_sky, phy_parms[2], distance, good_fit, c.Flag]:
         ParamToWrite.append(otherparam)
     writer.writerow(ParamToWrite)
     f_res.close()

@@ -276,16 +276,16 @@ def main():
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         if(c.decompose):
-            ParamToWrite = ['Name','ra','dec','z', 'Ie','Ie_err','re(pixels)',\
-                            're_err(pixels)', 're(kpc)', 're_err(kpc)' ,'n', \
-                            'n_err', '<Ie>', '<Ie_err>', 'eb', 'eb_err', \
-                            'Id', 'Id_err', 'rd(pixels)',\
-                            'rd_err(pixels)', 'rd(kpc)', 'rd_err(kpc)', \
+            ParamToWrite = ['Name','ra_','dec_','z', 'Ie','Ie_err','re_pix',\
+                            're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
+                            'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
+                            'Id', 'Id_err', 'rd_pix',\
+                            'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
                             'ed', 'ed_err', 'BD', \
-                            'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm(kpc)', \
+                            'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
-                            'A_err', 'S', 'S_err', 'G', 'M', 'distance', \
-                            'fit', 'flag', 'Comments']
+                            'A_err', 'S', 'S_err', 'G', 'M', 'sky', 'dis_modu',\
+			    'distance', 'fit', 'flag', 'Comments']
 #            if 'bulge' in ComP:
 #                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
 #                                  're(kpc)', 're_err(kpc)' ,'n', 'n_err']
@@ -306,7 +306,7 @@ def main():
 #                ParamToWrite.append(otherparam)
             writer.writerow(ParamToWrite)
         else:
-            writer.writerow(['Name','ra','dec','z', 'C', \
+            writer.writerow(['Name','ra_','dec_','z', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
                          'flag', 'Comments'])
         f_res.close()
