@@ -1078,13 +1078,22 @@ def main():
                                             except:
                                                 MoX = xcntr
                                                 MoY = ycntr
-                                            if os.access('GalEllFit.fits',\
+                                            try:
+                                                if os.access('GalEllFit.fits',\
                                                           os.F_OK):
-                                                os.remove('GalEllFit.fits')
-                                            run_elli(outmodel, ell_output,\
+                                                    os.remove('GalEllFit.fits')
+                                                run_elli(outmodel, ell_output,\
                                                      MoX, MoY, eg, \
-                                                pos_ang, major_axis, sky)
-                                            iraf.flpr()
+                                                    pos_ang, major_axis, sky)
+                                                iraf.flpr()
+                                            except:
+                                                f_err.writelines(['Error in '\
+                                                          'ellipse '\
+                                                          'task. Check ', \
+                                                          'whether ' ,\
+                                                           str(ell_output) ,\
+                                                      ' or ellip or err  or',\
+                                                      ' test.tab exists\n'])                                               
                                             for myfile in [outplfile, \
                                                            outmodel]:
                                                 if os.access(myfile, \
@@ -1095,15 +1104,8 @@ def main():
                                                        str(outimage),'.pl or ',\
                                                        str(out_mask_file),\
                                                        ' does not exist.\n'])  
-                                            f_err.writelines(['Error in '\
-                                                          'ellipse '\
-                                                          'task. Check ', \
-                                                          'whether ' ,\
-                                                           str(ell_output) ,\
-                                                      ' or ellip or err  or',\
-                                                      ' test.tab exists OR ',\
-                                                      'GALFIT MIGHT BE '\
-                                                      'CRASHED\n'])
+                                            f_err.writelines(['GALFIT '\
+					              'MIGHT BE CRASHED\n'])
                                             c.Flag += 128
                                             failedgalfit(cutimage)
                                             run = 0
