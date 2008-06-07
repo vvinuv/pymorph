@@ -94,7 +94,7 @@ def WriteDb(ParamValues):
                         'Goodness':'float', 'run':'int', 'C':'float', \
                         'C_err':'float', 'A':'float', 'A_err':'float', \
                         'S':'float', 'S_err':'float', 'G':'float', 'M':'float',\
-                        'sky':'float', 'dis_modu':'float', \
+                        'SexSky':'float', 'GalSky':'float','dis_modu':'float', \
                         'distance':'float', 'fit':'int', 'flag':'bigint', \
                         'Manual_flag':'int',\
                         'Comments':'varchar(1000)'}
@@ -106,8 +106,8 @@ def WriteDb(ParamValues):
                         'ed', 'ed_err', 'BD', \
                         'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                         'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
-                        'A_err', 'S', 'S_err', 'G', 'M', 'sky', \
-                        'dis_modu', 'distance', \
+                        'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
+                        'GalSky', 'dis_modu', 'distance', \
                         'fit', 'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
@@ -116,7 +116,7 @@ def WriteDb(ParamValues):
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'int', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
-		     'float', 'float',\
+		     'float', 'float', 'float', \
                      'float', 'int', 'bigint', 'int', 'varchar(500)']
        
     else:
@@ -163,6 +163,3 @@ def WriteDb(ParamValues):
 #A = ['EDCSNJ1216490-1200091',184.204,-12.0025277778,0.7863,22.76,0.03,1.55,0.04,0.521182261202,0.0134498648052,1.24,0.12,18.8371116745,0.0316672494062,0.47,0.02,21.23,0.01,8.95,0.12,3.00940725017,0.0403495944157,0.35,0.0,0.244343055269,0.196363096362,9999,9999,9999,9999,1.146,0.664,1,3.63747679805,3.88004211969,0.130618587136,9999,0.365522099184,1.4538,0.546744991269,-2.24971293032,25.1297510444,1,1542]
 #WriteDb(A)
 #CREATE TABLE IF NOT EXISTS book (name char(40), lastname char(40), petname char (40))
-
-
-
