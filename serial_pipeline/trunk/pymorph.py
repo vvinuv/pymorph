@@ -574,6 +574,7 @@ def main():
                             c.URd = halfradius * 10.0
                         mag_zero = c.mag_zero #magnitude zero point
                         sky  = float(values[10]) #sky
+                        c.SexSky = float(values[10])
                         pos_ang = pa(float(values[11]))
                         axis_rat = 1.0 / float(values[12]) #axis ration b/a
                         eg = 1 - axis_rat
