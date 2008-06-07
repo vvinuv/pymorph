@@ -284,7 +284,8 @@ def main():
                             'ed', 'ed_err', 'BD', \
                             'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
-                            'A_err', 'S', 'S_err', 'G', 'M', 'sky', 'dis_modu',\
+                            'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
+                            'GalSky', 'dis_modu',\
 			    'distance', 'fit', 'flag', 'Comments']
 #            if 'bulge' in ComP:
 #                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
