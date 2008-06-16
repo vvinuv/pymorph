@@ -231,11 +231,23 @@ def main():
                    'OE_I' + str(c.rootname) + '_' + str(gal_id) + '.txt ' +\
                  'OEM_O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
                  'O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
-                 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png '+\
-                 'R_I' + str(c.rootname) + '_' + str(gal_id) + '.html '+\
                  'Tmp* ' + \
                  'SO_I' + str(c.rootname) + '_' + str(gal_id) + '.fits '
-        LinuxCommand = 'rm -f ' + str(RemoveMe)
+        f_R_crash =  'R_I' + str(c.rootname) + '_' + str(gal_id) + '_1.html'
+        f_R_cra = open(f_R_crash, 'w')
+	P_cra = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png '
+        P_new = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '_1.png '
+        for line_crash in open('R_I' + str(c.rootname) + '_' + str(gal_id) + \
+                               '.html', 'r'):
+            line_crash2wri = line_crash.replace(P_cra, P_new)
+	    f_R_cra.write(line_crash2wri)
+        f_R_cra.close() 
+	CmdToRename = 'mv ' + 'P_I' + str(c.rootname) + '_' + str(gal_id) + \
+	               '.png ' + \
+		       'P_I' + str(c.rootname) + '_' + str(gal_id) + '_1.png '
+	os.system(CmdToRename)
+        LinuxCommand = 'rm -f ' + str(RemoveMe) + 'R_I' + str(c.rootname) + \
+                       '_' + str(gal_id) + '.html'
         os.system(LinuxCommand)
     def GetFlag(flagname):
         FlagDict = dict([('REPEAT', 0),
