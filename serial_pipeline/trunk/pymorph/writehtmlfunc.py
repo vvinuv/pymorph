@@ -373,6 +373,10 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg3 = ''
     error_mesg4 = ''
     error_mesg5 = ''
+    error_mesg6 = ''
+    if c.starthandle:
+        error_mesg6 = '<a href="R_' + str(cutimage)[:-5] + \
+	              '_1.html"> Crashed </a>' 
     HitLimit = 1
     if 'bulge' in ComP:
         if mag_b == c.UMag or mag_b == c.LMag or re == c.URe or re == c.LRe or\
