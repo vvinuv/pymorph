@@ -235,8 +235,8 @@ def main():
                  'SO_I' + str(c.rootname) + '_' + str(gal_id) + '.fits '
         f_R_crash =  'R_I' + str(c.rootname) + '_' + str(gal_id) + '_1.html'
         f_R_cra = open(f_R_crash, 'w')
-	P_cra = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png '
-        P_new = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '_1.png '
+	P_cra = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png'
+        P_new = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '_1.png'
         for line_crash in open('R_I' + str(c.rootname) + '_' + str(gal_id) + \
                                '.html', 'r'):
             line_crash2wri = line_crash.replace(P_cra, P_new)
