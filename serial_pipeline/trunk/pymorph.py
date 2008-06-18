@@ -1222,7 +1222,7 @@ def selectpsf(ImG, CaT):
                 BaKgR  = float(values[10])
                 if float(values[16]) >= c.StarGalProb and \
 		   float(values[13]) > AreaOfObj \
-                   and float(values[14]) < 200.0:
+                   and float(values[14]) < 50.0:
                     xcntr = float(values[1]) - 1
                     ycntr = float(values[2]) - 1
                     #size of the psf is 8 times the sigma assuming the star has 
