@@ -52,8 +52,16 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             if Co == 'bulge':
                 f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
                         ' to ' + str(c.UN) +  '\n')
-                f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
-                f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
+                if c.center_deviated:
+                    f_constrain.write(str(cO) + '      x      -' + \
+		    str(c.center_deviation) + '     ' + \
+		    str(c.center_deviation) + '\n')
+                    f_constrain.write(str(cO) + '      y      -' + \
+		    str(c.center_deviation) + '     ' + \
+		    str(c.center_deviation) + '\n')
+                else:
+                    f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
+                    f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
                 f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                         ' to ' + str(c.LMag) + '\n')
                 f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
