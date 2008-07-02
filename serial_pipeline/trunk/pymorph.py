@@ -288,7 +288,8 @@ def main():
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         if(c.decompose):
-            ParamToWrite = ['Name','ra_','dec_','z', 'Ie','Ie_err','re_pix',\
+            ParamToWrite = ['Name','ra_','dec_','z', 'mag_auto', 'magerr_auto',\
+	                    'Ie','Ie_err','re_pix',\
                             're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
                             'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
                             'Id', 'Id_err', 'rd_pix',\
@@ -319,7 +320,8 @@ def main():
 #                ParamToWrite.append(otherparam)
             writer.writerow(ParamToWrite)
         else:
-            writer.writerow(['Name','ra_','dec_','z', 'C', \
+            writer.writerow(['Name','ra_','dec_','z', 'mag_auto', \
+	                 'magerr_auto', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
                          'flag', 'Comments'])
         f_res.close()
