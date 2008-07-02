@@ -1471,7 +1471,7 @@ def SExtractorConf():
         c.SEx_PHOT_FLUXFRAC = float(SEx_PHOT_FLUXFRAC)
     except:
         c.SEx_PHOT_FLUXFRAC = 0.5
-    SEx_pix_scale_disp = 'PIXEL_SCALE (' + str(SEx_PIXEL_SCALE) + ') >>> '
+    SEx_pix_scale_disp = 'PIXEL_SCALE (' + str(c.SEx_PIXEL_SCALE) + ') >>> '
     SEx_PIXEL_SCALE = raw_input(SEx_pix_scale_disp)
     try:
         c.SEx_PIXEL_SCALE = float(SEx_PIXEL_SCALE)
