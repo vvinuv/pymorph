@@ -54,11 +54,13 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                         ' to ' + str(c.UN) +  '\n')
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
-		    str(c.center_deviation) + '     ' + \
-		    str(c.center_deviation) + '\n')
+                    str(c.center_deviation - c.center_deviation / 4.0) + \
+		    '     ' + \
+		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                     f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation) + '     ' + \
-		    str(c.center_deviation) + '\n')
+		    str(c.center_deviation - c.center_deviation / 4.0) + \
+		    '     ' + \
+		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                 else:
                     f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
                     f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
@@ -71,11 +73,13 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             if Co == 'disk':
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
-		    str(c.center_deviation) + '     ' + \
-		    str(c.center_deviation) + '\n')
+		    str(c.center_deviation - c.center_deviation / 4.0) + \
+		    '     ' + \
+		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                     f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation) + '     ' + \
-		    str(c.center_deviation) + '\n')
+		    str(c.center_deviation - c.center_deviation / 4.0) + \
+		    '     ' + \
+		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                 else:
                     f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
                     f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
