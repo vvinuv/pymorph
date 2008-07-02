@@ -80,7 +80,9 @@ def WriteDb(ParamValues):
     if c.decompose:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra_':'float', \
                         'dec_':'float',\
-                        'z':'float', 'Ie':'float','Ie_err':'float',\
+                        'z':'float', 'mag_auto':'float', \
+			'magerr_auto':'float', \
+			'Ie':'float','Ie_err':'float',\
                         're_pix':'float', 're_err_pix':'float',\
                         're_kpc':'float', 're_err_kpc':'float' ,'n':'float', \
                        'n_err':'float', 'AvgIe':'float', 'AvgIe_err':'float',\
@@ -98,7 +100,8 @@ def WriteDb(ParamValues):
                         'distance':'float', 'fit':'int', 'flag':'bigint', \
                         'Manual_flag':'int',\
                         'Comments':'varchar(1000)'}
-        ParamToWrite = ['Name','ra_','dec_','z', 'Ie','Ie_err','re_pix',\
+        ParamToWrite = ['Name','ra_','dec_','z', 'mag_auto', 'magerr_auto', \
+	                'Ie','Ie_err','re_pix',\
                         're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
                         'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
                         'Id', 'Id_err', 'rd_pix',\
@@ -110,6 +113,7 @@ def WriteDb(ParamValues):
                         'GalSky', 'dis_modu', 'distance', \
                         'fit', 'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
+	             'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
@@ -122,15 +126,18 @@ def WriteDb(ParamValues):
     else:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
                         'dec_':'float',\
-                        'z':'float', 'C':'float', 'C_err':'float', 'A':'float',\
+                        'z':'float', 'mag_auto':'float', \
+			'magerr_auto':'float', \
+			'C':'float', 'C_err':'float', 'A':'float',\
                         'A_err':'float', 'S':'float', 'S_err':'float',\
                         'G':'float', 'M':'float', 'flag':'bigint', \
                         'Manual_flag':'int',\
                         'Comments':'varchar(500)'}
-        ParamToWrite = ['Name','ra','dec_','z', 'C', \
-                        'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
+        ParamToWrite = ['Name','ra','dec_','z', 'mag_auto', 'magerr_auto', \
+	                'C', 'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
                         'flag', 'Manual_flag', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
+	             'float', 'float',\
                      'float', 'float', 'float','float', 'float', 'float',\
                      'float', 'bigint', 'int', 'varchar(500)']
     DictParamWithType = {}  #Dictionary with Type
