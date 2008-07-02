@@ -523,8 +523,7 @@ def main():
                         c.fitting[0] = 1
                         c.fitting[1] = 1
                 if isset(CrashFlag, GetFlag("FAKE_CNTR")):
-                    c.fitting[0] = 0
-                    c.fitting[1] = 0
+                    c.center_deviated = 1
             if(c.galcut == True):   #Given galaxy cutouts
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
@@ -1526,7 +1525,7 @@ def UsageOfPyMorph():
 
 if __name__ == '__main__':
     c.FirstCreateDB = 1 #Won't create table when c.FirstCreateDB=0
-    c.VERSION = 1.6
+    c.VERSION = 1.7
     c.FILTER = 'UNKNOWN'
     c.Filter = 'UNKNOWN'
     try:
@@ -1782,6 +1781,7 @@ if __name__ == '__main__':
         else:
             selectpsf(c.imagefile, sex_cata)
     if c.psfselect == 2:
+        c.center_deviated = 0
         c.starthandle = 0
         os.system('ds9 &')
         time.sleep(2)
@@ -1801,6 +1801,7 @@ if __name__ == '__main__':
         runpsfselect()
         os.system('xpaset -p ds9 quit')
     elif c.psfselect == 0:
+        c.center_deviated = 0
         c.starthandle = 0
         FindAndFit()
         main()
