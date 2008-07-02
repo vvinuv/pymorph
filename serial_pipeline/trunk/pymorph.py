@@ -928,7 +928,9 @@ def main():
                                         writer = csv.writer(f_res)
                                         GalId = str(cutimage)[:-5]
                                         writer.writerow([GalId, alpha_j, \
-                                            delta_j, z, C, C_err, A, A_err, S, \
+                                            delta_j, z, c.SexMagAuto, \
+					    c.SexMagAutoErr, \
+					    C, C_err, A, A_err, S, \
                                             S_err, G, M, c.Flag])
                                         f_res.close()
                                     f_err.writelines(['(((((CASGM '\
