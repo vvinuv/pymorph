@@ -1471,11 +1471,12 @@ def SExtractorConf():
         c.SEx_PHOT_FLUXFRAC = float(SEx_PHOT_FLUXFRAC)
     except:
         c.SEx_PHOT_FLUXFRAC = 0.5
-    SEx_PIXEL_SCALE = raw_input('PIXEL_SCALE (0) >>> ')
+    SEx_pix_scale_disp = 'PIXEL_SCALE (' + str(SEx_PIXEL_SCALE) + ') >>> '
+    SEx_PIXEL_SCALE = raw_input(SEx_pix_scale_disp)
     try:
         c.SEx_PIXEL_SCALE = float(SEx_PIXEL_SCALE)
     except:
-        c.SEx_PIXEL_SCALE = 0
+        c.SEx_PIXEL_SCALE = c.pixelscale
     SEx_SEEING_FWHM = raw_input('SEEING_FWHM (0.11) >>> ')
     try:
         c.SEx_SEEING_FWHM = float(SEx_SEEING_FWHM )
@@ -1548,7 +1549,7 @@ if __name__ == '__main__':
     c.SEx_DEBLEND_NTHRESH = 32
     c.SEx_DEBLEND_MINCONT = 0.005
     c.SEx_PHOT_FLUXFRAC = 0.5
-    c.SEx_PIXEL_SCALE = 0
+    c.SEx_PIXEL_SCALE = c.pixelscale
     c.SEx_SEEING_FWHM = 0.11
     c.SEx_BACK_SIZE = 64
     c.SEx_BACK_FILTERSIZE = 3
