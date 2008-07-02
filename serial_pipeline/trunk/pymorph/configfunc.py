@@ -59,6 +59,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     f_constrain.write(str(cO) + '      y      -' + \
 		    str(c.center_deviation) + '     ' + \
 		    str(c.center_deviation) + '\n')
+                    c.center_deviated = 0
                 else:
                     f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
                     f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
