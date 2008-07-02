@@ -59,7 +59,6 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     f_constrain.write(str(cO) + '      y      -' + \
 		    str(c.center_deviation) + '     ' + \
 		    str(c.center_deviation) + '\n')
-                    c.center_deviated = 0
                 else:
                     f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
                     f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
@@ -70,8 +69,16 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
                 f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'disk':
-                f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
-                f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+                if c.center_deviated:
+                    f_constrain.write(str(cO) + '      x      -' + \
+		    str(c.center_deviation) + '     ' + \
+		    str(c.center_deviation) + '\n')
+                    f_constrain.write(str(cO) + '      y      -' + \
+		    str(c.center_deviation) + '     ' + \
+		    str(c.center_deviation) + '\n')
+                else:
+                    f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
+                    f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
                 f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                         ' to ' + str(c.LMag) + '\n')
                 f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
@@ -83,6 +90,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
             cO += 1
         f_constrain.close()
+    if c.center_deviated:
+        c.center_deviated = 0
     f=open(config_file,'w')
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
