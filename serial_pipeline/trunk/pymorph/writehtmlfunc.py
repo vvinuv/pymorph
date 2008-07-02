@@ -439,7 +439,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     f_res = open("result.csv", "ab")
     writer = csv.writer(f_res)
     galid = str(cutimage)[to_remove:-5]
-    ParamToWrite = [galid, alpha_j, delta_j, z]
+    ParamToWrite = [galid, alpha_j, delta_j, z, c.SexMagAuto, c.SexMagAutoErr]
     if 'bulge' in ComP:
         for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
                           SersicIndex, SersicIndexErr, AvgMagInsideRe,\
