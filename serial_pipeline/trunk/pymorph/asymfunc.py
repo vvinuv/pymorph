@@ -49,9 +49,14 @@ class asymmetry:
         return 
 
 def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, background, extraction_radius, angle, flag_image, ABS_ZSUM):
-    iraf.images(_doprint=0)
-    iraf.images.imgeom(_doprint=0)
-    iraf.images.imutil(_doprint=0)
+    try:
+        iraf.images(_doprint=0)
+        iraf.images.imgeom(_doprint=0)
+        iraf.images.imutil(_doprint=0)
+    except:
+        iraf.images()
+	iraf.images.imgeom()
+	iraf.images.imutil()
     co = n.cos(pa * n.pi / 180.0)
     si = n.sin(pa * n.pi / 180.0)
     Aabs = n.zeros([9])
