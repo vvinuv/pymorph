@@ -56,10 +56,16 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     GaLaXy = GaLaXy - sky
     hdu = pyfits.PrimaryHDU(GaLaXy.astype(n.float32))
     hdu.writeto(EllGal)
-    iraf.stsdas(_doprint=0)
-    iraf.tables(_doprint=0)
-    iraf.stsdas.analysis(_doprint=0)
-    iraf.stsdas.analysis.isophote(_doprint=0)
+    try:
+        iraf.stsdas(_doprint=0)
+        iraf.tables(_doprint=0)
+        iraf.stsdas.analysis(_doprint=0)
+        iraf.stsdas.analysis.isophote(_doprint=0)
+    except:
+        iraf.stsdas()
+	iraf.tables()
+	iraf.stsdas.analysis()
+	iraf.stsdas.analysis.isophote()
     image_exist = 1
     iraf.unlearn('geompar')
     iraf.geompar.x0=xcntr
