@@ -1560,7 +1560,7 @@ if __name__ == '__main__':
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_BACKPHOTO_THICK = 24
-    c.SEx_WEIGHT_TYPE = 'MAP_RMS'
+    c.SEx_WEIGHT_TYPE = 'DECIDE'
     c.WhichPsf = 0
     c.LMag = 500.0
     c.UMag = -500.0
