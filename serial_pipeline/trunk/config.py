@@ -1,7 +1,12 @@
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f643-1-1_drz_sci.fits'
-whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. 
+whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. If it contains the 
+                                      #string 'rms', this will treated as 
+				      #RMS_MAP and if it contains weight, then 
+                                      #that will be treated as WEIGHT_MAP. 
+				      #If nothing found, then by default it 
+				      #is treated as MAP_RMS 
 sex_cata = 'j8f643_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
 clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
