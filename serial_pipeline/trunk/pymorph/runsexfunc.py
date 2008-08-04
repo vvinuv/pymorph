@@ -35,11 +35,11 @@ def sex(cutimage, whtimage):
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':
             if re.search("rms", whtimage.lower()):
-                SEx_WEIGHT_TYPE = RMS_MAP
+                SEx_WEIGHT_TYPE = 'MAP_RMS'
             elif re.search("weight", whtimage.lower()):
-                SEx_WEIGHT_TYPE = WEIGHT_MAP
+                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
             else:
-                SEx_WEIGHT_TYPE = RMS_MAP
+                SEx_WEIGHT_TYPE = 'MAP_RMS'
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
