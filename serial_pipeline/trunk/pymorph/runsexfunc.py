@@ -1,5 +1,6 @@
 import os
 import config as c
+import re
 
 class RunSex:
     """The class for running SExtractor, if the pipeline doesn't find any
@@ -32,6 +33,13 @@ def sex(cutimage, whtimage):
     if(whtimage == 'None'):
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
     else:
+        if SEx_WEIGHT_TYPE == 'DECIDE':
+            if re.search("rms", whtimage.lower()):
+                SEx_WEIGHT_TYPE = RMS_MAP
+            elif re.search("weight", whtimage.lower()):
+                SEx_WEIGHT_TYPE = WEIGHT_MAP
+            else:
+                SEx_WEIGHT_TYPE = RMS_MAP
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
