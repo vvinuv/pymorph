@@ -144,6 +144,7 @@ def WriteDb(ParamValues):
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
     ParamValues.append(9999)
+    ParamValues.append(9999)
     ParamValues.append('None')
     ii = 0
     for Param in ParamToWrite:
