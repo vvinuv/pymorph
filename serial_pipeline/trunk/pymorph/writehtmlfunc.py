@@ -31,6 +31,7 @@ class WriteHtmlFunc:
         self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
 
 def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
+
     lanczosG = 7
     lanczos_coef = [0.99999999999980993, 676.5203681218851,\
                     -1259.1392167224028, 771.32342877765313,\
@@ -68,6 +69,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     dec1 = int(float(delta_j))
     dec2 = abs(int((float(delta_j) - dec1) * 60.0))
     dec3 = (abs(((float(delta_j) - dec1) * 60.0)) - dec2) * 60.0
+
     if ra1 < 10:
         alpha1 = '0' + str(ra1)
     else:
@@ -166,8 +168,10 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             re_err_kpc = 9999
             rd_kpc = 9999
             rd_err_kpc = 9999
+            DisMoD = 9999
         else:
             phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
+            DisMoD = phy_parms[2]
             if 'bulge' in ComP:
                 re_kpc = phy_parms[3] * re
                 re_err_kpc = phy_parms[3] * re_err
@@ -470,7 +474,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
-                       M, c.SexSky, galfit_sky, phy_parms[2], \
+                       M, c.SexSky, galfit_sky, DisMoD, \
                        distance, good_fit, c.Flag]:
         ParamToWrite.append(otherparam)
     writer.writerow(ParamToWrite)
@@ -484,7 +488,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     try:
         from utilities import WriteDb
     except:
-        print 'problem'
+        print 'DB writing Problem'
     try:
         WriteDb(ParamToWrite)
     except:
