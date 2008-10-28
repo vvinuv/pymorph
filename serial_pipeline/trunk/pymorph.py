@@ -570,7 +570,10 @@ def main():
                         SeaPix = 10.0
                     elif SearchRad.endswith('pix'):
                         SeaPix = float(SearchRad[:-3])
-                        SeaDeg =  -0.00027
+                        if alpha_s == 0.0 and delta_s == 0.0:
+                            SeaDeg =  -0.00027
+                        else:
+                            SeaDeg = 0.00027
                     if(abs(alpha_j - alpha_s) < SeaDeg and \
                        abs(delta_s - delta_j) < SeaDeg or \
                        abs(xcntr - ximg) < SeaPix and \
