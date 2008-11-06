@@ -1813,4 +1813,3 @@ if __name__ == '__main__':
             os.system('mv restart.cat CRASH.CAT')
             c.clus_cata = 'CRASH.CAT' 
             main()
-
