@@ -150,8 +150,12 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
         f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
                       '[Degrees: Up=0, Left=90]\n'])
-        f.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
+        if c.bdbox or c.bbox:
+            f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
                       'boxiness (> 0)\n'])
+        else:
+            f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
+	              'boxiness (> 0)\n'])
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
         c.Flag += 512
@@ -166,8 +170,12 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 8) ', str(axis_rat), ' 1     # axis ratio (b/a)\n'])
         f.writelines([' 9) ', str(pos_ang), ' 1         	# position '\
                       'angle(PA) [Degrees: Up=0, Left=90]\n'])
-        f.writelines(['10) 0.0 0         	# diskiness (< 0) or '\
+        if c.bdbox or c.dbox:
+            f.writelines(['10) 0.0 1         	# diskiness (< 0) or '\
                       'boxiness (> 0)\n']) 
+        else:
+            f.writelines(['10) 0.0 0            # diskiness (< 0) or '\
+	              'boxiness (> 0)\n'])
         f.writelines([' Z) 0             	# output image '\
                       '(see above)\n\n\n'])
         c.Flag += 1024
