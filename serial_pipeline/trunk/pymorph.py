@@ -1576,6 +1576,9 @@ if __name__ == '__main__':
     c.avoideme = 150.0
     c.AreaOfObj = 40.0 #Area of psf for selection
     c.StarGalProb = 0.8
+    c.bdbox = 0
+    c.bbox = 0
+    c.dbox = 0
     c.NoMask = 0
     c.NormMask = 0
     sex_cata = c.sex_cata
@@ -1635,6 +1638,12 @@ if __name__ == '__main__':
 		c.NormMask = 1
             if opt in ['--with-sg']:
                 c.StarGalProb = float(arg)
+            if opt in ['--bdbox']:
+                c.bdbox = 1
+            if opt in ['--bbox']:
+                c.bbox = 1
+            if opt in ['--dbox']:
+                c.dbox = 1
             if opt in ('-h', '--help'):
                 UsageOfPyMorph()
     if c.Filter == 'UNKNOWN':
