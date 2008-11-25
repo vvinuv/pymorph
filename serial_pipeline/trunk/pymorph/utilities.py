@@ -87,9 +87,11 @@ def WriteDb(ParamValues):
                         're_kpc':'float', 're_err_kpc':'float' ,'n':'float', \
                        'n_err':'float', 'AvgIe':'float', 'AvgIe_err':'float',\
                         'eb':'float', 'eb_err':'float', \
+			'bboxy':'float', 'bboxy_err':'float', \
                         'Id':'float', 'Id_err':'float', 'rd_pix':'float',\
                         'rd_err_pix':'float', 'rd_kpc':'float', \
                         'rd_err_kpc':'float', 'ed':'float', 'ed_err':'float', \
+			'dboxy':'float', 'dboxy_err':'float', \
                         'BD':'float', 'BT':'float', 'Point':'float', \
                         'Point_err':'float', 'Pfwhm':'float', \
                         'Pfwhm_kpc':'float', 'chi2nu':'float', \
@@ -104,9 +106,10 @@ def WriteDb(ParamValues):
 	                'Ie','Ie_err','re_pix',\
                         're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
                         'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
+			'bboxy', 'bboxy_err', \
                         'Id', 'Id_err', 'rd_pix',\
                         'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
-                        'ed', 'ed_err', 'BD', \
+                        'ed', 'ed_err', 'dboxy', 'dboxy_err', 'BD', \
                         'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                         'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                         'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
@@ -116,6 +119,7 @@ def WriteDb(ParamValues):
 	             'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
+		     'float', 'float', 'float', 'float', \
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'float', 'float', 'float',\
                      'float', 'float', 'float', 'int', 'float', 'float',\
