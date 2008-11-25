@@ -98,7 +98,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         delta3 = '0' + str(dec3)[:3]
     else:
         delta3 = str(dec3)[:4]
-    if(c.repeat == False):
+    if(c.repeat == False or c.repeat):
         for line_i in fileinput.input("index.html",inplace =1):
             line_i = line_i.strip()
             if not '</BODY></HTML>' in line_i:
