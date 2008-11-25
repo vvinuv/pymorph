@@ -292,9 +292,9 @@ def main():
 	                    'Ie','Ie_err','re_pix',\
                             're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
                             'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
-                            'Id', 'Id_err', 'rd_pix',\
+                            'bboxy', 'bboxy_err', 'Id', 'Id_err', 'rd_pix',\
                             'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
-                            'ed', 'ed_err', 'BD', \
+                            'ed', 'ed_err', 'dboxy', 'dboxy_err', 'BD', \
                             'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                             'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
