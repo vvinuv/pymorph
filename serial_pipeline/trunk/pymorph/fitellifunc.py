@@ -105,3 +105,62 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     for myfile in ['ellip','err','test.tab', EllGal]:
         if os.access(myfile,os.F_OK):
             os.remove(myfile)
+
+def run_elli_full(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
+    """The function responsible for fit ellipse"""
+    EllGal = 'GalEllFit.fits'
+    fEl = pyfits.open(input)
+    GaLaXy = fEl[0].data
+    fEl.close()
+    GaLaXy = GaLaXy - sky
+    hdu = pyfits.PrimaryHDU(GaLaXy.astype(n.float32))
+    hdu.writeto(EllGal)
+    try:
+        iraf.stsdas(_doprint=0)
+        iraf.tables(_doprint=0)
+        iraf.stsdas.analysis(_doprint=0)
+        iraf.stsdas.analysis.isophote(_doprint=0)
+    except:
+        iraf.stsdas()
+	iraf.tables()
+	iraf.stsdas.analysis()
+	iraf.stsdas.analysis.isophote()
+    image_exist = 1
+    iraf.unlearn('geompar')
+    iraf.geompar.x0=xcntr
+    iraf.geompar.y0=ycntr
+    iraf.geompar.ellip0=eg
+    iraf.geompar.pa0=pa
+    iraf.geompar.sma0=6.0
+    iraf.geompar.minsma=0.1
+    iraf.geompar.maxsma=sma*5.0
+    iraf.geompar.step=0.1
+    iraf.geompar.recente="no"
+    iraf.geompar.xylearn="no"
+    iraf.unlearn('controlpar')
+    iraf.controlpar.conver=0.05
+    iraf.controlpar.minit=10
+    iraf.controlpar.maxit=50
+    iraf.controlpar.hcenter="no"
+    iraf.controlpar.hellip="no"
+    iraf.controlpar.hpa="no"
+    iraf.controlpar.wander="INDEF"
+    iraf.controlpar.maxgerr=0.5
+    iraf.controlpar.olthres=1
+    iraf.controlpar.soft="no"
+    iraf.samplepar.integrm="bi-linear"
+    iraf.samplepar.usclip=3
+    iraf.samplepar.lsclip=3
+    iraf.samplepar.nclip=0
+    iraf.samplepar.fflag=0.5
+    iraf.unlearn('ellipse')
+    iraf.ellipse("".join(EllGal), output="test", interac="no",Stdout="ellip", \
+                 Stderr="err")
+    iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \
+                showrow="no", orig_row="no", showhdr="no", showunits="no", \
+                columns="SMA, INTENS, INT_ERR, MAG, MAG_LERR, MAG_UERR, \
+                TFLUX_E", rows="-", \
+                option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
+    for myfile in ['ellip','err','test.tab', EllGal]:
+        if os.access(myfile,os.F_OK):
+            os.remove(myfile)
