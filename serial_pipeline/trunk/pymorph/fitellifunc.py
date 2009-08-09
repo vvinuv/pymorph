@@ -158,8 +158,9 @@ def run_elli_full(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,backgrou
                  Stderr="err")
     iraf.tprint("test.tab", prparam="no", prdata="yes", pwidth=80, plength=0, \
                 showrow="no", orig_row="no", showhdr="no", showunits="no", \
-                columns="SMA, INTENS, INT_ERR, MAG, MAG_LERR, MAG_UERR, \
-                TFLUX_E", rows="-", \
+                columns="SMA, INTENS, INT_ERR, ELLIP, ELLIP_ERR, PA, PA_ERR, \
+                MAG, MAG_LERR, MAG_UERR, TMAG_E, TMAG_C, A3, \
+		A3_ERR, B3, B3_ERR, A4, A4_ERR, B4_ERR", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
     for myfile in ['ellip','err','test.tab', EllGal]:
         if os.access(myfile,os.F_OK):

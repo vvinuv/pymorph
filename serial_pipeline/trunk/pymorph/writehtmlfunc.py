@@ -499,12 +499,12 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         WriteDb(ParamToWrite)
     except:
         print 'No database can be created!'
-    outfile1 = open('galfit.html', 'w')
+    outfile1 = open('pymorph.html', 'w')
     outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
                    ' Transitional//EN">')
     outfile1.write('<HTML><HEAD> \n')
     outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
-                    URL=galfit.html"> \n'])
+                    URL=pymorph.html"> \n'])
     outfile1.write('</HEAD> \n')
     outfile = 'R_' + str(cutimage)[:-4] + 'html'
     try:
