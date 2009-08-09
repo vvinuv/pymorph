@@ -1523,7 +1523,9 @@ def SExtractorConf():
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 def UsageOfPyMorph():
     print "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
-          "[--help[-h]] "
+          "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
+	  "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
+	  "[--with-area]  [--no-mask] [--norm-mask] [--with-sg]"
     sys.exit(0)
 
 if __name__ == '__main__':
