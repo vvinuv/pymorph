@@ -336,6 +336,7 @@ def main():
     pdb = {}                        #The parameter dictionary
     psfcounter = 0                  #For getting psf in the case of unknown ra
     for line_j in obj_file:
+	RaDecInfo = 0
         try:
             values = line_j.split()
             k = 0
@@ -353,6 +354,7 @@ def main():
                     os._exit(0)
             try:
                 alpha1 = float(pdb["ra1"])
+		RaDecInfo = 1
             except:
                 alpha1 = -9999
             try:
@@ -365,6 +367,7 @@ def main():
                 alpha3 = 0
             try:
                 delta1 = float(pdb["dec1"])
+		RaDecInfo = 1
             except:
                 delta1 = -9999
             try:
@@ -468,14 +471,14 @@ def main():
             try:
                 ximg = float(pdb["ximg"])
             except:
-                if(c.galcut == True):
+                if(c.galcut == True and RaDecInfo == 0):
                     ximg = SizeXX / 2.0
                 else:
                     ximg = -9999
             try:
                 yimg = float(pdb["yimg"])
             except:
-                if(c.galcut == True):
+                if(c.galcut == True and RaDecInfo == 0):
                     yimg = SizeYY / 2.0
                 else:
                     yimg = -9999
@@ -542,10 +545,10 @@ def main():
             for line_s in open(sex_cata,'r'):
                 try:
                     values = line_s.split()
-                    if(c.galcut == False):
+                    if(c.galcut == False or RaDecInfo == 1):
                         alpha_s = float(values[3]) #- (c.shiftra) #This is the difference between the observed and the published coordinate for an object. It is used to correct the sextractor cordinate to compare with the published one.
                         delta_s = float(values[4]) # - (c.shiftdec) 
-                    else:
+                    elif c.galcut and RaDecInfo == 0:
                         try:
                             alpha_j = float(values[3])
                             delta_j = float(values[4])
