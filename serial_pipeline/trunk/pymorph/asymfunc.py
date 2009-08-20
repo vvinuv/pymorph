@@ -1,6 +1,6 @@
 import os
 import numpy as n	
-import numpy.core.ma as ma
+import numpy.ma as ma
 import pyfits
 from pyraf import iraf
 
@@ -96,7 +96,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     mask2 = n.swapaxes(mask2, 0, 1)
     mask = mask1 + mask2
     maskedgalaxy = ma.masked_array(z, mask)
-    z = ma.filled(maskedgalaxy, value = background)
+    z = ma.filled(maskedgalaxy, background)
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto('MaskedGalaxy.fits')
     NXPTS = z.shape[0]

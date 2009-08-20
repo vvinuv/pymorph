@@ -2,7 +2,7 @@ import pyfits,os
 import csv
 from os.path import exists
 import numpy as n
-import numpy.core.ma as ma
+import numpy.ma as ma
 import ndimage as im
 import config as c
 from concfunc import *
@@ -62,7 +62,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     f.close()
     mask = n.swapaxes(mask, 0, 1)
     maskedgalaxy = ma.masked_array(z, mask)
-    z = ma.filled(maskedgalaxy, value=0.0)
+    z = ma.filled(maskedgalaxy, 0.0)
     ########################
     #   CONCENTRATION      #
     ########################

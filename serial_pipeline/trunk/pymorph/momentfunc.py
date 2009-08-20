@@ -1,6 +1,6 @@
 import pyfits
 import numpy as n
-import numpy.core.ma as ma
+import numpy.ma as ma
 
 class moment:
 	"""This clas is for moment calculation. The algorithm used here is as 

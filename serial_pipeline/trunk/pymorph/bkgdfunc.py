@@ -1,6 +1,6 @@
 import pyfits,os
 import numpy as n
-import numpy.core.ma as ma
+import numpy.ma as ma
 import ndimage as im
 import config as c
 
