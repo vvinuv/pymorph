@@ -1,7 +1,7 @@
 import sys, pyfits
 from pylab import *
 import numpy as n
-import numpy.core.ma as ma
+import numpy.ma as ma
 import config as c
 
 class PlotFunc:
@@ -83,11 +83,11 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
 #
 #
         maskedModel = ma.masked_array(model, mask)
-        model = ma.filled(maskedModel, value=9999)
+        model = ma.filled(maskedModel, 9999)
         #The calculations for Goodness is starting here
         maskedresidual = ma.masked_array(residual, mask)
         anormRes = normalize(-2 * skysig, 3 * skysig) 
-        residual = ma.filled(maskedresidual, value=9999)
+        residual = ma.filled(maskedresidual, 9999)
         #colorbar(shrink=0.90)
         valid_pixels = ma.count(maskedresidual)
         print 'No of valid pixels >>> ', valid_pixels
