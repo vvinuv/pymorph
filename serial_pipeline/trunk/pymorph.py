@@ -835,6 +835,7 @@ def main():
                                 if(c.decompose):
                                     try:
                                         if(c.repeat == False):
+					    print 'working'
                                             ElliMaskFunc(cutimage, xcntr, \
                                                          ycntr, SizeX, \
                                                          SizeY, line_s, 1)
