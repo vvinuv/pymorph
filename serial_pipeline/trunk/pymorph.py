@@ -398,19 +398,20 @@ def main():
                     wimg = 'W' + str(c.rootname) + '_' + str(gal_id) + '.fits'
                 else:
                     wimg = 'None'
-            try:
-                cfile = pdb["cfile"]  #GALFIT configuration file
-            except:
-                if(c.repeat == True and c.galcut == False):
-                    cfile = 'G_I' + str(c.rootname) + '_' + \
-                             str(gal_id) + '.in'
-                elif(c.repeat == True and c.galcut == True):
-                    if ReSize:
-                        cfile = 'G_I' + str(gimg)[:-5] + '.in' 
-                    else:
-                        cfile = 'G_' + str(gimg)[:-5] + '.in'
-                else:
-                    cfile = 'None'
+#            try:
+#                cfile = pdb["cfile"]  #GALFIT configuration file
+#            except:
+#                if(c.repeat == True and c.galcut == False):
+#                    cfile = 'G_I' + str(c.rootname) + '_' + \
+#                             str(gal_id) + '.in'
+#                elif(c.repeat == True and c.galcut == True):
+#                    if ReSize:
+#                        cfile = 'G_I' + str(gimg)[:-5] + '.in' 
+#                    else:
+#                        cfile = 'G_' + str(gimg)[:-5] + '.in'
+#                else:
+#                    cfile = 'None'
+	    cfile = 'None'
             if exists(cfile):
                 for line_c in open(cfile,'r'): #Reading config file if it exists
                     try:
