@@ -398,20 +398,19 @@ def main():
                     wimg = 'W' + str(c.rootname) + '_' + str(gal_id) + '.fits'
                 else:
                     wimg = 'None'
-#            try:
-#                cfile = pdb["cfile"]  #GALFIT configuration file
-#            except:
-#                if(c.repeat == True and c.galcut == False):
-#                    cfile = 'G_I' + str(c.rootname) + '_' + \
-#                             str(gal_id) + '.in'
-#                elif(c.repeat == True and c.galcut == True):
-#                    if ReSize:
-#                        cfile = 'G_I' + str(gimg)[:-5] + '.in' 
-#                    else:
-#                        cfile = 'G_' + str(gimg)[:-5] + '.in'
-#                else:
-#                    cfile = 'None'
-	    cfile = 'None'
+            try:
+                cfile = pdb["cfile"]  #GALFIT configuration file
+            except:
+                if(c.repeat == True and c.galcut == False):
+                    cfile = 'G_I' + str(c.rootname) + '_' + \
+                             str(gal_id) + '.in'
+                elif(c.repeat == True and c.galcut == True):
+                    if ReSize:
+                        cfile = 'G_I' + str(gimg)[:-5] + '.in' 
+                    else:
+                        cfile = 'G_' + str(gimg)[:-5] + '.in'
+                else:
+                    cfile = 'None'
             if exists(cfile):
                 for line_c in open(cfile,'r'): #Reading config file if it exists
                     try:
@@ -422,6 +421,10 @@ def main():
                             oimg = (valuec[1])
                         if(str(valuec[0]) == 'C)'):
                             wimg = (valuec[1])
+			    if exists(wimg):
+				pass
+			    else:
+				wimg = 'None'
                         if(str(valuec[0]) == 'D)'):
                             pfile = (valuec[1])
                         if(str(valuec[0]) == 'F)'):
@@ -835,7 +838,6 @@ def main():
                                 if(c.decompose):
                                     try:
                                         if(c.repeat == False):
-					    print 'working'
                                             ElliMaskFunc(cutimage, xcntr, \
                                                          ycntr, SizeX, \
                                                          SizeY, line_s, 1)
