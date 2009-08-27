@@ -67,7 +67,13 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     #   CONCENTRATION      #
     ########################
     if(casgmrun):
-	if c.aperture:
+	try:
+	    ApErTuRe = c.aperture
+	except:
+	    print 'aperture keyword is not found in config.py. Setting '\
+	          'circular'
+	    ApErTuRe = 1
+	if ApErTuRe:
             con=concentration(z, xcntr, ycntr, nxpts, nypts, 0.0, 0.0, sky)
 	else:
 	    con=concentration(z, xcntr, ycntr, nxpts, nypts, pa, eg, sky)
