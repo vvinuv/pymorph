@@ -31,11 +31,12 @@ class concentration:
 		self.ycntr		= ycntr
 		self.nxpts		= nxpts
 		self.nypts		= nypts
-		self.eta_radius		= 2.0
+		self.eta_radius		= 1.5
 		self.pa			= pa
 		self.eg			= eg
 		self.pixel_division	= 1
 		self.incr		= 1.0
+		self.incrl              = 1.0
 		self.background		= background
 		
 		#Find the radius to each pixel	
@@ -88,20 +89,24 @@ class concentration:
                                         flag90=1
                                         alpha90=error(I90,tempI90,ttempI90,orad,self.total_I,self.total_rad,self.background)
                                         self.r90=orad+alpha90[0]
+#					print 'r90', self.r90, orad
 				if(flag80==0 and tempI80<I80):
 					flag80=1
 					alpha80=error(I80,tempI80,ttempI80,orad,self.total_I,self.total_rad,self.background)
 					self.r80=orad+alpha80[0]
+#					print 'r80', self.r80, orad
 				if(flag50==0 and tempI50<I50):
 					flag50=1
 					alpha50=error(I50,tempI50,ttempI50,orad,self.total_I,self.total_rad,self.background)
 					self.r50=orad + alpha50[0]
+#					print 'r50', self.r50, orad
 				if(flag20==0 and tempI20>I20):
 					flag20=1
 					alpha20=error(I20,ttempI20,tempI20,irad-self.incr,self.total_I,self.total_rad,self.background)
-					self.r20=irad-self.incr+alpha20[0]
+					self.r20=irad-self.incrl+alpha20[0]
+#					print 'r20', self.r20, irad
 				orad-=self.incr
-				irad+=self.incr
+				irad+=self.incrl
                                 ttempI90=tempI90
 				ttempI80=tempI80
 				ttempI50=tempI50

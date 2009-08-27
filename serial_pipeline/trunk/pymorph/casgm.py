@@ -67,7 +67,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     #   CONCENTRATION      #
     ########################
     if(casgmrun):
-        con=concentration(z, xcntr, ycntr, nxpts, nypts, 0, 0, sky)
+	if c.aperture:
+            con=concentration(z, xcntr, ycntr, nxpts, nypts, 0.0, 0.0, sky)
+	else:
+	    con=concentration(z, xcntr, ycntr, nxpts, nypts, pa, eg, sky)
         extraction_radius=con.total_rad
         r20 = con.r20
         r50 = con.r50
