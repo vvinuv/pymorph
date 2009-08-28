@@ -11,6 +11,7 @@ from clumfunc import *
 from ginifunc_modi import *
 #from momentfunc import *
 from pyraf import iraf
+from runsexfunc import *
 
 class CasGm:
     """The class which will find CASGM parameters. The algorithm for each 
@@ -33,8 +34,26 @@ class CasGm:
         return
 
 def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg, pa, sky, skysig):
-    xcntr = xcntr-1 #this is because python index statrs from 0
-    ycntr = ycntr-1
+    xcntr = xcntr #this is because python index statrs from 0
+    ycntr = ycntr
+    FoundNewCntr = 0
+    if xcntr > 35.0 or ycntr > 35.0:
+        dectThre = 18.0
+    else:
+	dectThre = 12.0
+    while FoundNewCntr == 0:
+	RunSex(cutimage, 'None', 'CaSsEx.cat', dectThre, dectThre, 1)
+        for line in open('CaSsEx.cat', 'r'):
+  	    try:
+	        values = line.split()
+	        if abs(float(values[1]) - xcntr) < 4.001 and abs(float(values[2]) - ycntr) < 4.001:
+                    xcntr = float(values[1]) - 1.0
+                    ycntr = float(values[2]) - 1.0
+		    FoundNewCntr = 1
+            except:
+	        pass
+	os.system('rm -f CaSsEx.cat CaSsEx.cat.sex')
+        dectThre -= 2.0
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
     f = pyfits.open(cutimage)
@@ -74,9 +93,9 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 	          'circular'
 	    ApErTuRe = 1
 	if ApErTuRe:
-            con=concentration(z, xcntr, ycntr, nxpts, nypts, 0.0, 0.0, sky)
+            con=concentration(z, mask, xcntr, ycntr, nxpts, nypts, 0.0, 0.0, sky)
 	else:
-	    con=concentration(z, xcntr, ycntr, nxpts, nypts, pa, eg, sky)
+	    con=concentration(z, mask, xcntr, ycntr, nxpts, nypts, pa - 90.0, eg, sky)
         extraction_radius=con.total_rad
         r20 = con.r20
         r50 = con.r50
