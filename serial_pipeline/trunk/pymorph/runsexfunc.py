@@ -5,16 +5,19 @@ import re
 class RunSex:
     """The class for running SExtractor, if the pipeline doesn't find any
        SExtractor catalogue. It uses the default.* files for doing that. """
-    def __init__(self, cutimage, whtimage):
+    def __init__(self, cutimage, whtimage, sex_cata, detect_thr, ana_thr):
         self.cutimage = cutimage
         self.whtimage = whtimage
-        self.sex    = sex(cutimage, whtimage)
+        self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr)
 
-def sex(cutimage, whtimage):
-    sex_cata = c.sex_cata
+def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr):
+    if sex_cata =='None':
+        sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
-    SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA 
-    SEx_DETECT_THRESH = c.SEx_DETECT_THRESH
+    if detect_thr == 9999:
+        SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA 
+    if ana_thr == 9999:
+        SEx_DETECT_THRESH = c.SEx_DETECT_THRESH
     SEx_ANALYSIS_THRESH = c.SEx_ANALYSIS_THRESH 
     SEx_FILTER = c.SEx_FILTER 
     SEx_FILTER_NAME = c.SEx_FILTER_NAME 
