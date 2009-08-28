@@ -1,5 +1,7 @@
 import numpy as n
 import pyfits
+import os
+import numpy.ma as ma
 class concentration:
 	"""The class for finding concentration parameter. The algorithm used
             here is as follows
@@ -25,29 +27,46 @@ class concentration:
 
             7. Compute concentration parameter as 5*log(r(80%)/r(20%)) 		
         """		
-	def __init__(self, z, xcntr, ycntr, nxpts, nypts, pa, eg, background):
+	def __init__(self, z, mask, xcntr, ycntr, nxpts, nypts, pa, eg, background):
 		self.z			= z
+		self.mask               = mask
 		self.xcntr		= xcntr
 		self.ycntr		= ycntr
 		self.nxpts		= nxpts
 		self.nypts		= nypts
-		self.eta_radius		= 1.5
+		self.eta_radius		= 2.0
 		self.pa			= pa
 		self.eg			= eg
 		self.pixel_division	= 1
 		self.incr		= 1.0
 		self.incrl              = 1.0
 		self.background		= background
-		
+		def FloatPart(x):
+		    return x - int(x)
+#		os.system('rm -f Center.fits WriteTest.fits R.fits')
+                if z.shape[0] < 70:
+		    SiZl = 4
+		    SiZu = 5
+		else:
+		    SiZl = 2
+		    SiZu = 3
+		CntrZ = self.z[n.ceil(xcntr-SiZl):n.ceil(xcntr+SiZu), n.ceil(ycntr-SiZl):n.ceil(ycntr+SiZu)]
+		Dim = CntrZ.shape[0]
+		DivideCntr = divide_image(CntrZ, Dim, Dim, 10)
+		DivideCntrR = return_r(DivideCntr.shape[0],DivideCntr.shape[1],(Dim/2.0+FloatPart(xcntr))*10,(Dim/2.0+FloatPart(ycntr))*10,self.pa,self.eg,1)
+#		HdU = pyfits.PrimaryHDU(DivideCntr.astype(n.float32))
+#		HdU.writeto('Center.fits')
 		#Find the radius to each pixel	
 		self.r = return_r(self.nxpts,self.nypts,self.xcntr,self.ycntr,self.pa,self.eg,self.pixel_division)
 		#Initiallizing the divided image
 		#self.divide_r=divide_image(self.z,self.nxpts,self.nypts,self.pixel_division)
 		self.divide_r = self.z
+#		HdU = pyfits.PrimaryHDU(DivideCntrR.astype(n.float32))
+#		HdU.writeto('R.fits')
 		Flag_check = 1
 #	calculating the eta parameter
 #		print self.divide_r,self.r,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius
-		self.total_rad = eta_radius_fnc(self.divide_r,self.r,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius)
+		self.total_rad = eta_radius_fnc(self.divide_r,self.r,self.mask,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius)
 #		print self.total_rad
 		if(self.total_rad == 9999):
 			self.concen=9999
@@ -70,12 +89,13 @@ class concentration:
 			flag20 = 0 #this flags equal 1 when r80 and r20 find
 			orad=self.total_rad*1.0 #orad is the initial radius to find the r80 and hopes the r80 is inside the eta_radius
 			irad=self.eta_radius#irad is the initial radius to find the r20
+			Inner = 1
 			I20 = 0.2 * self.total_I
 			I50 = 0.5 * self.total_I
 			I80 = 0.8 * self.total_I
 			I90 = 0.9 * self.total_I
-			ttempI20 = self.divide_r[n.where(self.r<=self.eta_radius-1.0)].sum()
-
+#			ttempI20 = self.divide_r[n.where(self.r<=self.eta_radius-1.0)].sum()
+			ttempI20 = DivideCntr[n.where(DivideCntrR<=self.eta_radius-1.0)].sum()
 			while flag90==0 or flag80==0 or flag50==0 or flag20==0:
 				if(flag90==0):
                                         tempI90 = self.divide_r[n.where(self.r<=orad)].sum()
@@ -84,7 +104,15 @@ class concentration:
 				if(flag50==0):
 					tempI50 = self.divide_r[n.where(self.r<=orad)].sum()
 				if(flag20==0):
-					tempI20 = self.divide_r[n.where(self.r<=irad)].sum()
+					if irad > DivideCntr.shape[0] - 1.0 \
+				           and Inner:
+					    Inner = 0
+					    irad = self.eta_radius
+                                            ttempI20 = self.divide_r[n.where(self.r<=self.eta_radius-1.0)].sum()
+					if Inner:
+					    tempI20 = DivideCntr[n.where(DivideCntrR<=irad)].sum()
+					else:
+					    tempI20 = self.divide_r[n.where(self.r<=irad)].sum()
                                 if(flag90==0 and tempI90<I90):
                                         flag90=1
                                         alpha90=error(I90,tempI90,ttempI90,orad,self.total_I,self.total_rad,self.background)
@@ -103,8 +131,10 @@ class concentration:
 				if(flag20==0 and tempI20>I20):
 					flag20=1
 					alpha20=error(I20,ttempI20,tempI20,irad-self.incr,self.total_I,self.total_rad,self.background)
-					self.r20=irad-self.incrl+alpha20[0]
-#					print 'r20', self.r20, irad
+					if Inner:
+					    self.r20=(irad-self.incrl+alpha20[0])/ 10.0
+					else:
+					    self.r20=irad-self.incrl+alpha20[0]
 				orad-=self.incr
 				irad+=self.incrl
                                 ttempI90=tempI90
@@ -129,8 +159,8 @@ def return_r(nxpts,nypts,xcntr,ycntr,pa,eg,pixel_division):
 	divide_x=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))/(nypts*pixel_division))*(1/(pixel_division*1.0))
 
 	divide_y=(n.reshape(n.arange(nxpts*pixel_division*pixel_division*nypts),(nxpts*pixel_division,nypts*pixel_division))%(nypts*pixel_division))*(1/(pixel_division*1.0))
-	
-	one_minus_eg_sq		= (1.0-eg)**2.0
+	axis_rat                = (1 - eg) #eg is defind in this way in pymorph.py
+	one_minus_eg_sq		= axis_rat * axis_rat # eg is axis ratio. check fitgal code(1.0-eg)**2.0
 	co			= n.cos(pa * n.pi / 180.0)
 	si			= n.sin(pa * n.pi / 180.0)
 	
@@ -149,16 +179,16 @@ def divide_image(z, nxpts, nypts, pixel_division):
 	divide_r = n.zeros([nxpts * pixel_division, nypts * pixel_division])
         divide_r = divide_r.astype(n.float32)
 	I_at_diff_radii = n.zeros([nypts*nxpts])
-        I_at_diff_radii = I_at_diff_radii.astype(float32)
+        I_at_diff_radii = I_at_diff_radii.astype(n.float32)
 	radii = n.zeros([nypts * nxpts])
-        radii = radii.astype(float32)
+        radii = radii.astype(n.float32)
 		#filling values in the divided images
 	a=0
 	for i in range(nypts):
 		for m in range(pixel_division):
 			b=0
 			for j in range(nxpts):
-				for n in range(pixel_division):
+				for p in range(pixel_division):
 					divide_r[a,b]=z[i,j]/(pixel_division*pixel_division*1.0)
 					b+=1
 			a+=1
@@ -169,7 +199,8 @@ def divide_image(z, nxpts, nypts, pixel_division):
 #------The function which returns the total radius ie. 1.5*r(eta=0.2)-----#
 #I_ave_radius is the intensity at different anulus, I_ave - intensity inside different radius, no_I_ave_radius - the no of pixels in the anular region, no_I_ave - the no. of pixels inside the different radius
 
-def eta_radius_fnc(divide_r, r, nxpts, nypts, background, incr, eta_radius):
+def eta_radius_fnc(divide_r, r, mask, nxpts, nypts, background, incr, eta_radius):
+	divide_r = ma.masked_array(divide_r, mask)
 	FLAG_ETA = nn = 0 # The n is using because the program won't calculate eta radius if the eta<0.2 in the first run itself. FLAG_ETA will tell whether the condition eta<0.2 is reached.
 	eta = I_ave_radius = I_ave = no_I_ave = no_I_ave_radius = r50 \
             = temp_eta = 0.0
@@ -178,22 +209,30 @@ def eta_radius_fnc(divide_r, r, nxpts, nypts, background, incr, eta_radius):
 		temp_eta = eta
 		I_ave_radius = divide_r[n.where(r <= eta_radius + 1.0)].sum()\
                                - divide_r[n.where(r < eta_radius - 1.0)].sum()
-		no_I_ave_radius = divide_r[n.where(r <= eta_radius + \
-                                  1.0)].size - divide_r[n.where(r <= \
-                                  eta_radius - 1.0)].size
+		no_I_ave_radius = ma.count(divide_r[n.where(r <= eta_radius + \
+                                  1.0)]) - ma.count(divide_r[n.where(r <= \
+                                  eta_radius - 1.0)])
 		I_ave = divide_r[n.where(r <= eta_radius)].sum()
-		no_I_ave = divide_r[n.where(r<=eta_radius)].size	
+		no_I_ave = ma.count(divide_r[n.where(r<=eta_radius)])	
+		z = ma.filled(divide_r, 0.0)
+#		os.system('rm -f WriteTestZ.fits WriteTestR.fits WriteTestM.fits')
+#		HdU = pyfits.PrimaryHDU(z.astype(n.float32))
+#		HdU.writeto('WriteTestZ.fits')
+#		HdU = pyfits.PrimaryHDU(r.astype(n.float32))
+#		HdU.writeto('WriteTestR.fits')
+#		HdU = pyfits.PrimaryHDU(mask.astype(n.float32))
+#		HdU.writeto('WriteTestM.fits')
 		if(I_ave==0 or no_I_ave==0 or I_ave_radius == 0 or no_I_ave_radius==0):
 			FLAG_ETA=0
 		else :
-			#I_ave=I_ave/no_I_ave #average intensity inside a radius
-			#I_ave_radius=I_ave_radius/no_I_ave_radius 
+			I_ave=I_ave/no_I_ave #average intensity inside a radius
+			I_ave_radius=I_ave_radius/no_I_ave_radius 
                         #average intensity inside the annulus
 			#print I_ave,I_ave_radius,eta_radius,eta
-			I_ave = I_ave / (3.14 * eta_radius * eta_radius)
-			I_ave_radius = I_ave_radius / (3.14 * ((eta_radius \
-                                       + 1.0) * (eta_radius + 1.0) - \
-                                       (eta_radius - 1.0) * (eta_radius - 1.0)))
+#			I_ave = I_ave / (3.14 * eta_radius * eta_radius)
+#			I_ave_radius = I_ave_radius / (3.14 * ((eta_radius \
+#                                       + 1.0) * (eta_radius + 1.0) - \
+#                                       (eta_radius - 1.0) * (eta_radius - 1.0)))
 			eta = (I_ave_radius) / (I_ave) #eta parameter
 			if(eta < 0.2 and nn == 0):
 				FLAG_ETA = 1
