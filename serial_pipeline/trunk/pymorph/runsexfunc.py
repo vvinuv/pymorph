@@ -60,5 +60,6 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     f_sex = open(sex_conf, 'w')
     f_sex.write(template %vars())
     f_sex.close()
-    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf)
+    print 'SExtractor Detecting Objects ....'
+    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
     os.system(cmd)    
