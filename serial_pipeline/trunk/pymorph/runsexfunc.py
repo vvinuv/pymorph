@@ -8,17 +8,24 @@ class RunSex:
     def __init__(self, cutimage, whtimage, sex_cata, detect_thr, ana_thr):
         self.cutimage = cutimage
         self.whtimage = whtimage
+	self.sex_cata = sex_cata
+	self.detect_thr = detect_thr
+	self.ana_thr = ana_thr
         self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr)
 
 def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr):
-    if sex_cata =='None':
+    if sex_cata == 'None':
         sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
+    SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA
     if detect_thr == 9999:
-        SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA 
-    if ana_thr == 9999:
         SEx_DETECT_THRESH = c.SEx_DETECT_THRESH
-    SEx_ANALYSIS_THRESH = c.SEx_ANALYSIS_THRESH 
+    else:
+	SEx_DETECT_THRESH = detect_thr
+    if ana_thr == 9999:
+        SEx_ANALYSIS_THRESH = c.SEx_ANALYSIS_THRESH 
+    else:
+	SEx_ANALYSIS_THRESH = ana_thr
     SEx_FILTER = c.SEx_FILTER 
     SEx_FILTER_NAME = c.SEx_FILTER_NAME 
     SEx_DEBLEND_NTHRESH = c.SEx_DEBLEND_NTHRESH
