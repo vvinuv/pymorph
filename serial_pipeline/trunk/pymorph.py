@@ -536,7 +536,7 @@ def main():
                                      #then it will not run SExtractor else do!
                     pass
                 else: 
-                    RunSex(gimg, wimg)
+                    RunSex(gimg, wimg, 'None', 9999, 9999)
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -1715,9 +1715,9 @@ if __name__ == '__main__':
               'the pipeline keep the sky value at the SExtractor value '\
               'during the decomposition.'
         if exists(c.whtfile):
-            RunSex(c.imagefile, c.whtfile)
+            RunSex(c.imagefile, c.whtfile, 'None', 9999, 9999)
         else:
-            RunSex(c.imagefile, 'None')
+            RunSex(c.imagefile, 'None', 'None', 9999, 9999)
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
             obj_file = open(c.clus_cata,'r') 
@@ -1782,7 +1782,7 @@ if __name__ == '__main__':
                     if exists(sex_cata): 
                         pass
                     else:
-                        RunSex(gimg, wimg)
+                        RunSex(gimg, wimg, 'None', 9999, 9999)
                     try:
                         selectpsf(gimg, sex_cata)
                     except:
