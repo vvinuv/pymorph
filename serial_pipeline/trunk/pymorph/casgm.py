@@ -36,6 +36,8 @@ class CasGm:
 def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg, pa, sky, skysig):
     xcntr = xcntr #this is because python index statrs from 0
     ycntr = ycntr
+#    cmd = 'ds9 ' + str(maskimage)
+#    os.system(cmd)
     FoundNewCntr = 0
     if xcntr > 35.0 or ycntr > 35.0:
         dectThre = 18.0
@@ -126,9 +128,9 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                                 r20, sky, angle, 1, 0)
             ABS_ZSUM_r20 = asy.image_asymm[6] * (r20 * r20) / \
                        (extraction_radius * extraction_radius * 1.0)
-            asy_r20_zsum = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0,\
-                                r50, r20, sky, angle, 0, ABS_ZSUM_r20)
-
+#            asy_r20_zsum = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0,\
+#                                r50, r20, sky, angle, 0, ABS_ZSUM_r20) This was commented on sep13 as i forgot what this is
+            asy_r20_zsum = 0 # This line is added to compensate the above commenting of line. I have replaced the corresponding value to 0 at the line 239
             back_asy = asymmetry(cutimage, maskimage, back_ini_xcntr, \
                                 back_ini_ycntr, 0, 0, r50, \
                                 back_extraction_radius, \
@@ -149,6 +151,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                 ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
                 ASY_ERROR = 2 * n.sqrt(asy.image_asymm[1]**2 \
                             + back_asy.image_asymm[1]**2)
+#		print asy.image_asymm[0] ,  back_asy.image_asymm[0]
             try:
                 ASY_ERROR = round(ASY_ERROR, 4)    
             except:
@@ -236,7 +239,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             f_tmp.close()
         f_tmp = open("agm_result_with_radius.csv", "ab")
         tmp_writer = csv.writer(f_tmp)
-        tmp_ParamToWrite = [str(cutimage)[to_remove:-5], str(con.concen), str(con.error_con), str(ASY), str(ASY_ERROR), str(asy.image_asymm[5]), str(asy.image_asymm[0]), str(back_asy.image_asymm[0]), str(asy_r20.image_asymm[0]), str(asy_r20_zsum.image_asymm[0]), str(S), str(ERROR_SMOO), str(con.r20), str(con.r50), str(con.r80), str(con.r90), str(extraction_radius), str(gini_coef[0]), str(gini_coef[1]), str(gini_coef[2]), str(gini_coef[3]), str(gini_coef[4]), str(gini_coef[5]), str(gini_coef[6]), str(gini_coef[7]), str(gini_coef[8]), str(gini_coef[9])]
+        tmp_ParamToWrite = [str(cutimage)[to_remove:-5], str(con.concen), str(con.error_con), str(ASY), str(ASY_ERROR), str(asy.image_asymm[5]), str(asy.image_asymm[0]), str(back_asy.image_asymm[0]), str(asy_r20.image_asymm[0]), str(0.0), str(S), str(ERROR_SMOO), str(con.r20), str(con.r50), str(con.r80), str(con.r90), str(extraction_radius), str(gini_coef[0]), str(gini_coef[1]), str(gini_coef[2]), str(gini_coef[3]), str(gini_coef[4]), str(gini_coef[5]), str(gini_coef[6]), str(gini_coef[7]), str(gini_coef[8]), str(gini_coef[9])]
         tmp_writer.writerow(tmp_ParamToWrite)
 #        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(con.r90), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
         f_tmp.close()

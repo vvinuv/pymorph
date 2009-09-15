@@ -2,7 +2,7 @@ import os
 import numpy as n	
 import numpy.ma as ma
 import pyfits
-from pyraf import iraf
+from rotate_new import *
 
 class asymmetry:
     """Finding Asymmetry parameter. The algorithm is as follows
@@ -49,14 +49,8 @@ class asymmetry:
         return 
 
 def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, background, extraction_radius, angle, flag_image, ABS_ZSUM):
-    try:
-        iraf.images(_doprint=0)
-        iraf.images.imgeom(_doprint=0)
-        iraf.images.imutil(_doprint=0)
-    except:
-        iraf.images()
-	iraf.images.imgeom()
-	iraf.images.imutil()
+    if flag_image == 0:
+	maskimage = 'BackMask.fits'
     co = n.cos(pa * n.pi / 180.0)
     si = n.sin(pa * n.pi / 180.0)
     Aabs = n.zeros([9])
@@ -74,15 +68,13 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     z = z - background
     f.close()
     z = n.swapaxes(z, 0, 1)
-    iraf.rotate("".join(maskimage), output="MRotated.fits",\
-                        rotation=180, xin = ini_xcntr + 1.0,\
-                        yin = ini_ycntr + 1.0, \
-                        xout = ini_xcntr + 1.0, yout = ini_ycntr + 1.0, \
-                        ncols= "INDEF",\
-                        nlines = "INDEF", interpo= "linear", \
-                        boundar="nearest", verbose="no")
-#    iraf.imarith("".join(maskimage), op="*", operand2="MRotated.fits", \
-#                    result="AMask.fits")
+    ff = pyfits.open(maskimage)
+    ZZZ = ff[0].data
+    ff.close()
+    RoTz = rotate_modi(ZZZ, 180.0, ini_xcntr, ini_ycntr, prefilter=False)
+    os.system('rm -f MRotated.fits')
+    hdu = pyfits.PrimaryHDU(RoTz)
+    hdu.writeto('MRotated.fits')
 #    f=pyfits.open("AMask.fits")
 #    mask = f[0].data
 #    f.close()
@@ -96,9 +88,18 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     mask2 = n.swapaxes(mask2, 0, 1)
     mask = mask1 + mask2
     maskedgalaxy = ma.masked_array(z, mask)
-    z = ma.filled(maskedgalaxy, background)
+    z1 = ma.filled(maskedgalaxy, background)
+    
+#    hdu = pyfits.PrimaryHDU(z)
+#    hdu.writeto('Z.fits')
+#    hdu = pyfits.PrimaryHDU(mask)
+#    hdu.writeto('MM.fits')
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto('MaskedGalaxy.fits')
+    os.system('rm -f MaskedGalaxy1.fits')
+    hdu = pyfits.PrimaryHDU(n.swapaxes(z1, 0, 1).astype(n.float32))
+    hdu.writeto('MaskedGalaxy1.fits')
+#    os._exit(0)
     NXPTS = z.shape[0]
     NYPTS = z.shape[1]
     #r50=c.r50
@@ -138,25 +139,66 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
             tx = (x - xcntr[iter]) * co + (y - ycntr[iter]) * si
             ty = (xcntr[iter] - x) * si + (y - ycntr[iter]) * co
             R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
-            iraf.rotate("".join("MaskedGalaxy.fits"), output="Rotated.fits",\
-                        rotation = 180, xin = xcntr[iter] + 1.0, \
-                        yin = ycntr[iter] + 1.0, \
-                        xout = xcntr[iter] + 1.0, yout = ycntr[iter] + 1.0, \
-                        ncols = "INDEF",\
-                        nlines = "INDEF", interpo = "linear", \
-                        boundar = "nearest", verbose = "no")
+#	    print xcntr[iter] , ycntr[iter]
+#	    os.system('ds9 MaskedGalaxy.fits MaskedGalaxy1.fits')
+            ff = pyfits.open("MaskedGalaxy.fits")
+	    ZZZ = ff[0].data
+            ff.close()
+	    RoTz = rotate_modi(ZZZ, 180.0, xcntr[iter], ycntr[iter], prefilter=False)
+            os.system('rm -f Rotated.fits')
+	    hdu = pyfits.PrimaryHDU(RoTz)
+            hdu.writeto('Rotated.fits')
             f = pyfits.open("Rotated.fits")
             rz = f[0].data
             f.close()
+#            f = pyfits.open("Rotated1.fits")
+#            rz1 = f[0].data
+#            f.close()
+#	    hdu = pyfits.PrimaryHDU(rz)
+#	    hdu.writeto('RR.fits')
             rz = n.swapaxes(rz, 0, 1)
-            res = z - rz
-            for myfile in ['Rotated.fits', 'Residual.fits', 'AResidual.fits']:
+#	    rz1 = n.swapaxes(rz1, 0, 1)
+#	    hdu = pyfits.PrimaryHDU(rz)
+#	    hdu.writeto('RRSwap.fits')
+	    res = z - rz
+#            res1 = z1 - rz1
+#	    print ini_xcntr, ini_ycntr, flag_image
+	    if flag_image < 0:
+#	    if ini_xcntr>-145 or ini_xcntr<1135:
+ 	        do = raw_input('Image ? ')
+	        if len(do) == 0:
+		    pass
+  	        else:
+		    os.system('rm -f Z.fits RRSwap.fits BackMM.fits ReS.fits')
+ 		    hdu = pyfits.PrimaryHDU(z)
+	 	    hdu.writeto('Z.fits')
+		    hdu = pyfits.PrimaryHDU(rz)
+		    hdu.writeto('RRSwap.fits')
+                    mm = ma.masked_array(res, mask)
+                    mm1 = ma.filled(mm, -1)
+		    hdu = pyfits.PrimaryHDU(mm1)
+		    hdu.writeto('BackMM.fits')
+		    ReS = n.where(R <= extraction_radius, res, 1)
+		    hdu = pyfits.PrimaryHDU(ReS)
+		    hdu.writeto('ReS.fits')
+		    os.system('ds9 Z.fits RRSwap.fits BackMM.fits ReS.fits') 
+
+#	    os._exit(0)
+            for myfile in ['Rotated.fits', 'Rotated1.fits', 'Residual.fits', 'AResidual.fits']:
                 if os.access(myfile, os.F_OK):
                     os.remove(myfile)
-            sh_sum[iter] = z[n.where(R <= extraction_radius)].sum()
-            rot_sum[iter] = rz[n.where(R <= extraction_radius)].sum()
-            abs_zsum[iter] = abs(z[n.where(R <= extraction_radius)]).sum()	
-            absres_sum[iter] = abs(res[n.where(R <= extraction_radius)]).sum()
+#            sh_sum[iter] = z1[n.where(R <= extraction_radius)].sum()
+	    sh_sum[iter] = ma.masked_array(z, mask)[n.where(R <= extraction_radius)].sum()
+#            print sh_sum[iter], sh_sum1
+#            rot_sum[iter] = rz1[n.where(R <= extraction_radius)].sum()
+	    rot_sum[iter] = ma.masked_array(rz, mask)[n.where(R <= extraction_radius)].sum()
+#	    print rot_sum[iter], rot_sum1
+#            abs_zsum[iter] = abs(z1[n.where(R <= extraction_radius)]).sum()
+            abs_zsum[iter] = abs(ma.masked_array(z, mask)[n.where(R <= extraction_radius)]).sum()
+#	    print abs_zsum[iter], abs_zsum1
+#            absres_sum[iter] = abs(res1[n.where(R <= extraction_radius)]).sum()
+	    absres_sum[iter] = abs(ma.masked_array(res, mask)[n.where(R <= extraction_radius)]).sum()
+#	    print absres_sum[iter], absres_sum1
             if(flag_image):
                 Aabs[iter] = absres_sum[iter] / (abs_zsum[iter])
             else:
@@ -167,13 +209,13 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
             xcntr[index] = ini_xcntr
             ycntr[index] = ini_ycntr
         if(xcntr[index] == ini_xcntr and ycntr[index] == ini_ycntr):
-            iraf.rotate("".join("MaskedGalaxy.fits"), output = "Rotated.fits",\
-                        rotation = 180, xin = xcntr[iter] + 1.0, \
-                        yin = ycntr[iter] + 1.0, \
-                        xout = xcntr[iter] + 1.0, yout = ycntr[iter] + 1.0, \
-                        ncols = "INDEF",\
-                        nlines = "INDEF", interpo = "linear", \
-                        boundar = "nearest", verbose = "no")
+            ff = pyfits.open("MaskedGalaxy.fits")
+	    ZZZ = ff[0].data
+	    ff.close()
+	    RoTz = rotate_modi(ZZZ, 180.0, xcntr[iter], ycntr[iter], prefilter=False)
+	    os.system('rm -f Rotated.fits')
+	    hdu = pyfits.PrimaryHDU(RoTz)
+	    hdu.writeto('Rotated.fits')
             f = pyfits.open("Rotated.fits")
             rz = f[0].data
             f.close()

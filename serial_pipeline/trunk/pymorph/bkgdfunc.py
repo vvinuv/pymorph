@@ -49,7 +49,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
         bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
         skysig = im.standard_deviation(bgmaskedgalaxy1d)
         sky_iter = ma.average(bgmaskedgalaxy1d)
-        skysig_iter = skysig * 3.0
+        skysig_iter = skysig * 1.5
         x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts
         x = x.astype(n.float32)
         y = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) % nypts
@@ -61,19 +61,27 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
             for i in range((nxpts - int(2 * back_extraction_radius)) / 4):
                 bycntr = back_extraction_radius
                 for j in range((nypts - int(2 * back_extraction_radius)) / 4):
-#                print bxcntr, bycntr, FLAG_BACK1, FLAG_BACK
+#                    print bxcntr, bycntr, FLAG_BACK1, FLAG_BACK
                     if(FLAG_BACK1 == 0):
                         tx = x - bxcntr
                         ty = y - bycntr
                         R = n.sqrt(tx**2.0 + ty**2.0)
+			ValueOfRegion = n.abs(z[n.where(R <= back_extraction_radius)] - sky_iter)
+			SizeOfRegion = ValueOfRegion.size
+                        SizeOfIgnRegion = ValueOfRegion[n.where(ValueOfRegion > skysig_iter)].size
+			BackMask = n.where(abs(z - sky_iter) < skysig * 3.0, 0, z) 
+                        BackMask = n.where(abs(BackMask) > 0, 1, BackMask) 
                         bmax = n.abs(z[n.where(R <= back_extraction_radius)] \
                                - sky_iter).max() # substracting the average sky value from the image and find the maximum value in the region 
-                        if(bmax < skysig_iter and FLAG_BACK == 0):
+#			if FLAG_BACK1 == 0:
+# 			    print SizeOfRegion , SizeOfIgnRegion, bxcntr, bycntr
+                        if(SizeOfIgnRegion < 0.2 * SizeOfRegion and FLAG_BACK == 0):
 #If the maximum value is within some n*sky sigma then that is considered as the background
                             FLAG_BACK = 1
                             FLAG_BACK1 = 1
                             back_ini_xcntr = bxcntr
                             back_ini_ycntr = bycntr
+
                     bycntr += 4.0
                 bxcntr += 4.0
             skysig_iter *= 1.3
@@ -82,4 +90,8 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
                 FLAG_BACK1 = 1
                 c.Flag += 1048576
             countback += 1
-    return bxcntr, bycntr, skysig
+    os.system('rm -f BackMask.fits')
+    BackMask = n.swapaxes(BackMask, 0, 1)
+    hdu = pyfits.PrimaryHDU(BackMask)
+    hdu.writeto('BackMask.fits')
+    return back_ini_xcntr, back_ini_ycntr, skysig

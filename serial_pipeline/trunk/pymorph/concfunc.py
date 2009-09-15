@@ -66,7 +66,11 @@ class concentration:
 		Flag_check = 1
 #	calculating the eta parameter
 #		print self.divide_r,self.r,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius
-		self.total_rad = eta_radius_fnc(self.divide_r,self.r,self.mask,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius)
+		try:
+ 		    self.total_rad = eta_radius_fnc(self.divide_r,self.r,self.mask,self.nxpts,self.nypts,self.background,self.incr,self.eta_radius)
+		except:
+		    self.total_rad = 9999
+		    print 'Cannot Find PetroRadius. May be problem with mask'
 #		print self.total_rad
 		if(self.total_rad == 9999):
 			self.concen=9999
