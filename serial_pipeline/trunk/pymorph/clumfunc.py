@@ -1,7 +1,6 @@
 import numpy as n
 import os
 import pyfits
-from pyraf import iraf
 import convolve as conv
 #import scipy
 #import scipy.signal

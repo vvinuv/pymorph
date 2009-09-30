@@ -10,7 +10,6 @@ from asymfunc import *
 from clumfunc import *
 from ginifunc_modi import *
 #from momentfunc import *
-from pyraf import iraf
 from runsexfunc import *
 
 class CasGm:
