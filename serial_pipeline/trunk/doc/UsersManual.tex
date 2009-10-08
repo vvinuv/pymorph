@@ -16,7 +16,7 @@
 \begin{Huge}PyMorph\end{Huge}
 
 \begin{large}
-[Python MORphological Parameters Hunter]
+%[Python MORphological Parameters Hunter]
 \end{large}
 \vspace{5cm}
 \begin{center}
@@ -46,11 +46,12 @@ Authors\end{center}
 The pipeline will work in different modes. They are described shortly as follows.
 
 \subsubsection{Normal Mode}
+In normal mode, user will be able give two kind of inputs
 \begin{itemize}
 \item 
 a. Galaxy(ies) in a large field
 \item
-b. Galaxy in a cutout image
+b. Galaxy(ies) in cutout image(s)
 \end{itemize}
 
 \subsubsection{Repeat Mode}
@@ -62,7 +63,7 @@ The fitting process can be failed due to several reasons. If we feel the fitting
 \subsubsection{Find and Fit}
 \begin{itemize}
 \item 
-Fit objects which in some magnitude range.
+Fit objects with in some magnitude range.
 \end{itemize}
 \subsubsection{Psf Selection}
 \begin{itemize}
@@ -72,16 +73,16 @@ a. Run PyMorph to find and extract psf from the image
 b. Find psf and run PyMorph
 \end{itemize}
 \subsection{Pre-Pipeline Procedure}
-\begin{itemize}
+\begin{enumerate}
  \item 
- 1. Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this MUST follow a particular order and that can be found in the appendix. This process is recommended as the PyMorph may keep the sky value at the SExtractor value during the decomposition. So running SExtractor needs care. In case if the PyMorph does not find any SExtractor catalogue it will make one using the default parameters.
+Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this MUST follow a particular order and that can be found in the appendix. This process is recommended, as the PyMorph may keep the sky value at the SExtractor value during the decomposition. So running SExtractor needs care. In case if the PyMorph does not find any SExtractor catalogue it will make one using the default parameters.
 \item
- 2. Make a file which contains the position, redshift information etc. of the galaxies which we are going to fit.
+Make a file which contains the position, redshift information etc. of the galaxies which we are going to fit.
 \item
- 3. Make psf. Either using PyMorph or by some other means
+Make psf. Either using PyMorph or by some other means
 \item
- 4. Edit the config.py which the configuration file for the pipeline. The parameters in the configuration file are described below
- \end{itemize}
+Edit the config.py which the configuration file for the pipeline. The parameters in the configuration file are described below
+\end{enumerate}
 
 \subsection{Input parameters}
 \begin{itemize}
@@ -97,12 +98,12 @@ b. Find psf and run PyMorph
 
 \item \textbf{sex\_cata:}
 \begin{itemize}
-\item[] The SExtractor catalogue of all the objects in the frame. In the case of large field you MUST supply the sextractror catalogue.
+\item[] The SExtractor catalogue of all the objects in the frame. If the user provide one SExtractor catalogue, PyMorph uses it. Otherwise it generate using the default SExtractor parameters. One can use the command line option \textit{--edit-conf} to change these parameters according to their images.
 \end{itemize}
 
 \item \textbf{clus\_cata:}
 \begin{itemize}
-\item[] The list of all the obects of interest. The possible columns in this file in the Section() and each column should have the title. The program need atleast gal\_id or gimg to run.
+\item[] The list of all the obects of interest. The possible columns in this file in the Section: \ref{cluscat} and each column should have the title. The program need atleast gal\_id or gimg to run.
 \end{itemize}
 
 \item \textbf{out\_cata:}
@@ -112,7 +113,7 @@ b. Find psf and run PyMorph
 
 \item \textbf{rootname}
 \begin{itemize}
-\item[] Root name. You can give just a blank '' to avoid using this.
+\item[] Root name. You can give just a blank '' to avoid using this. If you give a root name all the intermediate files and the name of the galaxy in the result file will be appended with this.
 \end{itemize}
 
 \item \textbf{psfselect}
@@ -124,7 +125,7 @@ b. Find psf and run PyMorph
 \item 2 $=>$ Select psf and run pipeline.
 \end{itemize}
 \item[] It is recommended to use psfselect = 1 and select psf. After having
- good psf, continue pipeline run using psfselect = 0. If you are hurry
+ good psf, continue pipeline run using psfselect = 0. If you are in hurry
  use psfselect = 2
 \end{itemize}
 
@@ -229,7 +230,7 @@ name should be psf_1216435-1203120.fits.
 
 \item[] \textbf{crashhandler}
 \begin{itemize}
-\item If it '1', then the PyMorph will handle the possible crashes and try to fix. The details can be found in the section\textbf{Working}
+\item If it '1', then the PyMorph will handle the possible crashes and try to fix. The details can be found in the Section \ref{crash}
 \end{itemize}
 
 \end{itemize}
@@ -351,6 +352,7 @@ center_deviation = 3.0               #< abs(center - fitted center)
 \end{verbatim}
 \end{footnotesize}
 \subsection{The parameters in clus\_cata}
+\label{cluscat}
 \begin{itemize}
 \item \textbf{ gal\_id:} The identifier of the galaxy.
 \item \textbf{ ra1, ra2, ra3:} The RA of the galaxy. ra1 is the degree part, ra2 is minute and ra3
@@ -488,7 +490,8 @@ In this mode user can fit objects without creating clus\_cata. PyMorph will ask 
  parameters. The user must create psf before going to run in this mode.
 \subsubsection{Psf Selection}
 One of most difficult problem during the Morphological parameter estimation is to get good psf. Even in the case of PyMorph the situation won't differ much. But PyMorph is providing a very handy tool to select the psf out of the frame. As one the collaborator tells, this procedure is something like playing computer game. It is interesting but need much care. The keywords in config.py, \textit{'psfselect'} and \textit{'starsize'} are the controlling parameters of the mode. By default PyMorph will find the nearest psf from the psf list. This will cause some problem while you are using cut image, where you will have one psf corresponding to one galaxy. Taking this in to account PyMorph will update the clus\_cata with one psf to each galaxy under the column \textit{'psf'}.
-\subsubsection*{Crash Handler}
+\subsubsection{Crash Handler}
+\label{crash}
 If the parameter \textit{crashhandler} is on in the config.py, it will be invoked in three situations
 \begin{itemize}
 \item Galfit crashes or one of the bulge / disk parameter hits the limit
