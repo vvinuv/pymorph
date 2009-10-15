@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,10pt]{article}
 \fontfamily{book antiqua}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -7,23 +7,32 @@
 \textwidth 15cm
 \textheight 23cm
 %\oddsidemargin -0.0in
-%\oddsidemargin -10 true pt 
+\oddsidemargin -6 true pt 
 
 \begin{document}
 \begin{titlepage}
 \begin{center}
 
-\begin{Huge}PyMorph\end{Huge}
+\begin{Huge}PyMorph\end{Huge}\\
+\begin{Large}Software for \\Automated Galaxy Morphological Parameter Estimation\end{Large}\\
 
 \begin{large}
 %[Python MORphological Parameters Hunter]
 \end{large}
 \vspace{5cm}
-\begin{center}
-Authors\end{center}
 \vspace{0.5cm}
-\begin{Large}Vinu Vikram, Yogesh Wadadekar, Ajit K. Kembhavi \end{Large}
-
+\begin{Large}Vinu Vikram\end{Large}\\
+School of Pure \& Applied Physics\\
+Mahatma Gandhi University\\
+Kottayam, Kerala, India\\
+\vspace{0.3cm}
+\begin{Large}Yogesh Wadadekar\end{Large}\\
+National Centre for Radio Astrophysics\\
+Pune, India\\
+\vspace{0.3cm}
+\begin{Large}Ajit K. Kembhavi \end{Large}\\
+Inter-University Centre for Astronomy and Astrophysics (IUCAA)\\
+Pune, India
 \vspace{5cm}
 2008
 \end{center}
@@ -31,7 +40,7 @@ Authors\end{center}
 \tableofcontents
 \clearpage
 \section{PyMorph}
-{\bf PyMorph} is a pipeline, which gives non-parametric and parametric quantities in an automated way. PyMorph uses GALFIT (Peng et. al. 2002) for bulge disk decomposition of galaxy and SExtractor (Bertin et. al. 1996) for determining the initial values. PyMorph uses its own module to calculate the CASGM parameters. In this section I will explain the PyMorph in detail.
+{\bf PyMorph} is a software pipeline which computes non-parametric and parametric morphological parameters of galaxies. PyMorph uses GALFIT (Peng et. al. 2002) for bulge disk decomposition of galaxy and SExtractor (Bertin et. al. 1996) for determining the initial values. PyMorph uses its own module to calculate Concentration index, Asymmetry, Clumpness, Gini Coefficient, second order moment of the brightest 20\% pixels of galaxies(CASGM). In this section we will explain PyMorph in detail.
 \subsection{Dependencies}
 \begin{enumerate}
  \item Python 2.4 or greater
@@ -39,228 +48,140 @@ Authors\end{center}
  \item GALFIT
  \item SExtractor
  \item matplotlib
- \item xpa (optional, if you want to select psf)
+ \item xpa (optional, if you want to select PSF)
 \end{enumerate}
 
 \subsection{Working modes}
-The pipeline will work in different modes. They are described shortly as follows.
-
-\subsubsection{Normal Mode}
-In normal mode, user will be able give two kind of inputs
+The pipeline works in different modes. A short description of the available modes are the following
+\begin{enumerate}
+ \item Normal Mode : In normal mode, user will be able give two kind of inputs
 \begin{itemize}
 \item 
-a. Galaxy(ies) in a large field
+a. A large field(s) of galaxies. eg. HST-ACS/WFPC2, SDSS, 2MASS fields
 \item
 b. Galaxy(ies) in cutout image(s)
 \end{itemize}
 
-\subsubsection{Repeat Mode}
-\begin{itemize}
- \item 
-The fitting process can be failed due to several reasons. If we feel the fitting can be improved by adjusting the initial values or using an efficient mask, this mode can be used.
-\end{itemize}
+\item Repeat Mode : The parameter estimation process can be failed due to several reasons. If the user feels that the fitting can be improved by adjusting the initial values or using an efficient mask, this mode can be used. Here the pipeline will run again on the failed galaxies using the user specified parameters and images. %with the experience gained from past.
+\item Find and Fit : Generate parameters of objects which satisfy the magnitude range specified by the user.
 
-\subsubsection{Find and Fit}
-\begin{itemize}
-\item 
-Fit objects with in some magnitude range.
-\end{itemize}
-\subsubsection{Psf Selection}
-\begin{itemize}
-\item 
-a. Run PyMorph to find and extract psf from the image
-\item
-b. Find psf and run PyMorph
-\end{itemize}
+\item PSF Selection : To select the PSFs from image
+
+\end{enumerate}
 \subsection{Pre-Pipeline Procedure}
 \begin{enumerate}
  \item 
-Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this MUST follow a particular order and that can be found in the appendix. This process is recommended, as the PyMorph may keep the sky value at the SExtractor value during the decomposition. So running SExtractor needs care. In case if the PyMorph does not find any SExtractor catalogue it will make one using the default parameters.
+Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this catalogue MUST follow a particular order and that can be found in the Appendix. This is recommended, as the PyMorph may keep the sky value at the SExtractor value during the 2D decomposition. So running SExtractor needs care. If PyMorph does not find any SExtractor catalogue it will create one using the default parameters.
 \item
-Make a file which contains the position, redshift information etc. of the galaxies which we are going to fit.
+Create a catalogue of galaxies for which the user wants to generate the morphological parameters. The possible columns in the catalogue can be seen the Section \ref{cluscat}. If the FindAndFit mode is enabled, then the program will not search for this catalogue.
 \item
-Make psf. Either using PyMorph or by some other means
+Create PSF files% either using PyMorph or by some other means.
 \item
-Edit the config.py which the configuration file for the pipeline. The parameters in the configuration file are described below
+Edit the config.py which is the configuration file for the pipeline. The parameters in the configuration file are described in the Section \ref{inputp}.
 \end{enumerate}
 
 \subsection{Input parameters}
+\label{inputp}
 \begin{itemize}
-\item \textbf{imagefile:}
+\item \textbf{imagefile:} The large image frame.% This image will be used only if the user are decomposing galaxies in a large frame.
+
+\item \textbf{whtfile:} The corresponding rms/weight map of the large frame. If the name contains the string \textit{wht}/\textit{rms} then the program treats it as weight/rms image. If this file is not found the program will skip this step. 
+
+\item \textbf{sex\_cata:} The SExtractor catalogue of all the objects in the frame. If the user provide one SExtractor catalogue, PyMorph uses it. Otherwise it generate using the default SExtractor parameters in the pipeline. One can use the command line option \textit{--edit-conf} to change these parameters according to their images.
+
+\item \textbf{clus\_cata:} The list of all the objects of interest. The possible columns in this file are given in the Section: \ref{cluscat} and each column must have the title. The program needs at least \textit{gal\_id} or \textit{gimg} to run.
+
+\item \textbf{out\_cata:} The name of the output catalogue. Program will make a catalogue of all the galaxies for which the morphological parameters are generated.
+
+\item \textbf{rootname:} Root name. You can give just a blank '' to avoid this. If the program finds \textit{rootname}, it will be appended to all the intermediate files and the name of the galaxy in the result file.
+
+\item \textbf{psfselect:} Since selecting GOOD PSFs from large frames and make a list of them is time consuming, we have added a small utility which will help the user to find the PSF with out spending much time. This can be achieved by using the psfselect parameter. This parameter can take either 0, 1 or 2. The meaning of these are following
 \begin{itemize}
-\item[] The frame contains the galaxies. This will use only if you are decomposing galaxies in a large frame.
+\item 0 $=>$ The pipeline will continue with the user given PSFs.
+\item 1 $=>$ The pipeline will run only for finding PSFs.
+\item 2 $=>$ Find PSFs and run pipeline.
+\item[] It is recommended to use \textit{psfselect} = 1 and select PSFs first. After having
+ good PSFs, run pipeline with \textit{psfselect} = 0.
 \end{itemize}
 
-\item \textbf{whtfile:}
-\begin{itemize}
-\item[] The corresponding rms weight map of the large frame. If this file is not found the program will skip this step.
-\end{itemize}
-
-\item \textbf{sex\_cata:}
-\begin{itemize}
-\item[] The SExtractor catalogue of all the objects in the frame. If the user provide one SExtractor catalogue, PyMorph uses it. Otherwise it generate using the default SExtractor parameters. One can use the command line option \textit{--edit-conf} to change these parameters according to their images.
-\end{itemize}
-
-\item \textbf{clus\_cata:}
-\begin{itemize}
-\item[] The list of all the obects of interest. The possible columns in this file in the Section: \ref{cluscat} and each column should have the title. The program need atleast gal\_id or gimg to run.
-\end{itemize}
-
-\item \textbf{out\_cata:}
-\begin{itemize}
-\item[] The name of the output catalogue. This file is used to write all the galaxies detected by the program during the run.
-\end{itemize}
-
-\item \textbf{rootname}
-\begin{itemize}
-\item[] Root name. You can give just a blank '' to avoid using this. If you give a root name all the intermediate files and the name of the galaxy in the result file will be appended with this.
-\end{itemize}
-
-\item \textbf{psfselect}
-\begin{itemize}
-\item[] Since selecting GOOD psf and make a list of them is difficult, we have added a small utility which will help the users to find the psf with out spending much time. This can be achived by using the psfselect parameter. This parameter can take either 0, 1 or 2. The three possibilities are as follows
-\begin{itemize}
-\item 0 $=>$ No psf selection, ie. the pipeline will continue with the user supplied psfs.
-\item 1 $=>$ Only Select psf. The pipeline will run only for selecting psfs.
-\item 2 $=>$ Select psf and run pipeline.
-\end{itemize}
-\item[] It is recommended to use psfselect = 1 and select psf. After having
- good psf, continue pipeline run using psfselect = 0. If you are in hurry
- use psfselect = 2
-\end{itemize}
-
-\item \textbf{starsize}
-\begin{itemize}
-\item[] The size of the psf image in terms of the semi-major axis of the image. The size of the image will be\textit{ starsize * semi-major axis}
-\end{itemize}
-
-\item \textbf{psflist:}
-\begin{itemize}
-\item[] List of psfs. You can give it as a list like\textbf{ ['psf1.fts, 'psf2.fits', etc]} or give a file contains the psf name as\textbf{'@psflist.txt}'. The pipeline will select the nearest psf to the fitting galaxy either using the header or using the information from its name. If in the latter case, the psf's name should be in form\textbf{
- psf\_radec.fits}.
-\begin{verbatim}Eg. If the psf's position is (12:16:43.5, -12:03:12.0) then the 
+% \item \textbf{starsize}
+% \begin{itemize}
+% \item[] The size of the psf image in terms of the semi-major axis of the image. The size of the image will be\textit{ starsize * semi-major axis}
+% \end{itemize}
+\item \textbf{psflist:} List of PSFs. You can give it either as a list like \textbf{['psf1.fits, 'psf2.fits', etc]} or point to a file which contains the names of PSFs as \textbf{'@psflist.txt}'. The pipeline will select the nearest PSF to the object of interest either using the header information or using the information from its name. In the latter case, the PSF's name should have the form \textbf{ psf\_radec.fits}.
+\begin{verbatim}Eg. If the PSF's position is (12:16:43.5, -12:03:12.0) then the 
 name should be psf_1216435-1203120.fits.
 \end{verbatim}
-\item[]  This convention is used to find the nearest psf. The pipline will first check whether the mode is repeat. If repeat is false and if the program fails to find the configuration file, then it will try to find the coordinate information of the galaxy. If the program doesn't find the RA and DEC information of the galaxy, then it chooses the psf one by one from the list.
-\end{itemize}
+This convention is used to find the nearest PSF. The pipline will first check whether the mode is \textit{repeat}. If \textit{repeat} is false and if the program fails to find the configuration file, then it will try to find the coordinate information of the galaxy. If the program doesn't find the RA and DEC information of the galaxy, then it chooses the PSF one by one from the list.
 
-\item \textbf{mag\_zero:}
-\begin{itemize}
-\item[] Magnitude Zero point.
-\end{itemize}
+\item \textbf{mag\_zero:} Magnitude zero point.
 
-\item \textbf{mask\_reg, thresh\_area, threshold:}
-\begin{itemize}
-\item[] Masking will start for neighbors whose distance from the object greater than threshold * semi-major axis of the object and area of the neighbor less than thresh\_area sq.pixel. The masking will be done for a circular region of radius mask\_reg * semi-major axis of the neighbor with respect to the center of the neighbour. In the case of large
- frame, it is possible that some light from objects from outside the cutout can also contaminate the cutout. In that case the program is intelligent enough to mask those region and elliptical masking will be used for those cases.
-\end{itemize}
+\item \textbf{mask\_reg, thresh\_area, threshold:} Parameters for masking condition. It is explained in the Section \ref{normal}.
 
-\item \textbf{size:}
-\begin{itemize}
-\item[] This parameter is a list of five parameters which controls the size and shape of the stamp image of the galaxy. The size parameters are in the order
-\begin{verbatim}size = [resize, varsize, fracrad, square, fixsize]
+\item \textbf{size:} This parameter is a list of five quantities which controls the size and shape of the stamp image of the galaxy. The size parameters are in the order
+\begin{verbatim}
+size = [resize, varsize, fracrad, square, fixsize]
 \end{verbatim}
-
-\item \textit{resize} - This will be used when the user supply a cutout and
- wishes to resize that image. This particular parameter is useful when
- we have a large number of individual galaxy images from surveys like
+\begin{itemize}
+\item \textit{resize} - This will be used when the user supply a cutout of galaxy and
+ wants to resize the image. This particular parameter is useful when
+ we have a large number of frames from surveys like
  SDSS.
 
-\item \textit{varsize} - This parameter will be used to find the right image
- cutout size. When it is true the size of the image will be decided by
- using the half light radius.
+\item \textit{varsize} - This parameter will be used to find the image
+ cutout size. When it is true the size of the image will be decided from the half light radius of the galaxy.
 
-\item \textit{fracrad} - The size of the image w.r.t. the half light radius.
- Size of the image will be\textit{ fracrad} times half light radius of the
+\item \textit{fracrad} -  Size of the cutout image will be\textit{ fracrad} times half light radius of the
  galaxy.
 
-\item \textit{square} - This will decide whether the cutout is rectangular
- shaped or square shaped. For square shape, this will be 1.
+\item \textit{square} - This will decide the shape of the cutout. If it is true, then the cutout will be square otherwise a rectangle.
 
 \item \textit{ fixsize} - If the user wants to make an image of fixed size,
  this keyword will provide the size information.
-
 \end{itemize}
 
-\item \textbf{pixelscale}
-\item \textbf{H0, WM, WV:}
-\begin{itemize}
-\item[] Hubble parameter, Omega matter, Omega lambda
-\end{itemize}
+\item \textbf{pixelscale:}
+\item \textbf{H0, WM, WV:} Hubble parameter, $\Omega_M$, $\Omega_\Lambda$
 
-\item The following parameters are used for calculating the CASGM parameters.
-\begin{itemize}
-\item[] \textbf{back\_extraction\_radius:}
-\begin{itemize}
-\item The radius of the background region
-\end{itemize}
-\item[] \textbf{angle:}
-\begin{itemize}
-\item The angle of rotation for the calculation of asymmetry
-\end{itemize}
+\item \textbf{back\_extraction\_radius:} The radius of the background region which will be used to calculate the background asymmetry and background clumpness.
 
-\end{itemize}
+% \item[] \textbf{angle:}
+% \begin{itemize}
+% \item The angle of rotation for the calculation of asymmetry
+% \end{itemize}
 
 \item The following parameters decide the working mode of PyMorph
 \begin{itemize}
-\item[] \textbf{repeat:}
-\begin{itemize}
-\item Repeat the pipeline manually, if it is True
+\item[] \textbf{repeat:} If it is True, repeat the pipeline manually.
+\item[] \textbf{galcut:} True, if the input is cutout of galaxies.
+\item[] \textbf{decompose:} True, if the user wants to extract the structural parameters.
+\item[] \textbf{cas:} True, if user wants to find the CASGM parameters.
+\item[] \textbf{findandfit:} True, to run PyMorph for galaxies within some magnitude range.
+\item[] \textbf{crashhandler:} If it is True, then the PyMorph will handle the possible crashes during the pipeline process and try to fix those  errors in the next run. %The details can be found in the Section \ref{crash}
 \end{itemize}
 
-\item[] \textbf{galcut:}
-\begin{itemize}
-\item True if we provide cutouts
-\end{itemize}
-
-\item[] \textbf{decompose:}
-\begin{itemize}
-\item True, if you need 2D bulge disk decomposition
-\end{itemize}
-
-\item[] \textbf{cas:}
-\begin{itemize}
-\item True, if you need casgm parameters
-\end{itemize}
-
-\item[] \textbf{findandfit}
-\begin{itemize}
-\item '1', to use this mode otherwise '0'
-\end{itemize}
-
-\item[] \textbf{crashhandler}
-\begin{itemize}
-\item If it '1', then the PyMorph will handle the possible crashes and try to fix. The details can be found in the Section \ref{crash}
-\end{itemize}
-
-\end{itemize}
-
-\item \textbf{components:} The user can decide the components for fitting. By default PyMorph will with a disk and a bulge to the object. The available componets are bulge, disk and point.
+\item \textbf{components:} The user can decide the components for fitting. By default PyMorph assumes a disk and a bulge to model the light distribution of the galaxy. The available components are bulge, disk and point.
 \item \textbf{fitting} This is also a list of three parameters which can be used to fix/fit center and sky.
 \begin{verbatim} fitting = [bulge_center, disk_center, sky]
 \end{verbatim}
-The parameter are self explanatory.
-\item The following parameters are used to classify good/bad fit.
-\begin{itemize}
-\item[] \textbf{chi2sq:}
-\begin{itemize}
-\item Good fit if the Chi2Nu $<$ chi2sq
-\end{itemize}
+% \item The following parameters are used to classify good/bad fit.
+% \begin{itemize}
+% \item[] \textbf{chi2sq:}
+% \begin{itemize}
+% \item Good fit if the Chi2Nu $<$ chi2sq
+% \end{itemize}
+% 
+% \item[] \textbf{Goodness:}
+% \begin{itemize}
+% \item Good fit if the Goodness $>$ Goodness
+% \end{itemize}
 
-\item[] \textbf{Goodness:}
-\begin{itemize}
-\item Good fit if the Goodness $>$ Goodness
-\end{itemize}
-
-\item[] \textbf{center\_deviation:}
-\begin{itemize}
-\item Good fit if abs(center - fitted center) $<$ abs(center - fitted center)
-\end{itemize}
-
-\end{itemize}
+\item \textbf{center\_deviation:} Using this parameter, the user can specify the amount of deviation allowed for the center. If the fitted center deviates from the initial center more than this amount, that will be considered as a crash and refit the galaxy, provided the \textit{crashhandler} is True.
+% \end{itemize}
 
 \end{itemize}
 \subsection{config.py}
+Here is the configuration file for PyMorph.
 \begin{footnotesize}
 \begin{verbatim}
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar Ajit Kembhavi"""
@@ -270,7 +191,7 @@ whtfile = 'j8f643-1-1_drz_rms.fits'  #The weight image.
 sex_cata = 'j8f643_sex.cat'          #The sextractor catalogue which has 
                                      #the format given in the file
 clus_cata = 'cl1216-1201.cat'        #catalogue of galaxies from
-                                     #online catalogu service
+                                     #online catalogue service
                                      #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
 ###----Specify the output names of images and catalogues----###
@@ -287,7 +208,7 @@ starsize = 20                        #psf image size will be startsize times
                                      #the SMA given by SExtractor
 #psflist = ['psf_1216382-1200443.fits', 'psf_1216408-1200251.fits']
 psflist = '@psflist.list'
-                                     #List of psf containg their 
+                                     #List of psf contains their 
                                      #position information in the 
                                      #header (RA_TARG, DEC_TARG). 
                                      #Make psf with the names as here 
@@ -351,22 +272,22 @@ Goodness = 0.60                      #> Goodness
 center_deviation = 3.0               #< abs(center - fitted center)
 \end{verbatim}
 \end{footnotesize}
-\subsection{The parameters in clus\_cata}
+\subsection{Possible columns in clus\_cata}
 \label{cluscat}
 \begin{itemize}
 \item \textbf{ gal\_id:} The identifier of the galaxy.
 \item \textbf{ ra1, ra2, ra3:} The RA of the galaxy. ra1 is the degree part, ra2 is minute and ra3
  is the second part.
-\item \textbf{ dec1, dec2, dec3:} The DEC of the galaxy and have same syntax as RAM
+\item \textbf{ dec1, dec2, dec3:} The DEC of the galaxy and have same syntax as RA
 \item \textbf{ z:} The redshift of the galaxy
-\item \textbf{ gimg:} The galaxy image
+\item \textbf{ gimg:} The galaxy image if PyMorph runs in GALCUT mode (ie. input will be cutouts of galaxies).
 \item \textbf{ wimg:} The corresponding weight image
-\item \textbf{ cfile:} Configuration file for GALFIT
+\item \textbf{ cfile:} Configuration file for GALFIT (if user wants to run PyMorph manually)
 \item \textbf{ ximg:} The x center of the galaxy
 \item \textbf{ yimg:} The y center of the galaxy
-\item \textbf{ bxcntr:} The x center of the background for finding the CASGM parameters
-\item \textbf{ bycntr:} The y center of the background for finding the CASGM parameters
-\item \textbf{ psf:} The psf corresponding to the galaxy
+\item \textbf{ bxcntr:} The x center of the background to find the CASGM parameters
+\item \textbf{ bycntr:} The y center of the background to find the CASGM parameters
+\item \textbf{ psf:} The PSF corresponding to the galaxy
 \item \textbf{ flag:} This will be used when the\textit{ crashhandler} is on. See the Flags section to know more.
 \end{itemize}
 
@@ -393,8 +314,8 @@ gimg
 Ij8f647_EDCSNJ1216453-1201176.fits
 \end{verbatim}
 \end{footnotesize}
-Here we have assumed that the image \textit{Ij8f647\_EDCSNJ1216453-1201176.fit}s contains a galaxy within 10 pixels
- radius from the center. In the case of cut outs, the minimal configuration which uses all the PyMorph utilities is the following
+Here we assumed that the image \textit{Ij8f647\_EDCSNJ1216453-1201176.fit}s contains a galaxy within 10 pixels
+ radius from the center. In the case of cutouts, the minimal configuration which uses all the PyMorph functionalities is the following
 \begin{footnotesize}
 \begin{verbatim}
 gimg z
@@ -405,33 +326,33 @@ Ij8f647_EDCSNJ1216453-1201176.fits 0.79
 Some command line options are also available and are explained as follows
 \begin{itemize}
  \item 
-\textbf{ --edit-conf (-e):} PyMorph use some default set of parameters to generate SExtractor catalogue. Since these input parameters affect the SEXtractor output and so the fit, the users are asked to make there own SExtractor  catalogue. This option allows the user to edit the SExtractor configuration file interactively.
+\textbf{ --edit-conf (-e):} PyMorph uses default set of parameters to generate SExtractor catalogue. These parameters can affect the photometric output from SExtractor. This option allows the user to edit the SExtractor configuration file interactively.
 
 \item
-\textbf{ --force (-f): } Normally PyMorph will not generate SExtractor catalogue if it find one. Using this option user can generate SExtractor catalogue always.
+\textbf{ --force (-f): } Normally PyMorph will not generate SExtractor catalogue if it find one. Using this option user can force the pipeline to generate SExtractor catalogue.
 \item
-\textbf{ --with-psf: } By default, PyMorph will use the nearest psf from the psflist during decomposition. User can alter this behavior by this parameter. So \textit{--with-psf=0} takes the nearest psf, \textit{--with-psf=1} uses second nearest psf and soon. Using \textit{--with-psf=-1} one can use the farthest available psf. This will become particulary important in the case of testing psf variation over a large field / consistency of decomposition with psf.
+\textbf{ --with-psf: } By default, PyMorph will use the nearest PSF from the psflist during decomposition. User can alter this behavior by this parameter. So \textit{--with-psf=0} takes the nearest PSF, \textit{--with-psf=1} uses second nearest PSF and so on. By using \textit{--with-psf=-1} one can select the farthest available PSF. This option becomes  important when the user wants to test the results with different PSFs in the frame.
 \item
-\textbf{ --help (-h): } Help on running pymorph with option
+\textbf{ --help (-h): } 
 \item
-\textbf{ --lmag}, \textbf{ --umag:} Minimum and maximum magnitudes allowed during fitting. By default lmag = 100 and umag = -100. Same range will be used for both bulge and disk.
+\textbf{ --lmag}, \textbf{ --umag:} Magnitude constraints for GALFIT.
 \item
-\textbf{ --ln}, \textbf{ --un: } The minimum and maximum allowed values of Sersic index. Defaults are 0.1 and 20.0.
+\textbf{ --ln}, \textbf{ --un: } The minimum and maximum allowed values of Se\'rsic index. Defaults are 0.1 and 20.0.
 \item
 \textbf{ --lre},\textbf{ --ure: } Minimum and maximum allowed values of bulge scale length, re. Default 0 and 500 pixels.
 \item
 \textbf{ --lrd},\textbf{ --urd: } Minimum and maximum allowed values of disk scale length, rd. Default 0 and 500 pixels.
 \item
-\textbf{ --with-in: } Fitting will be done for objects which are NXPTS / 2 + with-in or NYPTS / 2 + with-in from the main object. By default it takes a value of 150. Usage: \textit{--with-in=150}.
+\textbf{ --with-in: } Fitting will be done for objects which are NXPTS / 2 + \textit{with-in} or NYPTS / 2 + \textit{with-in} from the main object. By default it takes a value of 150. Usage: \textit{--with-in=150}.
 \textbf{ --with-filter:} Manually give the filter. This will go to the database.
 \textbf{ --with-db:} The MySQL database name.
-\textbf{ --with-area:} The area of psf object.
+\textbf{ --with-area:} The area of PSFs.
 \end{itemize}
 
 \subsection{Working}
-The architecture of the PyMorph is show in the figures and explained as follows
+The architecture of the PyMorph is shown in the Figures \ref{fig:arch1}, \ref{fig:arch2} and explained as follows
 
- \begin{figure}[tbh!]
+ \begin{figure}%[tbh!]
  \centering
  \includegraphics[width=8cm, height=3.5cm, bb=0 0 641 234]{pipeline-arch1.png}
  % pipeline-arch1.png: 641x234 pixel, 72dpi, 22.61x8.26 cm, bb=0 0 641 234
@@ -439,125 +360,201 @@ The architecture of the PyMorph is show in the figures and explained as follows
  \label{fig:arch1}
 \end{figure}
 
-\begin{figure}[tbh!]
+ \begin{figure}%[tbh!]
  \centering
- \includegraphics[width=11cm, height=8.5cm, bb=0 0 656 492]{pipeline-arch2.png}
- % pipeline-arch2.png: 656x492 pixel, 72dpi, 23.14x17.36 cm, bb=0 0 656 492
- \caption{PyMorph Architechture}
+ \includegraphics[scale=0.5]{pipeline-full.png}
+ % pipeline-arch1.png: 641x234 pixel, 72dpi, 22.61x8.26 cm, bb=0 0 641 234
+ \caption{The PyMorph Architecture}
  \label{fig:arch2}
 \end{figure}
 
-\begin{figure}[tbh!]
- \centering
- \includegraphics[width=11cm, height=8.5cm, bb=0 0 794 596]{pipeline-arch3.png}
- % pipeline-arch3.png: 1058x794 pixel, 96dpi, 28.00x21.01 cm, bb=0 0 794 596
- \caption{PyMorph Architecture}
- \label{fig:arch3}
-\end{figure}
-
-\begin{figure}[tbh!]
- \centering
- \includegraphics[width=11cm, height=8.5cm, bb=0 0 794 596]{pipeline-arch4.png}
- % pipeline-arch4.png: 1058x794 pixel, 96dpi, 28.00x21.01 cm, bb=0 0 794 596
- \caption{PyMorph Repeat Mode}
- \label{fig:arch4}
-\end{figure}
+% \begin{figure}[tbh!]
+%  \centering
+%  \includegraphics[width=11cm, height=8.5cm, bb=0 0 656 492]{pipeline-arch2.png}
+%  % pipeline-arch2.png: 656x492 pixel, 72dpi, 23.14x17.36 cm, bb=0 0 656 492
+%  \caption{PyMorph Architecture}
+%  \label{fig:arch2}
+% \end{figure}
+% 
+% \begin{figure}[tbh!]
+%  \centering
+%  \includegraphics[width=11cm, height=8.5cm, bb=0 0 794 596]{pipeline-arch3.png}
+%  % pipeline-arch3.png: 1058x794 pixel, 96dpi, 28.00x21.01 cm, bb=0 0 794 596
+%  \caption{PyMorph Architecture}
+%  \label{fig:arch3}
+% \end{figure}
+% 
+% \begin{figure}[tbh!]
+%  \centering
+%  \includegraphics[width=11cm, height=8.5cm, bb=0 0 794 596]{pipeline-arch4.png}
+%  % pipeline-arch4.png: 1058x794 pixel, 96dpi, 28.00x21.01 cm, bb=0 0 794 596
+%  \caption{PyMorph Repeat Mode}
+%  \label{fig:arch4}
+% \end{figure}
 
 
 \subsubsection{Normal Mode with large field}
-\begin{itemize}
-\item It compare the galaxy catalogue (clus\_cata) and sextractor catalogue (sex\_cata) and if the pipeline find an object in the sextractor catalogue, it will make a stamp image and the correspoding weight map of the galaxy. The pipline first try to match the RA and DEC information in clus\_cata with sextractor catalogue. If the clus\_cata doesn't have any of the ra1, ra2, ra3 and dec1, dec2, dec3 column, the pipeline will try to compare it with
- the physical coordinate of the object in the frame. So it will search for columns with headers ximg and yimg. If these colums are also unavailable the pipeline will not find any objects in the case of large frame and exit.
-\item The pipeline will find the neighbour objects of the galaxy from the SExtractor catalogue.
-\item It makes a mask using the parameters supplied in the configuration file.
-\item It makes configuation file for running GALFIT using the SExtractor catalogue. Here the object will be fitted with Sersic + Exponential function and neighbours will be fitted by a single Sersic function.
-\item Run GALFIT
-\item Find the Physical parameters from the fitted one.
-\item It makes a mask for Ellipse task. The mask for Ellipse task and that of GALFIT are different. In the case of Ellipse mask all objects near the galaxy will be masked and the pipeline will use the ellipticity and position angle information to do that. But in the case of the GALFIT mask a circular masking will be done according to the parameters
- supplied in the configuration file.
-\item Run Ellipse task on the galaxy image using the SExtractor parameters as the initial values.
-\item Run Ellipse task on the model image of the galaxy.
-\item Compare the two 1-D profiles.
-\item It makes plots of galaxy, model, residual, histogram, mask and the 1-D profiles.
-\item It makes an html file and csv file contains the fitted parameters and casgm parameters.
-\end{itemize}
-\subsubsection{Normal Mode with cutouts}
- In this case also the pipeline does all the works as explained in the previous section. In addition to those, if you are supplying cutouts of galaxies, then the pipeline assumes the center of the object lies in the center of the cutout and assign the values of ximg and yimg as size/2.
-\subsubsection{Repeat Mode}
-In this mode, the pipeline assumes there is cutout of galaxies and it has made during the previous run. So if the clus\_cata contains the colums gimg or gal\_id, the pipeline runs for that galaxies. During this mode the pipeline will not make/alter any mask image and galfit configuration file, if they exists. So one can adjust his GALFIT configuration file / masking before running the pipeline in the REPEAT mode.
-\subsubsection{Find and Fit}
-In this mode user can fit objects without creating clus\_cata. PyMorph will ask the user some necessary information like the magnitude range, redshift and the object classification probability and find the morphological
- parameters. The user must create psf before going to run in this mode.
-\subsubsection{Psf Selection}
-One of most difficult problem during the Morphological parameter estimation is to get good psf. Even in the case of PyMorph the situation won't differ much. But PyMorph is providing a very handy tool to select the psf out of the frame. As one the collaborator tells, this procedure is something like playing computer game. It is interesting but need much care. The keywords in config.py, \textit{'psfselect'} and \textit{'starsize'} are the controlling parameters of the mode. By default PyMorph will find the nearest psf from the psf list. This will cause some problem while you are using cut image, where you will have one psf corresponding to one galaxy. Taking this in to account PyMorph will update the clus\_cata with one psf to each galaxy under the column \textit{'psf'}.
-\subsubsection{Crash Handler}
-\label{crash}
-If the parameter \textit{crashhandler} is on in the config.py, it will be invoked in three situations
-\begin{itemize}
-\item Galfit crashes or one of the bulge / disk parameter hits the limit
-\begin{itemize}
-\item[] Solution: Try to fit again with the following conditions
-\begin{itemize}
-\item Fix / free sky, if it is free / fix
-\item Fix / free centers of bulge and disk, if the centers are found free / fix
-\end{itemize}
-\end{itemize}
+\label{normal}
+PyMorph compares the user given galaxy catalogue (\textit{clus\_cata}) and SExtractor catalogue (\textit{sex\_cata}). If the pipeline finds an object in the SExtractor catalogue, it will create a stamp image and the corresponding weight map of the galaxy. Initially the pipeline try to match the RA and DEC information from the \textit{clus\_cata} with SExtractor catalogue using \textit{serachrad}. If the \textit{clus\_cata} doesn't have RA, DEC information the pipeline will try to compare it with the pixel coordinate of the object in the frame. For that it will search for columns with headers \textit{ximg} and \textit{yimg}. The pipeline stops if it does not find these columns. To find the structural parameters the pipeline works as follows.
 
-\item Reduced chi square is large
-\begin{itemize}
-\item[] Solution: Fix / free centers of bulge and disk, if the centers are found free / fix
-\end{itemize}
+The first step in 2D bulge-disk decomposition is the creation of stamp size image of the object. 
+The size of the image should be in such a way that the image must include enough sky and should not loose light from the outer part of the objects.
+An image with very large size will leads to the unnecessary usage of CPU.
+We use the FLUX\_RADIUS ($R_{50}$), THETA\_IMAGE ($\theta$), ELONGATION ($\frac{a}{b}$) values from SExtractor to find the required size of the cutout.
+Here the FLUX\_RADIUS corresponds to the half light radius ($R_{50}$) of the galaxy.
+The size of the stamp image will be found by the following formula
+\begin{equation}
+X = F_{\textrm{rad}} R_{50} \left(|\cos\theta| + \frac{b}{a} | \sin\theta |\right)
+\end{equation}
+\begin{equation}
+Y = F_{\textrm{rad}} R_{50} \left(| \sin\theta | + \frac{b}{a} | \cos\theta |\right)
+\end{equation}
+where X and Y are the x and y dimension of the stamp image. 
+$F_{rad}$ is the user specified controlling parameters.
+In our case we found $F_{rad} = 6$ is a good compromising value for the determination of the postage stamp.
+We cut same portion of the noise map and use it as the weight image to GALFIT.
 
-\item Fake center
-\begin{itemize}
-\item[] Solution: Fix centers of bulge and disk.
-\end{itemize}
-\end{itemize}
-The schematic diagram of crash handle is as following
+GALFIT allows us to fit more than one objects simultaneously.
+We fit a single Se\'rsic function to the neighbour objects to reduce the contamination from these objects to the main galaxy.
+So the next step is to find the neighbour objects and determine whether it should be fitted simultaneously with the main object.
+To do that, we use SExtractor A\_IMAGE (R) and ISO0 (A) parameters of both objects and neighbour.
+The criterion for simultaneous fit is the following
+\begin{eqnarray}
+|x_o - x_n| &<& T_R (R_o + R_n) \quad \textrm{or} \nonumber \\
+|y_o - y_n| &<& T_R (R_o + R_n) \quad \textrm{or} \nonumber \\
+A_n &>& T_A A_o 
+\label{sim-fit}
+\end{eqnarray}
+where $x_o$, $x_n$, $y_o$, $x_n$ are the x and y centers of object and neighbour and $R_o$, $R_n$, $A_o$ and $A_n$ are the A\_IMAGE and ISO0 of object and neighbour. 
+We found the controlling parameters $T_R = 3.0$ and $T_A = 0.3$ are promising.
+We mask all the neighbour objects which does not satisfy the above criterion (Eqn \ref{sim-fit}).
+We mask all the pixels of the neighbour objects which satisfy $r < T_M R_n$, where r is the radius in an elliptical aperture. 
+We have used $T_M = 2.0$ so that all the pixels of the neighbour object will be masked.
+This masking technique will work only if SExtractor detect the neighbour object. 
+Since the detection depends on the DETECT\_THRESH and DETECT\_MINAREA parameters, it is possible that some furious pixels can left undetected by SExtractor.
+So we use the following simple technique to mask those furious pixels.
+From the center of the main object we make elliptical annuli with increasing radii.
+In the inner aperture we find the maximum value of the galaxy.
+We assume a smooth distribution for the galaxy's light profile which decreases from the center.
+This implies the largest value in the central elliptical aperture is the maximum value the object can have.
+So we mask all the other pixels outside the inner aperture with value greater than this maximum value.
+Now we go to next annulus and find the maximum and mask other pixels outside this aperture which has value larger than the maximum of this aperture.
+This procedure continue till the aperture radius hit the image limit.
+Then we use a set of binary morphology operations to clean the mask.
+Now almost all the furious pixels and undetected objects will be masked properly and we combine this with the neighbour mask.
+
+Next step is to find initial values for the fitting parameters.
+To each galaxy in the catalogue we fit a Se\'rsic and exponential functions.
+The Se\'rsic function which is used to model the luminosity profile of the bulge part is given by
+\begin{equation}
+ I(r) = I_e e^{-b_n (\frac{r}{r_e}^{1/n} - 1)}
+\end{equation}
+ and the exponential function which model the disk part of the galaxy is given by
+\begin{equation}
+ I(r) = I_d e^{-\frac{r}{r_d}}
+\end{equation}
+where $r_e$ is the bulge scale length, $n$ is the Se\'rsic index and $r_d$ is the disk scale length. $b_n$ is a parameter which depends on the Se\'rsic index.
+
+GALFIT accepts the initial values of the total magnitude, scale radii, axis ratios and position angles of bulge and disk and Se\'rsic index of the bulge.
+We set MAG\_AUTO value from SExtractor as the input value to the total magnitudes of both bulge and disk.
+For the scale radii we give the half light radius of the galaxy.
+By default PyMorph set the initial value for Se\'rsic index (n) to 4, which corresponds to de Vaucouleurs' law.
+After setting the initial value we create a contrain file, which restrict the free parameters from going to unphysical values during the fit.
+The position angle and axis ratio are set from the values of the THETA\_IMAGE and ELONGATION parameters.
+
+The estimation of CASGM parameters are explained in the Section \ref{casgm}. Finally the pipeline creates diagnostic plots (Figures 3, 4) and results in different formats which includes html, csv, mysql database and fits cutouts.
 \begin{figure}
  \centering
- \includegraphics[width=10cm, height=5.7cm, bb=0 0 635 363]{pipeline-arch5.png}
- % pipeline-arch5.png: 635x363 pixel, 72dpi, 22.40x12.81 cm, bb=0 0 635 363
- \caption{Crash Handler}
- \label{fig:arch5}
+ \includegraphics[scale=0.5]{P_Ij8f648_EDCSNJ1216446-1201089.png}
+ % P_Ij8f648_EDCSNJ1216446-1201089.png: 666x402 pixel, 72dpi, 23.49x14.18 cm, bb=0 0 666 402
+ \label{fig:output}
+\caption{Output image from PyMorph}
 \end{figure}
 
+\begin{figure}
+ \centering
+ \includegraphics[scale=0.3]{pymorph-html.jpg}
+ % P_Ij8f648_EDCSNJ1216446-1201089.png: 666x402 pixel, 72dpi, 23.49x14.18 cm, bb=0 0 666 402
+ \label{fig:html}
+\caption{HTML output from PyMorph}
+\end{figure}
+\subsubsection{Normal Mode with cutouts}
+ In this mode the pipeline follows the same route as explained in the previous section. In this case if the program doesn't find the RA, DEC information or the centroid of the object, it extract the morphological parameters of the object in the center of the image. 
+\subsubsection{Repeat Mode}
+During this mode of run the pipeline will not create or modify the mask image or GALFIT configuration file, if they exist. So one can adjust his GALFIT configuration file / mask image before running the pipeline in the REPEAT mode.
+\subsubsection{Find and Fit}
+In this mode user can fit objects without creating \textit{clus\_cata}. The user has to give the magnitude range of the object to be fitted. This is useful when one wants to find the quantitative morphology of all the objects in the frame. 
+% \subsubsection{Psf Selection}
+% One of most difficult problem during the Morphological parameter estimation is to get good psf. Even in the case of PyMorph the situation won't differ much. But PyMorph is providing a very handy tool to select the psf out of the frame. As one the collaborator tells, this procedure is something like playing computer game. It is interesting but need much care. The keywords in config.py, \textit{'psfselect'} and \textit{'starsize'} are the controlling parameters of the mode. By default PyMorph will find the nearest psf from the psf list. This will cause some problem while you are using cut image, where you will have one psf corresponding to one galaxy. Taking this in to account PyMorph will update the clus\_cata with one psf to each galaxy under the column \textit{'psf'}.
+% \subsubsection{Crash Handler}
+% \label{crash}
+% If the parameter \textit{crashhandler} is on in the config.py, it will be invoked in three situations
+% \begin{itemize}
+% \item Galfit crashes or one of the bulge / disk parameter hits the limit
+% \begin{itemize}
+% \item[] Solution: Try to fit again with the following conditions
+% \begin{itemize}
+% \item Fix / free sky, if it is free / fix
+% \item Fix / free centers of bulge and disk, if the centers are found free / fix
+% \end{itemize}
+% \end{itemize}
+% 
+% \item Reduced chi square is large
+% \begin{itemize}
+% \item[] Solution: Fix / free centers of bulge and disk, if the centers are found free / fix
+% \end{itemize}
+% 
+% \item Fake center
+% \begin{itemize}
+% \item[] Solution: Fix centers of bulge and disk.
+% \end{itemize}
+% \end{itemize}
+% The schematic diagram of crash handle is as following
+% \begin{figure}
+%  \centering
+%  \includegraphics[width=10cm, height=5.7cm, bb=0 0 635 363]{pipeline-arch5.png}
+%  % pipeline-arch5.png: 635x363 pixel, 72dpi, 22.40x12.81 cm, bb=0 0 635 363
+%  \caption{Crash Handler}
+%  \label{fig:arch5}
+% \end{figure}
+
 \subsection{Filenames}
-The PyMorph will output a number of files and those filenames has adopted a unique format. The filename convention is illustrated below. Suppose in the config.py the parameter rootname = j8f645 and gal\_id, which is the name of the galaxy in the clus\_cata is 9999, then
+The PyMorph makes a number of files and those filenames follow unique format. The filename convention is illustrated below. Suppose in the config.py the parameter \textit{rootname} = j8f645 and \textit{gal\_id}, which is the name of the galaxy in the \textit{clus\_cata} is 9999, then
 \begin{itemize}
 \item \textbf{Ij8f645\_9999.fits:} The cut out of the galaxy.
-\item \textbf{Wj8f645\_9999.fits:} Correspoding weight image for the cuts.
-\item \textbf{Mj8f645\_9999.fits:} Galfit mask.
-\item \textbf{EMj8f645\_9999.fits:} for ellipse task.
+\item \textbf{Wj8f645\_9999.fits:} Corresponding weight image.
+\item \textbf{Mj8f645\_9999.fits:} Mask image for GALFIT.
+\item \textbf{EMj8f645\_9999.fits:} Mask image for ellipse fitting.
 \item \textbf{EMj8f645\_9999.fits.p:l} EMj8f645\_9999.fits will be converted to EMj8f645\_9999.fits.pl for
  ellipse task.
 \item \textbf{Gj8f645\_9999.in:} Configuration file for GALFIT.
-\item \textbf{Oj8f645\_9999.fits:} The ouput image from galfit.
-\item \textbf{fit2.log:} The output parametrs will be append to this file
-\item \textbf{error.log:} The process status of the pipeline can be seen in the file
-\item \textbf{E\_j8f645\_9999.txt:} The ellipse task output of input image.
-\item \textbf{OE\_j8f645\_9999.txt:} The ellipse task output of output image.
+\item \textbf{Oj8f645\_9999.fits:} The output image from GALFIT.
+\item \textbf{fit2.log:} The output parameters will be append to this file
+\item \textbf{error.log:} The status of the process. From this file the user gets the information about crashes.
+\item \textbf{E\_j8f645\_9999.txt:} 1D surface brightness profile of the input image.
+\item \textbf{OE\_j8f645\_9999.txt:} 1D surface brightness profile of the model.
 \item \textbf{P\_j8f645\_9999.png:} The plot of input, output, residue images and the 1-D profile comparison.
-\item \textbf{R\_j8f645\_9999.html:} The html output including the figures and parameters.
-\item \textbf{index.html:} The index file of all the fit will be in this.
+\item \textbf{R\_j8f645\_9999.html:} The html output.
+\item \textbf{index.html:} The index file of all the objects.
 \item \textbf{result.csv:} The csv file contains all the parameters
-\item \textbf{agm\_result\_with\_radius.csv:} The file contains the radial variation of Asymmetry , Gini coefficients and M20
-\item \textbf{restart.cat:} The catalogue contains all the objects with the corresponding lines in the clus\_cata. This catalogue can be used to restart the pymorph in the case of failed galaxies.
-\item \textbf{CRASH.CAT:} Probably the user may not want to use this. This will be used in the case of crash handling.
+\item \textbf{agm\_result\_with\_radius.csv:} The file contains the radial variation of Asymmetry , Gini coefficients and M20. Also $r_{20}$, $r_{50}$, $r_{80}$, $r_{90}$, Petrosian radius etc. are included.
+\item \textbf{restart.cat:} The catalogue contains all the failed objects with the corresponding lines in the \textit{clus\_cata}. This catalogue can be used to restart the PyMorph in the case of failed galaxies.
+\item \textbf{CRASH.CAT:} Probably the user may not want to use this. This will be used by the pipeline if the \textit{crashhandler} is True.
 \end{itemize}
 
-\section{CASGM Description}
-
-Concentration, Asymmetry, Clumpness, Gini coefficient and Moment of the galaxy (CASGM) are the quanties which have been used for the last few years to describe galaxy morphology and estimation of its evolution in the Non-parameteric way (Abraham et. al. 1996; Bershady et. al., Conselice et. al. 2003; Lotz et. al. 2004). We are describing the method we adopted to find these parameters in \textbf{PyMorph}.
+\section{CASGM Module}
+\label{casgm}
+ Concentration, Asymmetry, Clumpness, Gini coefficient and Moment of the galaxy (CASGM) are widely used to generate quantitative galaxy morphology, for the last few years. %(Abraham et. al. 1996; Bershady et. al., Conselice et. al. 2003; Lotz et. al. 2004). 
+In this section we describe the implementation of these parameters in \textbf{PyMorph}.
 
 \subsection{Concentration (C)}
 
-1. It will find the radius $r_{\eta}$ where Petrosian parameter ($\eta$) is 0.2 The Petrosian parameter is defind as follows
+1. Find the Petrosian radius $r_{\eta}$ at which parameter ($\eta$) becomes 0.2. The Petrosian parameter, $\eta$,  is defined as 
 \begin{equation}
 \eta = \frac{L(R)}{L(<R)}
 \end{equation}
 
-L(R) is the light at a radius R and $L(<R)$ is the total light inside the radius R.
+L(R) is the average surface brightness at the radius R and $L(<R)$ is the average brightness inside the radius R.
 
 \begin{figure}[h]
 \begin{center}
@@ -568,14 +565,14 @@ $\begin{array}{c@{\hspace{1cm}}c}
 \end{array}$
 \end{center}
 \caption{Portion of galaxy within $r_{20}$ and $r_{80}$ }% \protect\ref{C and A}}
-\label{Original and Rotated}
+\label{concentration}
 \end{figure}
 
-2. Find the total light as the light inside $1.5 \times r_{\eta}$.
+2. Find the total light of the galaxy as the light inside $1.5 \times r_{\eta}$.
 
 3. Find the $80\%$ and $20\%$ light contained radii. ie. $r_{80}$ and  $r_{20}$.
 
-4. Find the concentration using the equation
+4. The concentration index will be found using the equation
 \begin{equation}
 C= 5 \log(\frac{r_{80}}{r_{20}})
 \end{equation}
@@ -585,7 +582,7 @@ C= 5 \log(\frac{r_{80}}{r_{20}})
 
 1. Define an extraction region of radius $1.5 \times r_{\eta}$.
 
-2. Rotating the image \footnote{The image used here is of NGC 5585 in R band.} by $180^0$
+2. Rotate the image \footnote{The image used here is of NGC 5585 in R band.} by $180^0$
 
 3. Find the asymmetry parameter using the equation
 \begin{equation}
@@ -593,9 +590,9 @@ A = \frac{\sum\left|I_0 - I_\phi\right|}{2\sum |I_\phi|}
 \end{equation}
 where $I_\phi$ is the rotated image and $I_0$ is the original image.
 
-4. Centering correction has been applied by minimizing the A value with center.
+4. Centering correction will be applied by minimizing the A value w.r.t. center.
 
-5. Noise correction has also been done by subtracting the asymmetry of the background from the image asymmetry.
+5. Noise correction will also be done by subtracting the asymmetry of the background from the image asymmetry.
 
 
 \begin{figure}[h]
@@ -613,9 +610,9 @@ $\begin{array}{c@{\hspace{1cm}}c@{\hspace{1cm}}c}
 
 \subsection{Clumpness (S)}
 
-1. Smoothing the image with a boxcar of size $r_{\eta}/4$
+1. Smooth the image with a boxcar of size $r_{\eta}/4$
 
-2. Removing the center region of radius $r_{\eta}/4$, since the center region is not resolved.
+2. Remove the center region of the galaxy within a radius $r_{\eta}/4$ as the center is not always resolved.
 
 3. Clumpness parameter can be computed using the equation
 \begin{equation}
@@ -624,7 +621,7 @@ S = 10\times \frac{I - I^\sigma}{I}
 
 where I is the original image and $I^\sigma$ is the smoothed image.
 
-4. Substract the background clumpness to get the final clumpness.
+4. Subtract the background clumpness to get the final clumpness.
 
 \begin{figure}[h]
 \begin{center}
@@ -640,17 +637,14 @@ $\begin{array}{c@{\hspace{1cm}}c@{\hspace{1cm}}c}
 \end{figure}
 
 \subsection{Gini coefficient (G)}
-Gini coefficient tells how the galaxy light distributed among the pixels. Its value lie in between 0 and 1. If all the light is concentrated in one pixel, then G will be 1 and if all the light distributed uniformly among the pixels, then G will be zero.
-1. Find the pixels in the image which belong to the galaxy, ie. make a segmentation map. This can be done by smoothing the image by a boxcar of size   $r_{\eta}/5$
+Gini coefficient quantifies galaxy's light distribution among the pixels. Its value lie in between 0 and 1. If all the light is concentrated in one pixel, then G will be 1 and if the light distributed uniformly among the pixels, then G will be zero. To find Gini coefficient we use the following technique
 
-2. The surface brightness at $r_{\eta}$, $\mu_{\eta}$ is measured and pixels in the smoothed image with flux values greater than $\mu_{\eta}$ and less than $10 \sigma$ is assigned to the galaxy. $\sigma$ is the sky deviation and it assures that any remaining cosmic rays or spurious noise pixels in the image are not  included in the segmentation map.
+1. Create a segmentation map, ie, find the pixels belong to the galaxy. To do this we smooth the image by a boxcar of size $r_{\eta}/5$. This will increase the signal-to-noise ratio at the outer regions of the galaxy. The surface brightness $\mu_{\eta}$ at $r_{\eta}$ is measured and pixels in the smoothed image with flux values greater than $\mu_{\eta}$ and less than $10 \sigma$ is assigned to the galaxy. $\sigma$ is the sky deviation in the image. The upper limit assures that any remaining cosmic rays or spurious noise pixels in the image are not included in the segmentation map.
 
-3. The Gini coefficient can be computed by the equation
+2. Sort the pixels in the segmentation map according to their photon counts and the Gini coefficient will be computed using the equation
 \begin{equation}
 G = \frac{1}{\overline{X} n (n-1)}\sum_{i}^n(2i-n-1)X_i
 \end{equation}
-
- where the pixels in the segmentation map is sorted.
 
 \begin{figure}[h]
         \centering
@@ -661,128 +655,76 @@ G = \frac{1}{\overline{X} n (n-1)}\sum_{i}^n(2i-n-1)X_i
 \end{figure}
 
 \subsection{The Moment of the Light (M20)}
-1. The total second-order moment $M_{tot}$ is the flux in each pixel $f_i$ multiplied by the squared distance to the center of the galaxy, summed over all the galaxy pixels assigned by the segmentation map.
+$M_{20}$ is the second order moment of the brightest $20\%$ pixels of the galaxy.
+
+1. Find the second-order moment $M_{tot}$ of the galaxy. Here only the pixels belongs to segmentation map will be considered. We use the following equation to find $M_{tot}$
 \begin{equation}
 M_{tot}=\sum_{i}^n M_i=\sum_{i}^n f_i\left[ (x_i-x_c)^2 +(y_i-y_c)^2\right]
 \end{equation}
 
-
 where $x_c, y_c$ is the galaxy's center.
 
-2. The center is computed by finding $x_c, y_c$ such that $M_{tot}$ is minimized.
+2. Minimize $M_{tot}$ w.r.t. center of the galaxy.
 
-3. Define $M_{20}$ as the brightest $20\%$ of the galaxy's flux.
-
-4. To compute $M_{20}$, sort the pixels by flux, sum $M_i$ over the brightest pixels until the sum of the brightest pixels equals $20\%$  of the total galaxy flux, and then normalize by $M_{tot}$.
+3. Sort the pixels by flux, sum $M_i$ over the brightest pixels until the sum of the pixel values equals $20\%$  of the total galaxy flux, and then normalize by $M_{tot}$.
 \begin{equation}
 M_20 = \log\left( \frac{\sum M_i}{M_{tot}}\right)
 \end{equation}
 
 while $\sum_i f_i <0.2 f_{tot}$
 
-5. $f_{tot}$ is the total flux of the segmentation map. The normalization by $M_{tot}$ removes the dependence  on total galaxy flux or size.
-\section{2 dimensional Decomposition}
-Two dimensional decomposition is the parametric way of describing galaxy light profile in terms of analytical functions. de Vaucouleurs (1948) observed that light profile of elliptical galaxy can be described by the analytical function
-\begin{equation}
-\Sigma(r) = \Sigma_e e^{-7.87 (\frac{r}{r_e})^{\frac{1}{4}}}
-\end{equation}
-In general, the bulge part of a galaxy can be modelled by Sersic(1968) function
-\begin{equation}
- \Sigma(r) = \Sigma_e e^{-\kappa (\frac{r}{r_e})^{\frac{1}{n}}}
-\end{equation}
-where $\Sigma_e$ is the surface brightness of the galaxy at the effective radius $r_e$, $n$ is the Sersic index, $\kappa = 2n - 0.331$ is a function of $n$. The elegance of Sersic profile is that it gives de Vaucouleurs profile when $n = 1$  and exponential profile for $n = 1$, which is used to model the disk part of the galaxy.
-\begin{equation}
-\Sigma(r) = \Sigma_0 e^{-\frac{r}{r_d}}
-\end{equation}
-where $r_d$ is the disk scale length and $\Sigma_0$ is the central surface brightness.
+where $f_{tot}$ is the total flux of the segmentation map. The normalization by $M_{tot}$ removes the dependence  on total galaxy flux or size.
 
-\section{Methods}
-\subsection{Masking}
-In PyMorph masking will be done separately for ellipse task and for decomposition. In the case of ellipse task all the neighbors are masked using the SExtractor information. But SExtractor can be failed to resolve small objects near the brighter ones. In that case the PyMorph will try to find those using the following method.
-\begin{itemize}
-\item It will find the maximum value inside a small radius of the object
- of our interest.
-\item It will search any other pixels out side the small radius above the
- maximum. If there are something it will mask mask those pixels. Then
- using that mask, the image will be masked. The central part where the
- maximum is found will also be masked. Then the radius will be increased
- further and again find the maximum inside that. This will continue till
- the image boundary.
-\item If it doesn't find any pixels above the maximum, the program will
- increase the radius and go on.
-\item After it reaches the image boundary, using the\textbf{ ndimage}\textit{
- fill\_hole} and\textit{ erosion} functions suitable operations on
- masking will be done. This will remove one pixel mask etc. In the case
- of masking for decomposition, only object which doens't fit will be
- masked.
-\end{itemize}
+\section{Parallel PyMorph}
+We have parallelized the pipeline based on Single Program, Multiple Data technique. The algorithm used here is shown in the Figure \ref{fig:para}. In this implementation we will have a master processor and $N_P$ slaves. The master will do the pre-processing and post-processing. In the pre-processing part the master processor will create stamp image of the galaxy and pass it to the slave. This process continues until the number of jobs ($N_J$) less than $N_P$. The slave runs PyMorph in the GALCUT mode and send the result to the master. As soon as the master get the result from the $N^{th}$ slave it creates cutout of another galaxy and send to the same processor. Finally, the master generate a final result file which is the only post-processing part. We have tested the parallel PyMorph and found that if we increase the number of slaves 10 fold, then the time requires to generate the parameters decreases $\sim$ 6 fold.
+\begin{figure}
+ \centering
+ \includegraphics[scale=0.6]{parallel-dia.png}
+ % parallel-dia.png: 630x400 pixel, 72dpi, 22.23x14.11 cm, bb=0 0 630 400
+ \label{fig:para}
+\caption{The schematic diagram of Parallel PyMorph. $N_P$ is the number of slaves and $N_J$ is the number of jobs}
+\end{figure}
 
-
-\subsection{Sky Sigma and Background region}
-If the user supply the background center, PyMorph will find the sky deviation from that region. But if these
- parameters are not given, then the Pymorph will calculate the sky deviation first and then using this find the background region. To find the sky deviation, the PyMorph will first mask all the object detected in the cutout. Then
- using that mask find the sky deviation. Since the estimation of CASGM parameters needs to know a background region of size \textit{back\_extraction\_radius} defind in the config.py. So the process is as follows
-\begin{itemize}
-\item Take an initial point ($\frac{back\_extraction\_radius}{2}$, $\frac{back\_extraction\_radius}{2}$) in the image.
-\item Find the sky deviation within a region of radius \textit{back\_extraction\_radius}. If this deviation is less than the n * sky sigma (where n = 2 as starting value), take that region as background region, else go to the point ($\frac{back\_extraction\_radius}{2} + 2.0$, $\frac{back\_extraction\_radius}{2} + 2.0$).
-\item The above process will go on till it reaches ($size - \frac{back\_extraction\_radius}{2}$ , $size - \frac{back\_extraction\_radius}{2}$) where size is the image size.
-\item Still the result is negative, increase n from 2 to 3 and continue the process till we find the background region.
-\item This process has disadvantage as it won't consider the gradient of sky.
-\end{itemize}
-\subsection*{Goodness}
-It is defind as the ratio of number pixels within n times sky sigma around sky value to the total number of pixels.
-
-\subsection{Flags}
-The flags used in PyMorph are the following
-
-\begin{center}
-% use packages: array
-\begin{tabular}{ll}
-Flag & Explanation \\ 
-1 & Repeat Mode \\ 
-2 & Fit bulge center \\ 
-4 & Fit disk center \\ 
-8 & Fit sky \\ 
-16 & The cutimage extend goes outside the image \\ 
-32 & Galaxy ellipse failed \\ 
-64 & Casgm failed \\ 
-128 & Galfit failed \\ 
-256 & Plotting failed \\ 
-512 & Fitting bulge \\ 
-1024 & Fitting disk \\ 
-2048 & Fitting point \\ 
-4096 & Neighbour fit \\ 
-8192 & Large chisq  \\ 
-16384 & Low goodness \\ 
-32768 & Fake center \\ 
-65536 & Sersic parameter hit the limit \\ 
-131072 & Disk parameter hit the limit \\
-262144 & Asymmetry is not Converged \\
-524288 & Asymmetry calculation goes outside frame \\
-1048576 & Background region determination is poor \\
-\end{tabular}
-\end{center}
-
-\subsection{How to run PyMorph?}
-\begin{itemize}
-\item tar xzvf PyMorph.tar.gz
-\item cp config.py /your/data/area/where/you/want/to/run/pymorph
-\item Edit .cshrc file and give
-\begin{footnotesize}
-\begin{verbatim}
-setenv PYTHONPATH /path/to/PyMorph/pymorph
-alias pymorph '/path/to/PyMorph/pymorph.py'
-\end{verbatim}
-\end{footnotesize}
-\item cd /your/data/area/where/you/want/to/run/pymorph
-\item Edit config.py and add path to your GALFIT and SExtractor binaries.
-\item pymorph [options]
-\end{itemize}
+% \section{Methods}
+% \subsection{Masking}
+% In PyMorph masking will be done separately for ellipse task and for decomposition. In the case of ellipse task all the neighbors are masked using the SExtractor information. But SExtractor can be failed to resolve small objects near the brighter ones. In that case the PyMorph will try to find those using the following method.
+% \begin{itemize}
+% \item It will find the maximum value inside a small radius of the object
+%  of our interest.
+% \item It will search any other pixels out side the small radius above the
+%  maximum. If there are something it will mask mask those pixels. Then
+%  using that mask, the image will be masked. The central part where the
+%  maximum is found will also be masked. Then the radius will be increased
+%  further and again find the maximum inside that. This will continue till
+%  the image boundary.
+% \item If it doesn't find any pixels above the maximum, the program will
+%  increase the radius and go on.
+% \item After it reaches the image boundary, using the\textbf{ ndimage}\textit{
+%  fill\_hole} and\textit{ erosion} functions suitable operations on
+%  masking will be done. This will remove one pixel mask etc. In the case
+%  of masking for decomposition, only object which doesn't fit will be
+%  masked.
+% \end{itemize}
+% 
+% 
+% \subsection{Sky Sigma and Background region}
+% If the user supply the background center, PyMorph will find the sky deviation from that region. But if these
+%  parameters are not given, then the Pymorph will calculate the sky deviation first and then using this find the background region. To find the sky deviation, the PyMorph will first mask all the object detected in the cutout. Then
+%  using that mask find the sky deviation. Since the estimation of CASGM parameters needs to know a background region of size \textit{back\_extraction\_radius} defined in the config.py. So the process is as follows
+% \begin{itemize}
+% \item Take an initial point ($\frac{back\_extraction\_radius}{2}$, $\frac{back\_extraction\_radius}{2}$) in the image.
+% \item Find the sky deviation within a region of radius \textit{back\_extraction\_radius}. If this deviation is less than the n * sky sigma (where n = 2 as starting value), take that region as background region, else go to the point ($\frac{back\_extraction\_radius}{2} + 2.0$, $\frac{back\_extraction\_radius}{2} + 2.0$).
+% \item The above process will go on till it reaches ($size - \frac{back\_extraction\_radius}{2}$ , $size - \frac{back\_extraction\_radius}{2}$) where size is the image size.
+% \item Still the result is negative, increase n from 2 to 3 and continue the process till we find the background region.
+% \item This process has disadvantage as it won't consider the gradient of sky.
+% \end{itemize}
+% \subsection*{Goodness}
+% It is defined as the ratio of number pixels within n times sky sigma around sky value to the total number of pixels.
 
 \section{Appendix}
-As you know SExtractor needs a configuration file, output parameters file, convolution kernel file and Neural Network file for Star/Galaxy classification files for its execution. 
+SExtractor needs a configuration file, output parameters file, convolution kernel file and Neural Network file for Star/Galaxy classification files for its execution. 
 PyMorph uses the following files as default.
-\subsection{Parameter File}
+\subsection{SExtractor Configuration File}
 \begin{footnotesize}
 \begin{verbatim}
 #-------------------------------- Catalog ------------------------------------
@@ -864,7 +806,7 @@ WEIGHT_IMAGE     j8f631_drz_rms.fits    # weight-map filename
 WEIGHT_GAIN      N              # modulate gain (E/ADU) with weights? (Y/N)
 \end{verbatim}
 \end{footnotesize}
-\subsection{Output Parameters}
+\subsection{SExtractor Output Parameters}
 \begin{footnotesize}
 \begin{verbatim}
 NUMBER
@@ -887,16 +829,62 @@ CLASS_STAR
 MAG_BEST           Uses in the case of findandfit mode
 \end{verbatim}
 \end{footnotesize}
-\subsection{The Convolution Kernel}
+\subsection{SExtractor Convolution Kernel}
 \begin{footnotesize}
 \begin{verbatim}
 By default PyMorph uses 5x5 convolution mask of a Gaussian PSF with FWHM = 2.5 pixels.
 \end{verbatim}
 \end{footnotesize}
-\subsection{Neural Netwrok}
+\subsection{SExtractor Neural Netwrok File}
 \begin{footnotesize}
 \begin{verbatim}
 PyMorph uses the default.nnw file coming with SExtractor
 \end{verbatim}
 \end{footnotesize}
+\subsection{PyMorph Flags}
+The flags used in PyMorph are the following
+
+\begin{center}
+% use packages: array
+\begin{tabular}{ll}
+Flag & Explanation \\ 
+1 & Repeat Mode \\ 
+2 & Fit bulge center \\ 
+4 & Fit disk center \\ 
+8 & Fit sky \\ 
+16 & The cutimage extend goes outside the image \\ 
+32 & Galaxy ellipse failed \\ 
+64 & CASGM module failed \\ 
+128 & Galfit failed \\ 
+256 & Plotting failed \\ 
+512 & Fitting bulge \\ 
+1024 & Fitting disk \\ 
+2048 & Fitting point \\ 
+4096 & Neighbour fit \\ 
+8192 & Large chisq  \\ 
+16384 & Low goodness \\ 
+32768 & Fake center \\ 
+65536 & Se\'rsic parameter hit the limit \\ 
+131072 & Disk parameter hit the limit \\
+262144 & Asymmetry is not Converged \\
+524288 & Asymmetry calculation goes outside frame \\
+1048576 & Background region determination is poor \\
+\end{tabular}
+\end{center}
+
+\subsection{How to run PyMorph?}
+\begin{itemize}
+\item tar xzvf PyMorph.tar.gz
+\item cp config.py /your/data/area/where/you/want/to/run/pymorph
+\item Edit .cshrc file and give
+\begin{footnotesize}
+\begin{verbatim}
+setenv PYTHONPATH /path/to/PyMorph/pymorph
+alias pymorph '/path/to/PyMorph/pymorph.py'
+\end{verbatim}
+\end{footnotesize}
+\item cd /your/data/area/where/you/want/to/run/pymorph
+\item Edit config.py and add path to your GALFIT and SExtractor binaries.
+\item pymorph [options]
+\end{itemize}
 \end{document}
