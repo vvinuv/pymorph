@@ -537,6 +537,7 @@ def main():
                     pass
                 else: 
                     RunSex(gimg, wimg, 'None', 9999, 9999, 0)
+		    SexShallow(gimg, wimg, 'None', 9999, 9999, 0)
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -597,8 +598,25 @@ def main():
                         if c.URd == 500.0:
                             c.URd = halfradius * 10.0
                         mag_zero = c.mag_zero #magnitude zero point
-                        sky  = float(values[10]) #sky
-                        c.SexSky = float(values[10])
+			ShallowSky = 9999
+			if exists(str(c.sex_cata) + '.Shallow'):
+	                    f_sex_shallow = open(str(c.sex_cata) + \
+			                    '.Shallow', 'r')
+			    for line_shallow in f_sex_shallow:
+				v_shallow = line_shallow.split()
+				try:
+				    if str(v_shallow[19]) == str(values[0]):
+				        ShallowSky = float(v_shallow[10])
+				except:
+			            pass
+			    f_sex_shallow.close()
+			if ShallowSky == 9999:
+			    sky  = float(values[10]) #sky
+                            c.SexSky = float(values[10])
+			else:
+			    sky  = ShallowSky
+			    c.SexSky = ShallowSky
+			print sky, float(values[10])
 			c.SexMagAuto = float(values[17])
 			c.SexMagAutoErr = float(values[18])
                         pos_ang = pa(float(values[11]))
@@ -1716,8 +1734,10 @@ if __name__ == '__main__':
               'during the decomposition.'
         if exists(c.whtfile):
             RunSex(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
+	    SexShallow(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
         else:
             RunSex(c.imagefile, 'None', 'None', 9999, 9999, 0)
+	    SexShallow(c.imagefile, 'None', 'None', 9999, 9999, 0)
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
             obj_file = open(c.clus_cata,'r') 

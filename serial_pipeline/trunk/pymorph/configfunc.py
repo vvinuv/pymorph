@@ -42,6 +42,10 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
     config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
     constrain_file = str(cutimage)[:-5] + '.con'
+    try:
+	c.center_constrain = c.center_constrain
+    except:
+	c.center_constrain = 3.0
     if exists(constrain_file):
         MakeConstrain = 0
     else:
@@ -62,8 +66,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 		    '     ' + \
 		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                 else:
-                    f_constrain.write(str(cO) + '      x      -6.0     6.0\n')
-                    f_constrain.write(str(cO) + '      y      -6.0     6.0\n')
+                    f_constrain.write(str(cO) + '      x      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
+                    f_constrain.write(str(cO) + '      y      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
                 f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                         ' to ' + str(c.LMag) + '\n')
                 f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
@@ -81,8 +85,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 		    '     ' + \
 		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
                 else:
-                    f_constrain.write(str(cO) + '       x       -6.0      6.0\n')
-                    f_constrain.write(str(cO) + '       y       -6.0      6.0\n')
+                    f_constrain.write(str(cO) + '       x       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
+                    f_constrain.write(str(cO) + '       y       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
                 f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                         ' to ' + str(c.LMag) + '\n')
                 f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \

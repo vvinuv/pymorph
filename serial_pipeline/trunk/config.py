@@ -90,6 +90,7 @@ PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
 chi2sq = 1.9                          #< chi2sq
 Goodness = 0.60                       #> Goodness
 center_deviation = 3.0                #< abs(center - fitted center)
+center_constrain = 2.0                #Keep center within +/- center_constrain
 
 ###----Database Informations----###
 database = 'Cluster'

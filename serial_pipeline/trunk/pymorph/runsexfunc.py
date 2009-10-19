@@ -60,6 +60,34 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     f_sex = open(sex_conf, 'w')
     f_sex.write(template %vars())
     f_sex.close()
-    print 'SExtractor Detecting Objects ....'
+    print 'SExtractor Detecting Objects (Deep)....'
+    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
+    os.system(cmd)    
+
+def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
+    if sex_cata == 'None':
+        sex_cata = c.sex_cata + '.Shallow'
+    DeepCata = c.sex_cata
+    mag_zero = c.mag_zero #magnitude zero point
+    SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
+    pymorph_path = c.PYMORPH_PATH
+    if(whtimage == 'None'):
+        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow_shallow.sex','r')
+    else:
+        if SEx_WEIGHT_TYPE == 'DECIDE':
+            if re.search("rms", whtimage.lower()):
+                SEx_WEIGHT_TYPE = 'MAP_RMS'
+            elif re.search("weight", whtimage.lower()):
+                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            else:
+                SEx_WEIGHT_TYPE = 'MAP_RMS'
+        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_shallow.sex','r')
+    template = f_tpl.read()
+    f_tpl.close()
+    sex_conf = str(sex_cata) + '.sex'
+    f_sex = open(sex_conf, 'w')
+    f_sex.write(template %vars())
+    f_sex.close()
+    print 'SExtractor Detecting Objects (Shallow)....'
     cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
     os.system(cmd)    
