@@ -481,7 +481,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(9999)
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
                        M, c.SexSky, galfit_sky, DisMoD, \
-                       distance, good_fit, c.Flag]:
+                       distance, good_fit, c.Flag, c.SexHalfRad]:
         ParamToWrite.append(otherparam)
     writer.writerow(ParamToWrite)
     f_res.close()

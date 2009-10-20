@@ -299,7 +299,7 @@ def main():
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                             'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
                             'GalSky', 'dis_modu',\
-			    'distance', 'fit', 'flag', 'Comments']
+			    'distance', 'fit', 'flag', 'HalfRadius', 'Comments']
 #            if 'bulge' in ComP:
 #                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
 #                                  're(kpc)', 're_err(kpc)' ,'n', 'n_err']
@@ -323,7 +323,7 @@ def main():
             writer.writerow(['Name','ra_','dec_','z', 'mag_auto', \
 	                 'magerr_auto', 'C', \
                          'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
-                         'flag', 'Comments'])
+                         'flag', 'HalfRadius', 'Comments'])
         f_res.close()
     f_cat = open(out_cata,'w')
     f_failed = open('restart.cat', 'w')
@@ -593,6 +593,7 @@ def main():
                         if c.LMag == 500.0:
                             c.LMag = mag + 7.0
                         halfradius = float(values[9]) #Half light radius
+			c.SexHalfRad = float(values[9]) #Sex halfrad to write
                         if c.URe == 500.0:
                             c.URe = halfradius * 10.0
                         if c.URd == 500.0:
@@ -958,7 +959,7 @@ def main():
                                             delta_j, z, c.SexMagAuto, \
 					    c.SexMagAutoErr, \
 					    C, C_err, A, A_err, S, \
-                                            S_err, G, M, c.Flag])
+                                            S_err, G, M, c.Flag, c.SexHalfRad])
                                         f_res.close()
                                     f_err.writelines(['(((((CASGM '\
                                                       'Successful)))))'])
