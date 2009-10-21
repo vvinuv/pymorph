@@ -457,7 +457,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             ParamToWrite.append(bulgecomp)
     else:
         for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999, 9999]:
+                          9999, 9999, 9999, 9999, 9999, 9999]:
             ParamToWrite.append(bulgecomp)
     if 'disk' in ComP:
         for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc,\
@@ -465,7 +465,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
 			 DiskBoxy, DiskBoxyErr]:
             ParamToWrite.append(diskcomp)
     else:
-        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
+        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
+		        9999, 9999]:
             ParamToWrite.append(diskcomp)
     ParamToWrite.append(BD)
     ParamToWrite.append(BT)
