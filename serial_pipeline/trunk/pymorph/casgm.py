@@ -54,7 +54,14 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             except:
 	        pass
 	os.system('rm -f CaSsEx.cat CaSsEx.cat.sex')
-        dectThre -= 2.0
+	if dectThre < 2.0:
+	    dectThre -= 0.5
+	else:
+            dectThre -= 2.0
+	if dectThre == 0:
+	    xcntr = xcntr
+	    ycntr = ycntr
+            FoundNewCntr = 1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
     f = pyfits.open(cutimage)
