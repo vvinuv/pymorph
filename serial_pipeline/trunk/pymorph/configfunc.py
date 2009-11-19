@@ -45,7 +45,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     try:
 	c.center_constrain = c.center_constrain
     except:
-	c.center_constrain = 3.0
+	c.center_constrain = 2.0
     if exists(constrain_file):
         MakeConstrain = 0
     else:
