@@ -9,20 +9,24 @@ from getopt import getopt, GetoptError
 import csv
 import pyfits
 import numpy as n
-from pyraf import iraf
 from ndimage import center_of_mass
+sys.path.append('.')
 import config as c
 from maskfunc import *
 from configfunc import *
 from ellimaskfunc import *
 from outmaskfunc import *
-from fitellifunc import *
 from plotfunc import *
 from writehtmlfunc import *
 from runsexfunc import *
 from casgm import *
 from bkgdfunc import *
 
+try:
+    from pyraf import iraf
+    from fitellifunc import *
+except:
+    pass
 
 def main():
     imagefile = c.imagefile
@@ -126,12 +130,15 @@ def main():
                 dec = (dec1 - (dec2 + dec3 / 60.0) / 60.0)
             else:
                 dec = (dec1 + (dec2 + dec3 / 60.0) / 60.0)
-            iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
+            try:
+                iraf.hedit(element, 'RA_TARG', ra, add= 'yes', verify= 'no', \
                                show='no', update='yes')
-            iraf.flpr()
-            iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no',\
+                iraf.flpr()
+                iraf.hedit(element, 'DEC_TARG', dec, add= 'yes', verify= 'no',\
                        show='no', update='yes')
-            iraf.flpr()
+                iraf.flpr()
+            except:
+                pass
         except:
             pass
     def failedgalfit(WhichGalaxy):
@@ -873,9 +880,12 @@ def main():
                                         if os.access(plfile, os.F_OK):
                                             os.remove(plfile)
                                         try:
-                                            iraf.imcopy(ell_mask_file, \
+                                            try:
+                                                iraf.imcopy(ell_mask_file, \
                                                        plfile, verbose='no')
-                                            iraf.flpr()
+                                                iraf.flpr()
+                                            except:
+                                                pass
                                             try:
                                                 ell_out = 'E_' + \
                                                      str(cutimage)[:-4] + 'txt'
@@ -889,7 +899,10 @@ def main():
                                                       pos_ang, major_axis, sky)
                                                 if os.access(plfile, os.F_OK):
                                                     os.remove(plfile)
-                                                iraf.flpr()
+                                                try:
+                                                    iraf.flpr()
+                                                except:
+                                                    pass
                                             except:
                                                 f_err.writelines(['Error '\
                                                            'in ellipse ',\
@@ -1101,12 +1114,15 @@ def main():
                                             ell_output = 'OE_' + \
                                                    str(cutimage)[:-4] + 'txt'
                                             outmodel = 'S' + outimage
-                                            iraf.imcopy(out_mask_file, \
+                                            try:
+                                                iraf.imcopy(out_mask_file, \
                                                        outplfile, verbose='no')
-                                            iraf.flpr()
-                                            iraf.imcopy(outimage + '[2]', \
+                                                iraf.flpr()
+                                                iraf.imcopy(outimage + '[2]', \
                                                        outmodel, verbose='no')
-                                            iraf.flpr()
+                                                iraf.flpr()
+                                            except:
+                                                pass
                                             if os.access(ell_output, \
                                                          os.F_OK):
                                                 os.remove(ell_output)  
@@ -1133,7 +1149,10 @@ def main():
                                                 run_elli(outmodel, ell_output,\
                                                      MoX, MoY, eg, \
                                                     pos_ang, major_axis, sky)
-                                                iraf.flpr()
+                                                try:
+                                                    iraf.flpr()
+                                                except:
+                                                    pass
                                             except:
                                                 f_err.writelines(['Error in '\
                                                           'ellipse '\
