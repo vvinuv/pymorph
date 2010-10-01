@@ -1699,18 +1699,20 @@ if __name__ == '__main__':
         c.FILTER = c.Filter
     def FindAndFit():
         if c.findandfit == 1:
-            magmin = raw_input("Enter Minimum Magnitude >>> ")
+            #magmin = raw_input("Enter Minimum Magnitude >>> ")
+            magmin = raw_input("What is faintest magnitude galaxy that you want to fit? >>> ")     #modified by abhishek
             try:
                 magmin = float(magmin) * 1.0
             except:
                 magmin = 9999
-            magmax = raw_input("Enter Maximum Magnitude >>> ")
+            #magmax = raw_input("Enter Maximum Magnitude >>> ")
+            magmax = raw_input("What is brightest magnitude galaxy that you want to fit? >>> ")    #modified by abhishek
             try:
                 magmax = float(magmax) * 1.0
             except:
                 magmax = -9999
-            stargal = raw_input("Enter galaxy classification (1 for star "\
-                                "and 0 is galaxy >>> ")
+            stargal = raw_input("Enter star-galaxy classification (1 for star "\
+                                "and 0 is galaxy (0.8 is a good number) >>> ")
             redshift = raw_input("Enter redshift, if you know >>> ")
             try:
                 redshift = float(redshift)*1.0
