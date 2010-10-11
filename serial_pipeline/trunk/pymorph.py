@@ -1350,117 +1350,123 @@ def selectpsf(ImG, CaT):
         manualpsf = raw_input("Unfortunately, NO psf is found. Please enter "\
                               "the psf name >>> ")
         c.psff.append(manualpsf)
-    PsfList = []
-    TmPLST = []
-    for element in c.psff:
-        TmPLST.append(element)
-    print 'Checking Started. You can just visually check the psf. You can do', \
-          'the thorough checking later'
-    for element in c.psff:
-        os.system('xpaset -p ds9 frame clear')
-        if exists(element):
-            os.system('cat ' + str(element) + ' | xpaset ds9 fits')
-            os.system('xpaset -p ds9 scale mode zscale')
-            os.system('xpaset -p ds9 zoom to fit')
-        else:
-            print 'The psf you have given does NOT exists!!!'
-            pass
-        write = raw_input("Do you need this psf? ('y' if yes, 'c'"\
-                          " to cancel psf checking) " )
-        if write == 'y':
-            PsfList.append(element)
-            TmPLST.remove(element)
-#            c.psff.remove(element)
-        elif write == 'c':
-            for element1 in TmPLST:
-                try:
-                    os.remove(element1)
-                except:
-                    pass
-            break
-        else:
-            try:
-                os.remove(element)
-            except:
-                pass
-    print '\nFinal Checking Started. If you are using psfselect = 2, be '\
-          'carefull!!! This is your last chance for selecting psf. '\
-          'Select ONLY GOOD psf. Press "y" to accept the previous psf. '\
-          'ENTER to go to the next one. This will continue until you press '\
-          '"1" when it asked Finished? ALL THE BEST! \n'
-    UrPsfChk = raw_input("Do you want to use your own psf? Enter 'y' or " \
-                         "'n' >>> ")
-    if UrPsfChk == 'y':
-        UrPsf = raw_input("Enter your psf >>> ")
-        fff = open('psflist.list', 'ab')
-        fff.writelines([str(UrPsf), '\n'])
-        fff.close()
-        if(c.galcut):
-            c.ValueS.append(UrPsf)
-            fwithpsf = open('CatWithPsf.cat', 'ab')
-            for v in c.ValueS:
-                fwithpsf.writelines([str(v), ' '])
-            fwithpsf.writelines(['\n'])
-            fwithpsf.close()
-        finish = 1
-        for element in PsfList:
-            if os.access(element, os.F_OK):
-                os.remove(element)
-    else:
-        finish = 0
-        TmpPsfList = []
-    UpdateCounter = 1
-    while finish == 0:
-        for element in PsfList:
+    if c.Interactive:
+        PsfList = []
+        TmPLST = []
+        for element in c.psff:
+            TmPLST.append(element)
+        print 'Checking Started. You can just visually check the psf. You can'\
+               ' do the thorough checking later'
+        for element in c.psff:
+            os.system('xpaset -p ds9 frame clear')
             if exists(element):
-                os.system('xpaset -p ds9 frame clear')
                 os.system('cat ' + str(element) + ' | xpaset ds9 fits')
                 os.system('xpaset -p ds9 scale mode zscale')
                 os.system('xpaset -p ds9 zoom to fit')
             else:
-                print 'The psf you have given is NOT exists!!!'
+                print 'The psf you have given does NOT exists!!!'
                 pass
-            write = raw_input("Do you REALLY need this psf? ('y' or," \
-                              "'n' or press any key to continue) ") 
+            write = raw_input("Do you need this psf? ('y' if yes, 'c'"\
+                              " to cancel psf checking) " )
             if write == 'y':
-                TmpPsfList.append(element)
-                fff = open('psflist.list', 'ab')
-                fff.writelines([str(element), '\n'])
-                if(c.galcut):
-                    if UpdateCounter:
-                        c.ValueS.append(element)
-                        fwithpsf = open('CatWithPsf.cat', 'ab')
-                        for v in c.ValueS:
-                            fwithpsf.writelines([str(v), ' '])
-                        fwithpsf.writelines(['\n'])
-                        fwithpsf.close()
-                        UpdateCounter = 0
-                fff.close()
-            if write == 'n':
-                TmpPsfList.append(element)
+                PsfList.append(element)
+                TmPLST.remove(element)
+#                c.psff.remove(element)
+            elif write == 'c':
+                for element1 in TmPLST:
+                    try:
+                        os.remove(element1)
+                    except:
+                        pass
+                break
+            else:
                 try:
                     os.remove(element)
                 except:
                     pass
-            else:
-                pass
-        for element in TmpPsfList:
-            try:
-                PsfList.remove(element)
-            except:
-                pass
-        TmpPsfList = []
-        fi = raw_input("Finished? ('1' to finish, any other key to continue) ") 
-        if fi == '0' or fi == '1':
-            finish = int(fi)
-            if finish == 1:
-                for element in PsfList:
+        print '\nFinal Checking Started. If you are using psfselect = 2, be '\
+              'carefull!!! This is your last chance for selecting psf. '\
+              'Select ONLY GOOD psf. Press "y" to accept the previous psf. '\
+             'ENTER to go to the next one. This will continue until you press '\
+             '"1" when it asked Finished? ALL THE BEST! \n'
+        UrPsfChk = raw_input("Do you want to use your own psf? Enter 'y' or " \
+                             "'n' >>> ")
+        if UrPsfChk == 'y':
+            UrPsf = raw_input("Enter your psf >>> ")
+            fff = open('psflist.list', 'ab')
+            fff.writelines([str(UrPsf), '\n'])
+            fff.close()
+            if(c.galcut):
+                c.ValueS.append(UrPsf)
+                fwithpsf = open('CatWithPsf.cat', 'ab')
+                for v in c.ValueS:
+                    fwithpsf.writelines([str(v), ' '])
+                fwithpsf.writelines(['\n'])
+                fwithpsf.close()
+            finish = 1
+            for element in PsfList:
+                if os.access(element, os.F_OK):
+                    os.remove(element)
+        else:
+            finish = 0
+            TmpPsfList = []
+        UpdateCounter = 1
+        while finish == 0:
+            for element in PsfList:
+                if exists(element):
+                    os.system('xpaset -p ds9 frame clear')
+                    os.system('cat ' + str(element) + ' | xpaset ds9 fits')
+                    os.system('xpaset -p ds9 scale mode zscale')
+                    os.system('xpaset -p ds9 zoom to fit')
+                else:
+                    print 'The psf you have given is NOT exists!!!'
+                    pass
+                write = raw_input("Do you REALLY need this psf? ('y' or," \
+                                  "'n' or press any key to continue) ") 
+                if write == 'y':
+                    TmpPsfList.append(element)
+                    fff = open('psflist.list', 'ab')
+                    fff.writelines([str(element), '\n'])
+                    if(c.galcut):
+                        if UpdateCounter:
+                            c.ValueS.append(element)
+                            fwithpsf = open('CatWithPsf.cat', 'ab')
+                            for v in c.ValueS:
+                                fwithpsf.writelines([str(v), ' '])
+                            fwithpsf.writelines(['\n'])
+                            fwithpsf.close()
+                            UpdateCounter = 0
+                    fff.close()
+                if write == 'n':
+                    TmpPsfList.append(element)
                     try:
                         os.remove(element)
                     except:
                         pass
-        else:
-            finish = 0
+                else:
+                    pass
+            for element in TmpPsfList:
+                try:
+                    PsfList.remove(element)
+                except:
+                    pass
+            TmpPsfList = []
+            fi = raw_input("Finished? ('1' to finish, any other key to continue) ") 
+            if fi == '0' or fi == '1':
+                finish = int(fi)
+                if finish == 1:
+                    for element in PsfList:
+                        try:
+                            os.remove(element)
+                        except:
+                            pass
+            else:
+                finish = 0
+    else:
+        for element in c.psff:
+            fff = open('psflist.list', 'ab')
+            fff.writelines([str(element), '\n'])
+        fff.close()
 def SExtractorConf():
     SEx_DETECT_MINAREA = raw_input("DETECT_MINAREA (6) >>> ")
     try:
@@ -1843,13 +1849,28 @@ if __name__ == '__main__':
                 pass
         else:
             selectpsf(c.imagefile, sex_cata)
+#The old function for psfselect = 2
+#    if c.psfselect == 2:
+#        c.center_deviated = 0
+#        c.starthandle = 0
+#        os.system('ds9 &')
+#        time.sleep(2)
+#        runpsfselect()
+#        os.system('xpaset -p ds9 quit')
+#        c.psflist = '@psflist.list'
+#        FindAndFit()
+#        main()
+#        if c.crashhandler:
+#            c.starthandle = 1
+#            os.system('mv restart.cat CRASH.CAT')
+#            c.clus_cata = 'CRASH.CAT' 
+#            main()
+#New function for psfselect=2 non-interactive for webservice
     if c.psfselect == 2:
+        c.Interactive = 0
         c.center_deviated = 0
         c.starthandle = 0
-        os.system('ds9 &')
-        time.sleep(2)
         runpsfselect()
-        os.system('xpaset -p ds9 quit')
         c.psflist = '@psflist.list'
         FindAndFit()
         main()
@@ -1858,7 +1879,9 @@ if __name__ == '__main__':
             os.system('mv restart.cat CRASH.CAT')
             c.clus_cata = 'CRASH.CAT' 
             main()
+
     elif c.psfselect == 1:
+        c.Interactive = 1
         os.system('ds9 &')
         time.sleep(2)
         runpsfselect()
