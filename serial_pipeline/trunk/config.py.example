@@ -74,6 +74,8 @@ decompose = True
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
 findandfit = 0
+maglim = [22, 15] #if findandfit= 1, then maglim = [faint_mag, bright_mag]
+stargal = 0.8 #Star-galaxy classification 
 crashhandler = 1
 
 ###---Galfit Controls---###
