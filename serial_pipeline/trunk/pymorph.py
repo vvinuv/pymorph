@@ -1726,11 +1726,17 @@ if __name__ == '__main__':
                     redshift = float(redshift)*1.0
                 except:
                     redshift = 9999
-            elif c.psfselect <= 2:    
-                magmin = c.maglim[0]
-                magmax = c.maglim[1] 
-                stargal = c.stargal
-                redshift = 9999
+            elif c.psfselect <= 2:   
+                try: 
+                    magmin = c.maglim[0]
+                    magmax = c.maglim[1] 
+                    stargal = c.stargal
+                    redshift = 9999
+                except:
+                    magmin = 9999
+                    magmax = -9999
+                    stargal = 0.8
+                    redshift = 9999                  
             NewClusCata = open(c.clus_cata,'w')
             if redshift == 9999:
                 NewClusCata.writelines(['gal_id ra1 dec1 mag\n'])
