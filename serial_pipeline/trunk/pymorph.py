@@ -21,6 +21,7 @@ from writehtmlfunc import *
 from runsexfunc import *
 from casgm import *
 from bkgdfunc import *
+from configiter import *
 
 try:
     from pyraf import iraf
@@ -1089,7 +1090,11 @@ def main():
                                     if exists('fit.log'):
                                         os.system('rm fit.log')
                                 #Here the user should tell the location of the GALFIT excutable                     
-                                    if(c.galfit):
+                                    if c.galfit and c.detail:
+                                        ConfigIter(cutimage, whtimage,  xcntr,\
+                                                   ycntr, SizeX, \
+                                                   SizeY, line_s, psffile)
+                                    elif c.galfit:
                                         cmd = str(c.GALFIT_PATH) + ' ' + \
                                                   config_file
                                         os.system(cmd)
