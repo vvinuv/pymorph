@@ -6,8 +6,7 @@ from cosmocal import *
 import config as c
 import numpy as n
 
-def ReadLog(ParamDict):
-    No = 1
+def ReadLog(ParamDict, No):
     if exists('fit.log'):
         for line in open('fit.log','r'): 
             values = line.split() 

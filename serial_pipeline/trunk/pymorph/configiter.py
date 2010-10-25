@@ -47,60 +47,49 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 	c.center_constrain = c.center_constrain
     except:
 	c.center_constrain = 2.0
-    if exists(constrain_file):
-        MakeConstrain = 0
-    else:
-        f_constrain = open(constrain_file, 'w')
-        cO = 1
-        MakeConstrain = 1
-        for Co in ComP:
-            if Co == 'bulge':
-                f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
-                        ' to ' + str(c.UN) +  '\n')
-                if c.center_deviated:
-                    f_constrain.write(str(cO) + '      x      -' + \
-                    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                    f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                else:
-                    f_constrain.write(str(cO) + '      x      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                    f_constrain.write(str(cO) + '      y      ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                        ' to ' + str(c.LMag) + '\n')
-                f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
-                        ' to ' + str(c.URe) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-            if Co == 'disk':
-                if c.center_deviated:
-                    f_constrain.write(str(cO) + '      x      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                    f_constrain.write(str(cO) + '      y      -' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + \
-		    '     ' + \
-		    str(c.center_deviation - c.center_deviation / 4.0) + '\n')
-                else:
-                    f_constrain.write(str(cO) + '       x       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                    f_constrain.write(str(cO) + '       y       ' + str(-c.center_constrain) + '     ' + str(c.center_constrain) + '\n')
-                f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                        ' to ' + str(c.LMag) + '\n')
-                f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
-                        ' to ' + str(c.URd) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
-            if Co == 'point':
-                f_constrain.write(str(cO) + '       x       -2.0      2.0\n')
-                f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
-            cO += 1
+    def SersicMainConstrain(constrain_file, cO):
+        f_constrain = open(constrain_file, 'ab')
+        f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
+                          ' to ' + str(c.UN) +  '\n')
+        f_constrain.write(str(cO) + '      x      ' + \
+                          str(-c.center_constrain) + '     ' + \
+                          str(c.center_constrain) + '\n')
+        f_constrain.write(str(cO) + '      y      ' + \
+                          str(-c.center_constrain) + '     ' + \
+                          str(c.center_constrain) + '\n')
+        f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
+                          ' to ' + str(c.LMag) + '\n')
+        f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
+                          ' to ' + str(c.URe) + '\n')
+        f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+        f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
         f_constrain.close()
-    if c.center_deviated:
-        c.center_deviated = 0
+
+    def ExpdiskConstrain(constrain_file, cO):
+        f_constrain = open(constrain_file, 'ab')
+        f_constrain.write(str(cO) + '       x       ' + \
+                          str(-c.center_constrain) + '     ' + \
+                          str(c.center_constrain) + '\n')
+        f_constrain.write(str(cO) + '       y       ' + \
+                          str(-c.center_constrain) + '     ' + \
+                          str(c.center_constrain) + '\n')
+        f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
+                          ' to ' + str(c.LMag) + '\n')
+        f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
+                          ' to ' + str(c.URd) + '\n')
+        f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+        f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
+        f_constrain.close()
+
+    def SersicConstrain(constrain_file, cO):
+        f_constrain = open(constrain_file, 'ab')
+        f_constrain.write(str(cO) + '      n      0.02 to 20.0  \n')
+        f_constrain.write(str(cO) + '     mag    -100.0 to 100.0\n')
+        f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
+        f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+        f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
+        f_constrain.close()
+
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
     mag    = float(values[7]) #Magnitude
@@ -186,13 +175,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 ParamDict[AdComp][8] = 0
                 ParamDict[AdComp][9] = 0
                 ParamDict[AdComp][11] = 'Other'
-                if MakeConstrain:
-                    f_constrain.write(str(cO) + '      n      0.02 to 20.0  \n')
-                    f_constrain.write(str(cO) + '     mag    -100.0 to 100.0\n')
-                    f_constrain.write(str(cO) + '      re      0.0 to 500.0\n')
-                    f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
-                    f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
-                    cO += 1
+
                 isneighbour = 1
                 AdComp += 1
         except:
@@ -269,7 +252,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     
     def DecideFitting(ParamDict, No):
         FitDict = {}
-        print ParamDict 
+#        print ParamDict 
         if No == 1:
             for j in range(len(ParamDict)):
                 i = j + 1
@@ -278,7 +261,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 0       
                     FitDict[i][6] = 0    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
@@ -298,7 +281,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][4] = 1
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
-        if No == 2:
+        if No == 4:
             for j in range(len(ParamDict)):
                 i = j + 1
                 FitDict[i] = {}  
@@ -306,7 +289,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 0       
                     FitDict[i][6] = 0    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
@@ -354,7 +337,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][4] = 0
                     FitDict[i][5] = 0       
                     FitDict[i][6] = 0    
-        if No == 4:
+        if No == 2:
             for j in range(len(ParamDict)):
                 i = j + 1
                 FitDict[i] = {}  
@@ -362,7 +345,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
@@ -387,7 +370,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
     #Write configuration file. RunNo is the number of iteration
     for RunNo in range(4):
-
+        f_constrain = open(constrain_file, 'w')
+        f_constrain.close()
         f=open(config_file,'w')
         f.write('# IMAGE PARAMETERS\n')
         f.writelines(['A) ', str(cutimage), '	# Input data image',\
@@ -421,18 +405,34 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
         for i in range(len(ParamDict)):
             if ParamDict[i + 1][1] == 'sersic':
-                SersicFunc(config_file, ParamDict, FitDict, i+1) 
+                if RunNo + 1 == 1:
+                    pass
+                else:
+                    SersicFunc(config_file, ParamDict, FitDict, i+1)
+                    if ParamDict[i + 1][11] == 'Main':
+                        SersicMainConstrain(constrain_file, i + 1) 
+                    else:
+                        SersicConstrain(constrain_file, i + 1)
             if ParamDict[i + 1][1] == 'expdisk':
-                ExpFunc(config_file, ParamDict, FitDict, i+1) 
+                ExpFunc(config_file, ParamDict, FitDict, i + 1)
+                if RunNo + 1 == 1:
+                    ExpdiskConstrain(constrain_file, 1)                 
+                else:
+                    ExpdiskConstrain(constrain_file, i + 1)
             if  ParamDict[i + 1][1] == 'sky':
                 SkyFunc(config_file, ParamDict, FitDict, i+1) 
-#        raw_input('Waiting >>> ')
+        print ParamDict
+        raw_input('Waiting >>> ')
 #        print 'Waiting'
         if exists('fit.log'):
             os.remove('fit.log') 
 
         cmd = str(c.GALFIT_PATH) + ' ' + config_file
         os.system(cmd)
-        ParamDict = ReadLog(ParamDict)
+        if RunNo + 1 == 1:
+            ParamDict = ReadLog(ParamDict, 2)
+        else:
+            ParamDict = ReadLog(ParamDict, 1)
+        print ParamDict
                         
 
