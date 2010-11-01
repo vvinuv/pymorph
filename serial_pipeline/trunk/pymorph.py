@@ -307,7 +307,11 @@ def main():
                             'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                             'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
                             'GalSky', 'dis_modu',\
-			    'distance', 'fit', 'flag', 'HalfRadius', 'Comments']
+			    'distance', 'fit', 'flag', 'HalfRadius', \
+                            'BarMag', 'BarMagErr', 'BarRePix', 'BarRePixErr', \
+                            'BarReKpc', 'BarReKpcErr', 'BarIndex', \
+                            'BarIndexErr', 'BarEll', 'BarEllErr', \
+                            'BarBoxy', 'Comments']
 #            if 'bulge' in ComP:
 #                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
 #                                  're(kpc)', 're_err(kpc)' ,'n', 'n_err']
