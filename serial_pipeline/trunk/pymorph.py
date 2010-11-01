@@ -1090,7 +1090,11 @@ def main():
                                     if exists('fit.log'):
                                         os.system('rm fit.log')
                                 #Here the user should tell the location of the GALFIT excutable                     
-                                    if c.galfit and c.detail:
+                                    try:
+                                        DetailFit = c.detail
+                                    except:
+                                        DetailFit = 0
+                                    if c.galfit and DetailFit:
                                         ConfigIter(cutimage, whtimage,  xcntr,\
                                                    ycntr, SizeX, \
                                                    SizeY, line_s, psffile)

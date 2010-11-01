@@ -145,8 +145,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                     rd = float(values[5])
                     DiskEllipticity = float(values[6])
 		    DiskBoxy = float(values[8])
-                if(str(values[0]) == 'gaussian'):
-                    mag_g = float(values[4])
+                if(str(values[0]) == 'psf'):
+                    mag_p = float(values[4])
                 if(str(values[0]) == 'sky'):
                     galfit_sky = float(values[4])
                 if(str(values[0])[:1] == '('):
@@ -162,8 +162,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                         rd_err = float(values[3])
                         DiskEllipticityErr = float(values[4])
 			DiskBoxyErr = float(values[6])
-                    if(str(a) == 'gaussian'):
-                        mag_g_err = float(values[2])
+                    if(str(a) == 'psf'):
+                        mag_p_err = float(values[2])
                 a=values[0]				
             except:
                 pass
@@ -188,13 +188,26 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             else:
                 rd_kpc = 9999
                 rd_err_kpc = 9999
-            if 'point' in ComP:
-                fwhm_kpc = 0.5 * phy_parms[3]
-            else:
-                fwhm_kpc = 9999
+#            if 'point' in ComP:
+#                fwhm_kpc = 0.5 * phy_parms[3]
+#            else:
+#                fwhm_kpc = 9999
         if 'bulge' in ComP and 'disk' in ComP:
-            BD = 10**(-0.4 * ( mag_b - mag_d))
-            BT = 1.0 / (1.0 + 1.0 / BD)
+            if 'point' in ComP:
+                fb = 10**(-0.4 * (mag_b - c.mag_zero))
+                fd = 10**(-0.4 * (mag_d - c.mag_zero))
+                fp = 10**(-0.4 * (mag_p - c.mag_zero))
+                BD = fb / fd 
+                BT = fb / (fb + fd + fp)
+            elif 'bar' in ComP:
+                fb = 10**(-0.4 * (mag_b - c.mag_zero))
+                fd = 10**(-0.4 * (mag_d - c.mag_zero))
+                fbar = 10**(-0.4 * (mag_bar - c.mag_zero)) 
+                BD = fb / fd
+                BT = fb / (fb + fd + fbar)
+            else:
+                BD = 10**(-0.4 * ( mag_b - mag_d))
+                BT = 1.0 / (1.0 + 1.0 / BD)
         elif 'bulge' in ComP:
             BD = 'nan'
             BT = 1.0
@@ -263,7 +276,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                 ' ' + ' </TD> <TD> ' + str(values[6]) +  \
                                 ' </TD> <TD> ' + str(values[7]) + \
                                 ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
-                if(str(values[0]) == 'gaussian'):
+                if(str(values[0]) == 'psf'):
                     point_xcntr = float(str(values[2])[1:-1])
                     point_ycntr = float(str(values[3])[:-1])
                     Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
@@ -271,11 +284,11 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                str(values[2])[1:-1] + ' </TD> <TD> ' + \
                                str(values[3])[:-1] + ' </TD> <TD> ' + \
                                str(values[4]) + ' </TD> <TD> ' + \
-                               str(values[5]) +  ' </TD> <TD> ' + \
-                               str(round(fwhm_kpc, 3))[:5] + ' </TD> <TD> ' + \
-                               ' ' + ' </TD> <TD> ' + str(values[6]) +  \
-                               ' </TD> <TD> ' + str(values[7]) + \
-                               ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
+                               str('9999') +  ' </TD> <TD> ' + \
+                               str('9999') + ' </TD> <TD> ' + \
+                               ' ' + ' </TD> <TD> ' + str('9999') +  \
+                               ' </TD> <TD> ' + str('9999') + \
+                               ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
                 if(str(values[0])[:1] == '('):
                     if(str(a) == 'sersic' and object_err > 1 or \
                         str(a) == 'sersic'  and 'bulge' not in ComP):
@@ -326,20 +339,20 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                                          ' </TD> <TD> ' + str(values[5]) + \
                                          ' </TD> <TD> ' + str(values[6]) + \
                                          ' </TD></TR>'
-                    if(str(a) == 'gaussian'):
+                    if(str(a) == 'psf'):
                         Point_Vals_err = '<TR align="center" ' + \
                                          'bgcolor="#CCFFFF">' + \
                                          '<TD>' + ' ' + '</TD> <TD>' + \
                                          str(values[0])[1:-1] + '</TD> <TD>'\
                                          + str(values[1])[:-1] + \
                                          ' </TD> <TD> ' + str(values[2]) + \
-                                         ' </TD> <TD> ' + str(values[3]) + \
+                                         ' </TD> <TD> ' + str('9999') + \
                                          ' </TD> <TD> ' + \
-                                         str(0.0)[:5] + \
+                                         str('9999') + \
                                          ' </TD> <TD> ' + ' ' + \
-                                         ' </TD> <TD> ' + str(values[4]) + \
-                                         ' </TD> <TD> ' + str(values[5]) + \
-                                         ' </TD> <TD> ' + str(values[6]) + \
+                                         ' </TD> <TD> ' + str('9999') + \
+                                         ' </TD> <TD> ' + str('9999') + \
+                                         ' </TD> <TD> ' + str('9999') + \
                                          ' </TD></TR>'
                 a=values[0]				
             except:
@@ -471,10 +484,10 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     ParamToWrite.append(BD)
     ParamToWrite.append(BT)
     if 'point' in ComP:
-        ParamToWrite.append(mag_g)
-        ParamToWrite.append(mag_g_err)
+        ParamToWrite.append(mag_p)
+        ParamToWrite.append(mag_p_err)
         ParamToWrite.append(0.5)
-        ParamToWrite.append(fwhm_kpc)
+        ParamToWrite.append(9999)
     else:
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)

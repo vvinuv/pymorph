@@ -26,7 +26,7 @@ ANALYSIS_THRESH  0.3            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
 FILTER           Y              # apply filter for detection (Y or N)?
 FILTER_NAME      %(pymorph_path)s/SEx/default.conv   # name of the file containing the filter
  
-DEBLEND_NTHRESH  64             # Number of deblending sub-thresholds
+DEBLEND_NTHRESH  16             # Number of deblending sub-thresholds
 DEBLEND_MINCONT  0.0005          # Minimum contrast parameter for deblending
  
 CLEAN            Y              # Clean spurious detections? (Y or N)?
