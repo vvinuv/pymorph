@@ -133,6 +133,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'Chi^2/nu'):
                     chi2nu = float(values[2])
                     Distance = str(round(distance, 3))[:5]
+                if(str(values[0]) == 'sersic' and object == 2):
+                    mag_bar = float(values[4])
+                    re_bar = float(values[5])
+                    SersicIndexBar = float(values[6])
+                    SersicEllipticityBar = float(values[7])
+		    SersicBoxyBar = float(values[9])
+                    object += 1
                 if(str(values[0]) == 'sersic' and object == 1):
                     mag_b = float(values[4])
                     re = float(values[5])
@@ -150,6 +157,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'sky'):
                     galfit_sky = float(values[4])
                 if(str(values[0])[:1] == '('):
+                    if(str(a) == 'sersic' and object_err == 2):
+                        mag_bar_err = float(values[2])
+                        re_bar_err  = float(values[3])
+                        SersicIndexBarErr = float(values[4])
+                        SersicEllipticityBarErr = float(values[5])
+			SersicBoxyBarErr = float(values[7])
+                        object_err += 1
                     if(str(a) == 'sersic' and object_err == 1):
                         mag_b_err = float(values[2])
                         re_err  = float(values[3])
@@ -164,6 +178,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
 			DiskBoxyErr = float(values[6])
                     if(str(a) == 'psf'):
                         mag_p_err = float(values[2])
+
                 a=values[0]				
             except:
                 pass
@@ -173,6 +188,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             rd_kpc = 9999
             rd_err_kpc = 9999
             DisMoD = 9999
+            re_bar_kpc = 9999
+            re_bar_err_kpc = 9999
         else:
             phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
             DisMoD = phy_parms[2]
@@ -188,6 +205,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             else:
                 rd_kpc = 9999
                 rd_err_kpc = 9999
+            if 'bar' in ComP:
+                re_bar_kpc = phy_parms[3] * re_bar
+                re_bar_err_kpc = phy_parms[3] * re_bar_err
+            else:
+                re_bar_kpc = 9999
+                re_bar_err_kpc = 9999
+
 #            if 'point' in ComP:
 #                fwhm_kpc = 0.5 * phy_parms[3]
 #            else:
@@ -497,6 +521,18 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                        M, c.SexSky, galfit_sky, DisMoD, \
                        distance, good_fit, c.Flag, c.SexHalfRad]:
         ParamToWrite.append(otherparam)
+    if 'bar' in ComP:
+        for barcomp in [mag_bar, mag_bar_err, re_bar, re_bar_err, re_bar_kpc, \
+                          re_bar_err_kpc, \
+                          SersicIndexBar, SersicIndexBarErr, \
+                          SersicEllipticityBar, \
+                          SersicEllipticityBarErr, SersicBoxyBar]:
+            ParamToWrite.append(barcomp)
+    else:
+        for barcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
+                          9999, 9999, 9999]:
+            ParamToWrite.append(barcomp)
+
     writer.writerow(ParamToWrite)
     f_res.close()
     #Remove any nan or inf from the parameter
