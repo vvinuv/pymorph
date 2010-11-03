@@ -296,22 +296,25 @@ def main():
         f_res = open("result.csv", "ab")
         writer = csv.writer(f_res)
         if(c.decompose):
-            ParamToWrite = ['Name','ra_','dec_','z', 'mag_auto', 'magerr_auto',\
-	                    'Ie','Ie_err','re_pix',\
-                            're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
-                            'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
-                            'bboxy', 'bboxy_err', 'Id', 'Id_err', 'rd_pix',\
-                            'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
-                            'ed', 'ed_err', 'dboxy', 'dboxy_err', 'BD', \
-                            'BT', 'Point', 'Point_err', 'Pfwhm', 'Pfwhm_kpc', \
-                            'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
-                            'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
-                            'GalSky', 'dis_modu',\
-			    'distance', 'fit', 'flag', 'HalfRadius', \
-                            'BarMag', 'BarMagErr', 'BarRePix', 'BarRePixErr', \
-                            'BarReKpc', 'BarReKpcErr', 'BarIndex', \
-                            'BarIndexErr', 'BarEll', 'BarEllErr', \
-                            'BarBoxy', 'Comments']
+            ParamToWrite = ['Name_0', 'ra__1', 'dec__2', 'z_3', 'mag_auto_4',\
+                            'magerr_auto_5', 'Ie_6', 'Ie_err_7', 're_pix_8',\
+                            're_err_pix_9', 're_kpc_10', 're_err_kpc_11', \
+                            'n_12', 'n_err_13', 'AvgIe_14', 'AvgIe_err_15', \
+                            'eb_16', 'eb_err_17', 'bboxy_18', 'bboxy_err_19',\
+                            'Id_20', 'Id_err_21', 'rd_pix_22', \
+                            'rd_err_pix_23', 'rd_kpc_24', 'rd_err_kpc_25', \
+                            'ed_26', 'ed_err_27', 'dboxy_28', 'dboxy_err_29',\
+                            'BD_30', 'BT_31', 'Point_32', 'Point_err_33', \
+                            'Pfwhm_34', 'Pfwhm_kpc_35', 'chi2nu_36', \
+                            'Goodness_37', 'run_38', 'C_39', 'C_err_40',\
+                            'A_41', 'A_err_42', 'S_43', 'S_err_44', 'G_45', \
+                            'M_46', 'SexSky_47', 'GalSky_48', 'dis_modu_49', \
+                            'distance_50', 'fit_51', 'flag_52', \
+                            'HalfRadius_53', 'BarMag_54', 'BarMagErr_55', \
+                            'BarRePix_56', 'BarRePixErr_57', 'BarReKpc_58',\
+                            'BarReKpcErr_59', 'BarIndex_60', 'BarIndexErr_61',\
+                            'BarEll_62', 'BarEllErr_63', 'BarBoxy_64', \
+                            'Comments_65']
 #            if 'bulge' in ComP:
 #                for bulgecomp in ['Ie','Ie_err','re(pixels)','re_err(pixels)',\
 #                                  're(kpc)', 're_err(kpc)' ,'n', 'n_err']
