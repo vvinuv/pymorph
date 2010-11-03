@@ -21,7 +21,8 @@ from writehtmlfunc import *
 from runsexfunc import *
 from casgm import *
 from bkgdfunc import *
-from configiter import *
+#from configiter import *
+from configbarpoint import *
 
 try:
     from pyraf import iraf

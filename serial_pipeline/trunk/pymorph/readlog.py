@@ -40,8 +40,10 @@ def ReadLog(ParamDict, No):
                     ParamDict[No][6] = float(values[7])
                     ParamDict[No][7] = float(values[8])
                     No += 1
-                if(str(values[0]) == 'gaussian'):
-                    mag_g = float(values[4])
+                if(str(values[0]) == 'psf'):
+                    ParamDict[No][2][0] = float(values[2][1:-1])
+                    ParamDict[No][2][1] = float(values[3][:-1])
+                    ParamDict[No][3] = float(values[4])
                 if(str(values[0]) == 'sky'):
                     ParamDict[No][2] = float(values[4])
                     No += 1
