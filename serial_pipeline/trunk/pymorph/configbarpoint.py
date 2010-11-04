@@ -342,7 +342,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     
     def DecideFitting(ParamDict, No):
         FitDict = {}
-#        print ParamDict 
+        #print ParamDict 
         if No == 1:
             for j in range(len(ParamDict)):
                 i = j + 1
@@ -369,7 +369,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][4] = 1
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
-                if ParamDict[i][1] == 'point' and ParamDict[i][11] == 'Main':
+                if ParamDict[i][1] == 'psf' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                 if ParamDict[i][1] == 'sky':
@@ -388,26 +388,26 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 i = j + 1
                 FitDict[i] = {}  
                 if ParamDict[i][1] == 'sersic' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
+                    FitDict[i][1] = [0, 0]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
+                    FitDict[i][1] = [0, 0]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1       
                     FitDict[i][5] = 1  
                 if ParamDict[i][1] == 'bar' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
+                    FitDict[i][1] = [0, 0]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
-                if ParamDict[i][1] == 'point' and ParamDict[i][11] == 'Main':
+                if ParamDict[i][1] == 'psf' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                 if ParamDict[i][1] == 'sky':
@@ -427,17 +427,27 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 FitDict[i] = {}  
                 if ParamDict[i][1] == 'sersic' and ParamDict[i][11] == 'Main':
                     FitDict[i][1] = [0, 0]
-                    FitDict[i][2] = 0 
-                    FitDict[i][3] = 0 
-                    FitDict[i][4] = 0
-                    FitDict[i][5] = 0       
-                    FitDict[i][6] = 0    
-                if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 0       
-                    FitDict[i][5] = 0    
+                    FitDict[i][4] = 1
+                    FitDict[i][5] = 1       
+                    FitDict[i][6] = 1    
+                if ParamDict[i][1] == 'expdisk' and ParamDict[i][11] == 'Main':
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 1 
+                    FitDict[i][3] = 1 
+                    FitDict[i][4] = 1       
+                    FitDict[i][5] = 1    
+                if ParamDict[i][1] == 'bar' and ParamDict[i][11] == 'Main':
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 1 
+                    FitDict[i][3] = 1 
+                    FitDict[i][4] = 1
+                    FitDict[i][5] = 1       
+                    FitDict[i][6] = 1    
+                if ParamDict[i][1] == 'psf' and ParamDict[i][11] == 'Main':
+                    FitDict[i][1] = [1, 1]
+                    FitDict[i][2] = 1 
                 if ParamDict[i][1] == 'sky':
                     FitDict[i][1] = 1
                     FitDict[i][2] = 0 
@@ -481,7 +491,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
 
     #Write configuration file. RunNo is the number of iteration
-    for RunNo in range(2):
+    for RunNo in range(3):
         f_constrain = open(constrain_file, 'w')
         f_constrain.close()
         f=open(config_file,'w')
@@ -524,18 +534,21 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     SersicConstrain(constrain_file, i + 1)
  
             if ParamDict[i + 1][1] == 'expdisk':
-                ExpFunc(config_file, ParamDict, FitDict, i + 1)
-                ExpdiskConstrain(constrain_file, i + 1)
+                if RunNo + 1 == 1:
+                    pass
+                else:
+                    ExpFunc(config_file, ParamDict, FitDict, i + 1)
+                    ExpdiskConstrain(constrain_file, i + 1)
 
             if ParamDict[i + 1][1] == 'bar':
-                if RunNo + 1 == 1:
+                if RunNo + 1 < 3:
                     pass
                 else:
                     BarFunc(config_file, ParamDict, FitDict, i+1)
                     BarConstrain(constrain_file, i + 1)
 
-            if ParamDict[i + 1][1] == 'point':
-                if RunNo + 1 == 1:
+            if ParamDict[i + 1][1] == 'psf':
+                if RunNo + 1 < 3:
                     pass
                 else:
                     PsfFunc(config_file, ParamDict, FitDict, i+1)
@@ -559,6 +572,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         #ReadLog(ParamDict, 1) reads the fit.log in the order, ie. sersic, 
         #expdisk, other sersic etc
         ParamDict = ReadLog(ParamDict, 1)
-        print ParamDict
+        if RunNo == 0:
+            for i in range(3):
+                ParamDict[i + 2][2][0]  = ParamDict[1][2][0]
+                ParamDict[i + 2][2][1]  = ParamDict[1][2][1]
+
+        #print ParamDict
                         
 

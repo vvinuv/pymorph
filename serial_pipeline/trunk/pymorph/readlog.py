@@ -44,9 +44,12 @@ def ReadLog(ParamDict, No):
                     ParamDict[No][2][0] = float(values[2][1:-1])
                     ParamDict[No][2][1] = float(values[3][:-1])
                     ParamDict[No][3] = float(values[4])
-                if(str(values[0]) == 'sky'):
-                    ParamDict[No][2] = float(values[4])
                     No += 1
+                if(str(values[0]) == 'sky'):
+                    for j in range(len(ParamDict)):
+                        i = j + 1
+                        if ParamDict[i][1] == 'sky':
+                            ParamDict[i][2] = float(values[4])
             except:
                 pass
 #        if 'bulge' in ComP and 'disk' in ComP:
