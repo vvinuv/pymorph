@@ -604,16 +604,20 @@ def main():
                        abs(ycntr - yimg) < SeaPix):
                         print "SExtractor ID >>> ", values[0]
                         mag    = float(values[7]) #Magnitude
-                        if c.UMag == -500.0:
+                        if c.UMag > -9999.0:
                             c.UMag = mag - 7.0
-                        if c.LMag == 500.0:
+                        if c.LMag < 9999.0:
                             c.LMag = mag + 7.0
                         halfradius = float(values[9]) #Half light radius
 			c.SexHalfRad = float(values[9]) #Sex halfrad to write
-                        if c.URe == 500.0:
-                            c.URe = halfradius * 10.0
-                        if c.URd == 500.0:
-                            c.URd = halfradius * 10.0
+                        #The following is just a simple fix
+                        #Now it does not take care of the re and rd limits 
+                        #via command line. Also increased the limit to 15 times
+                        #the halfradius which was 10 times ealrier
+                        if c.URe < 9999.0:
+                            c.URe = halfradius * 15.0
+                        if c.URd < 9999.0:
+                            c.URd = halfradius * 15.0
                         mag_zero = c.mag_zero #magnitude zero point
 			ShallowSky = 9999
 			if exists(str(c.sex_cata) + '.Shallow'):
