@@ -612,12 +612,12 @@ def main():
 			c.SexHalfRad = float(values[9]) #Sex halfrad to write
                         #The following is just a simple fix
                         #Now it does not take care of the re and rd limits 
-                        #via command line. Also increased the limit to 15 times
+                        #via command line. Also increased the limit to 50 times
                         #the halfradius which was 10 times ealrier
                         if c.URe < 9999.0:
-                            c.URe = halfradius * 15.0
+                            c.URe = halfradius * 50.0
                         if c.URd < 9999.0:
-                            c.URd = halfradius * 15.0
+                            c.URd = halfradius * 50.0
                         mag_zero = c.mag_zero #magnitude zero point
 			ShallowSky = 9999
 			if exists(str(c.sex_cata) + '.Shallow'):
