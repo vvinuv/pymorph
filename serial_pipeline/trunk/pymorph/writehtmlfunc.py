@@ -424,8 +424,9 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
 	              '_1.html"> Crashed </a>' 
     HitLimit = 1
     if 'bulge' in ComP:
-        if mag_b == c.UMag or mag_b == c.LMag or re == c.URe or re == c.LRe or\
-           SersicIndex == c.LN or SersicIndex == c.UN:
+        if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2 or \
+           abs(re - c.URe) < 1.0 or abs(re - c.LRe) < 0.1 or\
+           abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
             c.Flag += 65536
             HitLimit = 0
         else:
@@ -434,7 +435,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         bulge_xcntr = xcntr
         bulge_ycntr = ycntr
     if 'disk' in ComP:
-        if mag_d == c.UMag or mag_d == c.LMag or rd == c.LRd or rd == c.URd:
+        if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2 or \
+            abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
             c.Flag += 131072
             HitLimit = 0
         else:
