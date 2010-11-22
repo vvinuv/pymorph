@@ -839,14 +839,14 @@ def main():
                                         ycntr = SizeYB + yminOut 
                                     else:
                                         ycntr = SizeY / 2 + ycntrFrac
-                                    if xmaxOut != 0:
-                                        xcntr = SizeXB + ycntrFrac 
-                                    else:
-                                        xcntr = SizeX / 2 + xcntrFrac
-                                    if ymaxOut != 0:
-                                        ycntr = SizeXB + ycntrFrac
-                                    else:
-                                        ycntr = SizeY / 2 + ycntrFrac
+#                                    if xmaxOut != 0:
+#                                        xcntr = SizeXB + ycntrFrac 
+#                                    else:
+#                                        xcntr = SizeX / 2 + xcntrFrac
+#                                    if ymaxOut != 0:
+#                                        ycntr = SizeXB + ycntrFrac
+#                                    else:
+#                                        ycntr = SizeY / 2 + ycntrFrac
                                 else:
                                     xcntr = SizeX / 2 + xcntrFrac
                                     ycntr = SizeY / 2 + ycntrFrac
