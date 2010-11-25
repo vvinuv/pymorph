@@ -1823,8 +1823,8 @@ if __name__ == '__main__':
             RunSex(c.imagefile, whtfile, wht_type, 'None', 9999, 9999, 0)
 	    SexShallow(c.imagefile, whtfile, wht_type, 'None', 9999, 9999, 0)
         else:
-            RunSex(c.imagefile, 'None', 'None', 9999, 9999, 0)
-	    SexShallow(c.imagefile, 'None', 'None', 9999, 9999, 0)
+            RunSex(c.imagefile, 'None', 'None', 'None', 9999, 9999, 0)
+	    SexShallow(c.imagefile, 'None', 'None', 'None', 9999, 9999, 0)
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
             obj_file = open(c.clus_cata,'r') 

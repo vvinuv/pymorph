@@ -51,8 +51,10 @@ def sex(cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas):
             #if re.search("rms", whtimage.lower()):
             if wht_type.lower() == 'rms':
                 SEx_WEIGHT_TYPE = 'MAP_RMS'
-            else:
+            elif wht_type.lower() == 'weight': 
                 SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            else:
+                SEx_WEIGHT_TYPE = 'NONE'
             #elif re.search("weight", whtimage.lower()):
             #    SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
             #else:
@@ -82,8 +84,10 @@ def SexShallow(cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas)
             #if re.search("rms", whtimage.lower()):
             if wht_type.lower() == 'rms':
                 SEx_WEIGHT_TYPE = 'MAP_RMS'
-            else:
+            elif wht_type.lower() == 'weight': 
                 SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            else:
+                SEx_WEIGHT_TYPE = 'NONE'
             #elif re.search("weight", whtimage.lower()):
             #    SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
             #else:
