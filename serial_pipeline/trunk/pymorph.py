@@ -26,13 +26,19 @@ from configbarpoint import *
 
 try:
     from pyraf import iraf
+    from iraf import stsdas
     from fitellifunc import *
 except:
     pass
 
 def main():
     imagefile = c.imagefile
-    whtfile = c.whtfile
+    whtfile1 = c.whtfile
+    whtfile = 'weight_rms.fits'
+    # convert weight map to rms map 
+    wht_type = c.wht_type
+    if wht_type.lower() == 'weight':
+       iraf.imcalc(whtfile1, whtfile, "1/sqrt(im1)", pixtype=double) 
     sex_cata = c.sex_cata
     clus_cata = c.clus_cata
     out_cata = c.out_cata
@@ -1814,8 +1820,8 @@ if __name__ == '__main__':
               'the pipeline keep the sky value at the SExtractor value '\
               'during the decomposition.'
         if exists(c.whtfile):
-            RunSex(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
-	    SexShallow(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
+            RunSex(c.imagefile, whtfile, wht_type, 'None', 9999, 9999, 0)
+	    SexShallow(c.imagefile, whtfile, wht_type, 'None', 9999, 9999, 0)
         else:
             RunSex(c.imagefile, 'None', 'None', 9999, 9999, 0)
 	    SexShallow(c.imagefile, 'None', 'None', 9999, 9999, 0)

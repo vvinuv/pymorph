@@ -5,15 +5,16 @@ import re
 class RunSex:
     """The class for running SExtractor, if the pipeline doesn't find any
        SExtractor catalogue. It uses the default.* files for doing that. """
-    def __init__(self, cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
+    def __init__(self, cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas):
         self.cutimage = cutimage
         self.whtimage = whtimage
-	self.sex_cata = sex_cata
-	self.detect_thr = detect_thr
-	self.ana_thr = ana_thr
-        self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas)
+        self.wht_type = wht_type
+        self.sex_cata = sex_cata
+        self.detect_thr = detect_thr
+        self.ana_thr = ana_thr
+        self.sex    = sex(cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas)
 
-def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
+def sex(cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas):
     if sex_cata == 'None':
         sex_cata = c.sex_cata
     mag_zero = c.mag_zero #magnitude zero point
@@ -47,12 +48,15 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':
-            if re.search("rms", whtimage.lower()):
+            #if re.search("rms", whtimage.lower()):
+            if wht_type.lower() == 'rms':
                 SEx_WEIGHT_TYPE = 'MAP_RMS'
-            elif re.search("weight", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
             else:
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
+                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            #elif re.search("weight", whtimage.lower()):
+            #    SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            #else:
+            #    SEx_WEIGHT_TYPE = 'MAP_RMS'
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default.sex','r')
     template = f_tpl.read()
     f_tpl.close()
@@ -64,7 +68,7 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
     os.system(cmd)    
 
-def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
+def SexShallow(cutimage, whtimage, wht_type, sex_cata, detect_thr, ana_thr, cas):
     if sex_cata == 'None':
         sex_cata = c.sex_cata + '.Shallow'
     DeepCata = c.sex_cata
@@ -75,12 +79,15 @@ def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow_shallow.sex','r')
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':
-            if re.search("rms", whtimage.lower()):
+            #if re.search("rms", whtimage.lower()):
+            if wht_type.lower() == 'rms':
                 SEx_WEIGHT_TYPE = 'MAP_RMS'
-            elif re.search("weight", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
             else:
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
+                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            #elif re.search("weight", whtimage.lower()):
+            #    SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
+            #else:
+            #    SEx_WEIGHT_TYPE = 'MAP_RMS'
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_shallow.sex','r')
     template = f_tpl.read()
     f_tpl.close()
