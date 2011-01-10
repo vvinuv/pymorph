@@ -1667,8 +1667,8 @@ if __name__ == '__main__':
     c.LRd = 0.0
     c.URd = 500.0
     c.avoideme = 150.0
-    c.AreaOfObj = 40.0 #Area of psf for selection
-    c.StarGalProb = 0.8
+    c.AreaOfObj = 40.0 #min Area of psf for selection
+    c.StarGalProb = 0.9 #for psf identification
     c.bdbox = 0
     c.bbox = 0
     c.dbox = 0
@@ -1809,9 +1809,9 @@ if __name__ == '__main__':
         pass
     elif(c.galcut == False):
         print 'The SExtractor catalogue for your frame is NOT found. ' \
-              'One is making using the default values. It is always '\
+              'One is being made using the default values. It is always '\
               'recommended to make SExtractor catalogue by YOURSELF as '\
-              'the pipeline keep the sky value at the SExtractor value '\
+              'the pipeline keeps the sky value at the SExtractor value '\
               'during the decomposition.'
         if exists(c.whtfile):
             RunSex(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
@@ -1933,12 +1933,21 @@ if __name__ == '__main__':
             c.clus_cata = 'CRASH.CAT' 
             main()
 
+#The old function for psfselect=1
+#   elif c.psfselect == 1:
+#       c.Interactive = 1
+#       os.system('ds9 &')
+#       time.sleep(2)
+#       runpsfselect()
+#       os.system('xpaset -p ds9 quit')
+#new function for psfselect=1 non-interactive for webservice (abhishek rawat)
     elif c.psfselect == 1:
-        c.Interactive = 1
-        os.system('ds9 &')
-        time.sleep(2)
+        c.Interactive = 0
         runpsfselect()
-        os.system('xpaset -p ds9 quit')
+        
+
+
+
     elif c.psfselect == 0:
         c.center_deviated = 0
         c.starthandle = 0
