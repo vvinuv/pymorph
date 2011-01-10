@@ -98,7 +98,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 f_constrain.write(str(cO) + '       y       -2.0      2.0\n')
             if Co == 'bar':
                 f_constrain.write(str(cO) + '      n      ' + str('0.1') + \
-                        ' to ' + str('1.2') +  '\n')
+                        ' to ' + str('2.2') +  '\n')
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
                     str(c.center_deviation - c.center_deviation / 4.0) + \
@@ -115,7 +115,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                         ' to ' + str(c.LMag) + '\n')
                 f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
                         ' to ' + str(c.URe) + '\n')
-                f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+                f_constrain.write(str(cO) + '      q       0.0 to 0.5\n')
                 f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
 
             cO += 1
@@ -171,7 +171,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
         f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
-        f.writelines([' 5) 4.0 1		#Sersic exponent',\
+        f.writelines([' 5) 4.0 0		#Sersic exponent',\
                       ' (deVauc=4, expdisk=1)\n'])
         f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
         f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
@@ -235,7 +235,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
 #### BAR COMPONENT IMPLIMENTATION ####
     if 'bar' in ComP:
-        barmag = mag + 2.5 * log10(6.0)
+        barmag = mag + 2.5 * log10(3.0)
         f.write('# Sersic function for bar\n\n')
         f.writelines([' 0) sersic		# Object type\n'])
         f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
@@ -245,7 +245,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
         f.writelines([' 5) 0.5 1		#Sersic exponent',\
                       ' (deVauc=4, expdisk=1)\n'])
-        f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
+        f.writelines([' 8) ', str('0.3'), ' 1	# axis ratio (b/a)\n'])
         f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
                       '[Degrees: Up=0, Left=90]\n'])
         f.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
@@ -256,7 +256,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(sky), '      ', str(c.fitting[2]), \
+    f.writelines([' 1) ', str(c.SexSky), '      ', str(c.fitting[2]), \
                   '	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\

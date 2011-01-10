@@ -5,9 +5,12 @@ from cosmocal import *
 #from utilities import WriteDb
 import config as c
 import numpy as n
+from numpy import random
+import copy
 
-def ReadLog(ParamDict, No):
+def ReadLog(ParamDict, No, RunNo):
     if exists('fit.log'):
+        ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
         for line in open('fit.log','r'): 
             values = line.split() 
             try: 
@@ -22,34 +25,44 @@ def ReadLog(ParamDict, No):
                     chi2nu = float(values[2])
                     Distance = str(round(distance, 3))[:5]
                 if(str(values[0]) == 'sersic'):
-                    ParamDict[No][2][0] = float(values[2][1:-1])
-                    ParamDict[No][2][1] = float(values[3][:-1])
-                    ParamDict[No][3] = float(values[4])
-                    ParamDict[No][4] = float(values[5])
-                    ParamDict[No][5] = float(values[6])
-                    ParamDict[No][6] = float(values[7])
-                    ParamDict[No][7] = float(values[8])
-		    ParamDict[No][8] = float(values[9])
+                    ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
+                    ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
+                    if RunNo == -10:
+                        pass
+                    else:
+                        ParamDict[RunNo + 1][No][3] = float(values[4])
+                        ParamDict[RunNo + 1][No][4] = float(values[5])
+#                    ParamDict[No][5] = random.normal(float(values[6]))
+                    if RunNo == -10:# and float(values[6]) < 1.5:
+                        ParamDict[RunNo + 1][No][5] = 4.0
+                    else:
+                        ParamDict[RunNo + 1][No][5] = float(values[6])
+                    if RunNo == -10:
+                        pass
+                    else:
+                        ParamDict[RunNo + 1][No][6] = float(values[7])
+                    ParamDict[RunNo + 1][No][7] = float(values[8])
+		    ParamDict[RunNo + 1][No][8] = float(values[9])
                     No += 1
                 if(str(values[0]) == 'expdisk'):
-                    ParamDict[No][2][0] = float(values[2][1:-1])
-                    ParamDict[No][2][1] = float(values[3][:-1])
-                    ParamDict[No][3] = float(values[4])
-                    ParamDict[No][4] = float(values[5])
-                    ParamDict[No][5] = float(values[6])
-                    ParamDict[No][6] = float(values[7])
-                    ParamDict[No][7] = float(values[8])
+                    ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
+                    ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
+                    ParamDict[RunNo + 1][No][3] = float(values[4])
+                    ParamDict[RunNo + 1][No][4] = float(values[5])
+                    ParamDict[RunNo + 1][No][5] = float(values[6])
+                    ParamDict[RunNo + 1][No][6] = float(values[7])
+                    ParamDict[RunNo + 1][No][7] = float(values[8])
                     No += 1
                 if(str(values[0]) == 'psf'):
-                    ParamDict[No][2][0] = float(values[2][1:-1])
-                    ParamDict[No][2][1] = float(values[3][:-1])
-                    ParamDict[No][3] = float(values[4])
+                    ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
+                    ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
+                    ParamDict[RunNo + 1][No][3] = float(values[4])
                     No += 1
                 if(str(values[0]) == 'sky'):
-                    for j in range(len(ParamDict)):
+                    for j in range(len(ParamDict[RunNo + 1])):
                         i = j + 1
-                        if ParamDict[i][1] == 'sky':
-                            ParamDict[i][2] = float(values[4])
+                        if ParamDict[RunNo + 1][i][1] == 'sky':
+                            ParamDict[RunNo + 1][i][2] = float(values[4])
             except:
                 pass
 #        if 'bulge' in ComP and 'disk' in ComP:
