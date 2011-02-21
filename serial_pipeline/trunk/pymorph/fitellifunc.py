@@ -74,7 +74,7 @@ def run_elli(input, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     iraf.geompar.pa0=pa
     iraf.geompar.sma0=6.0
     iraf.geompar.minsma=0.1
-    iraf.geompar.maxsma=sma*5.0
+    iraf.geompar.maxsma=c.SexHalfRad*4.0
     iraf.geompar.step=0.1
     iraf.geompar.recente="no"
     iraf.geompar.xylearn="no"
