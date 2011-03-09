@@ -1,4 +1,4 @@
-#!/home/vinu/software/Python2.5/bin/python
+#!/sw/bin/python2.6
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
 import os
@@ -1629,7 +1629,18 @@ def rm_sex_cata(option, opt, value, parser):
     return
 
 def run_test(option, opt, value, parser):
-    print "run the test!"
+    print "using directory " + value + "for output\n"
+    c.center_deviated = 0
+    c.starthandle = 0
+    FindAndFit()
+    main()
+    if c.crashhandler:
+        c.starthandle = 1
+        os.system('mv restart.cat CRASH.CAT')
+        c.clus_cata = 'CRASH.CAT' 
+        main()
+    
+    sys.exit(0)
     return
 
 if __name__ == '__main__':
@@ -1672,70 +1683,6 @@ if __name__ == '__main__':
     c.SEx_WEIGHT_TYPE = 'DECIDE'
     sex_cata = c.sex_cata
 
-    usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
-        "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
-        "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
-        "[--with-area]  [--no-mask] [--norm-mask] [--with-sg] [--bdbox] [--bbox] [--dbox] [--test]"
-    parser = OptionParser(usage=usage)
-    parser.add_option("-e", "--edit_conf", action="callback", 
-                      callback=run_SExtractorConf, 
-                      help="runs SExtractor configuration")
-    parser.add_option("-f", "--force", action="callback", 
-                      callback=rm_sex_cata,
-                      help="removes SExtractor catalog")
-    parser.add_option("-p", "--with-psf", action="store", type="int",
-                      dest="WhichPsf",default = False, help="Nearest/farthest PSF")
-    parser.add_option("-t", "--test", action="callback", callback=run_test,
-                      help="runs the test instance OVERRIDES ALL OTHER INPUT")
-    parser.add_option("--lmag", action="store", type="float",
-                      dest="LMag",default = 500.0, help="lower magnitude cutoff")
-    parser.add_option("--umag", action="store", type="float",
-                      dest="UMag", default = -500.0, help="upper magnitude cutoff")
-    parser.add_option("--ln", action="store", type="float",
-                      dest="LN", default = 0.1, help="Lower Sersic")
-    parser.add_option("--un", action="store", type="float",
-                      dest="UN", default = 20.0, help="Upper Sersic")
-    parser.add_option("--lre", action="store", type="float",
-                      dest="LRe", default = 0.0, help="Lower Bulge Radius")
-    parser.add_option("--ure", action="store", type="float",
-                      dest="URe", default = 500.0, help="Upper Bulge Radius")
-    parser.add_option("--lrd", action="store", type="float",
-                      dest="LRd", default = 0.0, help="Lower Disk Radius")
-    parser.add_option("--urd", action="store", type="float",
-                      dest="URd", default = 500.0, help="Upper Disk Radius")
-    parser.add_option("--with-in", action="store", type="float",
-                      dest="avoidme", default = 150.0, help="avoid me!")
-    parser.add_option("--with-filter", action="store", type="string", 
-                      default = 'UNKNOWN', dest="Filter", help="Filter used")
-    parser.add_option("--with-db", action="store", type="string",
-                      default = 'UNKNOWN', dest="database", help="database used")
-    parser.add_option("--with-area", action="store", type="float",
-                      dest="AreaOfObj", default = 40.0, help="min Area of psf for selection")
-    parser.add_option("--no_mask", action="store_true",default = False,
-                      dest="NoMask", help="turns off masking")
-    parser.add_option("--norm_mask", action="store_true",default = False,
-                      dest="NormMask", help="turns on Normal masking")
-    parser.add_option("--with-sg", action="store", type="float",
-                      dest="StarGalProb", default = 0.9, 
-                      help="for psf identification")
-    parser.add_option("--bdbox", action="store_true", default = False,
-                      dest="bdbox", help="turns on bdbox")
-    parser.add_option("--bbox", action="store_true", default = False,
-                      dest="bbox", help="turns on bbox")
-    parser.add_option("--dbox", action="store_true", default = False,
-                      dest="dbox", help="turns on dbox")
-
-
-    (options, args) = parser.parse_args()
-
-
-    for key, value in options.__dict__.items():
-        setattr(c,key, value)
-
-    if c.Filter == 'UNKNOWN':
-        pass
-    else:
-        c.FILTER = c.Filter
     def FindAndFit():
         if c.findandfit == 1:
             if c.psfselect > 2:
@@ -1798,6 +1745,73 @@ if __name__ == '__main__':
             c.searchrad = '0.05arc'
         else:
             pass
+    
+    usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
+        "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
+        "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
+        "[--with-area]  [--no-mask] [--norm-mask] [--with-sg] [--bdbox] "\
+        "[--bbox] [--dbox] [--test]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-e", "--edit_conf", action="callback", 
+                      callback=run_SExtractorConf, 
+                      help="runs SExtractor configuration")
+    parser.add_option("-f", "--force", action="callback", 
+                      callback=rm_sex_cata,
+                      help="removes SExtractor catalog")
+    parser.add_option("-p", "--with-psf", action="store", type="int",
+                      dest="WhichPsf",default = False, help="Nearest/farthest PSF")
+    parser.add_option("-t", "--test", action="callback", callback=run_test, 
+                      type="string",
+                      help="runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output")
+    parser.add_option("--lmag", action="store", type="float",
+                      dest="LMag",default = 500.0, help="lower magnitude cutoff")
+    parser.add_option("--umag", action="store", type="float",
+                      dest="UMag", default = -500.0, help="upper magnitude cutoff")
+    parser.add_option("--ln", action="store", type="float",
+                      dest="LN", default = 0.1, help="Lower Sersic")
+    parser.add_option("--un", action="store", type="float",
+                      dest="UN", default = 20.0, help="Upper Sersic")
+    parser.add_option("--lre", action="store", type="float",
+                      dest="LRe", default = 0.0, help="Lower Bulge Radius")
+    parser.add_option("--ure", action="store", type="float",
+                      dest="URe", default = 500.0, help="Upper Bulge Radius")
+    parser.add_option("--lrd", action="store", type="float",
+                      dest="LRd", default = 0.0, help="Lower Disk Radius")
+    parser.add_option("--urd", action="store", type="float",
+                      dest="URd", default = 500.0, help="Upper Disk Radius")
+    parser.add_option("--with-in", action="store", type="float",
+                      dest="avoidme", default = 150.0, help="avoid me!")
+    parser.add_option("--with-filter", action="store", type="string", 
+                      default = 'UNKNOWN', dest="Filter", help="Filter used")
+    parser.add_option("--with-db", action="store", type="string",
+                      default = 'UNKNOWN', dest="database", help="database used")
+    parser.add_option("--with-area", action="store", type="float",
+                      dest="AreaOfObj", default = 40.0, help="min Area of psf for selection")
+    parser.add_option("--no_mask", action="store_true",default = False,
+                      dest="NoMask", help="turns off masking")
+    parser.add_option("--norm_mask", action="store_true",default = False,
+                      dest="NormMask", help="turns on Normal masking")
+    parser.add_option("--with-sg", action="store", type="float",
+                      dest="StarGalProb", default = 0.9, 
+                      help="for psf identification")
+    parser.add_option("--bdbox", action="store_true", default = False,
+                      dest="bdbox", help="turns on bdbox")
+    parser.add_option("--bbox", action="store_true", default = False,
+                      dest="bbox", help="turns on bbox")
+    parser.add_option("--dbox", action="store_true", default = False,
+                      dest="dbox", help="turns on dbox")
+
+
+    (options, args) = parser.parse_args()
+
+
+    for key, value in options.__dict__.items():
+        setattr(c,key, value)
+
+    if c.Filter == 'UNKNOWN':
+        pass
+    else:
+        c.FILTER = c.Filter
     if exists(sex_cata):
         pass
     elif(c.galcut == False):
