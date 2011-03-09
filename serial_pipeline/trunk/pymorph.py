@@ -5,7 +5,7 @@ import os
 import time
 from os.path import exists
 import sys
-from getopt import getopt, GetoptError
+from optparse import OptionParser, OptParseError
 import csv
 import pyfits
 import numpy as n
@@ -1613,12 +1613,24 @@ def SExtractorConf():
         c.SEx_BACKPHOTO_THICK = 24
     SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
     c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
-def UsageOfPyMorph():
-    print "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
-          "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
-	  "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
-	  "[--with-area]  [--no-mask] [--norm-mask] [--with-sg]"
-    sys.exit(0)
+
+def run_SExtractorConf(option, opt, value, parser):
+    try:
+        SExtractorConf()
+    except:
+        raise OptionValueError("failure in SextractorConf()")
+    return
+
+def rm_sex_cata(option, opt, value, parser):
+    if exists(sex_cata):
+        os.remove(sex_cata)
+    else:
+        pass
+    return
+
+def run_test(option, opt, value, parser):
+    print "run the test!"
+    return
 
 if __name__ == '__main__':
     c.FirstCreateDB = 1 #Won't create table when c.FirstCreateDB=0
@@ -1658,88 +1670,68 @@ if __name__ == '__main__':
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_BACKPHOTO_THICK = 24
     c.SEx_WEIGHT_TYPE = 'DECIDE'
-    c.WhichPsf = 0
-    c.LMag = 500.0
-    c.UMag = -500.0
-    c.LN = 0.1
-    c.UN = 20.0
-    c.LRe = 0.0
-    c.URe = 500.0
-    c.LRd = 0.0
-    c.URd = 500.0
-    c.avoideme = 150.0
-    c.AreaOfObj = 40.0 #min Area of psf for selection
-    c.StarGalProb = 0.9 #for psf identification
-    c.bdbox = 0
-    c.bbox = 0
-    c.dbox = 0
-    c.NoMask = 0
-    c.NormMask = 0
     sex_cata = c.sex_cata
-    if len(sys.argv[1:]) > 0:
-        try:
-            options, args = getopt(sys.argv[1:], "efhti", ['edit-conf', \
-                        'with-psf=', 'force', 'help', 'test', 'initial',\
-                        'lmag=', 'umag=', 'ln=', 'un=', 'lre=', 'ure=', \
-                        'lrd=', 'urd=', 'with-in=', 'with-filter=', \
-                        'with-db=', 'with-area=', 'no-mask', 'norm-mask', \
-			'with-sg='])
-        except GetoptError, err:
-            print str(err) 
-            UsageOfPyMorph()
-        for opt, arg in options:
-            if opt in ('-c', '--edit-conf'):
-                SExtractorConf()
-            if opt in ('-i', '--initial'):
-                DecideInitialParamers
-            if opt in ('-f', '--force'):
-                if exists(sex_cata):
-                    os.remove(sex_cata)
-                else:
-                    pass
-            if opt in ('-p', '--with-psf'):
-                c.WhichPsf = int(arg)               #Nearest/farthest psf
-            if opt in ('-t', '--test'):
-                TestingOption
-            if opt in ['--lmag']:
-                c.LMag = float(arg)
-            if opt in ['--umag']:
-                c.UMag = float(arg)
-            if opt in ['--ln']:
-                c.LN = float(arg)
-            if opt in ['--un']:
-                c.UN = float(arg)
-            if opt in ['--lre']:
-                c.LRe = float(arg)
-            if opt in ['--ure']:
-                c.URe = float(arg)
-                print c.URe
-            if opt in ['--lrd']:
-                c.LRd = float(arg)
-            if opt in ['--ure']:
-                c.URd = float(arg)
-            if opt in ['--with-in']:
-                c.avoideme = float(arg)
-            if opt in ['--with-filter']:
-                c.Filter = arg
-            if opt in ['--with-db']:
-                c.database = arg
-            if opt in ['--with-area']:
-                c.AreaOfObj = float(arg)
-            if opt in ['--no-mask']:
-		c.NoMask = 1
-            if opt in ['--norm-mask']:
-		c.NormMask = 1
-            if opt in ['--with-sg']:
-                c.StarGalProb = float(arg)
-            if opt in ['--bdbox']:
-                c.bdbox = 1
-            if opt in ['--bbox']:
-                c.bbox = 1
-            if opt in ['--dbox']:
-                c.dbox = 1
-            if opt in ('-h', '--help'):
-                UsageOfPyMorph()
+
+    usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
+        "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
+        "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
+        "[--with-area]  [--no-mask] [--norm-mask] [--with-sg] [--bdbox] [--bbox] [--dbox] [--test]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-e", "--edit_conf", action="callback", 
+                      callback=run_SExtractorConf, 
+                      help="runs SExtractor configuration")
+    parser.add_option("-f", "--force", action="callback", 
+                      callback=rm_sex_cata,
+                      help="removes SExtractor catalog")
+    parser.add_option("-p", "--with-psf", action="store", type="int",
+                      dest="WhichPsf",default = False, help="Nearest/farthest PSF")
+    parser.add_option("-t", "--test", action="callback", callback=run_test,
+                      help="runs the test instance OVERRIDES ALL OTHER INPUT")
+    parser.add_option("--lmag", action="store", type="float",
+                      dest="LMag",default = 500.0, help="lower magnitude cutoff")
+    parser.add_option("--umag", action="store", type="float",
+                      dest="UMag", default = -500.0, help="upper magnitude cutoff")
+    parser.add_option("--ln", action="store", type="float",
+                      dest="LN", default = 0.1, help="Lower Sersic")
+    parser.add_option("--un", action="store", type="float",
+                      dest="UN", default = 20.0, help="Upper Sersic")
+    parser.add_option("--lre", action="store", type="float",
+                      dest="LRe", default = 0.0, help="Lower Bulge Radius")
+    parser.add_option("--ure", action="store", type="float",
+                      dest="URe", default = 500.0, help="Upper Bulge Radius")
+    parser.add_option("--lrd", action="store", type="float",
+                      dest="LRd", default = 0.0, help="Lower Disk Radius")
+    parser.add_option("--urd", action="store", type="float",
+                      dest="URd", default = 500.0, help="Upper Disk Radius")
+    parser.add_option("--with-in", action="store", type="float",
+                      dest="avoidme", default = 150.0, help="avoid me!")
+    parser.add_option("--with-filter", action="store", type="string", 
+                      default = 'UNKNOWN', dest="Filter", help="Filter used")
+    parser.add_option("--with-db", action="store", type="string",
+                      default = 'UNKNOWN', dest="database", help="database used")
+    parser.add_option("--with-area", action="store", type="float",
+                      dest="AreaOfObj", default = 40.0, help="min Area of psf for selection")
+    parser.add_option("--no_mask", action="store_true",default = False,
+                      dest="NoMask", help="turns off masking")
+    parser.add_option("--norm_mask", action="store_true",default = False,
+                      dest="NormMask", help="turns on Normal masking")
+    parser.add_option("--with-sg", action="store", type="float",
+                      dest="StarGalProb", default = 0.9, 
+                      help="for psf identification")
+    parser.add_option("--bdbox", action="store_true", default = False,
+                      dest="bdbox", help="turns on bdbox")
+    parser.add_option("--bbox", action="store_true", default = False,
+                      dest="bbox", help="turns on bbox")
+    parser.add_option("--dbox", action="store_true", default = False,
+                      dest="dbox", help="turns on dbox")
+
+
+    (options, args) = parser.parse_args()
+
+
+    for key, value in options.__dict__.items():
+        setattr(c,key, value)
+
     if c.Filter == 'UNKNOWN':
         pass
     else:
