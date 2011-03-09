@@ -22,7 +22,8 @@ from runsexfunc import *
 from casgm import *
 from bkgdfunc import *
 #from configiter import *
-from configbarpoint import *
+#from configbarpoint import *
+from configbulgedisk import *
 
 try:
     from pyraf import iraf
@@ -861,8 +862,8 @@ def main():
                                                 eg, pos_ang, sky)
                                         bxcntr = Bkgd_Params.bkgd[0]
                                         bycntr = Bkgd_Params.bkgd[1]
-                                        skysig = Bkgd_Params.bkgd[2]
-                                        print 'Sky Sigma >>> ', skysig
+                                        c.skysig = Bkgd_Params.bkgd[2]
+                                        print 'Sky Sigma >>> ', c.skysig
                                     except:
                                         f_err.writelines(['Could not',\
                                                   ' find the sky'\
@@ -964,7 +965,7 @@ def main():
                                 try:
                                     caSgm = casgm(cutimage, 'TmpElliMask.fits',\
                                                 xcntr, ycntr, bxcntr, bycntr, \
-                                                eg, pos_ang, sky, skysig)
+                                                eg, pos_ang, sky, c.skysig)
                                     C = caSgm[0]
                                     C_err = caSgm[1]
                                     A = caSgm[2]
@@ -1218,7 +1219,7 @@ def main():
                                         os.system('rm ''P_' + str(cutimage)\
                                                    [6:-4] + 'png''')
                                     GoodNess = PlotFunc(cutimage, outimage, \
-                                          maskimage, xcntr, ycntr, sky, skysig)
+                                         maskimage, xcntr, ycntr, sky, c.skysig)
                                     Goodness = GoodNess.plot_profile
                                 except:
                                     f_err.writelines(['Error in plotting. '])

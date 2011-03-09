@@ -62,9 +62,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                           str(c.center_constrain) + '\n')
         f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                           ' to ' + str(c.LMag) + '\n')
-        f_constrain.write(str(cO) + '      re     ' + str(c.LRe) +\
+        f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
                           ' to ' + str(c.URe) + '\n')
-        f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
+        f_constrain.write(str(cO) + '      q       0.05 to 1.0\n')
         f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
         f_constrain.close()
 
@@ -143,9 +143,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'sersic'
         ParamDict[0][AdComp][2] = [xcntr_o, ycntr_o]
-        ParamDict[0][AdComp][3] = mag + 1.0
-        ParamDict[0][AdComp][4] = radius / 2.0
-        ParamDict[0][AdComp][5] = 2.0
+        ParamDict[0][AdComp][3] = mag 
+        ParamDict[0][AdComp][4] = radius 
+        ParamDict[0][AdComp][5] = 4.0
         ParamDict[0][AdComp][6] = axis_rat
         ParamDict[0][AdComp][7] = pos_ang
         ParamDict[0][AdComp][8] = 0
@@ -158,7 +158,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp] = {}
         ParamDict[0][AdComp][1] = 'expdisk'
         ParamDict[0][AdComp][2] = [xcntr_o, ycntr_o]
-        ParamDict[0][AdComp][3] = mag + 0.5
+        ParamDict[0][AdComp][3] = mag 
         ParamDict[0][AdComp][4] = radius
         ParamDict[0][AdComp][5] = axis_rat
         ParamDict[0][AdComp][6] = pos_ang
@@ -357,7 +357,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
@@ -397,7 +397,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
+                    FitDict[i][4] = 0
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
@@ -574,8 +574,24 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
         return ContinueLoop
 
+#The following function is to check whether the large bulge radii is real for
+#deva + disk fitting
+    def DecideHowToMove2(ParamDict, RunNo):
+        ContinueLoop = 0
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3]:
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[RunNo - 1][1][4] / 3.0)
+
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo - 1][1][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo - 1][1][2][1])
+#            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3])
+            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
+#            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
+ 
+            ContinueLoop = 1
+        return ContinueLoop
+
     #Write configuration file. RunNo is the number of iteration
-    for RunNo in range(3):
+    for RunNo in range(2):
         f_constrain = open(constrain_file, 'w')
         f_constrain.close()
         f=open(config_file,'w')
@@ -643,7 +659,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
 #        print ParamDict
 #        raw_input('Waiting >>> ')
-        #print 'Waiting'
+#        print 'Waiting'
         if exists('fit.log'):
             os.remove('fit.log') 
         try:
@@ -656,7 +672,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         #ReadLog(ParamDict, 1) reads the fit.log in the order, ie. sersic, 
         #expdisk, other sersic etc
             ParamDict = ReadLog(ParamDict, 1, RunNo)
-            if DecideHowToMove1(ParamDict, RunNo + 1):
+            if DecideHowToMove2(ParamDict, RunNo + 1):
                 pass
             else:
                 break
@@ -671,9 +687,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         except:
 #            print 'Hello'
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
-            ParamDict[RunNo + 1][3][5] = 0.5
-            ParamDict[RunNo + 1][1][4] = 0.5
-            ParamDict[RunNo + 1][1][5] = 1.5
+#            ParamDict[RunNo + 1][3][5] = 0.5
+#            ParamDict[RunNo + 1][1][4] = 0.5
+#            ParamDict[RunNo + 1][1][5] = 1.5
 
 #            for i in range(3):
 #                if abs(ParamDict[RunNo][i + 1][2][0] - ParamDict[RunNo + 1][i + 1][2][0]) > 2.5 or abs(ParamDict[RunNo][i + 1][2][1] - ParamDict[RunNo + 1][i + 1][2][1]) > 2.5: 
