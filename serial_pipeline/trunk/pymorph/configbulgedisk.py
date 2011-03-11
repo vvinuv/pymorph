@@ -50,20 +50,25 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 	c.center_constrain = c.center_constrain
     except:
 	c.center_constrain = 2.0
-    def SersicMainConstrain(constrain_file, cO):
+    def SersicMainConstrain(constrain_file, cO, cen_con, re_con):
         f_constrain = open(constrain_file, 'ab')
         f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
                           ' to ' + str(c.UN) +  '\n')
         f_constrain.write(str(cO) + '      x      ' + \
-                          str(-c.center_constrain) + '     ' + \
-                          str(c.center_constrain) + '\n')
+                          str(-cen_con) + '     ' + \
+                          str(cen_con) + '\n')
         f_constrain.write(str(cO) + '      y      ' + \
-                          str(-c.center_constrain) + '     ' + \
-                          str(c.center_constrain) + '\n')
+                          str(-cen_con) + '     ' + \
+                          str(cen_con) + '\n')
         f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                           ' to ' + str(c.LMag) + '\n')
-        f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
+        if re_con == 0:
+            f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
                           ' to ' + str(c.URe) + '\n')
+        else:
+            f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
+                          ' to ' + str(re_con) + '\n')
+
         f_constrain.write(str(cO) + '      q       0.05 to 1.0\n')
         f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
         f_constrain.close()
@@ -122,7 +127,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
         f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
         f_constrain.close()
-
+    
+    def SkyConstrain(constrain_file, cO):
+        f_constrain = open(constrain_file, 'ab')
+        f_constrain.write(str(cO) + '      sky      ' + str(c.SexSky - c.SexSky * 0.001) + ' to ' + str(c.SexSky + c.SexSky * 0.001) + '  \n')
+        f_constrain.close()
     xcntr_o  = xcntr #float(values[1]) #x center of the object
     ycntr_o  = ycntr #float(values[2]) #y center of the object
     mag    = float(values[7]) #Magnitude
@@ -578,15 +587,20 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 #deva + disk fitting
     def DecideHowToMove2(ParamDict, RunNo):
         ContinueLoop = 0
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3]:
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 3.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3]:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo-1][1][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo-1][1][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3] + 0.5)
             ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[RunNo - 1][1][4] / 3.0)
-
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo - 1][1][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo - 1][1][2][1])
-#            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3])
             ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
-#            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
- 
+            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
+            ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[RunNo-1][2][2][0])
+            ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[RunNo-1][2][2][1])
+            ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[RunNo - 1][2][3])
+            ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[RunNo - 1][2][4])
+            ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[RunNo - 1][2][5])
+            ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[RunNo - 1][2][6])
+            ParamDict[RunNo][3][2] = copy.deepcopy(ParamDict[RunNo - 1][3][2])
             ContinueLoop = 1
         return ContinueLoop
 
@@ -630,7 +644,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
-                    SersicMainConstrain(constrain_file, i + 1)
+                    if RunNo == 1: #Second run
+                        print ParamDict[RunNo][2][4]
+                        SersicMainConstrain(constrain_file, i + 1, 2.0, 2. * ParamDict[RunNo][2][4])
+                    else: #Second run
+                        SersicMainConstrain(constrain_file, i + 1, c.center_constrain, 0)
                 else:
                     SersicConstrain(constrain_file, i + 1)
  
@@ -655,10 +673,12 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     PsfConstrain(constrain_file, i + 1)
 
             if  ParamDict[RunNo][i + 1][1] == 'sky':
+                if RunNo == 9: 
+                    SkyConstrain(constrain_file, i + 1)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
 
-#        print ParamDict
-#        raw_input('Waiting >>> ')
+        print ParamDict
+        raw_input('Waiting >>> ')
 #        print 'Waiting'
         if exists('fit.log'):
             os.remove('fit.log') 
