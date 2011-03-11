@@ -645,8 +645,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
                     if RunNo == 1: #Second run
-                        print ParamDict[RunNo][2][4]
-                        SersicMainConstrain(constrain_file, i + 1, 2.0, 2. * ParamDict[RunNo][2][4])
+                        SersicMainConstrain(constrain_file, i + 1, 1.0, 0)#2. * ParamDict[RunNo][2][4])
                     else: #Second run
                         SersicMainConstrain(constrain_file, i + 1, c.center_constrain, 0)
                 else:
