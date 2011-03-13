@@ -676,8 +676,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     SkyConstrain(constrain_file, i + 1)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
 
-        print ParamDict
-        raw_input('Waiting >>> ')
+#        print ParamDict
+#        raw_input('Waiting >>> ')
 #        print 'Waiting'
         if exists('fit.log'):
             os.remove('fit.log') 
