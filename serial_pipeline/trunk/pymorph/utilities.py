@@ -6,7 +6,7 @@ import config as c
 def WriteDb(ParamValues):
     gal_id = ParamValues[0]
     dba = c.database
-    pwd = 'cluster'
+    pwd = c.pword
     usr = c.usr
     tbl = c.table
     try:
