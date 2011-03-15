@@ -7,7 +7,8 @@ from numpy import log10
 from readlog import ReadLog
 from runsexfunc import *
 import copy
-
+import numpy as n
+import numpy.ma as ma
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
        consists of bulge and disk component of the object and only Sersic 
@@ -26,7 +27,7 @@ class ConfigIter:
         self.NYPTS = NYPTS 
         self.psffile = psffile
         self.confiter    = confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
-		
+
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
@@ -63,10 +64,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                           ' to ' + str(c.LMag) + '\n')
         if re_con == 0:
-            f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
+            f_constrain.write(str(cO) + '      re     ' + str(0.2) +\
                           ' to ' + str(c.URe) + '\n')
         else:
-            f_constrain.write(str(cO) + '      re     ' + str(0.1) +\
+            f_constrain.write(str(cO) + '      re     ' + str(0.5) +\
                           ' to ' + str(re_con) + '\n')
 
         f_constrain.write(str(cO) + '      q       0.05 to 1.0\n')
@@ -142,6 +143,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     axis_rat = 1.0/float(values[12]) #axis ration b/a
     area_o = float(values[13])   # object's area
     major_axis = float(values[14])	#major axis of the object
+    FourPerSky = c.SexSky * 0.02
+    OnePerSky = c.SexSky * 0.004
+    SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.004)
     ParamDict = {}
     ParamDict[0] = {}
     #Add components
@@ -377,16 +381,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][5] = 1  
                 #In the first run the bar and point will not be fitted.
                 #The following is to keep the order of ParamDict and FitDict 
-                if ParamDict[RunNo][i][1] == 'bar' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-                if ParamDict[RunNo][i][1] == 'psf' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
                 if ParamDict[RunNo][i][1] == 'sky':
                     FitDict[i][1] = 1
                     FitDict[i][2] = 0 
@@ -398,7 +392,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][4] = 1
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
-        if No == 2:
+        if No > 1:
             for j in range(len(ParamDict[RunNo])):
                 i = j + 1
                 FitDict[i] = {}  
@@ -415,84 +409,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1       
                     FitDict[i][5] = 1  
-                if ParamDict[RunNo][i][1] == 'bar' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-                if ParamDict[RunNo][i][1] == 'psf' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
                 if ParamDict[RunNo][i][1] == 'sky':
-                    FitDict[i][1] = 1
-                    FitDict[i][2] = 0 
-                    FitDict[i][3] = 0 
-                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-        if No == 3:
-            for j in range(len(ParamDict[RunNo])):
-                i = j + 1
-                FitDict[i] = {}  
-                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-                if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1       
-                    FitDict[i][5] = 1    
-                if ParamDict[RunNo][i][1] == 'bar' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-                if ParamDict[RunNo][i][1] == 'psf' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                if ParamDict[RunNo][i][1] == 'sky':
-                    FitDict[i][1] = 1
-                    FitDict[i][2] = 0 
-                    FitDict[i][3] = 0 
-                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
-                    FitDict[i][1] = [0, 0]
-                    FitDict[i][2] = 0 
-                    FitDict[i][3] = 0 
-                    FitDict[i][4] = 0
-                    FitDict[i][5] = 0       
-                    FitDict[i][6] = 0    
-        if No == 4:
-            for j in range(len(ParamDict[RunNo])):
-                i = j + 1
-                FitDict[i] = {}  
-                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1
-                    FitDict[i][5] = 1       
-                    FitDict[i][6] = 1    
-                if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [1, 1]
-                    FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 1       
-                    FitDict[i][5] = 1    
-                if ParamDict[RunNo][i][1] == 'sky':
-                    FitDict[i][1] = 1
+                    FitDict[i][1] = 0
                     FitDict[i][2] = 0 
                     FitDict[i][3] = 0 
                 if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
@@ -504,108 +422,41 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     FitDict[i][6] = 0    
         return FitDict
 
-    def DecideHowToMove(ParamDict, RunNo):
-        ContinueLoop = 0
-        if ParamDict[RunNo][1][5] > 7: #If n > 7, re = 1 and n = 1
-            ParamDict[RunNo][1][4] = 1.0
-            ParamDict[RunNo][1][5] = 1.0
-            ContinueLoop = 1
-        if ParamDict[RunNo][1][5] > 7 and ParamDict[RunNo][3][5] > 2.15:
-            ParamDict[RunNo][1][4] = 1.0
-            ParamDict[RunNo][1][5] = 1.0
-            ParamDict[RunNo][3][4] = copy.deepcopy(ParamDict[RunNo - 1][3][4])
-            ParamDict[RunNo][3][5] = 0.5
-            ContinueLoop = 1
-        if ParamDict[RunNo][1][6] < ParamDict[RunNo][3][6] or ParamDict[RunNo][3][5] > 2.15:
-            ParamDict[RunNo][3][7] = copy.deepcopy(ParamDict[RunNo][1][7])
-            ParamDict[RunNo][3][6] = copy.deepcopy(ParamDict[RunNo][1][6])
-            ParamDict[RunNo][3][5] = 0.5
-            ParamDict[RunNo][3][4] = copy.deepcopy(ParamDict[RunNo - 1][3][4]) 
-            ParamDict[RunNo][3][3] = copy.deepcopy(ParamDict[RunNo - 1][3][3])
-            ParamDict[RunNo][3][2][0] = copy.deepcopy(ParamDict[RunNo][1][2][0])
-            ParamDict[RunNo][3][2][1] = copy.deepcopy(ParamDict[RunNo][1][2][1])
-            ParamDict[RunNo][1][4] = 1.0
-            ParamDict[RunNo][1][5] = 1.0
-            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
-            ContinueLoop = 1
-        if ParamDict[RunNo][3][6] > 0.58:
-            ParamDict[RunNo][3][7] = copy.deepcopy(ParamDict[RunNo][1][7])
-            ParamDict[RunNo][3][6] = 0.3
-            ParamDict[RunNo][3][5] = 0.5
-            ContinueLoop = 1
-        return ContinueLoop
-    def DecideHowToMove1(ParamDict, RunNo):
-        ContinueLoop = 0
-        if ParamDict[RunNo][1][6] < ParamDict[RunNo][3][6] and ParamDict[RunNo][1][6] < 0.45:
-            ParamDict[RunNo][3][7] = copy.deepcopy(ParamDict[RunNo][1][7])
-
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo - 1][1][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo - 1][1][2][1])
-            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3])
-            ParamDict[RunNo][1][3] = ParamDict[RunNo][1][3] + 1.0 
-            ParamDict[RunNo][1][4] = 1.0
-            ParamDict[RunNo][1][5] = 1.0
-            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
-            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
- 
-#        ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[RunNo - 1][2][2][0])
-#        ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[RunNo - 1][2][2][1])
-#        ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[RunNo - 1][2][3])
-#        ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[RunNo - 1][2][4])
-#        ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[RunNo - 1][2][6])
-#        ParamDict[RunNo][2][7] = copy.deepcopy(ParamDict[RunNo - 1][2][7])
-
-            ParamDict[RunNo][3][2][0] = copy.deepcopy(ParamDict[RunNo - 1][3][2][0])
-            ParamDict[RunNo][3][2][1] = copy.deepcopy(ParamDict[RunNo - 1][3][2][1])
-            ParamDict[RunNo][3][3] = copy.deepcopy(ParamDict[RunNo - 1][3][3])
-            ParamDict[RunNo][3][3] =  ParamDict[RunNo][3][3] 
-            ParamDict[RunNo][3][4] = copy.deepcopy(ParamDict[RunNo - 1][3][4]) 
-            ParamDict[RunNo][3][5] = 0.5
-            ParamDict[RunNo][3][6] = copy.deepcopy(ParamDict[RunNo - 1][3][6])
-            ContinueLoop = 1
-        elif ParamDict[RunNo][1][5] > 7 :
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo - 1][1][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo - 1][1][2][1])
-            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3])
-            ParamDict[RunNo][1][3] = ParamDict[RunNo][1][3] + 2.0 
-            ParamDict[RunNo][1][4] = 1.0
-            ParamDict[RunNo][1][5] = 1.0
-            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
-            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
- 
-#        ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[RunNo - 1][2][2][0])
-#        ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[RunNo - 1][2][2][1])
-#        ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[RunNo - 1][2][3])
-#        ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[RunNo - 1][2][4])
-#        ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[RunNo - 1][2][6])
-#        ParamDict[RunNo][2][7] = copy.deepcopy(ParamDict[RunNo - 1][2][7])
-            ContinueLoop = 1
-
-        return ContinueLoop
-
 #The following function is to check whether the large bulge radii is real for
 #deva + disk fitting
     def DecideHowToMove2(ParamDict, RunNo):
+        c.ParamDictBook[RunNo - 1] = copy.deepcopy(ParamDict[RunNo])
         ContinueLoop = 0
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 3.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3]:
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo-1][1][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo-1][1][2][1])
-            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo - 1][1][3] + 0.5)
-            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[RunNo - 1][1][4] / 3.0)
-            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[RunNo - 1][1][6])
-            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[RunNo - 1][1][7])
-            ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[RunNo-1][2][2][0])
-            ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[RunNo-1][2][2][1])
-            ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[RunNo - 1][2][3])
-            ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[RunNo - 1][2][4])
-            ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[RunNo - 1][2][5])
-            ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[RunNo - 1][2][6])
-            ParamDict[RunNo][3][2] = copy.deepcopy(ParamDict[RunNo - 1][3][2])
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo][2][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo][2][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo][2][3] + 1.0)
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[RunNo][2][4])
+            try:
+                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+            except:
+                pass
+            c.FitArr.append(1)
+            ContinueLoop = 1
+        elif ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3]:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[RunNo][2][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[RunNo][2][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[RunNo][2][3] + 1.0)
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[RunNo][2][4])
+            try:
+                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+            except:
+                pass
+            c.FitArr.append(0)
             ContinueLoop = 1
         return ContinueLoop
-
+     
+    c.Chi2DOFArr = []
+    c.FitArr = []
+    c.ParamDictBook = {}
     #Write configuration file. RunNo is the number of iteration
-    for RunNo in range(2):
+#    print SkyArray
+    for RunNo in range(SkyArray.shape[0] + 2):
         f_constrain = open(constrain_file, 'w')
         f_constrain.close()
         f=open(config_file,'w')
@@ -644,8 +495,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
-                    if RunNo == 1: #Second run
-                        SersicMainConstrain(constrain_file, i + 1, 1.0, 0)#2. * ParamDict[RunNo][2][4])
+                    if RunNo == -1: #Second run
+                        SersicMainConstrain(constrain_file, i + 1, 1.0, ParamDict[RunNo][2][4] * 20.0)
                     else: #Second run
                         SersicMainConstrain(constrain_file, i + 1, c.center_constrain, 0)
                 else:
@@ -675,7 +526,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 if RunNo == 9: 
                     SkyConstrain(constrain_file, i + 1)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
-
+        
 #        print ParamDict
 #        raw_input('Waiting >>> ')
 #        print 'Waiting'
@@ -690,30 +541,34 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         #we can find the best  initial values for the rest of it.
         #ReadLog(ParamDict, 1) reads the fit.log in the order, ie. sersic, 
         #expdisk, other sersic etc
-            ParamDict = ReadLog(ParamDict, 1, RunNo)
+            ParamDict, Chi2DOF = ReadLog(ParamDict, 1, RunNo)
+            c.Chi2DOFArr.append(Chi2DOF)
             if DecideHowToMove2(ParamDict, RunNo + 1):
                 pass
             else:
                 break
-            if RunNo == -10:
-                for i in range(3):
-                    try:
-                        ParamDict[RunNo][i + 2][2][0]  = ParamDict[RunNo][1][2][0]
-                        ParamDict[RunNo][i + 2][2][1]  = ParamDict[RunNo][1][2][1]
-                    except:
-                        pass
-                ParamDict[RunNo][2][3] = ParamDict[RunNo][1][3] 
+            if RunNo == SkyArray.shape[0]:
+                c.Chi2DOFArr = n.array(c.Chi2DOFArr)
+                c.FitArr = n.array(c.FitArr)
+#                print c.Chi2DOFArr
+#                print c.FitArr
+#                print 'Printing ', len(ParamDict)
+                Chi2DOFArrMa = ma.masked_array(c.Chi2DOFArr, c.FitArr)
+#                print Chi2DOFArrMa.argmin()
+#                print 'Print this ', c.ParamDictBook[Chi2DOFArrMa.argmin()]
+#                print 'hi'
+                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
         except:
-#            print 'Hello'
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
-#            ParamDict[RunNo + 1][3][5] = 0.5
-#            ParamDict[RunNo + 1][1][4] = 0.5
-#            ParamDict[RunNo + 1][1][5] = 1.5
-
-#            for i in range(3):
-#                if abs(ParamDict[RunNo][i + 1][2][0] - ParamDict[RunNo + 1][i + 1][2][0]) > 2.5 or abs(ParamDict[RunNo][i + 1][2][1] - ParamDict[RunNo + 1][i + 1][2][1]) > 2.5: 
-                    
-                    
+#        print c.Chi2DOFArr
+#        print c.FitArr
+    c.Chi2DOFArr = n.array(c.Chi2DOFArr)
+    c.FitArr = n.array(c.FitArr)
+#    print c.Chi2DOFArr
+#    print c.FitArr
+#    print len(ParamDict)
+    Chi2DOFArrMa = ma.masked_array(c.Chi2DOFArr, c.FitArr)
+#    print ParamDict[Chi2DOFArrMa.argmin() + 1]
 #        print 'Updated \n', ParamDict, '\n\n'
                         
 
