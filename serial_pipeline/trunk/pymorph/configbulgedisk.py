@@ -144,7 +144,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     area_o = float(values[13])   # object's area
     major_axis = float(values[14])	#major axis of the object
     FourPerSky = c.SexSky * 0.02
-    OnePerSky = c.SexSky * 0.004
+    OnePerSky = c.SexSky * 0.008
     SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.004)
     ParamDict = {}
     ParamDict[0] = {}
@@ -454,11 +454,23 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     def DecideHowToMove2(ParamDict, RunNo):
         c.ParamDictBook[RunNo - 1] = copy.deepcopy(ParamDict[RunNo])
         ContinueLoop = 0
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0:
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
-            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][2][3])
-            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][2][4])
+        HitLimitCheck = 0
+        if abs(ParamDict[RunNo][1][4] - (c.LMag - 2.0)) < 0.05 or abs(ParamDict[RunNo][1][4] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21: 
+            HitLimitCheck = 1
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0 or HitLimitCheck:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][1][4])
+            ParamDict[RunNo][1][5] = copy.deepcopy(ParamDict[0][1][5])
+            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[0][1][6])
+            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[0][1][7])
+            ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
+            ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
+            ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[0][2][3])
+            ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[0][2][4])
+            ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[0][2][5])
+            ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[0][2][6])
             try:
                 ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
             except:
@@ -466,10 +478,19 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             c.FitArr.append(1)
             ContinueLoop = 1
         else:
-            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
-            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
-            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][2][3])
-            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][2][4])
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][1][4])
+            ParamDict[RunNo][1][5] = copy.deepcopy(ParamDict[0][1][5])
+            ParamDict[RunNo][1][6] = copy.deepcopy(ParamDict[0][1][6])
+            ParamDict[RunNo][1][7] = copy.deepcopy(ParamDict[0][1][7])
+            ParamDict[RunNo][2][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
+            ParamDict[RunNo][2][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
+            ParamDict[RunNo][2][3] = copy.deepcopy(ParamDict[0][2][3])
+            ParamDict[RunNo][2][4] = copy.deepcopy(ParamDict[0][2][4])
+            ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[0][2][5])
+            ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[0][2][6])
             try:
                 ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
             except:
@@ -587,6 +608,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
         except:
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
+            ParamDict[RunNo + 1][3][2] = copy.deepcopy(SkyArray[RunNo])
 #        print c.Chi2DOFArr
 #        print c.FitArr
     c.Chi2DOFArr = n.array(c.Chi2DOFArr)
