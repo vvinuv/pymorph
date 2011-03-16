@@ -1806,7 +1806,8 @@ if __name__ == '__main__':
 
 
     for key, value in options.__dict__.items():
-        setattr(c,key, value)
+        if not hasattr(c, key):
+            setattr(c,key, value)
 
     if c.Filter == 'UNKNOWN':
         pass

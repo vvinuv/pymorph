@@ -62,7 +62,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                           str(-cen_con) + '     ' + \
                           str(cen_con) + '\n')
         f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
-                          ' to ' + str(c.LMag) + '\n')
+                          ' to ' + str(c.LMag - 2.0) + '\n')
         if re_con == 0:
             f_constrain.write(str(cO) + '      re     ' + str(0.2) +\
                           ' to ' + str(c.URe) + '\n')
@@ -70,7 +70,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             f_constrain.write(str(cO) + '      re     ' + str(0.5) +\
                           ' to ' + str(re_con) + '\n')
 
-        f_constrain.write(str(cO) + '      q       0.05 to 1.0\n')
+        f_constrain.write(str(cO) + '      q       0.05 to 0.95\n')
         f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
         f_constrain.close()
 
@@ -424,7 +424,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
 #The following function is to check whether the large bulge radii is real for
 #deva + disk fitting
-    def DecideHowToMove2(ParamDict, RunNo):
+    def DecideHowToMove3(ParamDict, RunNo):
         c.ParamDictBook[RunNo - 1] = copy.deepcopy(ParamDict[RunNo])
         ContinueLoop = 0
         if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0:
@@ -450,7 +450,34 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             c.FitArr.append(0)
             ContinueLoop = 1
         return ContinueLoop
-     
+    
+    def DecideHowToMove2(ParamDict, RunNo):
+        c.ParamDictBook[RunNo - 1] = copy.deepcopy(ParamDict[RunNo])
+        ContinueLoop = 0
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][2][3])
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][2][4])
+            try:
+                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+            except:
+                pass
+            c.FitArr.append(1)
+            ContinueLoop = 1
+        else:
+            ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][2][2][0])
+            ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][2][2][1])
+            ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][2][3])
+            ParamDict[RunNo][1][4] = copy.deepcopy(ParamDict[0][2][4])
+            try:
+                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+            except:
+                pass
+            c.FitArr.append(0)
+            ContinueLoop = 1
+        return ContinueLoop
+
     c.Chi2DOFArr = []
     c.FitArr = []
     c.ParamDictBook = {}
