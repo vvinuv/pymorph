@@ -609,6 +609,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         except:
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
             ParamDict[RunNo + 1][3][2] = copy.deepcopy(SkyArray[RunNo])
+            c.Chi2DOFArr.append(9999)
+            c.FitArr.append(1)
 #        print c.Chi2DOFArr
 #        print c.FitArr
     c.Chi2DOFArr = n.array(c.Chi2DOFArr)
