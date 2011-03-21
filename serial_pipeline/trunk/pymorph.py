@@ -1749,11 +1749,11 @@ if __name__ == '__main__':
     # Note I set defaults here and call them in creating the options. This is so 
     # I can use them in determining whether to retain the default or not.
 
-    usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
-        "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
+    usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf [-p]] [--force[-f]] "\
+        "[--help[-h]] [--lmag] [--umag] [--ln] [--un] [--lre] [--ure] "\
         "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
         "[--with-area]  [--no-mask] [--norm-mask] [--with-sg] [--bdbox] "\
-        "[--bbox] [--dbox] [--test]"
+        "[--bbox] [--dbox] [--test [-t]] [--devauc]"
     parser = OptionParser(usage=usage)
     parser.add_option("-e", "--edit_conf", action="callback", 
                       callback=run_SExtractorConf, 
@@ -1809,9 +1809,9 @@ if __name__ == '__main__':
                       default = False, help="turns on bbox")
     parser.add_option("--dbox", action="store_true", dest="dbox",
                       default = False, help="turns on dbox")
-    parser.add_option("--vary_bulge", action="store_true", dest="vary_bulge",
+    parser.add_option("--devauc", action="store_true", dest="devauc",
                       default = False, 
-                      help="turns on varying of sersic parameter in fit")
+                      help="turns on DeVacouleur's bulge fitting (sersic index of bulge frozen at 4.0 for fit)")
 
     # parses command line aguments for pymorph
     (options, args) = parser.parse_args()

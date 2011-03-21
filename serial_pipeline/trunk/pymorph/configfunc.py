@@ -171,7 +171,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(mag), ' 1		# total magnitude\n'])
         f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
-        f.writelines([' 5) 4.0 ', str(c.vary_bulge),\
+        f.writelines([' 5) 4.0 ', str(int(not c.devauc)) ,\
                       '		#Sersic exponent (deVauc=4, expdisk=1)\n'])
         f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
         f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
