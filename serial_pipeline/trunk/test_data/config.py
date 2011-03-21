@@ -81,6 +81,8 @@ crashhandler = 0
 
 ###---Galfit Controls---###
 components = ['bulge', 'disk']        #The components to be fitted to the objec
+vary_bulge = 1.0 # set to 1 to fit sesic bulge, set to 0 to fit devacouler's bulge (n = 4)
+
 ###---fixing = [bulge_center, disk_center, sky]
 fitting = [1, 1, 1]                    # = 0, Fix params at SExtractor value
 

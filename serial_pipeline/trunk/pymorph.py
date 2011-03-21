@@ -1745,7 +1745,10 @@ if __name__ == '__main__':
             c.searchrad = '0.05arc'
         else:
             pass
-    
+
+    # Note I set defaults here and call them in creating the options. This is so 
+    # I can use them in determining whether to retain the default or not.
+
     usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf] [--force[-f]] "\
         "[--help[-h]] [--lmag] [--umag] [--lu] [--un] [--lre] [--ure] "\
         "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
@@ -1759,22 +1762,26 @@ if __name__ == '__main__':
                       callback=rm_sex_cata,
                       help="removes SExtractor catalog")
     parser.add_option("-p", "--with-psf", action="store", type="int",
-                      dest="WhichPsf",default = False, help="Nearest/farthest PSF")
+                      dest="WhichPsf",default = False,
+                      help="Nearest/farthest PSF")
     parser.add_option("-t", "--test", action="callback", callback=run_test, 
-                      type="string",
-                      help="runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output")
+                      type="string", help="runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output")
     parser.add_option("--lmag", action="store", type="float",
-                      dest="LMag",default = 500.0, help="lower magnitude cutoff")
+                      dest="LMag",default = 500.0, 
+                      help="lower magnitude cutoff")
     parser.add_option("--umag", action="store", type="float",
-                      dest="UMag", default = -500.0, help="upper magnitude cutoff")
+                      dest="UMag", default = -500.0,
+                      help="upper magnitude cutoff")
     parser.add_option("--ln", action="store", type="float",
                       dest="LN", default = 0.1, help="Lower Sersic")
     parser.add_option("--un", action="store", type="float",
                       dest="UN", default = 20.0, help="Upper Sersic")
     parser.add_option("--lre", action="store", type="float",
-                      dest="LRe", default = 0.0, help="Lower Bulge Radius")
+                      dest="LRe", default = 0.0,
+                      help="Lower Bulge Radius")
     parser.add_option("--ure", action="store", type="float",
-                      dest="URe", default = 500.0, help="Upper Bulge Radius")
+                      dest="URe", default = 500.0,
+                      help="Upper Bulge Radius")
     parser.add_option("--lrd", action="store", type="float",
                       dest="LRd", default = 0.0, help="Lower Disk Radius")
     parser.add_option("--urd", action="store", type="float",
@@ -1782,31 +1789,41 @@ if __name__ == '__main__':
     parser.add_option("--with-in", action="store", type="float",
                       dest="avoidme", default = 150.0, help="avoid me!")
     parser.add_option("--with-filter", action="store", type="string", 
-                      default = 'UNKNOWN', dest="Filter", help="Filter used")
+                      dest="Filter", default = 'UNKNOWN', help="Filter used")
     parser.add_option("--with-db", action="store", type="string",
-                      default = 'UNKNOWN', dest="database", help="database used")
+                       dest="database", default = 'UNKNOWN', 
+                      help="database used")
     parser.add_option("--with-area", action="store", type="float",
-                      dest="AreaOfObj", default = 40.0, help="min Area of psf for selection")
-    parser.add_option("--no_mask", action="store_true",default = False,
-                      dest="NoMask", help="turns off masking")
-    parser.add_option("--norm_mask", action="store_true",default = False,
-                      dest="NormMask", help="turns on Normal masking")
+                      dest="AreaOfObj", default = 40.0, 
+                      help="min Area of psf for selection")
+    parser.add_option("--no_mask", action="store_true", dest="NoMask",
+                      default = False, help="turns off masking")
+    parser.add_option("--norm_mask", action="store_true", dest="NormMask",
+                      default = False, help="turns on Normal masking")
     parser.add_option("--with-sg", action="store", type="float",
                       dest="StarGalProb", default = 0.9, 
                       help="for psf identification")
-    parser.add_option("--bdbox", action="store_true", default = False,
-                      dest="bdbox", help="turns on bdbox")
-    parser.add_option("--bbox", action="store_true", default = False,
-                      dest="bbox", help="turns on bbox")
-    parser.add_option("--dbox", action="store_true", default = False,
-                      dest="dbox", help="turns on dbox")
+    parser.add_option("--bdbox", action="store_true", dest="bdbox",
+                      default = False, help="turns on bdbox")
+    parser.add_option("--bbox", action="store_true", dest="bbox",
+                      default = False, help="turns on bbox")
+    parser.add_option("--dbox", action="store_true", dest="dbox",
+                      default = False, help="turns on dbox")
+    parser.add_option("--vary_bulge", action="store_true", dest="vary_bulge",
+                      default = False, 
+                      help="turns on varying of sersic parameter in fit")
 
-
+    # parses command line aguments for pymorph
     (options, args) = parser.parse_args()
 
-
+    # compares command line arguments to defaults,
+    # if default, only stores value if value is not set in config file
+    # if not default, then stores to config regardless of config file value.
     for key, value in options.__dict__.items():
-        if not hasattr(c, key):
+        if  parser.defaults[key] ==  value:
+            if not hasattr(c, key):
+                setattr(c,key, value)
+        else:
             setattr(c,key, value)
 
     if c.Filter == 'UNKNOWN':
