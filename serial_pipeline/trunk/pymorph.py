@@ -1110,7 +1110,7 @@ def main():
                                     if c.galfit and DetailFit:
                                         ConfigIter(cutimage, whtimage,  xcntr,\
                                                    ycntr, SizeX, \
-                                                   SizeY, line_s, psffile)
+                                                   SizeY, line_s, psffile, z)
                                     elif c.galfit:
                                         cmd = str(c.GALFIT_PATH) + ' ' + \
                                                   config_file
