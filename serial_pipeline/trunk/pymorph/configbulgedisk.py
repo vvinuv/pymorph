@@ -17,7 +17,7 @@ class ConfigIter:
        The initial value for Sersic index 'n' is 4.The configuration file has 
        the name G_string(galid).in. The output image has the name 
        O_string(galid).fits"""
-    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z):
         self.cutimage = cutimage
         self.line_s  = line_s
 	self.whtimage = whtimage
@@ -26,10 +26,10 @@ class ConfigIter:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
-        self.confiter    = confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
+        self.confiter    = confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
 
 
-def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z):
     RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
     imagefile = c.imagefile
     sex_cata = c.sex_cata
@@ -455,9 +455,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         c.ParamDictBook[RunNo - 1] = copy.deepcopy(ParamDict[RunNo])
         ContinueLoop = 0
         HitLimitCheck = 0
+        KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
         if abs(ParamDict[RunNo][1][4] - (c.LMag - 2.0)) < 0.05 or abs(ParamDict[RunNo][1][4] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21: 
             HitLimitCheck = 1
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 10.0 or HitLimitCheck:
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 2.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999:
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -476,8 +477,14 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             except:
                 pass
             c.FitArr.append(1)
+            c.RadArr.append(1)
             ContinueLoop = 1
         else:
+            if cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3] * \
+               ParamDict[RunNo][1][4] > 20.0 and z != 9999: 
+                c.RadArr.append(1)
+            else:
+                c.RadArr.append(0)
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -501,6 +508,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
 
     c.Chi2DOFArr = []
     c.FitArr = []
+    c.RadArr = []
     c.ParamDictBook = {}
     #Write configuration file. RunNo is the number of iteration
 #    print SkyArray
@@ -598,6 +606,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             if RunNo == SkyArray.shape[0]:
                 c.Chi2DOFArr = n.array(c.Chi2DOFArr)
                 c.FitArr = n.array(c.FitArr)
+                c.RadArr = n.array(c.RadArr)
 #                print c.Chi2DOFArr
 #                print c.FitArr
 #                print 'Printing ', len(ParamDict)
@@ -608,13 +617,16 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                 ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
         except:
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
-            ParamDict[RunNo + 1][3][2] = copy.deepcopy(SkyArray[RunNo])
+            if RunNo < SkyArray.shape[0]:
+                ParamDict[RunNo + 1][3][2] = copy.deepcopy(SkyArray[RunNo])
             c.Chi2DOFArr.append(9999)
             c.FitArr.append(1)
+            c.RadArr.append(1)
 #        print c.Chi2DOFArr
 #        print c.FitArr
     c.Chi2DOFArr = n.array(c.Chi2DOFArr)
     c.FitArr = n.array(c.FitArr)
+    c.RadArr = n.array(c.RadArr)
 #    print c.Chi2DOFArr
 #    print c.FitArr
 #    print len(ParamDict)

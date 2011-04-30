@@ -124,8 +124,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
             values = line.split() 
             try: 
                 if(str(values[0]) == 'Input'):
-                    alpha_ned = str(alpha_j)[:6]
-                    delta_ned = str(delta_j)[:6]
+                    alpha_ned = str(alpha_j)[:10]
+                    delta_ned = str(delta_j)[:10]
                 if(str(values[0]) == 'Init.'):
                     initial_conf = str(values[4])
                 if(str(values[0]) == 'Restart'):
