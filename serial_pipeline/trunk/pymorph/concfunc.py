@@ -205,9 +205,9 @@ def divide_image(z, nxpts, nypts, pixel_division):
 
 def eta_radius_fnc(divide_r, r, mask, nxpts, nypts, background, incr, eta_radius):
 	divide_r = ma.masked_array(divide_r, mask)
-	FLAG_ETA = nn = 0 # The n is using because the program won't calculate eta radius if the eta<0.2 in the first run itself. FLAG_ETA will tell whether the condition eta<0.2 is reached.
-	eta = I_ave_radius = I_ave = no_I_ave = no_I_ave_radius = r50 \
-            = temp_eta = 0.0
+	FLAG_ETA, nn = 0, 0 # The n is using because the program won't calculate eta radius if the eta<0.2 in the first run itself. FLAG_ETA will tell whether the condition eta<0.2 is reached.
+        eta, I_ave_radius, I_ave, no_I_ave, no_I_ave_radius, r50, \
+             temp_eta = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 #Here it try to find the eta radius. It will run until FLAG_ETA=0 and eta_radius< min(NXPTS,NYPTS)
 	while FLAG_ETA == 0:
 		temp_eta = eta
@@ -280,7 +280,7 @@ def eta_radius_fnc(divide_r, r, mask, nxpts, nypts, background, incr, eta_radius
 		temp_no_I_ave = no_I_ave
 		temp_no_I_ave_radius = no_I_ave_radius
 		eta_radius += incr
-		if(eta_radius > n.min(nxpts, nypts) / 2.0):
+		if(eta_radius > n.min([nxpts, nypts]) / 2.0):
 			print 'The radius measurment exceeded the size '\
                                'of the frame. Exiting CASGM module'
 			eta_radius_corre = 9999
