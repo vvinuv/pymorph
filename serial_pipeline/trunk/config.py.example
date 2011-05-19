@@ -13,9 +13,19 @@ clus_cata = 'cl1216-1201.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
+datadir = '/data2/home/ameert/sdss_sample/fit_data/' 
+				       #the directory containing input images
+                                       #if commented out, then program uses
+                                       # current directory
+
 ###----Specify the output names of images and catalogues----###
 out_cata = 'cl1216-1201_out.cat'      #catalogue of galaxies in the field
 rootname = 'j8f643'
+
+outdir = '/data2/home/ameert/sdss_sample/fits_out/dev/1/'  
+					#the directory containing output data
+                                        #if commented out, then program uses
+                                        # current directory
 
 ###----Psf list----###
 psfselect = 0                         #0 => No psfselection
