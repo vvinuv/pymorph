@@ -4,11 +4,11 @@ import pyfits
 import config as c
 from os.path import exists
 from numpy import log10
-from readlog import ReadLog
 from runsexfunc import *
-import copy
 import numpy as n
+import copy
 import numpy.ma as ma
+from readlog import ReadLog
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
        consists of bulge and disk component of the object and only Sersic 
@@ -30,7 +30,7 @@ class ConfigIter:
 
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z):
-    RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
+    RunSex(c.datadir+cutimage, c.datadir+whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
@@ -369,8 +369,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
-                    FitDict[i][3] = 1 
-                    FitDict[i][4] = 0
+                    FitDict[i][3] = 1
+                    FitDict[i][4] = int(not c.devauc)
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
@@ -400,7 +400,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                     FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
-                    FitDict[i][4] = 0
+                    FitDict[i][4] = int(not c.devauc)
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
@@ -517,13 +517,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f_constrain.close()
         f=open(config_file,'w')
         f.write('# IMAGE PARAMETERS\n')
-        f.writelines(['A) ', str(cutimage), '	# Input data image',\
+        f.writelines(['A) ', c.datadir+str(cutimage), '	# Input data image',\
                       ' (FITS file)\n'])
         f.writelines(['B) ', str(outfile), '		# Name for',\
                       ' the output image\n'])
-        f.writelines(['C) ', str(whtimage), '		# Noise image name', \
+        f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
                       ' (made from data if blank or "none")\n'])
-        f.writelines(['D) ', str(psffile), '			# Input PSF', \
+        f.writelines(['D) ', c.datadir+str(psffile), '			# Input PSF', \
                       ' image for convolution (FITS file)\n'])
         f.writelines(['E) 1			# PSF oversampling factor '\
                       'relative to data\n'])

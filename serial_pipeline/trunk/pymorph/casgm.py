@@ -2,9 +2,9 @@ import pyfits,os
 import csv
 from os.path import exists
 import numpy as n
-import numpy.ma as ma
 import ndimage as im
 import config as c
+import numpy.ma as ma
 from concfunc import *
 from asymfunc import *
 from clumfunc import *
@@ -43,7 +43,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     else:
 	dectThre = 12.0
     while FoundNewCntr == 0:
-	RunSex(cutimage, 'None', 'CaSsEx.cat', dectThre, dectThre, 1)
+	RunSex(c.datadir +cutimage, 'None', 'CaSsEx.cat', dectThre, dectThre, 1)
         for line in open('CaSsEx.cat', 'r'):
   	    try:
 	        values = line.split()
@@ -64,7 +64,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             FoundNewCntr = 1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    f = pyfits.open(cutimage)
+    f = pyfits.open(c.datadir +cutimage)
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):

@@ -1,8 +1,8 @@
 import pyfits,os
 import numpy as n
-import numpy.ma as ma
 import ndimage as im
 import config as c
+import numpy.ma as ma
 
 class BkgdFunc:
     "The class which will provide the blank sky region and sky deviation to the casgm class and the sky sigma will also be used when the pipeline decide the fit is good or bad"
@@ -22,7 +22,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
     ycntr = ycntr-1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    f = pyfits.open(cutimage)
+    f = pyfits.open(c.datadir +cutimage)
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):

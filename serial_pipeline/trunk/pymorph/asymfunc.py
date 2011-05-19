@@ -3,6 +3,7 @@ import numpy as n
 import numpy.ma as ma
 import pyfits
 from rotate_new import *
+import config as c
 
 class asymmetry:
     """Finding Asymmetry parameter. The algorithm is as follows
@@ -63,7 +64,7 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     sh_sum = sh_sum.astype(n.float32)
     absres_sum = n.zeros([9])
     absres_sum = absres_sum.astype(n.float32)
-    f=pyfits.open(cutimage)
+    f=pyfits.open(c.datadir +cutimage)
     z = f[0].data
     z = z - background
     f.close()

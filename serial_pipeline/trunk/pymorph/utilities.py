@@ -1,8 +1,8 @@
-import MySQLdb as mysql
-import sys
-import datetime
-import config as c
-
+#import MySQLdb as mysql
+#import sys
+#import datetime
+#import config as c
+from writehtmlfunc import *
 def WriteDb(ParamValues):
     gal_id = ParamValues[0]
     dba = c.database
@@ -10,7 +10,7 @@ def WriteDb(ParamValues):
     usr = c.usr
     tbl = c.table
     try:
-        Conn = mysql.connect (host = "localhost",
+        Conn = mysql.connect (host = "shredder",
                                 user = "%s" %usr,
                                 passwd = "%s" %pwd,
                                 db = "%s" %dba) 

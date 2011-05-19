@@ -1,10 +1,14 @@
 from os.path import exists
 import csv
-import fileinput
-from cosmocal import *
-#from utilities import WriteDb
+import sys
 import config as c
 import numpy as n
+import fileinput
+from cosmocal import *
+import datetime
+import MySQLdb as mysql
+#from utilities import WriteDb
+
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
@@ -519,6 +523,11 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)
         ParamToWrite.append(9999)
+    try:
+        galfit_sky * 1.0
+    except:
+        galfit_sky = 9999
+        print 'GALFIT does not report sky'
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
                        M, c.SexSky, galfit_sky, DisMoD, \
                        distance, good_fit, c.Flag, c.SexHalfRad]:

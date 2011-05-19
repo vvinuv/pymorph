@@ -137,13 +137,13 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     major_axis = float(values[14])	#major axis of the object
     #Write configuration file
     f.write('# IMAGE PARAMETERS\n')
-    f.writelines(['A) ', str(cutimage), '	# Input data image',\
+    f.writelines(['A) ', c.datadir + str(cutimage), '	# Input data image',\
                   ' (FITS file)\n'])
     f.writelines(['B) ', str(outfile), '		# Name for',\
                   ' the output image\n'])
-    f.writelines(['C) ', str(whtimage), '		# Noise image name', \
+    f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
                   ' (made from data if blank or "none")\n'])
-    f.writelines(['D) ', str(psffile), '			# Input PSF', \
+    f.writelines(['D) ', c.datadir + str(psffile), '			# Input PSF', \
                   ' image for convolution (FITS file)\n'])
     f.writelines(['E) 1			# PSF oversampling factor relative',
                   ' to data\n'])

@@ -4,6 +4,7 @@ import pyfits
 from momentfunc import *
 #import scipy.signal
 import convolve as conv
+import config as c
 
 class gini:
 	"""Calculate gini coefficient at different radii. This will also call 
@@ -95,12 +96,12 @@ def segmentation(zextract,ini_xcntr,ini_ycntr,pa,eg,background,r20,r50,r80,extra
 	G = gini_coef(I)
 	mo=moment(I, ini_xcntr, ini_ycntr)
 	M = mo.moment_of_light[0]
-	f=pyfits.open('AResidual.fits')
+	f=pyfits.open(c.outdir +'AResidual.fits')
 	res =  f[0].data
 	f.close()
         res = n.swapaxes(res, 0, 1)
-	if os.access('AResidual.fits', os.F_OK):
-		os.remove('AResidual.fits')
+	if os.access(c.outdir +'AResidual.fits', os.F_OK):
+		os.remove(c.outdir +'AResidual.fits')
 	res1=n.where(I == 0, 0, res)
 	G_res = gini_coef(res1)
 	mo1=moment(res, ini_xcntr, ini_ycntr)

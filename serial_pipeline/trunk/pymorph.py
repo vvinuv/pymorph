@@ -1,4 +1,4 @@
-#!/sw/bin/python2.6
+#!/data2/home/ameert/python/bin/python2.5
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
 import os
@@ -9,9 +9,19 @@ from optparse import OptionParser, OptParseError
 import csv
 import pyfits
 import numpy as n
+from numpy import log10
+import ndimage as im
 from ndimage import center_of_mass
-sys.path.append('.')
+
+if len(sys.argv) > 1:
+    configdir = sys.argv[1]
+else:
+    configdir = '.'
+
+print 'configdir is : ', configdir
+sys.path.append(configdir)
 import config as c
+
 from maskfunc import *
 from configfunc import *
 from ellimaskfunc import *
@@ -25,10 +35,14 @@ from bkgdfunc import *
 #from configbarpoint import *
 from configbulgedisk import *
 
-try:
+
+
+try: 
     from pyraf import iraf
     from fitellifunc import *
 except:
+    print "Pyraf could not be imported!!!"
+    print "Continuing with fitting."
     pass
 
 def main():
@@ -39,16 +53,18 @@ def main():
     out_cata = c.out_cata
     try:
         if c.psflist.startswith('@'):
-            psffi = open(c.psflist.split('@')[1], 'r')
+            psffi = open(c.datadir + c.psflist.split('@')[1], 'r')
             c.psflist = []
             for pline in psffi: 
                 c.psflist.append(pline.split()[0])
     except:
+        print "Not using psflist"
         pass     
     ReSize = c.size[0]
     try:
         VarSize = c.size[1]
     except:
+        print "c.size[1] undefined"
         if ReSize:
             VarSize = 1
         else:
@@ -56,15 +72,18 @@ def main():
     try:
         Square = c.size[3]
     except:
+        print "c.size[3] undefined"
         Square = 1
     try:
         FracRad = c.size[2]  
     except:
+        print "c.size[2] undefined"
         FracRad = 20
     if VarSize == 0:
         try:
             FixSize = c.size[4]
         except:
+            print "c.size[4] undefined"
             FixSize = 120
     threshold = c.threshold
     thresh_area = c.thresh_area
@@ -106,9 +125,9 @@ def main():
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
     try:
-        if exists(whtfile):
+        if exists(c.datadir + whtfile):
             if(c.repeat == False and c.galcut == False):
-                wht = pyfits.open(whtfile)
+                wht = pyfits.open(c.datadir + whtfile)
                 weight = wht[0].data
                 wht.close()
                 print "whtfile >>> ", whtfile
@@ -199,7 +218,7 @@ def main():
         psflist = c.psflist
         r = 3.14159265 / 180.0
         for element in psflist:
-            p=pyfits.open(element)
+            p=pyfits.open(c.datadir + element)
             header = p[0].header
             if (header.has_key('RA_TARG')):
                 ra = header['RA_TARG']
@@ -239,10 +258,10 @@ def main():
                    'G_I' + str(c.rootname) + '_' + str(gal_id) + '.in ' + \
                    'M_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
                    'OE_I' + str(c.rootname) + '_' + str(gal_id) + '.txt ' +\
-                 'OEM_O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
-                 'O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
-                 'Tmp* ' + \
-                 'SO_I' + str(c.rootname) + '_' + str(gal_id) + '.fits '
+                   'OEM_O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'O_I' + str(c.rootname) + '_' + str(gal_id) + '.fits ' +\
+                   'Tmp* ' + \
+                   'SO_I' + str(c.rootname) + '_' + str(gal_id) + '.fits '
         f_R_crash =  'R_I' + str(c.rootname) + '_' + str(gal_id) + '_1.html'
         f_R_cra = open(f_R_crash, 'w')
 	P_cra = 'P_I' + str(c.rootname) + '_' + str(gal_id) + '.png'
@@ -252,7 +271,7 @@ def main():
             line_crash2wri = line_crash.replace(P_cra, P_new)
 	    f_R_cra.write(line_crash2wri)
         f_R_cra.close() 
-	CmdToRename = 'mv ' + 'P_I' + str(c.rootname) + '_' + str(gal_id) + \
+	CmdToRename = 'mv P_I' + str(c.rootname) + '_' + str(gal_id) + \
 	               '.png ' + \
 		       'P_I' + str(c.rootname) + '_' + str(gal_id) + '_1.png '
 	os.system(CmdToRename)
@@ -288,6 +307,7 @@ def main():
     try:
         ComP = c.components
     except:
+        print "c.components undefined"
         ComP = ['bulge', 'disk']
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
@@ -344,7 +364,7 @@ def main():
         f_res.close()
     f_cat = open(out_cata,'w')
     f_failed = open('restart.cat', 'w')
-    obj_file = open(clus_cata,'r')  #The file contains the objects of interest
+    obj_file = open(c.datadir +clus_cata,'r')  #The file contains the objects of interest
     pnames = obj_file.readline().split() #The names of the parameters given 
                                          #in the first line in the clus_cata
     for FailedParam in pnames:
@@ -363,6 +383,7 @@ def main():
             try:
                 gal_id = pdb["gal_id"]
             except:
+                print "no gal_id using gimg"
                 try:
                     gal_id = pdb["gimg"][:-5] #id will be filename without .fits
                 except:
@@ -373,35 +394,43 @@ def main():
                 alpha1 = float(pdb["ra1"])
 		RaDecInfo = 1
             except:
+                print "no ra1"
                 alpha1 = -9999
             try:
                 alpha2 = float(pdb["ra2"])
             except:
+                print "no ra2"
                 alpha2 = 0
             try:
                 alpha3 = float(pdb["ra3"])
             except:
+                print "no ra3"
                 alpha3 = 0
             try:
                 delta1 = float(pdb["dec1"])
 		RaDecInfo = 1
             except:
+                print "no dec1"
                 delta1 = -9999
             try:
                 delta2 = float(pdb["dec2"])
             except:
+                print "no dec2"
                 delta2 = 0
             try:
                 delta3 = float(pdb["dec3"])
             except:
+                print "no dec3"
                 delta3 = 0
             try:
                 z = float(pdb["z"])
             except:
+                print "no z"
                 z = 9999
             try:
                 gimg = pdb["gimg"]    #Galaxy cutout
             except:
+                print "no gimg given"
                 if exists('I' + str(c.rootname) + '_' + str(gal_id) + '.fits'):
                     gimg = 'I' + str(c.rootname) + '_' + str(gal_id) + '.fits'
                 elif exists(str(gal_id) + '.fits'): 
@@ -411,6 +440,7 @@ def main():
             try:
                 wimg = pdb["wimg"]   #Weight cut
             except:
+                print "no wimg given"
                 if exists('W' + str(c.rootname) + '_' + str(gal_id) + '.fits'):
                     wimg = 'W' + str(c.rootname) + '_' + str(gal_id) + '.fits'
                 else:
@@ -418,6 +448,7 @@ def main():
             try:
                 cfile = pdb["cfile"]  #GALFIT configuration file
             except:
+                print "no cfile given"
                 if(c.repeat == True and c.galcut == False):
                     cfile = 'G_I' + str(c.rootname) + '_' + \
                              str(gal_id) + '.in'
@@ -449,13 +480,14 @@ def main():
                         if(str(valuec[0]) == 'G)'):
                             confile = (valuec[1])
                     except:
+                        print "problem with cfile"
                         pass
             else:
                 cfile = 'None'
             if c.galcut:
                 print 'Image is >>> ', gimg
             if(c.galcut == True):
-                    ggimg = pyfits.open(gimg)
+                    ggimg = pyfits.open(c.datadir +gimg)
                     ggimage = ggimg[0].data
                     header0 = ggimg[0].header
                     if (header0.has_key('EXPTIME')):
@@ -520,6 +552,7 @@ def main():
             except:
                 UserGivenPsf = 'None'
             if c.crashhandler and c.starthandle:
+                print "CrashHandler!!!"
                 CrashHandlerToRemove(gal_id)
                 try:
                     CrashFlag = float(pdb["flag"])
@@ -552,9 +585,12 @@ def main():
                 if exists(sex_cata): #If the user provides sextractor catalogue
                                      #then it will not run SExtractor else do!
                     pass
-                else: 
-                    RunSex(gimg, wimg, 'None', 9999, 9999, 0)
-		    SexShallow(gimg, wimg, 'None', 9999, 9999, 0)
+                else:
+                    try:
+                        RunSex(c.datadir +gimg,c.datadir + wimg, 'None', 9999, 9999, 0)
+                        SexShallow(c.datadir + gimg, c.datadir + wimg, 'None', 9999, 9999, 0)
+                    except:
+                        pass
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -655,13 +691,13 @@ def main():
                         if(c.galcut == True):
                             if ReSize:
                                 cutimage = 'I' + gimg
-                                whtimage = 'I' + wimg
+                                whtimage ='I' + wimg
                             else:
-                                cutimage = gimg
-                                whtimage = wimg                
+                                cutimage =gimg
+                                whtimage =wimg                
                         else:
                             cutimage = 'I' + str(c.rootname) + '_' + \
-                                        str(gal_id) + '.fits'
+                                       str(gal_id) + '.fits'
                             whtimage = 'W' + str(c.rootname) + '_' + \
                                         str(gal_id) + '.fits'
                         SizeX = halfradius * FracRad * abs(n.cos(ArcR)) + \
@@ -761,10 +797,10 @@ def main():
                                     hdu.header.update('NCOMBINE', NCOMBINE)
                                 else:
                                     pass
-                                hdu.writeto(cutimage)
+                                hdu.writeto(c.datadir +cutimage)
                                 
                             if(c.repeat == False and c.galcut and ReSize):
-                                fZcuT = pyfits.open(gimg)
+                                fZcuT = pyfits.open(c.datadir +gimg)
                                 ZcuT = fZcuT[0].data
                                 fZcuT.close()
                                 TX = ZcuT.shape[1]
@@ -804,24 +840,24 @@ def main():
                                     hdu.header.update('NCOMBINE', NCOMBINE)
                                 else:
                                     pass
-                                hdu.writeto(cutimage)
+                                hdu.writeto(c.datadir +cutimage)
                             try:
                                 if(c.repeat == False and c.galcut == False):
-                                    if exists(whtfile): 
+                                    if exists(c.datadir +whtfile): 
                                         z2 = weight[ymin:ymax,xmin:xmax]
                                         hdu = pyfits.PrimaryHDU(z2.astype\
                                               (n.float32))
-                                        hdu.writeto(whtimage)
+                                        hdu.writeto(c.datadir +whtimage)
                                 if(c.repeat == False and c.galcut and ReSize):
-                                    if exists(wimg):
-                                        fWZcuT = pyfits.open(wimg)
+                                    if exists(c.datadir +wimg):
+                                        fWZcuT = pyfits.open(c.datadir +wimg)
                                         WZcuT = fWZcuT[0].data
                                         fWZcuT.close()
                                         WZcuT1 = WZcuT[ymin:ymax,xmin:xmax]
                                         hdu = pyfits.PrimaryHDU(WZcuT1.astype\
                                                                 (n.float32))
-                                        hdu.writeto(whtimage)
-                                Gal = pyfits.open(cutimage)
+                                        hdu.writeto(c.datadir +whtimage)
+                                Gal = pyfits.open(c.datadir +cutimage)
                                 GalaxyCuT = Gal[0].data
                                 Gal.close()
                                 GalaxyCuT = n.swapaxes(GalaxyCuT, 0, 1) 
@@ -963,6 +999,7 @@ def main():
                                         ElliMaskFunc(cutimage, xcntr, ycntr,\
                                                      SizeX, SizeY, line_s, 1)
                                 try:
+                                    print c.skysig
                                     caSgm = casgm(cutimage, 'TmpElliMask.fits',\
                                                 xcntr, ycntr, bxcntr, bycntr, \
                                                 eg, pos_ang, sky, c.skysig)
@@ -990,7 +1027,11 @@ def main():
                                         f_res.close()
                                     f_err.writelines(['(((((CASGM '\
                                                       'Successful)))))'])
-                                except:
+                                # except:
+                                except Exception, inst:
+                                    print type(inst)     # the exception instance
+                                    print inst.args      # arguments stored in .args
+                                    print inst           # __str__ allows args to printed directly
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
                                     c.Flag += 64
@@ -998,11 +1039,11 @@ def main():
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
                         f_err.close()
-                        os.system('rm -f BMask.fits MRotated.fits \
-                                  MaskedGalaxy.fits Rotated.fits')
+                        os.system('rm -f BMask.fits MRotated.fits '+
+                                  'MaskedGalaxy.fits Rotated.fits')
                         if(c.decompose == False):
-                            if os.access(ell_mask_file, os.F_OK):
-                                os.remove(ell_mask_file)
+                            if os.access( ell_mask_file, os.F_OK):
+                                os.remove( ell_mask_file)
                         f_err = open('error.log', 'a') 
                         if(c.decompose):
                             for psfelement in psflist:
@@ -1016,7 +1057,7 @@ def main():
                                             psffile = UserGivenPsf
                                             psfradec(psffile)
                                         try:
-                                            p=pyfits.open(psffile)
+                                            p=pyfits.open( psffile)
                                             header = p[0].header
                                             if(header.has_key('RA_TARG')):
                                                 ra_p = header['RA_TARG']
@@ -1305,9 +1346,9 @@ def main():
     f_failed.close()
 def selectpsf(ImG, CaT):
     c.psff = []
-    im = pyfits.open(ImG)
-    image = im[0].data
-    im.close()
+    im1 = pyfits.open(ImG)
+    image = im1[0].data
+    im1.close()
     AreaOfObj = c.AreaOfObj
     def FindPsf(AreaOfObj, CaT):
         for line in open(CaT,'r'):
@@ -1650,7 +1691,7 @@ if __name__ == '__main__':
     c.Filter = 'UNKNOWN'
     try:
         if(c.repeat == False and c.galcut == False):
-            img = pyfits.open(c.imagefile)
+            img = pyfits.open(c.datadir + c.imagefile)
             c.ImAgE = img[0].data
             c.HeAdEr0 = img[0].header
             if (c.HeAdEr0.has_key('GAIN')):
@@ -1753,7 +1794,7 @@ if __name__ == '__main__':
         "[--help[-h]] [--lmag] [--umag] [--ln] [--un] [--lre] [--ure] "\
         "[--lrd] [--urd] [--with-in] [--with-filter] [--with-db] "\
         "[--with-area]  [--no-mask] [--norm-mask] [--with-sg] [--bdbox] "\
-        "[--bbox] [--dbox] [--test [-t]] [--devauc]"
+        "[--bbox] [--dbox] [--test [-t]] [--devauc] [--outdir] [--datadir]"
     parser = OptionParser(usage=usage)
     parser.add_option("-e", "--edit_conf", action="callback", 
                       callback=run_SExtractorConf, 
@@ -1812,7 +1853,13 @@ if __name__ == '__main__':
     parser.add_option("--devauc", action="store_true", dest="devauc",
                       default = False, 
                       help="turns on DeVacouleur's bulge fitting (sersic index of bulge frozen at 4.0 for fit)")
-
+    parser.add_option("-o","--outdir", action="store", type="string",
+                      dest="outdir", default = os.getcwd()+'/',
+                      help="path to directory that will contain all output. MUST end in '/'")
+    parser.add_option("-d","--datadir", action="store", dest="datadir", 
+                      type="string", default = os.getcwd()+'/',
+                      help="path to directory containing all input. MUST end in '/'")
+    
     # parses command line aguments for pymorph
     (options, args) = parser.parse_args()
 
@@ -1830,6 +1877,14 @@ if __name__ == '__main__':
         pass
     else:
         c.FILTER = c.Filter
+
+
+    # now change dir to the 
+    thisdir = os.getcwd()
+    print "thisdir is ", thisdir
+    print "outdir is ", c.outdir
+    os.chdir(c.outdir)
+
     if exists(sex_cata):
         pass
     elif(c.galcut == False):
@@ -1838,15 +1893,15 @@ if __name__ == '__main__':
               'recommended to make SExtractor catalogue by YOURSELF as '\
               'the pipeline keeps the sky value at the SExtractor value '\
               'during the decomposition.'
-        if exists(c.whtfile):
-            RunSex(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
-	    SexShallow(c.imagefile, c.whtfile, 'None', 9999, 9999, 0)
+        if exists(c.datadir + c.whtfile):
+            RunSex(c.datadir + c.imagefile, c.datadir + c.whtfile, 'None', 9999, 9999, 0)
+	    SexShallow(c.datadir + c.imagefile, c.datadir + c.whtfile, 'None', 9999, 9999, 0)
         else:
-            RunSex(c.imagefile, 'None', 'None', 9999, 9999, 0)
-	    SexShallow(c.imagefile, 'None', 'None', 9999, 9999, 0)
+            RunSex(c.datadir + c.imagefile, 'None', 'None', 9999, 9999, 0)
+	    SexShallow(c.datadir + c.imagefile, 'None', 'None', 9999, 9999, 0)
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
-            obj_file = open(c.clus_cata,'r') 
+            obj_file = open(c.datadir + c.clus_cata,'r') 
             pnames = obj_file.readline().split() 
             c.ValueS = []
             for v in pnames:
@@ -1880,11 +1935,11 @@ if __name__ == '__main__':
                     try:
                         gimg = pdb["gimg"]    #Galaxy cutout
                     except:
-                        if exists('I' + str(c.rootname) + '_' \
+                        if exists(c.datadir + 'I' + str(c.rootname) + '_' \
                                    + str(gal_id) + '.fits'):
                             gimg = 'I' + str(c.rootname) + '_' \
                                     + str(gal_id) + '.fits'
-                        elif exists(str(gal_id) + '.fits'):
+                        elif exists(c.datadir + str(gal_id) + '.fits'):
                             gimg = str(gal_id) + '.fits'
                         else:
                             print "No image found. Exiting"
@@ -1892,13 +1947,13 @@ if __name__ == '__main__':
                     try:
                         wimg = pdb["wimg"]   #Weight cut
                     except:
-                        if exists('W' + str(c.rootname) + '_' + \
+                        if exists(c.datadir + 'W' + str(c.rootname) + '_' + \
                                   str(gal_id) + '.fits'):
                             wimg = 'W' + str(c.rootname) + '_' + \
                                    str(gal_id) + '.fits'
                         else:
                             wimg = 'None'
-                    GiMg = pyfit.open(gimg)
+                    GiMg = pyfit.open(c.datadir + gimg)
                     headerGiMg = GiMg[0].header
                     if (headerGiMg.has_key('GAIN')):
                         c.SEx_GAIN = headerGiMg['GAIN']
@@ -1908,9 +1963,9 @@ if __name__ == '__main__':
                     if exists(sex_cata): 
                         pass
                     else:
-                        RunSex(gimg, wimg, 'None', 9999, 9999, 0)
+                        RunSex(c.datadir + gimg,c.datadir + wimg, 'None', 9999, 9999, 0)
                     try:
-                        selectpsf(gimg, sex_cata)
+                        selectpsf(c.datadir + gimg,sex_cata)
                     except:
                         pass
                     if os.access(sex_cata, os.F_OK):
@@ -1921,12 +1976,12 @@ if __name__ == '__main__':
             AskForUpdate = raw_input("Do you want to update the clus_cata? " \
                             "('y' for yes) ")
             if AskForUpdate == 'y':
-                cmd = 'mv CatWithPsf.cat ' + str(c.clus_cata)
+                cmd = 'mv CatWithPsf.cat ' +str(c.clus_cata)
                 os.system(cmd)
             else:
                 pass
         else:
-            selectpsf(c.imagefile, sex_cata)
+            selectpsf(c.datadir + c.imagefile,sex_cata)
 #The old function for psfselect = 2
 #    if c.psfselect == 2:
 #        c.center_deviated = 0
@@ -1949,7 +2004,7 @@ if __name__ == '__main__':
         c.center_deviated = 0
         c.starthandle = 0
         runpsfselect()
-        c.psflist = '@psflist.list'
+        c.psflist = c.datadir + '@psflist.list'
         FindAndFit()
         main()
         if c.crashhandler:
@@ -1983,3 +2038,5 @@ if __name__ == '__main__':
             os.system('mv restart.cat CRASH.CAT')
             c.clus_cata = 'CRASH.CAT' 
             main()
+
+    os.chdir(thisdir)

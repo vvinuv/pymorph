@@ -28,11 +28,9 @@ class ConfigIter:
 		
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
-    print 'hi'
     RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
     imagefile = c.imagefile
     sex_cata = 'TEMP.SEX.cat'
-    print sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg

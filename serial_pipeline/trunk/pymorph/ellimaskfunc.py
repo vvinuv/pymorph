@@ -50,7 +50,7 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     ty = (xcntr - 1.0 -x) * si + (y - ycntr + 1.0) * co
     R = n.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
     tmp_mask = n.zeros((NXPTS, NYPTS))
-    f = pyfits.open(cutimage)
+    f = pyfits.open(c.datadir + cutimage)
     galaxy = f[0].data
     f.close()
     galaxy = n.swapaxes(galaxy, 0, 1)

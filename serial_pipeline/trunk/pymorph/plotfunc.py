@@ -1,8 +1,8 @@
 import sys, pyfits
-from pylab import *
 import numpy as n
-import numpy.ma as ma
 import config as c
+from pylab import *
+import numpy.ma as ma
 
 class PlotFunc:
     """The class for plotting. It will plot the galaxy image, the model galaxy

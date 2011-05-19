@@ -61,7 +61,7 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     f_sex.write(template %vars())
     f_sex.close()
     print 'SExtractor Detecting Objects (Deep)....'
-    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
+    cmd = str(c.SEX_PATH) + ' ' +str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
     os.system(cmd)    
 
 def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
@@ -89,5 +89,5 @@ def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     f_sex.write(template %vars())
     f_sex.close()
     print 'SExtractor Detecting Objects (Shallow)....'
-    cmd = str(c.SEX_PATH) + ' ' + str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
+    cmd = str(c.SEX_PATH) + ' ' +str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
     os.system(cmd)    
