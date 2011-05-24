@@ -320,7 +320,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
                     cO += 1
                 isneighbour = 1
-            except:
+        except:
             pass
     f_constrain.close()
     f.close()
