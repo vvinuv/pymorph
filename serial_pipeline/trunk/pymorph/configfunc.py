@@ -26,6 +26,7 @@ class ConfigFunc:
 		
 
 def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+    reload(c)
     imagefile = c.imagefile
     sex_cata = c.sex_cata
     threshold = c.threshold
@@ -277,8 +278,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             area_n = float(values[13]) # neighbour area
             maj_axis = float(values[14])#major axis of neighbour
             NotFitNeigh = 0
-            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoideme or \
-               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoideme:
+            if abs(xcntr_n - xcntr_o) > NXPTS / 2.0 + c.avoidme or \
+               abs(ycntr_n - ycntr_o) > NYPTS / 2.0 + c.avoidme:
                 NotFitNeigh = 1
             if(abs(xcntr_n - xcntr_o) <= (major_axis + maj_axis) * \
                threshold and \
@@ -319,7 +320,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                     f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
                     cO += 1
                 isneighbour = 1
-        except:
+            except:
             pass
     f_constrain.close()
     f.close()
