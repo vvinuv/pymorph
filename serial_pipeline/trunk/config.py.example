@@ -108,6 +108,7 @@ center_deviation = 3.0                #< abs(center - fitted center)
 center_constrain = 2.0                #Keep center within +/- center_constrain
 
 ###----Database Informations----###
+host = 'localhost'
 database = 'Cluster'
 table = 'cluster'
 usr = 'vinu'

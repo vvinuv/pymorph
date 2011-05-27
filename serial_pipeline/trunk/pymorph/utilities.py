@@ -9,8 +9,9 @@ def WriteDb(ParamValues):
     pwd = c.pword
     usr = c.usr
     tbl = c.table
+    host = c.host
     try:
-        Conn = mysql.connect (host = "shredder",
+        Conn = mysql.connect (host = "%s" %host,
                                 user = "%s" %usr,
                                 passwd = "%s" %pwd,
                                 db = "%s" %dba) 

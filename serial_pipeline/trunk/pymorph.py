@@ -1,4 +1,4 @@
-#!/data2/home/ameert/python/bin/python2.5
+#!/sw/bin/python2.6
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
 import os
@@ -1859,7 +1859,9 @@ if __name__ == '__main__':
     parser.add_option("-d","--datadir", action="store", dest="datadir", 
                       type="string", default = os.getcwd()+'/',
                       help="path to directory containing all input. MUST end in '/'")
-    
+    parser.add_option("--with-host", action="store", type="string",
+                       dest="host", default = 'localhost', 
+                      help="mysql host used")
     # parses command line aguments for pymorph
     (options, args) = parser.parse_args()
 
