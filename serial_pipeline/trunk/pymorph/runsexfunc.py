@@ -72,7 +72,7 @@ def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     mag_zero = c.mag_zero #magnitude zero point
     SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
-    if(whtimage == 'None'):
+    if 'None' in whtimage.split('/')[-1]::
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow_shallow.sex','r')
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':
