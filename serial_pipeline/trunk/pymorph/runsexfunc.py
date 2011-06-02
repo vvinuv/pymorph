@@ -12,6 +12,7 @@ class RunSex:
 	self.detect_thr = detect_thr
 	self.ana_thr = ana_thr
         self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas)
+        print self.whtimage
 
 def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     if sex_cata == 'None':
@@ -43,7 +44,7 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     SEx_BACKPHOTO_THICK = c.SEx_BACKPHOTO_THICK 
     SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
-    if(whtimage == 'None'):
+    if 'None' in whtimage:
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':
