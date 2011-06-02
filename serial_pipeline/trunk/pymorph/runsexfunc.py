@@ -44,7 +44,7 @@ def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     SEx_BACKPHOTO_THICK = c.SEx_BACKPHOTO_THICK 
     SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
     pymorph_path = c.PYMORPH_PATH
-    if 'None' in whtimage:
+    if 'None' in whtimage.split('/')[-1]:
         f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
     else:
         if SEx_WEIGHT_TYPE == 'DECIDE':

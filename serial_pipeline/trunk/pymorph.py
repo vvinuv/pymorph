@@ -1862,6 +1862,7 @@ if __name__ == '__main__':
     parser.add_option("--with-host", action="store", type="string",
                        dest="host", default = 'localhost', 
                       help="mysql host used")
+    
     # parses command line aguments for pymorph
     (options, args) = parser.parse_args()
 

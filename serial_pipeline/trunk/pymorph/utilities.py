@@ -5,13 +5,14 @@
 from writehtmlfunc import *
 def WriteDb(ParamValues):
     gal_id = ParamValues[0]
+    hst = c.host
     dba = c.database
     pwd = c.pword
     usr = c.usr
     tbl = c.table
     host = c.host
     try:
-        Conn = mysql.connect (host = "%s" %host,
+        Conn = mysql.connect (host = "%s" %hst,
                                 user = "%s" %usr,
                                 passwd = "%s" %pwd,
                                 db = "%s" %dba) 
