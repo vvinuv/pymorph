@@ -9,6 +9,7 @@ import numpy as n
 import copy
 import numpy.ma as ma
 from readlog import ReadLog
+from cosmocal import cal
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
        consists of bulge and disk component of the object and only Sersic 
@@ -458,7 +459,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
         if abs(ParamDict[RunNo][1][4] - (c.LMag - 2.0)) < 0.05 or abs(ParamDict[RunNo][1][4] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21: 
             HitLimitCheck = 1
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999:
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8:
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -603,18 +604,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 pass
             else:
                 break
-            if RunNo == SkyArray.shape[0]:
-                c.Chi2DOFArr = n.array(c.Chi2DOFArr)
-                c.FitArr = n.array(c.FitArr)
-                c.RadArr = n.array(c.RadArr)
-#                print c.Chi2DOFArr
-#                print c.FitArr
-#                print 'Printing ', len(ParamDict)
-                Chi2DOFArrMa = ma.masked_array(c.Chi2DOFArr, c.FitArr)
-#                print Chi2DOFArrMa.argmin()
-#                print 'Print this ', c.ParamDictBook[Chi2DOFArrMa.argmin()]
-#                print 'hi'
-                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
         except:
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
             if RunNo < SkyArray.shape[0]:
@@ -622,6 +611,27 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             c.Chi2DOFArr.append(9999)
             c.FitArr.append(1)
             c.RadArr.append(1)
+        if RunNo == SkyArray.shape[0]:
+            c.Chi2DOFArr = n.array(c.Chi2DOFArr)
+            c.FitArr = n.array(c.FitArr)
+            c.RadArr = n.array(c.RadArr)
+#                print c.Chi2DOFArr
+#                print c.FitArr
+#                print 'Printing ', len(ParamDict)
+            Chi2DOFArrMa = ma.masked_array(c.Chi2DOFArr, c.FitArr)
+#                print Chi2DOFArrMa.argmin()
+#                print 'Print this ', c.ParamDictBook[Chi2DOFArrMa.argmin()]
+#                print 'hi'
+            if c.FitArr[n.where(c.FitArr == 0)].shape[0] > 0:
+                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
+            else:
+                SerIndArr = []
+                for pp in range(len(c.ParamDictBook)):
+                    SerIndArr.append(c.ParamDictBook[pp][1][5])
+                SerIndArr = n.array(SerIndArr)
+                SerIndArr[n.where(SerIndArr < 0.15)] = 20.0
+                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[SerIndArr.argmin()]) 
+            
 #        print c.Chi2DOFArr
 #        print c.FitArr
     c.Chi2DOFArr = n.array(c.Chi2DOFArr)
