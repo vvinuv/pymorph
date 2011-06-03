@@ -528,6 +528,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     except:
         galfit_sky = 9999
         print 'GALFIT does not report sky'
+    if c.GalSky != 9999:
+        galfit_sky = c.GalSky
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
                        M, c.SexSky, galfit_sky, DisMoD, \
                        distance, good_fit, c.Flag, c.SexHalfRad]:

@@ -152,7 +152,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     #Add components
     AdComp = 1
     if 'bulge' in ComP:
-        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'sersic'
@@ -167,7 +166,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'disk' in ComP:
-        c.Flag += 1024
         #Disk parameters
         ParamDict[0][AdComp] = {}
         ParamDict[0][AdComp][1] = 'expdisk'
@@ -181,7 +179,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'bar' in ComP:
-#        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'bar'
@@ -196,7 +193,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'point' in ComP:
-#        c.Flag += 512
         ParamDict[0][AdComp] = {}
         #Point Parameters
         ParamDict[0][AdComp][1] = 'psf'
@@ -255,8 +251,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         except:
             pass
     f_constrain.close()
-    if isneighbour:
-        c.Flag  += 4096
+#    if isneighbour: No need to add flag again. configfunction add that
+#        c.Flag  += 4096
+#    print c.Flag 
     #Sky component
     ParamDict[0][AdComp] = {}
     ParamDict[0][AdComp][1] = 'sky'
@@ -459,7 +456,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
         if abs(ParamDict[RunNo][1][4] - (c.LMag - 2.0)) < 0.05 or abs(ParamDict[RunNo][1][4] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21: 
             HitLimitCheck = 1
-        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8:
+        if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8 or ParamDict[RunNo][1][6] < 0.08:
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -474,7 +471,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[0][2][5])
             ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[0][2][6])
             try:
-                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+                SkyNo = len(ParamDict[0])
+                ParamDict[RunNo][SkyNo][2] = copy.deepcopy(SkyArray[RunNo-1])
             except:
                 pass
             c.FitArr.append(1)
@@ -500,7 +498,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             ParamDict[RunNo][2][5] = copy.deepcopy(ParamDict[0][2][5])
             ParamDict[RunNo][2][6] = copy.deepcopy(ParamDict[0][2][6])
             try:
-                ParamDict[RunNo][3][2] = copy.deepcopy(SkyArray[RunNo-1])
+                SkyNo = len(ParamDict[0])
+                ParamDict[RunNo][SkyNo][2] = copy.deepcopy(SkyArray[RunNo-1])
             except:
                 pass
             c.FitArr.append(0)
@@ -624,13 +623,32 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
 #                print 'hi'
             if c.FitArr[n.where(c.FitArr == 0)].shape[0] > 0:
                 ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
+                SkyNo = len(ParamDict[0]) #GalSky has to do better
+                c.GalSky = ParamDict[RunNo + 1][SkyNo][2]
             else:
+                c.Flag += 2097152
                 SerIndArr = []
+                RePixArr = []
+                IeArr = []
+                IdArr = []
                 for pp in range(len(c.ParamDictBook)):
                     SerIndArr.append(c.ParamDictBook[pp][1][5])
+                    RePixArr.append(c.ParamDictBook[pp][1][4])
+                    IeArr.append(c.ParamDictBook[pp][1][3])
+                    IdArr.append(c.ParamDictBook[pp][2][3])
                 SerIndArr = n.array(SerIndArr)
+                RePixArr = n.array(RePixArr)
+                IeArr = n.array(IeArr)
+                IdArr = n.array(IdArr)
                 SerIndArr[n.where(SerIndArr < 0.15)] = 20.0
-                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[SerIndArr.argmin()]) 
+                RePixArr[n.where(RePixArr < 0.21)] = 9999.0
+                MagDiffArr = IeArr - IdArr
+                if MagDiffArr[n.where(MagDiffArr > 0)].shape[0] >= MagDiffArr.shape[0] / 2: 
+                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmax()]) 
+                else:
+                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmin()])
+                SkyNo = len(ParamDict[0]) #GalSky has to do better
+                c.GalSky = ParamDict[RunNo + 1][SkyNo][2]                   
             
 #        print c.Chi2DOFArr
 #        print c.FitArr

@@ -299,7 +299,8 @@ def main():
                          ('DISK_AT_LIMIT', 17),
                          ('ASYM_NOT_CONV', 18),
                          ('ASYM_OUT_FRAME', 19),
-                         ('BACK_FAILED', 20)])
+                         ('BACK_FAILED', 20),
+                         ('DETAIL_FAILED', 21)])
         return FlagDict[flagname]
     def isset(flag, bit):
         """Return True if the specified bit is set in the given bit mask"""
@@ -671,9 +672,11 @@ def main():
 			if ShallowSky == 9999:
 			    sky  = float(values[10]) #sky
                             c.SexSky = float(values[10])
+                            c.GalSky = 9999
 			else:
 			    sky  = ShallowSky
 			    c.SexSky = ShallowSky
+                            c.GalSky = 9999
 			print sky, float(values[10])
 			c.SexMagAuto = float(values[17])
 			c.SexMagAutoErr = float(values[18])
