@@ -145,10 +145,12 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     area_o = float(values[13])   # object's area
     major_axis = float(values[14])	#major axis of the object
     FourPerSky = c.SexSky * 0.02
-    OnePerSky = c.SexSky * 0.008
+    OnePerSky = c.SexSky * 0.02
     SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.004)
     ParamDict = {}
+    ErrDict = {}
     ParamDict[0] = {}
+    ErrDict[0] = {}
     #Add components
     AdComp = 1
     if 'bulge' in ComP:
@@ -262,8 +264,17 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     ParamDict[0][AdComp][4] = 0
     ParamDict[0][AdComp][5] = 0
     ParamDict[0][AdComp][11] = 'Other'
-
     #Write Sersic function
+    ErrDict[0][1] = {}
+    ErrDict[0][1][1] = [9999, 9999]
+    ErrDict[0][1][2] = 9999
+    ErrDict[0][1][3] = 9999
+    ErrDict[0][1][4] = 9999
+    ErrDict[0][2] = {}
+    ErrDict[0][2][1] = [9999, 9999]
+    ErrDict[0][2][2] = 9999
+    ErrDict[0][2][3] = 9999
+
     def SersicFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
         f.write('# Sersic function\n\n')
@@ -356,7 +367,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f.writelines(['# Neighbour sersic function\n\n'])
         f.close()
     
-    def DecideFitting(ParamDict, RunNo):
+    def DecideFitting(ParamDict, RunNo, FixAll):
         No = RunNo + 1
         FitDict = {}
         #print ParamDict 
@@ -418,8 +429,59 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                     FitDict[i][4] = 0
                     FitDict[i][5] = 0       
                     FitDict[i][6] = 0    
+        if FixAll:
+            for j in range(len(ParamDict[RunNo])):
+                i = j + 1
+                FitDict[i] = {}  
+                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 1 
+                    FitDict[i][3] = 1 
+                    FitDict[i][4] = int(not c.devauc)
+                    FitDict[i][5] = 1       
+                    FitDict[i][6] = 1    
+                if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 1 
+                    FitDict[i][3] = 1 
+                    FitDict[i][4] = 1       
+                    FitDict[i][5] = 1  
+                if ParamDict[RunNo][i][1] == 'sky':
+                    FitDict[i][1] = 0
+                    FitDict[i][2] = 0 
+                    FitDict[i][3] = 0 
+                if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
+                    FitDict[i][1] = [0, 0]
+                    FitDict[i][2] = 0 
+                    FitDict[i][3] = 0 
+                    FitDict[i][4] = 0
+                    FitDict[i][5] = 0       
+                    FitDict[i][6] = 0    
+        
         return FitDict
-
+    def FractionalError(ParamDict, ErrDict, RunNo):
+        Xberr = ErrDict[RunNo][1][1][0] / ParamDict[RunNo][1][2][0] 
+        Yberr = ErrDict[RunNo][1][1][1] / ParamDict[RunNo][1][2][1] 
+        Fb = 10**((c.mag_zero -  ParamDict[RunNo][1][3]) / 2.5)
+        Fbe = abs(10**((c.mag_zero -  ParamDict[RunNo][1][3] + ErrDict[RunNo][1][2]) / 2.5) - 10**((c.mag_zero -  ParamDict[RunNo][1][3] - ErrDict[RunNo][1][2]) / 2.5))
+        ffbe = Fbe / Fb
+        reerr = ErrDict[RunNo][1][3] / ParamDict[RunNo][1][4]
+        nerr = ErrDict[RunNo][1][4] / ParamDict[RunNo][1][5]
+        Xderr = ErrDict[RunNo][2][1][0] / ParamDict[RunNo][2][2][0] 
+        Yderr = ErrDict[RunNo][2][1][1] / ParamDict[RunNo][2][2][1] 
+        Fd = 10**((c.mag_zero -  ParamDict[RunNo][2][3]) / 2.5)
+        Fde = n.abs(10**((c.mag_zero -  ParamDict[RunNo][2][3] + ErrDict[RunNo][2][2]) / 2.5) - 10**((c.mag_zero -  ParamDict[RunNo][2][3] - ErrDict[RunNo][2][2]) / 2.5))
+        ffde = Fde / Fd
+        rderr = ErrDict[RunNo][2][3] / ParamDict[RunNo][2][4]
+#        print Xberr, Yberr, Fb, Fbe, reerr, nerr
+#        print Xderr, Yderr, Fd, Fde, rderr
+        toterr = n.sqrt(ffbe**2.0 + reerr**2.0 + nerr**2.0 + ffde**2.0 + rderr**2.0)
+        if n.median([ffbe, reerr, nerr, ffde, rderr]) < 0.1:
+            toterr = 0.01
+        else:
+            toterr = n.median([ffbe, reerr, nerr, ffde, rderr])
+        print n.median([ffbe, reerr, nerr, ffde, rderr])
+        return toterr
 #The following function is to check whether the large bulge radii is real for
 #deva + disk fitting
     def DecideHowToMove3(ParamDict, RunNo):
@@ -454,9 +516,17 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         ContinueLoop = 0
         HitLimitCheck = 0
         KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
-        if abs(ParamDict[RunNo][1][4] - (c.LMag - 2.0)) < 0.05 or abs(ParamDict[RunNo][1][4] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21: 
+        print 'LM ', c.LMag
+        CntrDev = n.sqrt((ParamDict[RunNo][1][2][0] - ParamDict[RunNo][2][2][0])**2.0 + (ParamDict[RunNo][1][2][1] - ParamDict[RunNo][2][2][1])**2.0)
+        if CntrDev < 1.0:
+            CntrDev = 0.05
+        print ParamDict[RunNo][1][2][0], ParamDict[RunNo][2][2][0], ParamDict[RunNo][1][2][1], ParamDict[RunNo][2][2][1], CntrDev
+        print ParamDict[RunNo][1][3], c.LMag - 1.0,ParamDict[RunNo][1][3], c.UMag, ParamDict[RunNo][1][4], ParamDict[RunNo][2][4], CntrDev
+        if abs(ParamDict[RunNo][1][3] - (c.LMag - 1.0)) < 0.05 or abs(ParamDict[RunNo][1][3] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21 or CntrDev > 2.0: 
             HitLimitCheck = 1
+        print 'Hit ', HitLimitCheck
         if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8 or ParamDict[RunNo][1][6] < 0.08:
+            print 'sati '
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -477,8 +547,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 pass
             c.FitArr.append(1)
             c.RadArr.append(1)
+            c.CntrDevArr.append(CntrDev)
             ContinueLoop = 1
         else:
+            print 'not sati'
             if cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3] * \
                ParamDict[RunNo][1][4] > 20.0 and z != 9999: 
                 c.RadArr.append(1)
@@ -503,12 +575,15 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             except:
                 pass
             c.FitArr.append(0)
-            ContinueLoop = 1
+            c.CntrDevArr.append(CntrDev)
+            ContinueLoop = 0
         return ContinueLoop
 
     c.Chi2DOFArr = []
     c.FitArr = []
     c.RadArr = []
+    c.CntrDevArr = []
+    c.ErrArr = []
     c.ParamDictBook = {}
     #Write configuration file. RunNo is the number of iteration
 #    print SkyArray
@@ -546,7 +621,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f.writelines(['S) 0			# Modify/create',\
                      ' objects interactively?\n\n\n'])
         f.close()
-        FitDict = DecideFitting(ParamDict, RunNo)
+        if RunNo == SkyArray.shape[0] + 1:
+            FixAll = 1
+        else:
+            FixAll = 0
+        FitDict = DecideFitting(ParamDict, RunNo, FixAll)
         for i in range(len(ParamDict[RunNo])):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
@@ -597,23 +676,33 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         #we can find the best  initial values for the rest of it.
         #ReadLog(ParamDict, 1) reads the fit.log in the order, ie. sersic, 
         #expdisk, other sersic etc
-            ParamDict, Chi2DOF = ReadLog(ParamDict, 1, RunNo)
+            ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo)
+            c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
             c.Chi2DOFArr.append(Chi2DOF)
-            if DecideHowToMove2(ParamDict, RunNo + 1):
-                pass
-            else:
+            print 'ErrArr ', c.ErrArr[RunNo] 
+            if not DecideHowToMove2(ParamDict, RunNo + 1) and RunNo ==0 and c.ErrArr[RunNo] < 0.1:
                 break
+            else:
+                pass
         except:
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
+            ErrDict[RunNo + 1] = copy.deepcopy(ErrDict[RunNo])
             if RunNo < SkyArray.shape[0]:
                 ParamDict[RunNo + 1][3][2] = copy.deepcopy(SkyArray[RunNo])
+            c.ErrArr.append(9999)
             c.Chi2DOFArr.append(9999)
             c.FitArr.append(1)
             c.RadArr.append(1)
+            c.CntrDevArr.append(9999)
+#        raw_input('') 
         if RunNo == SkyArray.shape[0]:
             c.Chi2DOFArr = n.array(c.Chi2DOFArr)
             c.FitArr = n.array(c.FitArr)
             c.RadArr = n.array(c.RadArr)
+            c.CntrDevArr = n.array(c.CntrDevArr)
+            print SkyArray
+            print c.Chi2DOFArr
+#            c.Chi2DOFArr = c.Chi2DOFArr * c.ErrArr * c.CntrDevArr #c.CntrDevArr * c.CntrDevArr
 #                print c.Chi2DOFArr
 #                print c.FitArr
 #                print 'Printing ', len(ParamDict)
@@ -655,6 +744,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     c.Chi2DOFArr = n.array(c.Chi2DOFArr)
     c.FitArr = n.array(c.FitArr)
     c.RadArr = n.array(c.RadArr)
+    c.CntrDevArr = n.array(c.CntrDevArr)
 #    print c.Chi2DOFArr
 #    print c.FitArr
 #    print len(ParamDict)

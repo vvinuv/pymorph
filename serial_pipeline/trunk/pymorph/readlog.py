@@ -8,9 +8,11 @@ import numpy as n
 from numpy import random
 import copy
 
-def ReadLog(ParamDict, No, RunNo):
+def ReadLog(ParamDict, ErrDict, No, RunNo):
+    object_err = 1
     if exists('fit.log'):
         ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
+        ErrDict[RunNo + 1] = copy.deepcopy(ErrDict[RunNo])
         for line in open('fit.log','r'): 
             values = line.split() 
             try: 
@@ -67,6 +69,21 @@ def ReadLog(ParamDict, No, RunNo):
                     Chi2 = float(values[2][:-1])
                     DOF = float(values[5])
                     Chi2DOF = Chi2 / DOF
+                if(str(values[0])[:1] == '('):
+                    if(str(PreComp) == 'sersic' and object_err < 3):
+                        ErrDict[RunNo + 1][1][1][0] = float(values[0][1:-1])
+                        ErrDict[RunNo + 1][1][1][1] = float(values[1][0:-1])
+                        ErrDict[RunNo + 1][1][2] = float(values[2])
+                        ErrDict[RunNo + 1][1][3] = float(values[3])
+                        ErrDict[RunNo + 1][1][4] = float(values[4])
+                        object_err += 1
+                    if(str(PreComp) == 'expdisk') and object_err < 3:
+                        ErrDict[RunNo + 1][2][1][0] = float(values[0][1:-1])
+                        ErrDict[RunNo + 1][2][1][1] = float(values[1][0:-1])
+                        ErrDict[RunNo + 1][2][2] = float(values[2])
+                        ErrDict[RunNo + 1][2][3] = float(values[3])
+                        object_err += 1
+                PreComp = values[0]
             except:
                 pass
 #        if 'bulge' in ComP and 'disk' in ComP:
@@ -81,7 +98,7 @@ def ReadLog(ParamDict, No, RunNo):
 #        else:
 #            BD = 'nan'
 #            BT = 'nan'
-    return ParamDict, Chi2DOF
+    return ParamDict, ErrDict, Chi2DOF
 #a = {1: {1: 'sersic', 2: [65.688000000000002, 65.738], 3: 22.5169, 4: 10.288, 5: 4.0, 6: 0.33636057854019513, 7: -12.900000000000006, 8: 0, 9: 0, 11: 'Main'}, 2: {1: 'expdisk', 2: [65.688000000000002, 65.738], 3: 22.5169, 4: 10.288, 5: 0.33636057854019513, 6: -12.900000000000006, 7: 0, 8: 0, 11: 'Main'}, 3: {1: 'sersic', 2: [56.633000000000003, 107.64100000000001], 3: 22.5913, 4: 5.7359999999999998, 5: 4.0, 6: 0.66979236436704614, 7: -75.799999999999997, 8: 0, 9: 0, 11: 'Other'}, 4: {1: 'sky', 2: -0.001669224, 3: 0, 4: 0, 5: 0, 11: 'Other'}}
 
 #print ReadLog(a)
