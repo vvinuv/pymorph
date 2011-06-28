@@ -10,6 +10,10 @@ import copy
 import numpy.ma as ma
 from readlog import ReadLog
 from cosmocal import cal
+try:
+    from utilities import WriteDbDetail
+except:
+    print 'No database'
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
        consists of bulge and disk component of the object and only Sersic 
@@ -520,11 +524,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         CntrDev = n.sqrt((ParamDict[RunNo][1][2][0] - ParamDict[RunNo][2][2][0])**2.0 + (ParamDict[RunNo][1][2][1] - ParamDict[RunNo][2][2][1])**2.0)
         if CntrDev < 1.0:
             CntrDev = 0.05
-        print ParamDict[RunNo][1][2][0], ParamDict[RunNo][2][2][0], ParamDict[RunNo][1][2][1], ParamDict[RunNo][2][2][1], CntrDev
-        print ParamDict[RunNo][1][3], c.LMag - 1.0,ParamDict[RunNo][1][3], c.UMag, ParamDict[RunNo][1][4], ParamDict[RunNo][2][4], CntrDev
-        if abs(ParamDict[RunNo][1][3] - (c.LMag - 1.0)) < 0.05 or abs(ParamDict[RunNo][1][3] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21 or CntrDev > 2.0: 
+#        print ParamDict[RunNo][1][2][0], ParamDict[RunNo][2][2][0], ParamDict[RunNo][1][2][1], ParamDict[RunNo][2][2][1], CntrDev
+#        print ParamDict[RunNo][1][3], c.LMag - 1.0,ParamDict[RunNo][1][3], c.UMag, ParamDict[RunNo][1][4], ParamDict[RunNo][2][4], CntrDev
+        if abs(ParamDict[RunNo][1][3] - (c.LMag - 1.0)) < 0.05 or abs(ParamDict[RunNo][1][3] - c.UMag) < 0.05 or ParamDict[RunNo][1][4] < 0.21 or ParamDict[RunNo][2][4] < 0.21 or CntrDev * KpCArc > 0.5 and z != 9999 or CntrDev > 4: 
             HitLimitCheck = 1
-        print 'Hit ', HitLimitCheck
+#        print 'Hit ', HitLimitCheck
         if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8 or ParamDict[RunNo][1][6] < 0.08:
             print 'sati '
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
@@ -695,6 +699,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             c.RadArr.append(1)
             c.CntrDevArr.append(9999)
 #        raw_input('') 
+        if RunNo > 0:
+            try:
+                WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo], ErrDict[RunNo + 1], c.SexSky, SkyArray[RunNo-1], RunNo, c.Flag, c.Chi2DOFArr[RunNo])
+            except:
+                print 'No database'
         if RunNo == SkyArray.shape[0]:
             c.Chi2DOFArr = n.array(c.Chi2DOFArr)
             c.FitArr = n.array(c.FitArr)

@@ -63,7 +63,7 @@ def WriteDb(ParamValues):
 #        pass
     x=datetime.date.today()
     yyyy, mm, dd = x.year, x.month, x.day
-    DaTe = str(yyyy) + '.' + str(mm) + str(dd)
+    DaTe = str(yyyy) + '.' + str(mm) + '.' + str(dd)
     AllParams.append('Date')
     AllParams.append('Version')
     AllParams.append('Filter')
@@ -177,3 +177,101 @@ def WriteDb(ParamValues):
 #A = ['EDCSNJ1216490-1200091',184.204,-12.0025277778,0.7863,22.76,0.03,1.55,0.04,0.521182261202,0.0134498648052,1.24,0.12,18.8371116745,0.0316672494062,0.47,0.02,21.23,0.01,8.95,0.12,3.00940725017,0.0403495944157,0.35,0.0,0.244343055269,0.196363096362,9999,9999,9999,9999,1.146,0.664,1,3.63747679805,3.88004211969,0.130618587136,9999,0.365522099184,1.4538,0.546744991269,-2.24971293032,25.1297510444,1,1542]
 #WriteDb(A)
 #CREATE TABLE IF NOT EXISTS book (name char(40), lastname char(40), petname char (40))
+
+
+def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu):
+    gal_id = Name
+    hst = c.host
+    dba = c.database
+    pwd = c.pword
+    usr = c.usr
+    tbl = c.table + 'Detailed'
+    host = c.host
+    try:
+        Conn = mysql.connect (host = "%s" %hst,
+                                user = "%s" %usr,
+                                passwd = "%s" %pwd,
+                                db = "%s" %dba) 
+    except mysql.Error, e:
+        print "Error %d: %s" % (e.args[0], e.args[1])
+        sys.exit (1)
+    cursor = Conn.cursor()
+    DictParamWithValue = {}
+    DictParamWithType1 = {}
+    AllParams = []
+    x=datetime.date.today()
+    yyyy, mm, dd = x.year, x.month, x.day
+    DaTe = str(yyyy) + '.' + str(mm) + '.' + str(dd)
+    AllParams.append('Name')
+    AllParams.append('Date')
+    AllParams.append('rootname')
+    DictParamWithType1['Name'] = 'varchar(500)' 
+    DictParamWithType1['Date'] = 'varchar(50)' 
+    DictParamWithType1['rootname'] = 'varchar(500)'
+    DictParamWithValue['Name'] = Name
+    DictParamWithValue['Date'] = DaTe
+    DictParamWithValue['rootname'] = c.rootname
+    DictParamWithType2 = {'xb':'float', 'yb':'float', 'xd':'float', 'yd':'float', \
+                        'Ie':'float','Ie_err':'float',\
+                        're_pix':'float', 're_err_pix':'float',\
+                        'n':'float', 'n_err':'float', \
+                        'eb':'float', \
+                        'Id':'float', 'Id_err':'float', 'rd_pix':'float',\
+                        'rd_err_pix':'float', \
+                        'ed':'float', \
+                        'BT':'float', 'chi2nu':'float', 'run':'int', \
+                        'SexSky':'float', 'GalSky':'float', \
+                        'flag':'bigint'}
+    ParamToWrite = ['xb', 'yb', 'xd', 'yd', 'Ie','Ie_err','re_pix',\
+                        're_err_pix', 'n', 'n_err', 'eb', \
+                        'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
+                        'ed', 'BT', 'chi2nu', 'run', \
+                        'SexSky', 'GalSky', 'flag']
+    ParamType = ['float', 'float', 'float', 'float', \
+                     'float', 'float', 'float', 'float', 'float', \
+	             'float', 'float', 'float', 'float', 'float', \
+                     'float', 'float', 'float', 'float', \
+                     'int', 'float', 'float', 'bigint']
+    DictParamWithType = {}  #Dictionary with Type
+    DictParamWithType.update(DictParamWithType1)
+    DictParamWithType.update(DictParamWithType2)
+    DictParamWithValue['xb'] = ParamValuesDict[1][2][0]
+    DictParamWithValue['yb'] = ParamValuesDict[1][2][1]
+    DictParamWithValue['Ie'] = ParamValuesDict[1][3]
+    DictParamWithValue['re_pix'] = ParamValuesDict[1][4]
+    DictParamWithValue['n'] = ParamValuesDict[1][5]
+    DictParamWithValue['eb'] = ParamValuesDict[1][6]
+    DictParamWithValue['xd'] = ParamValuesDict[2][2][0]
+    DictParamWithValue['yd'] = ParamValuesDict[2][2][1]
+    DictParamWithValue['Id'] = ParamValuesDict[2][3]
+    DictParamWithValue['rd_pix'] = ParamValuesDict[2][4]
+    DictParamWithValue['ed'] = ParamValuesDict[2][5]
+    DictParamWithValue['Ie_err'] = ErrDict[1][2]
+    DictParamWithValue['re_err_pix'] = ErrDict[1][3]
+    DictParamWithValue['n_err'] = ErrDict[1][4]
+    DictParamWithValue['Id_err'] = ErrDict[2][2]
+    DictParamWithValue['rd_err_pix'] = ErrDict[2][3]
+    fb = 10**((c.mag_zero - ParamValuesDict[1][3]) / 2.5)
+    fd = 10**((c.mag_zero - ParamValuesDict[2][3]) / 2.5)
+    DictParamWithValue['BT'] = fb / (fb + fd)
+    DictParamWithValue['chi2nu'] = Chi2nu
+    DictParamWithValue['run'] = RunNo
+    DictParamWithValue['SexSky'] = SexSky
+    DictParamWithValue['GalSky'] = GalSky
+    DictParamWithValue['flag'] = flag
+    for p in ParamToWrite:
+        AllParams.append(p)
+    cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \
+              DictParamWithType[p]) for p in AllParams]) + ")" 
+    cursor.execute(cmd)
+    cmd = "INSERT INTO %s values (" % tbl 
+    for p in AllParams:
+        if DictParamWithType[p] in ('int', 'bigint', 'float'):
+            cmd = cmd + str(DictParamWithValue[p]) + ', '
+        else:
+            cmd = cmd + "'" + str(DictParamWithValue[p]) + "', "
+    cmd = str(cmd[:-2]) + ')'
+    cursor.execute(cmd)
+    cursor.close()
+    Conn.close()
+
