@@ -443,14 +443,14 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 i = j + 1
                 FitDict[i] = {}  
                 if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [0, 0]
+                    FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = int(not c.devauc)
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [0, 0]
+                    FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1       
