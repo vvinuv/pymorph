@@ -141,7 +141,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     def SkyConstrain(constrain_file, cO, SkyValToCon):
         Ndig = len(str(int(SkyValToCon))) + 6
         f_constrain = open(constrain_file, 'ab')
-        f_constrain.write(str(cO) + '      sky      ' + str(-SkyValToCon * 0.008)[:Ndig+1] + '    ' + str(SkyValToCon * 0.008)[:Ndig] + '  \n')
+        f_constrain.write(str(cO) + '      sky      ' + str(-c.SexSky * 0.008)[:Ndig+1] + '    ' + str(c.SexSky * 0.008)[:Ndig] + '  \n')
         f_constrain.close()
     xcntr_o  = xcntr #float(values[1]) #x center of the object
     ycntr_o  = ycntr #float(values[2]) #y center of the object
@@ -284,7 +284,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     ErrDict[0][2][2] = 9999
     ErrDict[0][2][3] = 9999
 
-    def SersicFunc(conffile, ParamDict, FitDict, No, RunNo, Final):
+    def SersicFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
         f.write('# Sersic function\n\n')
         f.writelines([' 0) sersic \n'])
@@ -292,12 +292,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                               str(ParamDict[RunNo][No][2][1]), ' ', \
                               str(FitDict[No][1][0]),   ' ', \
                               str(FitDict[No][1][1]),   '\n'])
-        if Final:
-            f.writelines([' 3) ', str(ParamDict[RunNo][No][3] - 0.5), ' ', \
-                                  str(FitDict[No][2]),  '\n'])
-        else:
-            f.writelines([' 3) ', str(ParamDict[RunNo][No][3]), ' ', \
-                                  str(FitDict[No][2]),  '\n'])
+        f.writelines([' 3) ', str(ParamDict[RunNo][No][3]), ' ', \
+                              str(FitDict[No][2]),  '\n'])
         f.writelines([' 4) ', str(ParamDict[RunNo][No][4]), ' ', \
                               str(FitDict[No][3]),  '\n'])
         f.writelines([' 5) ', str(ParamDict[RunNo][No][5]), ' ',\
@@ -312,7 +308,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             f.writelines(['10) 0.0 0            \n'])
         f.writelines([' Z) 0 			\n\n\n'])
         f.close()
-    def ExpFunc(conffile, ParamDict, FitDict, No, RunNo, Final):
+    def ExpFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
         f.writelines(['# Exponential function\n\n'])
         f.writelines([' 0) expdisk \n'])
@@ -320,12 +316,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                               str(ParamDict[RunNo][No][2][1]),' ', \
                               str(FitDict[No][1][0]), ' ', \
                               str(FitDict[No][1][1]), '\n'])
-        if Final:
-            f.writelines([' 3) ', str(ParamDict[RunNo][No][3] + 0.5),  ' ', \
-                                  str(FitDict[No][2]),    '\n'])
-        else:
-            f.writelines([' 3) ', str(ParamDict[RunNo][No][3]),  ' ', \
-                                  str(FitDict[No][2]),    '\n'])
+        f.writelines([' 3) ', str(ParamDict[RunNo][No][3]),  ' ', \
+                              str(FitDict[No][2]),    '\n'])
         f.writelines([' 4) ', str(ParamDict[RunNo][No][4]),  ' ', \
                               str(FitDict[No][3]),    '\n'])
         f.writelines([' 8) ', str(ParamDict[RunNo][No][5]),  ' ', \
@@ -579,7 +571,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     #Write configuration file. RunNo is the number of iteration
 #    print SkyArray
     IthinkDisk = 0
-    Final = 0
     for RunNo in range(SkyArray.shape[0] + 2):
         f_constrain = open(constrain_file, 'w')
         f_constrain.close()
@@ -621,7 +612,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         FitDict = DecideFitting(ParamDict, RunNo, FixAll)
         for i in range(len(ParamDict[RunNo])):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
-                SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo, Final)
+                SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
                     if IthinkDisk: #Second run
                         SersicMainConstrain(constrain_file, i + 1, c.center_constrain, ParamDict[0][1][4] / 3.0, 6)
@@ -634,7 +625,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 if RunNo + 1 == 0:
                     pass
                 else:
-                    ExpFunc(config_file, ParamDict, FitDict, i + 1, RunNo, Final)
+                    ExpFunc(config_file, ParamDict, FitDict, i + 1, RunNo)
                     ExpdiskConstrain(constrain_file, i + 1)
             if ParamDict[RunNo][i + 1][1] == 'bar':
                 if RunNo + 1 == 0:
@@ -712,8 +703,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[0])
             if c.FitArr[n.where(c.FitArr == 0)].shape[0] > 0:
                 ParamDict[RunNo + 1][SkyNo][2] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()][SkyNo][2])
-                if c.ParamDictBook[Chi2DOFArrMa.argmin()][1][3] < c.ParamDictBook[Chi2DOFArrMa.argmin()][2][3]:
-                    Final = 1
 #                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
                 SkyNo = len(ParamDict[0]) #GalSky has to do better
                 c.GalSky = ParamDict[RunNo + 1][SkyNo][2]
