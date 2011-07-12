@@ -141,7 +141,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     def SkyConstrain(constrain_file, cO, SkyValToCon):
         Ndig = len(str(int(SkyValToCon))) + 6
         f_constrain = open(constrain_file, 'ab')
-        f_constrain.write(str(cO) + '      sky      ' + str(-c.SexSky * 0.008)[:Ndig+1] + '    ' + str(c.SexSky * 0.008)[:Ndig] + '  \n')
+        f_constrain.write(str(cO) + '      sky      ' + str(-SkyValToCon * 0.008)[:Ndig+1] + '    ' + str(SkyValToCon * 0.008)[:Ndig] + '  \n')
         f_constrain.close()
     xcntr_o  = xcntr #float(values[1]) #x center of the object
     ycntr_o  = ycntr #float(values[2]) #y center of the object
