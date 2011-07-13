@@ -134,9 +134,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f_constrain.write(str(cO) + '      pa    -360.0 to 360.0\n')
         f_constrain.close()
     
-    def SkyConstrain(constrain_file, cO):
+    def SkyConstrain(constrain_file, cO, SkyValToCon):
+        Ndig = len(str(int(SkyValToCon))) + 6
         f_constrain = open(constrain_file, 'ab')
-        f_constrain.write(str(cO) + '      sky      ' + str(c.SexSky - c.SexSky * 0.001) + ' to ' + str(c.SexSky + c.SexSky * 0.001) + '  \n')
+        f_constrain.write(str(cO) + '      sky      ' + str(-SkyValToCon * 0.008)[:Ndig+1] + '    ' + str(SkyValToCon * 0.008)[:Ndig] + '  \n')
         f_constrain.close()
     xcntr_o  = xcntr #float(values[1]) #x center of the object
     ycntr_o  = ycntr #float(values[2]) #y center of the object
@@ -150,7 +151,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     major_axis = float(values[14])	#major axis of the object
     FourPerSky = c.SexSky * 0.02
     OnePerSky = c.SexSky * 0.02
-    SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.004)
+    SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.008)
     ParamDict = {}
     ErrDict = {}
     ParamDict[0] = {}
@@ -438,20 +439,20 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 i = j + 1
                 FitDict[i] = {}  
                 if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [0, 0]
+                    FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = int(not c.devauc)
                     FitDict[i][5] = 1       
                     FitDict[i][6] = 1    
                 if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
-                    FitDict[i][1] = [0, 0]
+                    FitDict[i][1] = [1, 1]
                     FitDict[i][2] = 1 
                     FitDict[i][3] = 1 
                     FitDict[i][4] = 1       
                     FitDict[i][5] = 1  
                 if ParamDict[RunNo][i][1] == 'sky':
-                    FitDict[i][1] = 0
+                    FitDict[i][1] = 1
                     FitDict[i][2] = 0 
                     FitDict[i][3] = 0 
                 if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
@@ -662,8 +663,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                     PsfConstrain(constrain_file, i + 1)
 
             if  ParamDict[RunNo][i + 1][1] == 'sky':
-                if RunNo == 9: 
-                    SkyConstrain(constrain_file, i + 1)
+                if RunNo == SkyArray.shape[0] + 1: 
+                    SkyConstrain(constrain_file, i + 1, ParamDict[RunNo][i+1][2])
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
         
 #        print ParamDict
@@ -684,7 +685,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
             c.Chi2DOFArr.append(Chi2DOF)
             print 'ErrArr ', c.ErrArr[RunNo] 
-            if not DecideHowToMove2(ParamDict, RunNo + 1) and RunNo ==0 and c.ErrArr[RunNo] < 0.1:
+            if not DecideHowToMove2(ParamDict, RunNo + 1) and RunNo == -10 and c.ErrArr[RunNo] < 0.1:
                 break
             else:
                 pass
@@ -719,8 +720,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
 #                print Chi2DOFArrMa.argmin()
 #                print 'Print this ', c.ParamDictBook[Chi2DOFArrMa.argmin()]
 #                print 'hi'
+            SkyNo = len(ParamDict[0])
+            ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[0])
             if c.FitArr[n.where(c.FitArr == 0)].shape[0] > 0:
-                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
+                ParamDict[RunNo + 1][SkyNo][2] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()][SkyNo][2])
+#                ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[Chi2DOFArrMa.argmin()])
                 SkyNo = len(ParamDict[0]) #GalSky has to do better
                 c.GalSky = ParamDict[RunNo + 1][SkyNo][2]
             else:
@@ -742,9 +746,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 RePixArr[n.where(RePixArr < 0.21)] = 9999.0
                 MagDiffArr = IeArr - IdArr
                 if MagDiffArr[n.where(MagDiffArr > 0)].shape[0] >= MagDiffArr.shape[0] / 2: 
-                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmax()]) 
+#                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmax()]) 
+                    ParamDict[RunNo + 1][SkyNo][2] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmax()][SkyNo][2]) 
                 else:
-                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmin()])
+#                    ParamDict[RunNo + 1] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmin()])
+                    ParamDict[RunNo + 1][SkyNo][2] = copy.deepcopy(c.ParamDictBook[MagDiffArr.argmin()][SkyNo][2])
                 SkyNo = len(ParamDict[0]) #GalSky has to do better
                 c.GalSky = ParamDict[RunNo + 1][SkyNo][2]                   
             
