@@ -682,9 +682,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         #ReadLog(ParamDict, 1) reads the fit.log in the order, ie. sersic, 
         #expdisk, other sersic etc
             ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo)
-            c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
+            try:
+                c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
+            except:
+                c.ErrArr.append(9999.0)
             c.Chi2DOFArr.append(Chi2DOF)
-            print 'ErrArr ', c.ErrArr[RunNo] 
             if not DecideHowToMove2(ParamDict, RunNo + 1) and RunNo == -10 and c.ErrArr[RunNo] < 0.1:
                 break
             else:
