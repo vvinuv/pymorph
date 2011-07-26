@@ -34,6 +34,7 @@ from bkgdfunc import *
 #from configiter import *
 #from configbarpoint import *
 from configbulgedisk import *
+from yetbackfunc import FindYetSky
 
 
 
@@ -51,15 +52,16 @@ def main():
     sex_cata = c.sex_cata
     clus_cata = c.clus_cata
     out_cata = c.out_cata
-    try:
-        if c.psflist.startswith('@'):
-            psffi = open(c.datadir + c.psflist.split('@')[1], 'r')
-            c.psflist = []
-            for pline in psffi: 
-                c.psflist.append(pline.split()[0])
-    except:
-        print "Not using psflist"
-        pass     
+    def PsfArr():
+        try:
+            if c.psflist.startswith('@'):
+                psffi = open(c.datadir + c.psflist.split('@')[1], 'r')
+                c.psflist = []
+                for pline in psffi: 
+                    c.psflist.append(pline.split()[0])
+        except:
+            print "Not using psflist"
+            pass     
     ReSize = c.size[0]
     try:
         VarSize = c.size[1]
@@ -215,6 +217,7 @@ def main():
         PsfDistanceDict = {}
         distance = 9999.0
         psffile = 'test.fits'
+        PsfArr()
         psflist = c.psflist
         r = 3.14159265 / 180.0
         for element in psflist:
@@ -892,12 +895,17 @@ def main():
                                     ycntr = SizeY / 2 + ycntrFrac
 #                                print cutimage,xcntr, ycntr, SizeX, SizeY, xminOut, yminOut, xmaxOut, ymaxOut
                                 try:
-                                    SexySky, SkyYet, SkyMed, SkyMin, SkyQua = \
-                                    FindYetSky(cutimage, xcntr, ycntr)
+                                    print c.datadir + cutimage, xcntr, ycntr
+                                    SexySky, SkyYet, SkyMed, SkyMin, SkyQua, \
+                                    SkySig = \
+                                    FindYetSky(c.datadir + cutimage, xcntr, ycntr)
                                     if SkyMin != 9999:
                                         c.SkyMin = SkyMin * 1.0
+                                        c.skysig = SkySig * 1.0
                                     else:
                                         c.SkyMin = c.SexSky * 1.0 
+                                    print 'Sky Sigma >>> ', c.skysig
+                                    print 'Min Sex', c.SkyMin, c.SexSky
                                 except:
                                     f_err.writelines(['Back finding failed\n'])
                                 try:
@@ -905,13 +913,14 @@ def main():
                                     ElliMaskFunc(cutimage, xcntr, ycntr, \
                                                  SizeX, SizeY, line_s, 0)
                                     try:
-                                        Bkgd_Params = BkgdFunc(cutimage, \
+                                        if c.cas or c.skysig == 9999:
+                                            Bkgd_Params = BkgdFunc(cutimage, \
                                                 xcntr, ycntr, bxcntr, bycntr, \
                                                 eg, pos_ang, sky)
-                                        bxcntr = Bkgd_Params.bkgd[0]
-                                        bycntr = Bkgd_Params.bkgd[1]
-                                        c.skysig = Bkgd_Params.bkgd[2]
-                                        print 'Sky Sigma >>> ', c.skysig
+                                            bxcntr = Bkgd_Params.bkgd[0]
+                                            bycntr = Bkgd_Params.bkgd[1]
+                                            c.skysig = Bkgd_Params.bkgd[2]
+                                            print 'Sky Sigma >>> ', c.skysig
                                     except:
                                         f_err.writelines(['Could not',\
                                                   ' find the sky'\

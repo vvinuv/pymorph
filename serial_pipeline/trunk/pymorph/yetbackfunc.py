@@ -1,10 +1,10 @@
+import config as c
 import os
 import numpy as n
 import pylab as p
 import pyfits
 import convolve as conv
 import numpy.ma as ma
-import config as c
 
 def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
     nxpts, nypts = z.shape
@@ -59,7 +59,8 @@ def FindYetSky(gimg, X0, Y0):
     f = pyfits.open('seg.fits')
     zm = f[0].data
     f.close()
-    SexSky, SkyYet, SkyMed, SkyMin, SkyQua = 9999, 9999, 9999, 9999, 9999
+    SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig = 9999, 9999, 9999, \
+    9999, 9999, 9999
     for l_s in open('SegCat.cat'):
         v_s = l_s.split()
         try:
@@ -84,8 +85,9 @@ def FindYetSky(gimg, X0, Y0):
                SkyYet = n.median(ma.masked_array(z, zm).compressed())
                SkyMed = n.median(SkyQua)
                SkyMin = n.min(SkyQua)
+               SkySig = n.std(ma.masked_array(z, zm).compressed())
                os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
                break
         except:
             pass 
-    return SexSky, SkyYet, SkyMed, SkyMin, SkyQua
+    return SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig

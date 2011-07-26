@@ -152,8 +152,9 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                   ' mask(FITS image or ASCII coord list)\n'])
     f.writelines(['G) ', str(constrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
-    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
-                  ' Image region to fit (xmin xmax ymin ymax)\n'])
+#    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
+#                  ' Image region to fit (xmin xmax ymin ymax)\n'])
+    f.writelines(['H) ', str(int(xcntr - 8 * c.SexHalfRad)), ' ', str(int(xcntr + 8 * c.SexHalfRad)), ' ', str(int(ycntr - 8 * c.SexHalfRad)), ' ', str(int(ycntr + 8 * c.SexHalfRad)), '            # Image region to fit (xmin xmax ymin ymax)\n'])
     f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
@@ -254,10 +255,10 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
 #        c.Flag += 512
-
+ 
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(c.SexSky), '      ', str(c.fitting[2]), \
+    f.writelines([' 1) ', str(c.SkyMin), '      ', str(c.fitting[2]), \
                   '	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
