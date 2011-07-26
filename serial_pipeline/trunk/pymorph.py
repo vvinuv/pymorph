@@ -892,6 +892,15 @@ def main():
                                     ycntr = SizeY / 2 + ycntrFrac
 #                                print cutimage,xcntr, ycntr, SizeX, SizeY, xminOut, yminOut, xmaxOut, ymaxOut
                                 try:
+                                    SexySky, SkyYet, SkyMed, SkyMin, SkyQua = \
+                                    FindYetSky(cutimage, xcntr, ycntr)
+                                    if SkyMin != 9999:
+                                        c.SkyMin = SkyMin * 1.0
+                                    else:
+                                        c.SkyMin = c.SexSky * 1.0 
+                                except:
+                                    f_err.writelines(['Back finding failed\n'])
+                                try:
                                 #The following function provide the center of blank sky region and the sky sigma    
                                     ElliMaskFunc(cutimage, xcntr, ycntr, \
                                                  SizeX, SizeY, line_s, 0)
