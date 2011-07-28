@@ -86,7 +86,7 @@ def FindYetSky(gimg, X0, Y0):
                SkyMed = n.median(SkyQua)
                SkyMin = n.min(SkyQua)
                SkySig = n.std(ma.masked_array(z, zm).compressed())
-               os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
+#               os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
                break
         except:
             pass 

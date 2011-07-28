@@ -13,7 +13,7 @@ class ConfigFunc:
        The initial value for Sersic index 'n' is 4.The configuration file has 
        the name G_string(galid).in. The output image has the name 
        O_string(galid).fits"""
-    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
         self.cutimage = cutimage
         self.line_s  = line_s
 	self.whtimage = whtimage
@@ -22,13 +22,12 @@ class ConfigFunc:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
-        self.conff    = conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
+        self.conff    = conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata)
 		
 
-def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
+def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
     reload(c)
     imagefile = c.imagefile
-    sex_cata = c.sex_cata
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
@@ -124,8 +123,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     if c.center_deviated:
         c.center_deviated = 0
     f=open(config_file,'w')
-    xcntr_o  = float(values[1]) #x center of the object
-    ycntr_o  = float(values[2]) #y center of the object
+    xcntr_o  = xcntr * 1.0 #float(values[1]) #x center of the object
+    ycntr_o  = ycntr * 1.0 # float(values[2]) #y center of the object
 #    xcntr = size/2.0 + 1.0 + xcntr_o - int(xcntr_o)
 #    ycntr = size/2.0 + 1.0 + ycntr_o - int(ycntr_o)
     mag    = float(values[7]) #Magnitude
@@ -286,17 +285,10 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
                threshold and \
                abs(ycntr_n - ycntr_o) <= (major_axis  + maj_axis) * \
                threshold and area_n >= thresh_area * area_o and \
-               xcntr_n != xcntr_o and ycntr_n != ycntr_o and NotFitNeigh == 0):
-                if((xcntr_o - xcntr_n) < 0):
-                    xn = xcntr + abs(xcntr_n - xcntr_o)
-                if((ycntr_o - ycntr_n) < 0):
-                    yn = ycntr + abs(ycntr_n - ycntr_o)
-                if((xcntr_o - xcntr_n) > 0):
-                    xn = xcntr - (xcntr_o - xcntr_n)
-                if((ycntr_o - ycntr_n) > 0):
-                    yn = ycntr - (ycntr_o - ycntr_n)
+               abs(xcntr_n - xcntr_o) > 5.0  and \
+               abs(ycntr_n - ycntr_o) > 5.0 and NotFitNeigh == 0):
                 f.writelines([' 0) sersic               # Object type\n'])
-                f.writelines([' 1) ', str(xn), ' ', str(yn), \
+                f.writelines([' 1) ', str(xcntr_n), ' ', str(ycntr_n), \
                              ' 1 1  # position x, y [pixel]\n'])
                 f.writelines([' 3) ', str(mag), ' 1     	#',\
                               ' total magnitude\n'])

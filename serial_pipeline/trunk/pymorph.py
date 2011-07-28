@@ -22,10 +22,10 @@ print 'configdir is : ', configdir
 sys.path.append(configdir)
 import config as c
 
-from maskfunc import *
+from maskfunc_easy import *
 from configfunc import *
-from ellimaskfunc import *
-from outmaskfunc import *
+from ellimaskfunc_easy import *
+from outmaskfunc_easy import *
 from plotfunc import *
 from writehtmlfunc import *
 from runsexfunc import *
@@ -1154,7 +1154,8 @@ def main():
                                     if(cfile == 'None'):
                                         ConfigFunc(cutimage, whtimage,  xcntr,\
                                                    ycntr, SizeX, \
-                                                   SizeY, line_s, psffile)
+                                                   SizeY, line_s, psffile, \
+                                                   'SegCat.cat')
                                         config_file = 'G_' + \
                                                        str(cutimage)[:-5]+ '.in'
                                         outimage = 'O_' + str(cutimage)
