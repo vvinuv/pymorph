@@ -900,7 +900,7 @@ def main():
                                     SkySig = \
                                     FindYetSky(c.datadir + cutimage, xcntr, ycntr)
                                     if SkyMin != 9999:
-                                        c.SkyMin = SkyMin * 1.0
+                                        c.SkyMin = SkyYet * 1.0
                                         c.skysig = SkySig * 1.0
                                     else:
                                         c.SkyMin = c.SexSky * 1.0 

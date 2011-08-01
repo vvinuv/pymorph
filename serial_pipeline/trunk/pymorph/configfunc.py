@@ -55,7 +55,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
         for Co in ComP:
             if Co == 'bulge':
                 f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
-                        ' to ' + str(c.UN) +  '\n')
+                        ' to ' + str(8.0) +  '\n')
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
                     str(c.center_deviation - c.center_deviation / 4.0) + \

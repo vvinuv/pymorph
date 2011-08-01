@@ -82,6 +82,9 @@ def FindYetSky(gimg, X0, Y0):
                                  bbya, pa, ii))
                SkyQua = n.array(SkyQua)
                SexSky = sky
+               tmpstd = n.std(ma.masked_array(z, zm).compressed())
+               tmpmed = n.median(ma.masked_array(z, zm).compressed())
+               zm[n.where((z - tmpmed) > 1.3 * tmpstd)] = 1
                SkyYet = n.median(ma.masked_array(z, zm).compressed())
                SkyMed = n.median(SkyQua)
                SkyMin = n.min(SkyQua)
