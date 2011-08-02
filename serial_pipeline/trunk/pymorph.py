@@ -13,13 +13,11 @@ from numpy import log10
 import ndimage as im
 from ndimage import center_of_mass
 
-if len(sys.argv) > 1:
-    configdir = sys.argv[1]
-else:
-    configdir = '.'
+configdir = '.'
 
 print 'configdir is : ', configdir
 sys.path.append(configdir)
+
 import config as c
 
 from maskfunc_easy import *
