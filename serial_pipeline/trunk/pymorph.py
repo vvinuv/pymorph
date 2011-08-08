@@ -1,4 +1,5 @@
-#!/sw/bin/python2.6
+#!/data2/home/ameert/python/bin/python2.5
+
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
 import os
@@ -31,7 +32,8 @@ from casgm import *
 from bkgdfunc import *
 #from configiter import *
 #from configbarpoint import *
-from configbulgedisk import *
+#from configbulgedisk import *
+from config_twostep import *
 from yetbackfunc import FindYetSky
 
 
@@ -1160,7 +1162,6 @@ def main():
                                     else:
                                         config_file = cfile
                                         outimage = str(oimg)
-                                    f_fit = open('fit2.log','a')
                                     if exists('fit.log'):
                                         os.system('rm fit.log')
                                 #Here the user should tell the location of the GALFIT excutable                     
@@ -1178,10 +1179,11 @@ def main():
                                         os.system(cmd)
 
 #                                        os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
-                                    if exists('fit.log'):
-                                        for line in open('fit.log','r'):
+                                        f_fit = open('fit2.log','a')
+                                        if exists('fit.log'):
+                                          for line in open('fit.log','r'):
                                             f_fit.writelines([str(line)])
-                                    f_fit.close()
+                                        f_fit.close()
                                     try:
                                         if(c.repeat == False):
                                             OutMaskFunc(outimage, xcntr, \
@@ -1263,10 +1265,16 @@ def main():
                                         f_err.writelines(['Error in making '\
                                                 'out mask for ellipse task\n'])
                                         run = 0 
-                                except:
-                                    f_err.writelines(['Error in writing',\
-                                                      ' configuration file\n'])	
-                                    run = 0
+                                except Exception, inst:
+                                    print type(inst)     # the exception instance
+                                    print inst.args      # arguments stored in .args
+                                    print inst           # __str__ allows args to printed directly
+                                    print "something bad happened!!!!\n\n"
+
+                                #except:
+                                #    f_err.writelines(['Error in writing',\
+                                #                      ' configuration file\n'])	
+                                #    run = 0
                             except:
                                 f_err.writelines(['Error in making mask for '\
                                                   'galfit\n'])

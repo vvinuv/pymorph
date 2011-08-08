@@ -179,13 +179,16 @@ def WriteDb(ParamValues):
 #CREATE TABLE IF NOT EXISTS book (name char(40), lastname char(40), petname char (40))
 
 
-def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu):
+def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu, model_type = ''):
     gal_id = Name
     hst = c.host
     dba = c.database
     pwd = c.pword
     usr = c.usr
-    tbl = c.table + 'Detailed'
+    if model_type == '':
+        tbl = c.table + 'Detailed'
+    else:
+        tbl = c.table + model_type
     host = c.host
     try:
         Conn = mysql.connect (host = "%s" %hst,
@@ -221,13 +224,13 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
                         'ed':'float', \
                         'BT':'float', 'chi2nu':'float', 'run':'int', \
                         'SexSky':'float', 'GalSky':'float', \
-                        'flag':'bigint'}
-    ParamToWrite = ['xb', 'yb', 'xd', 'yd', 'Ie','Ie_err','re_pix',\
-                        're_err_pix', 'n', 'n_err', 'eb', \
+                        'flag':'bigint', 'dpa':'float', 'bpa':'float'}
+    ParamToWrite = ['xb', 'yb', 'xd', 'yd','bpa', 'dpa', 'Ie','Ie_err',\
+                    're_pix','re_err_pix', 'n', 'n_err', 'eb', \
                         'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
                         'ed', 'BT', 'chi2nu', 'run', \
                         'SexSky', 'GalSky', 'flag']
-    ParamType = ['float', 'float', 'float', 'float', \
+    ParamType = ['float', 'float', 'float', 'float', 'float', 'float', \
                      'float', 'float', 'float', 'float', 'float', \
 	             'float', 'float', 'float', 'float', 'float', \
                      'float', 'float', 'float', 'float', \
@@ -241,11 +244,13 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['re_pix'] = ParamValuesDict[1][4]
     DictParamWithValue['n'] = ParamValuesDict[1][5]
     DictParamWithValue['eb'] = ParamValuesDict[1][6]
+    DictParamWithValue['bpa'] = ParamValuesDict[1][7]
     DictParamWithValue['xd'] = ParamValuesDict[2][2][0]
     DictParamWithValue['yd'] = ParamValuesDict[2][2][1]
     DictParamWithValue['Id'] = ParamValuesDict[2][3]
     DictParamWithValue['rd_pix'] = ParamValuesDict[2][4]
     DictParamWithValue['ed'] = ParamValuesDict[2][5]
+    DictParamWithValue['dpa'] = ParamValuesDict[2][6]
     DictParamWithValue['Ie_err'] = ErrDict[1][2]
     DictParamWithValue['re_err_pix'] = ErrDict[1][3]
     DictParamWithValue['n_err'] = ErrDict[1][4]
