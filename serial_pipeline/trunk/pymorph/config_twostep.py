@@ -426,7 +426,7 @@ def SersicConstrain(constrain_file, cO):
 def SkyConstrain(constrain_file, cO, SkyValToCon):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write(str(cO) + '      sky      ' +
-                      str(SkyValToCon * 1.0-0.008) + '    ' +
+                      str(SkyValToCon * 1.0-0.008) + ' to   ' +
                       str(SkyValToCon * 1.0+0.008) + '  \n')
     f_constrain.close()
 
