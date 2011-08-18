@@ -361,9 +361,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
 def add_constrain(constrain_file, bt):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write('1/2     re     0.1  1.0\n')
-    
+
+    if bt < .4:
+        bt_range = .3
+    else:
+        bt_range = .5
     if bt > 0:
-        bt_min = bt-0.4
+        bt_min = bt-0.
         bt_max = bt+0.4
         if bt_min <= 0:
             bt_min = 0.0000000001
@@ -670,26 +674,33 @@ def DecideHowToMove2(ParamDict, RunNo,z):
     HitLimitCheck = 0
     KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
 
-    n_points=n.array([0.5, 04, 8])
-    b_points = n.array([0.2, 0.7, 0.2])
-    z=n.polyfit(n_points, b_points, 2)
-    p=n.poly1d(z)
+    # quadratic fit   
+    #    n_points=n.array([0.5, 04, 8])
+    #    b_points = n.array([0.2, 0.7, 0.2])
+    #    z=n.polyfit(n_points, b_points, 2)
+    #    p=n.poly1d(z)
 
+    # log-like fit
+    n_points=n.array([0.5, 3, 8])
+    b_points = n.array([0.2, 0.5, 0.5])
+    z=n.polyfit(n_points, b_points, 3)
+    p=n.poly1d(z)
+    
     if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0:
         print "bad sersic fit"
         bad_fit = 1
-        bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
+        bt_fit = .5
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[0][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[0][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[0][1][3]) - 2.5 * n.log10(bt_fit)
-        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[0][1][4])/2.0
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[0][1][4])#/2.0
         ParamDict[RunNo][1][5] = 4.0
         ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[0][1][6])
         ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[0][1][7])
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[0][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[0][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[0][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[0][1][4])*2.0
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[0][1][4])#*2.0
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[0][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[0][1][7])
 
@@ -735,7 +746,7 @@ def DecideHowToMove2(ParamDict, RunNo,z):
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*4.0
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])#*4.0
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
 
@@ -751,14 +762,14 @@ def DecideHowToMove2(ParamDict, RunNo,z):
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) - 2.5 * n.log10(bt_fit)
-        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*.5
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])#*.5
         ParamDict[RunNo][1][5] = 4.0
         ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*2
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])#*2
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
 
