@@ -7,6 +7,7 @@ from numpy import log10
 import numpy as n
 import copy
 import numpy.ma as ma
+import time
 
 # import pymorph-specific modules 
 import config as c
@@ -224,7 +225,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
     c.ErrArr = []
     c.ParamDictBook = copy.deepcopy(ParamDict)
     bad_fit = 0
-    #Write configuration file. RunNo is the number of iteration
+    bt_fit = -1
+   #Write configuration file. RunNo is the number of iteration
     for RunNo in range(3):
         if exists('fit.log'):
             os.system('rm fit.log')
@@ -269,7 +271,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
                     if RunNo > 0 and not bad_fit: # later runs 
-                        SersicMainConstrain(constrain_file, i + 1, 2.0 , 0)#ParamDict[c.sersic_loc][1][4]+1)
+                        SersicMainConstrain(constrain_file, i + 1, 2.0 , ParamDict[c.sersic_loc][1][4]*2)
                     else:
                         SersicMainConstrain(constrain_file, i + 1, c.center_constrain, 0)
                 else:
@@ -302,7 +304,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 if RunNo > 0 and not bad_fit: 
                     SkyConstrain(constrain_file, i + 1, ParamDict[c.sersic_loc][i+1][2])
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
-        
+
+        add_constrain(constrain_file, bt_fit)
         cmd = str(c.GALFIT_PATH) + ' ' + config_file
         os.system(cmd)
         # ReadLog(ParamDict, 2) => this function reads fig.log
@@ -312,8 +315,16 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         # initial values for the rest of it. ReadLog(ParamDict, 1)
         # reads the fit.log in the order, ie. sersic,
         # expdisk, other sersic etc
-        ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo)
-        c.ParamDictBook[RunNo+1] = copy.deepcopy(ParamDict[RunNo+1])
+        try:
+            print 'readlog'
+            ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo)
+            print 'log read'
+            print 'chi2dof ',Chi2DOF
+            
+            c.ParamDictBook[RunNo+1] = copy.deepcopy(ParamDict[RunNo+1])
+        except:
+            print "failure at readlog!!!"
+            time.sleep(5)
         try:
             c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
         except:
@@ -321,12 +332,14 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         c.Chi2DOFArr.append(Chi2DOF)
         
         if RunNo < 2:
-            bad_fit = DecideHowToMove2(ParamDict, RunNo + 1, z) 
+            bad_fit, bt_fit = DecideHowToMove2(ParamDict, RunNo + 1, z) 
+            print bt_fit, type(bt_fit)
+            print bad_fit, type(bad_fit)
+            
             try:
-                WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo+1], ErrDict[RunNo + 1], c.SexSky, c.ParamDictBook[RunNo+1][c.SkyNo][2], RunNo, c.Flag, c.Chi2DOFArr[RunNo], model_type = str(RunNo))
+                WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo+1], ErrDict[RunNo + 1], c.SexSky, c.ParamDictBook[RunNo+1][c.SkyNo][2], RunNo, c.Flag, Chi2DOF, model_type = str(RunNo))
             except:
                 print 'No database'
-
         if RunNo == 0:
             fit_log = 'fit_ser.log'
         elif RunNo == 1:
@@ -344,6 +357,27 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         for mv_file_nm in [outfile, config_file, constrain_file]:
             os.system('cp %s %s_%d.%s' %(mv_file_nm, mv_file_nm.split('.')[0],
                                           RunNo, mv_file_nm.split('.')[1]))
+
+def add_constrain(constrain_file, bt):
+    f_constrain = open(constrain_file, 'ab')
+    f_constrain.write('1/2     re     0.1  1.0\n')
+    
+    if bt > 0:
+        bt_min = bt-0.4
+        bt_max = bt+0.4
+        if bt_min <= 0:
+            bt_min = 0.0000000001
+        if bt_max >= 1.0:
+            bt_max = .9999999999
+    
+        bd_min = (1.0/bt_min - 1.0)**(-1)
+        bd_max = (1.0/bt_max - 1.0)**(-1)
+        mag_min = -2.5*n.log10(bd_max)
+        mag_max = -2.5*n.log10(bd_min)
+    
+        f_constrain.write('1-2      mag     ' + str(mag_min) +\
+                          ' to ' + str(mag_max) + '\n')
+    f_constrain.close()
 
 def SersicMainConstrain(constrain_file, cO, cen_con, re_con):
     f_constrain = open(constrain_file, 'ab')
@@ -368,7 +402,7 @@ def SersicMainConstrain(constrain_file, cO, cen_con, re_con):
     f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
     f_constrain.close()
 
-def ExpdiskConstrain(constrain_file, cO, cen_con):
+def ExpdiskConstrain(constrain_file, cO, cen_con, rs_con = 0):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write(str(cO) + '       x       ' + \
                       str(-cen_con) + '     ' + \
@@ -378,8 +412,12 @@ def ExpdiskConstrain(constrain_file, cO, cen_con):
                       str(cen_con) + '\n')
     f_constrain.write(str(cO) + '     mag     ' + str(c.UMag) + \
                       ' to ' + str(c.LMag) + '\n')
-    f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
-                      ' to ' + str(c.URd) + '\n')
+    if rs_con == 0:
+        f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
+                          ' to ' + str(c.URd) + '\n')
+    else:
+        f_constrain.write(str(cO) + '      rs     ' + str(c.LRd) + \
+                          ' to ' + str(rs_con) + '\n')
     f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
     f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
     f_constrain.close()
@@ -570,8 +608,7 @@ def DecideFitting(ParamDict, RunNo, bad_fit):
             i = j + 1
             FitDict[i] = {}  
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
-                FitDict[i][1] = [1,1] 
-                #FitDict[i][1] = [bad_fit,bad_fit] 
+                FitDict[i][1] = [0,0] 
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1 
                 if RunNo == 1:
@@ -581,18 +618,17 @@ def DecideFitting(ParamDict, RunNo, bad_fit):
                 FitDict[i][5] = 1       
                 FitDict[i][6] = 1    
             if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
-                FitDict[i][1] = [1,1]
-                #FitDict[i][1] = [bad_fit, bad_fit]
+                FitDict[i][1] = [0, 0]
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1 
                 FitDict[i][4] = 1       
                 FitDict[i][5] = 1  
             if ParamDict[RunNo][i][1] == 'sky':
-                FitDict[i][1] = 1
-                FitDict[i][2] = 1 
+                FitDict[i][1] = bad_fit
+                FitDict[i][2] = 0 
                 FitDict[i][3] = 0 
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
-                #should this bee all 1s or 0s?
+                #should this be all 1s or 0s?
                 FitDict[i][1] = [1, 1]
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1 
@@ -624,7 +660,7 @@ def FractionalError(ParamDict, ErrDict, RunNo):
         toterr = 0.01
     else:
         toterr = n.median([ffbe, reerr, nerr, ffde, rderr])
-    print n.median([ffbe, reerr, nerr, ffde, rderr])
+    print 'median ' ,n.median([ffbe, reerr, nerr, ffde, rderr])
     return toterr
 
 
@@ -634,21 +670,26 @@ def DecideHowToMove2(ParamDict, RunNo,z):
     HitLimitCheck = 0
     KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
 
-    if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or c.ParamDictBook[sersic_loc][2][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0:
+    n_points=n.array([0.5, 04, 8])
+    b_points = n.array([0.2, 0.7, 0.2])
+    z=n.polyfit(n_points, b_points, 2)
+    p=n.poly1d(z)
+
+    if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0:
         print "bad sersic fit"
         bad_fit = 1
-        bt_fit = .5
+        bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[0][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[0][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[0][1][3]) - 2.5 * n.log10(bt_fit)
-        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[0][1][4])
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[0][1][4])/2.0
         ParamDict[RunNo][1][5] = 4.0
         ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[0][1][6])
         ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[0][1][7])
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[0][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[0][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[0][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[0][1][4])
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[0][1][4])*2.0
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[0][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[0][1][7])
 
@@ -659,7 +700,8 @@ def DecideHowToMove2(ParamDict, RunNo,z):
         
     elif c.ParamDictBook[sersic_loc][1][5] <= 2.0: # disk-like galaxy -> so set disk parameters to bulge 
         print 'disky'
-        bt_fit = .25
+        bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
+        
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) - 2.5 * n.log10(bt_fit)
@@ -681,7 +723,8 @@ def DecideHowToMove2(ParamDict, RunNo,z):
 
     elif 3.0 <= c.ParamDictBook[sersic_loc][1][5] and c.ParamDictBook[sersic_loc][1][5] <= 6.0: # bulge-like galaxy -> so set bulge parameters to bulge 
         print 'bulge_like'
-        bt_fit = .75
+        bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
+        
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) - 2.5 * n.log10(bt_fit)
@@ -692,7 +735,7 @@ def DecideHowToMove2(ParamDict, RunNo,z):
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*2.0
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*4.0
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
 
@@ -703,7 +746,8 @@ def DecideHowToMove2(ParamDict, RunNo,z):
 
     else: # some intermediate combination of bulge and disk
         print 'mix'
-        bt_fit = .5
+        bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
+        
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) - 2.5 * n.log10(bt_fit)
@@ -723,4 +767,5 @@ def DecideHowToMove2(ParamDict, RunNo,z):
         except:
             pass
 
-    return bad_fit
+        
+    return bad_fit,bt_fit

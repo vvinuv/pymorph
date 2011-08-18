@@ -2,6 +2,7 @@
 #import sys
 #import datetime
 #import config as c
+import time
 from writehtmlfunc import *
 def WriteDb(ParamValues):
     gal_id = ParamValues[0]
@@ -79,6 +80,7 @@ def WriteDb(ParamValues):
     DictParamWithValue['Filter'] = c.FILTER
     DictParamWithValue['Total_Run'] = Total_Run
     DictParamWithValue['rootname'] = c.rootname
+    print 'writing db'
     if c.decompose:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra_':'float', \
                         'dec_':'float',\
@@ -100,12 +102,14 @@ def WriteDb(ParamValues):
                         'Goodness':'float', 'run':'int', 'C':'float', \
                         'C_err':'float', 'A':'float', 'A_err':'float', \
                         'S':'float', 'S_err':'float', 'G':'float', 'M':'float',\
-                        'SexSky':'float', 'GalSky':'float','dis_modu':'float', \
-                        'distance':'float', 'fit':'int', 'flag':'bigint', \
+                        'SexSky':'float', 'GalSky':'float',\
+                        'dis_modu':'float', \
+                        'distance':'float', 'fit':'int', \
+                        'flag':'bigint', 'SexHalfRad':'float',\
                         'Manual_flag':'int', 'MorphType':'int',\
                         'Comments':'varchar(1000)'}
-        ParamToWrite = ['Name','ra_','dec_','z', 'mag_auto', 'magerr_auto', \
-	                'Ie','Ie_err','re_pix',\
+        ParamToWrite = ['Name','ra_','dec_','z', 'mag_auto', \
+                        'magerr_auto', 'Ie','Ie_err','re_pix',\
                         're_err_pix', 're_kpc', 're_err_kpc' ,'n', \
                         'n_err', 'AvgIe', 'AvgIe_err', 'eb', 'eb_err', \
 			'bboxy', 'bboxy_err', \
@@ -116,18 +120,21 @@ def WriteDb(ParamValues):
                         'chi2nu', 'Goodness', 'run', 'C', 'C_err', 'A', \
                         'A_err', 'S', 'S_err', 'G', 'M', 'SexSky', \
                         'GalSky', 'dis_modu', 'distance', \
-                        'fit', 'flag', 'Manual_flag', 'MorphType', 'Comments']
+                        'fit', 'flag', 'SexHalfRad','Manual_flag', \
+                        'MorphType', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
-	             'float', 'float',\
+	             'float', 'float', 'float', 'float', \
+                     'float', 'float', 'float', 'float',\
+                     'float', 'float', 'float', 'float', 'float', \
+                     'float', 'float', \
+                     'float', 'float', 'float', \
+                     'float', 'float', 'float', \
+                     'float', 'float', 'float', 'float', 'float', \
+                     'float', 'float', 'float', 'float', 'float', \
+                     'float', 'float', 'int', 'float', 'float', 'float', \
                      'float', 'float', 'float', 'float', 'float', 'float',\
-                     'float', 'float', 'float', 'float', 'float', 'float',\
-		     'float', 'float', 'float', 'float', \
-                     'float', 'float', 'float', 'float', 'float', 'float',\
-                     'float', 'float', 'float', 'float', 'float', 'float',\
-                     'float', 'float', 'float', 'int', 'float', 'float',\
-                     'float', 'float', 'float', 'float', 'float', 'float',\
-		     'float', 'float', 'float', \
-                     'float', 'int', 'bigint', 'int', 'int', 'varchar(500)']
+                     'float', 'float', 'float',\
+                     'int', 'bigint', 'int', 'float','int', 'varchar(500)']
        
     else:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra':'float', \
@@ -136,16 +143,18 @@ def WriteDb(ParamValues):
 			'magerr_auto':'float', \
 			'C':'float', 'C_err':'float', 'A':'float',\
                         'A_err':'float', 'S':'float', 'S_err':'float',\
-                        'G':'float', 'M':'float', 'flag':'bigint', \
+                        'G':'float', 'M':'float', \
+                        'flag':'bigint', 'SexHalfRad':'float',\
                         'Manual_flag':'int', 'MorphType':'int',\
                         'Comments':'varchar(500)'}
         ParamToWrite = ['Name','ra','dec_','z', 'mag_auto', 'magerr_auto', \
-	                'C', 'C_err', 'A', 'A_err', 'S', 'S_err', 'G', 'M', \
-                        'flag', 'Manual_flag', 'MorphType', 'Comments']
+	                'C', 'C_err', 'A', 'A_err', 'S', 'S_err', 'G',\
+                        'M', 'flag', 'SexHalfRad',\
+                        'Manual_flag', 'MorphType', 'Comments']
         ParamType = ['varchar(500)', 'float', 'float', 'float', 'float',\
-	             'float', 'float',\
+	             'float', 'float','float',\
                      'float', 'float', 'float','float', 'float', 'float',\
-                     'float', 'bigint', 'int', 'int', 'varchar(500)']
+                     'bigint', 'float', 'int', 'int', 'varchar(500)']
     DictParamWithType = {}  #Dictionary with Type
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
@@ -214,27 +223,32 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['Name'] = Name
     DictParamWithValue['Date'] = DaTe
     DictParamWithValue['rootname'] = c.rootname
-    DictParamWithType2 = {'xb':'float', 'yb':'float', 'xd':'float', 'yd':'float', \
-                        'Ie':'float','Ie_err':'float',\
-                        're_pix':'float', 're_err_pix':'float',\
-                        'n':'float', 'n_err':'float', \
-                        'eb':'float', \
-                        'Id':'float', 'Id_err':'float', 'rd_pix':'float',\
-                        'rd_err_pix':'float', \
-                        'ed':'float', \
-                        'BT':'float', 'chi2nu':'float', 'run':'int', \
-                        'SexSky':'float', 'GalSky':'float', \
-                        'flag':'bigint', 'dpa':'float', 'bpa':'float'}
+    DictParamWithValue['SexHalfRad'] = c.SexHalfRad
+    print c.SexHalfRad
+    
+    DictParamWithType2 = {'xb':'float', 'yb':'float', \
+                          'xd':'float', 'yd':'float', \
+                          'Ie':'float','Ie_err':'float',\
+                          're_pix':'float', 're_err_pix':'float',\
+                          'n':'float', 'n_err':'float', \
+                          'eb':'float', \
+                          'Id':'float', 'Id_err':'float', 'rd_pix':'float',\
+                          'rd_err_pix':'float', \
+                          'ed':'float', \
+                          'BT':'float', 'chi2nu':'float', 'run':'int', \
+                          'SexSky':'float', 'GalSky':'float', \
+                          'flag':'bigint', 'dpa':'float', 'bpa':'float',\
+                          'ismain':'varchar(10)', 'SexHalfRad':'float'}
     ParamToWrite = ['xb', 'yb', 'xd', 'yd','bpa', 'dpa', 'Ie','Ie_err',\
                     're_pix','re_err_pix', 'n', 'n_err', 'eb', \
                         'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
                         'ed', 'BT', 'chi2nu', 'run', \
-                        'SexSky', 'GalSky', 'flag']
+                        'SexSky', 'GalSky', 'flag', 'ismain', 'SexHalfRad']
     ParamType = ['float', 'float', 'float', 'float', 'float', 'float', \
-                     'float', 'float', 'float', 'float', 'float', \
-	             'float', 'float', 'float', 'float', 'float', \
-                     'float', 'float', 'float', 'float', \
-                     'int', 'float', 'float', 'bigint']
+                 'float', 'float', 'float', 'float', 'float', \
+                 'float', 'float', 'float', 'float', 'float', \
+                 'float', 'float', 'float', 'float', \
+                 'int', 'float', 'float', 'bigint', 'varchar(10)','float']
     DictParamWithType = {}  #Dictionary with Type
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
@@ -245,6 +259,7 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['n'] = ParamValuesDict[1][5]
     DictParamWithValue['eb'] = ParamValuesDict[1][6]
     DictParamWithValue['bpa'] = ParamValuesDict[1][7]
+    DictParamWithValue['ismain'] = ParamValuesDict[1][11]
     DictParamWithValue['xd'] = ParamValuesDict[2][2][0]
     DictParamWithValue['yd'] = ParamValuesDict[2][2][1]
     DictParamWithValue['Id'] = ParamValuesDict[2][3]

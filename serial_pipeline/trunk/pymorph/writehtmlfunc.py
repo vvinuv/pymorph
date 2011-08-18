@@ -8,7 +8,7 @@ from cosmocal import *
 import datetime
 import MySQLdb as mysql
 #from utilities import WriteDb
-
+import traceback
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
@@ -562,6 +562,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         WriteDb(ParamToWrite)
     except:
         print 'No database can be created!'
+        traceback.print_exc()
     outfile1 = open('pymorph.html', 'w')
     outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
                    ' Transitional//EN">')

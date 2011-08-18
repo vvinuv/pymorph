@@ -1270,7 +1270,7 @@ def main():
                                     print inst.args      # arguments stored in .args
                                     print inst           # __str__ allows args to printed directly
                                     print "something bad happened!!!!\n\n"
-
+                                    
                                 #except:
                                 #    f_err.writelines(['Error in writing',\
                                 #                      ' configuration file\n'])	
