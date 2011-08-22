@@ -681,8 +681,13 @@ def DecideHowToMove2(ParamDict, RunNo,z):
     #    p=n.poly1d(z)
 
     # log-like fit
-    n_points=n.array([0.5, 3, 8])
-    b_points = n.array([0.2, 0.5, 0.5])
+    #n_points=n.array([0.5, 3, 8])
+    #b_points = n.array([0.2, 0.5, 0.5])
+    #z=n.polyfit(n_points, b_points, 3)
+    #p=n.poly1d(z)
+
+    n_points=n.array([0.5, 3,4,5,6, 7, 8])
+    b_points = n.array([0.2, 0.5, 0.5,0.5, 0.5,0.5,0.5])
     z=n.polyfit(n_points, b_points, 3)
     p=n.poly1d(z)
     
