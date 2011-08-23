@@ -227,7 +227,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
     bad_fit = 0
     bt_fit = -1
    #Write configuration file. RunNo is the number of iteration
-    for RunNo in range(3):
+    for RunNo in range(4):
         if exists('fit.log'):
             os.system('rm fit.log')
 
@@ -266,19 +266,21 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                      ' objects interactively?\n\n\n'])
         f.close()
         FitDict = DecideFitting(ParamDict, RunNo, bad_fit)
+        max_rad = 40.0/cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
+
         for i in range(len(ParamDict[RunNo])):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
-                    if RunNo > 0 and not bad_fit: # later runs 
+                    if RunNo > 0 and not bad_fit and ParamDict[c.sersic_loc][1][4]*2 < max_rad: # later fits
                         SersicMainConstrain(constrain_file, i + 1, 2.0 , ParamDict[c.sersic_loc][1][4]*2)
                     else:
-                        SersicMainConstrain(constrain_file, i + 1, c.center_constrain, 0)
+                        SersicMainConstrain(constrain_file, i + 1, c.center_constrain, max_rad)
                 else:
                     SersicConstrain(constrain_file, i + 1)
  
             if ParamDict[RunNo][i + 1][1] == 'expdisk':
-                if RunNo == 0:
+                if RunNo <= 1:
                     pass
                 else:
                     ExpFunc(config_file, ParamDict, FitDict, i + 1, RunNo)
@@ -303,9 +305,12 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             if  ParamDict[RunNo][i + 1][1] == 'sky':
                 if RunNo > 0 and not bad_fit: 
                     SkyConstrain(constrain_file, i + 1, ParamDict[c.sersic_loc][i+1][2])
+                else:
+                    SkyConstrain(constrain_file, i + 1, c.SexSky)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
 
-        add_constrain(constrain_file, bt_fit)
+        if RunNo > 1:
+            add_constrain(constrain_file, bt_fit)
         cmd = str(c.GALFIT_PATH) + ' ' + config_file
         os.system(cmd)
         # ReadLog(ParamDict, 2) => this function reads fig.log
@@ -331,10 +336,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             c.ErrArr.append(9999.0)
         c.Chi2DOFArr.append(Chi2DOF)
         
-        if RunNo < 2:
+        if RunNo < 3:
             bad_fit, bt_fit = DecideHowToMove2(ParamDict, RunNo + 1, z) 
-            print bt_fit, type(bt_fit)
-            print bad_fit, type(bad_fit)
             
             try:
                 WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo+1], ErrDict[RunNo + 1], c.SexSky, c.ParamDictBook[RunNo+1][c.SkyNo][2], RunNo, c.Flag, Chi2DOF, model_type = str(RunNo))
@@ -342,10 +345,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 print 'No database'
         if RunNo == 0:
             fit_log = 'fit_ser.log'
-        elif RunNo == 1:
-            fit_log = 'fit1.log'
         else:
-            fit_log = 'fit2.log'
+            fit_log = 'fit%d.log' %RunNo
         
         f_fit = open(fit_log,'a')
         if exists('fit.log'):
@@ -361,26 +362,44 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
 def add_constrain(constrain_file, bt):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write('1/2     re     0.1  1.0\n')
+    f_constrain.write('1-2     x      -0.001 to 0.001\n')
+    f_constrain.write('1-2     y      -0.001 to 0.001\n')
 
-    if bt < .4:
-        bt_range = .3
+    absmin_bt = .0000001
+    absmax_bt = .9999999
+
+    min_down = .3
+    min_up = .3
+    d_trans1 = .4
+    d_trans2 = .49
+    u_trans1 = .3
+    u_trans2 = .49 
+
+    down_slope = (d_trans1 - min_down)/(d_trans2 - d_trans1)
+    up_slope = (u_trans2 - min_up)/(u_trans2 - u_trans1)
+
+    if bt <= d_trans1:
+        bt_min = absmin_bt
+    elif bt <= d_trans2:
+        bt_min = bt - min_down - down_slope*(d_trans2 - bt) 
     else:
-        bt_range = .5
-    if bt > 0:
-        bt_min = bt-0.
-        bt_max = bt+0.4
-        if bt_min <= 0:
-            bt_min = 0.0000000001
-        if bt_max >= 1.0:
-            bt_max = .9999999999
+        bt_min = bt - min_down
+
+    if bt <= u_trans1:
+        bt_max = min_up + bt
+    elif bt <= u_trans2:
+        bt_max = bt + min_up + up_slope*(bt - u_trans1)
+    else:
+        bt_max = absmax_bt
+
+        
+    bd_min = (1.0/bt_min - 1.0)**(-1)
+    bd_max = (1.0/bt_max - 1.0)**(-1)
+    mag_min = -2.5*n.log10(bd_max)
+    mag_max = -2.5*n.log10(bd_min)
     
-        bd_min = (1.0/bt_min - 1.0)**(-1)
-        bd_max = (1.0/bt_max - 1.0)**(-1)
-        mag_min = -2.5*n.log10(bd_max)
-        mag_max = -2.5*n.log10(bd_min)
-    
-        f_constrain.write('1-2      mag     ' + str(mag_min) +\
-                          ' to ' + str(mag_max) + '\n')
+    f_constrain.write('1-2      mag     ' + str(mag_min) +\
+                      ' to ' + str(mag_max) + '\n')
     f_constrain.close()
 
 def SersicMainConstrain(constrain_file, cO, cen_con, re_con):
@@ -468,8 +487,8 @@ def SersicConstrain(constrain_file, cO):
 def SkyConstrain(constrain_file, cO, SkyValToCon):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write(str(cO) + '      sky      ' +
-                      str(SkyValToCon * 1.0-0.008) + ' to   ' +
-                      str(SkyValToCon * 1.0+0.008) + '  \n')
+                      str(SkyValToCon * 1.0-0.03) + ' to   ' +
+                      str(SkyValToCon * 1.0+0.01) + '  \n')
     f_constrain.close()
 
 
@@ -615,10 +634,10 @@ def DecideFitting(ParamDict, RunNo, bad_fit):
                 FitDict[i][1] = [0,0] 
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1 
-                if RunNo == 1:
-                    FitDict[i][4] = int(c.devauc)
+                if RunNo in [1, 2]:
+                    FitDict[i][4] = int(c.devauc) # fix n
                 else:
-                    FitDict[i][4] = int(not c.devauc)
+                    FitDict[i][4] = int(not c.devauc) # let n free
                 FitDict[i][5] = 1       
                 FitDict[i][6] = 1    
             if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
@@ -711,6 +730,36 @@ def DecideHowToMove2(ParamDict, RunNo,z):
 
         try:
             ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[0][-1][2])
+        except:
+            pass
+
+        if RunNo == 1: #dev fit
+            ParamDict[RunNo][2][2][0] = 9999
+            ParamDict[RunNo][2][2][1] = 9999
+            ParamDict[RunNo][2][3] = 9999
+            ParamDict[RunNo][2][4] = 9999
+            ParamDict[RunNo][2][5] = 9999
+            ParamDict[RunNo][2][6] = 9999
+            
+    elif RunNo == 1: #this is now the dev fit
+        bt_fit = -1
+        
+        ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
+        ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
+        ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) 
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])
+        ParamDict[RunNo][1][5] = 4.0
+        ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
+        ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
+        ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
+        ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
+        ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3])
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])
+        ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
+        ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
+
+        try:
+            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sersic_loc][-1][2])
         except:
             pass
         

@@ -5,6 +5,8 @@
 import time
 from writehtmlfunc import *
 def WriteDb(ParamValues):
+    print ParamValues
+    time.sleep(10)
     gal_id = ParamValues[0]
     hst = c.host
     dba = c.database

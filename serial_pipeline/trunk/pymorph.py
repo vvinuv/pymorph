@@ -2,6 +2,7 @@
 
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
+import traceback
 import os
 import time
 from os.path import exists
@@ -1270,6 +1271,7 @@ def main():
                                     print inst.args      # arguments stored in .args
                                     print inst           # __str__ allows args to printed directly
                                     print "something bad happened!!!!\n\n"
+                                    print traceback.print_exc()
                                     
                                 #except:
                                 #    f_err.writelines(['Error in writing',\

@@ -137,13 +137,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'Chi^2/nu'):
                     chi2nu = float(values[2])
                     Distance = str(round(distance, 3))[:5]
-                if(str(values[0]) == 'sersic' and object == 2):
-                    mag_bar = float(values[4])
-                    re_bar = float(values[5])
-                    SersicIndexBar = float(values[6])
-                    SersicEllipticityBar = float(values[7])
-		    SersicBoxyBar = float(values[9])
-                    object += 1
+                #if(str(values[0]) == 'sersic' and object == 2):
+                #    mag_bar = float(values[4])
+                #    re_bar = float(values[5])
+                #    SersicIndexBar = float(values[6])
+                #    SersicEllipticityBar = float(values[7])
+		#    SersicBoxyBar = float(values[9])
+                #    object += 1
                 if(str(values[0]) == 'sersic' and object == 1):
                     mag_b = float(values[4])
                     re = float(values[5])
@@ -161,13 +161,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 if(str(values[0]) == 'sky'):
                     galfit_sky = float(values[4])
                 if(str(values[0])[:1] == '('):
-                    if(str(a) == 'sersic' and object_err == 2):
-                        mag_bar_err = float(values[2])
-                        re_bar_err  = float(values[3])
-                        SersicIndexBarErr = float(values[4])
-                        SersicEllipticityBarErr = float(values[5])
-			SersicBoxyBarErr = float(values[7])
-                        object_err += 1
+                 #   if(str(a) == 'sersic' and object_err == 2):
+                 #       mag_bar_err = float(values[2])
+                 #       re_bar_err  = float(values[3])
+                 #       SersicIndexBarErr = float(values[4])
+                 #       SersicEllipticityBarErr = float(values[5])
+		 #       SersicBoxyBarErr = float(values[7])
+                 #       object_err += 1
                     if(str(a) == 'sersic' and object_err == 1):
                         mag_b_err = float(values[2])
                         re_err  = float(values[3])
