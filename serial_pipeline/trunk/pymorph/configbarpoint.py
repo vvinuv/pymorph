@@ -7,6 +7,7 @@ from numpy import log10
 from readlog import ReadLog
 from runsexfunc import *
 import copy
+from flagfunc import *
 
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
@@ -138,7 +139,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     #Add components
     AdComp = 1
     if 'bulge' in ComP:
-        c.Flag += 512
+        c.Flag += 2**GetFlag('FIT_BULGE')
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'sersic'
@@ -153,7 +154,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'disk' in ComP:
-        c.Flag += 1024
+        c.Flag += 2**GetFlag('FIT_DISK')
         #Disk parameters
         ParamDict[0][AdComp] = {}
         ParamDict[0][AdComp][1] = 'expdisk'
@@ -167,7 +168,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'bar' in ComP:
-#        c.Flag += 512
+#        c.Flag += 2**GetFlag('FIT_DISK')
         ParamDict[0][AdComp] = {}
         #Bulge Parameters
         ParamDict[0][AdComp][1] = 'bar'
@@ -182,7 +183,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         ParamDict[0][AdComp][11] = 'Main'
         AdComp += 1
     if 'point' in ComP:
-#        c.Flag += 512
+#        c.Flag += 2**GetFlag('FIT_POINT')
         ParamDict[0][AdComp] = {}
         #Point Parameters
         ParamDict[0][AdComp][1] = 'psf'
@@ -242,7 +243,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
             pass
     f_constrain.close()
     if isneighbour:
-        c.Flag  += 4096
+        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
     #Sky component
     ParamDict[0][AdComp] = {}
     ParamDict[0][AdComp][1] = 'sky'

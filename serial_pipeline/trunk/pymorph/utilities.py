@@ -5,8 +5,6 @@
 import time
 from writehtmlfunc import *
 def WriteDb(ParamValues):
-    print ParamValues
-    time.sleep(10)
     gal_id = ParamValues[0]
     hst = c.host
     dba = c.database
@@ -72,16 +70,19 @@ def WriteDb(ParamValues):
     AllParams.append('Filter')
     AllParams.append('Total_Run')
     AllParams.append('rootname')
+    AllParams.append('YetSky')
     DictParamWithType1['Date'] = 'varchar(50)' 
     DictParamWithType1['Version'] = 'float'
     DictParamWithType1['Filter'] = 'varchar(500)'
     DictParamWithType1['Total_Run'] = 'int'
     DictParamWithType1['rootname'] = 'varchar(500)'
+    DictParamWithType1['YetSky'] = 'float'
     DictParamWithValue['Date'] = DaTe
     DictParamWithValue['Version'] = c.VERSION
     DictParamWithValue['Filter'] = c.FILTER
     DictParamWithValue['Total_Run'] = Total_Run
     DictParamWithValue['rootname'] = c.rootname
+    DictParamWithValue['YetSky'] = c.SkyMin
     print 'writing db'
     if c.decompose:
         DictParamWithType2 = {'Name':'varchar(500)', 'ra_':'float', \
@@ -190,7 +191,7 @@ def WriteDb(ParamValues):
 #CREATE TABLE IF NOT EXISTS book (name char(40), lastname char(40), petname char (40))
 
 
-def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu, model_type = ''):
+def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu, model_type = '', goodness = 9999):
     gal_id = Name
     hst = c.host
     dba = c.database
@@ -226,6 +227,7 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['Date'] = DaTe
     DictParamWithValue['rootname'] = c.rootname
     DictParamWithValue['SexHalfRad'] = c.SexHalfRad
+    DictParamWithValue['goodness'] = goodness
     print c.SexHalfRad
     
     DictParamWithType2 = {'xb':'float', 'yb':'float', \
@@ -240,17 +242,20 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
                           'BT':'float', 'chi2nu':'float', 'run':'int', \
                           'SexSky':'float', 'GalSky':'float', \
                           'flag':'bigint', 'dpa':'float', 'bpa':'float',\
-                          'ismain':'varchar(10)', 'SexHalfRad':'float'}
+                          'ismain':'varchar(10)', 'SexHalfRad':'float', \
+                          'goodness':'float'}
     ParamToWrite = ['xb', 'yb', 'xd', 'yd','bpa', 'dpa', 'Ie','Ie_err',\
                     're_pix','re_err_pix', 'n', 'n_err', 'eb', \
-                        'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
-                        'ed', 'BT', 'chi2nu', 'run', \
-                        'SexSky', 'GalSky', 'flag', 'ismain', 'SexHalfRad']
+                    'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
+                    'ed', 'BT', 'chi2nu', 'run', \
+                    'SexSky', 'GalSky', 'flag', 'ismain', 'SexHalfRad', \
+                    'goodness']
     ParamType = ['float', 'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', \
-                 'int', 'float', 'float', 'bigint', 'varchar(10)','float']
+                 'int', 'float', 'float', 'bigint', 'varchar(10)','float', \
+                 'float']
     DictParamWithType = {}  #Dictionary with Type
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
@@ -275,7 +280,10 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['rd_err_pix'] = ErrDict[2][3]
     fb = 10**((c.mag_zero - ParamValuesDict[1][3]) / 2.5)
     fd = 10**((c.mag_zero - ParamValuesDict[2][3]) / 2.5)
-    DictParamWithValue['BT'] = fb / (fb + fd)
+    try:
+        DictParamWithValue['BT'] = fb / (fb + fd)
+    except:
+        DictParamWithValue['BT'] = 9999.0
     DictParamWithValue['chi2nu'] = Chi2nu
     DictParamWithValue['run'] = RunNo
     DictParamWithValue['SexSky'] = SexSky

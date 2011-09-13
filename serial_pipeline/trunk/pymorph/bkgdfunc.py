@@ -3,6 +3,7 @@ import numpy as n
 import ndimage as im
 import config as c
 import numpy.ma as ma
+from flagfunc import *
 
 class BkgdFunc:
     "The class which will provide the blank sky region and sky deviation to the casgm class and the sky sigma will also be used when the pipeline decide the fit is good or bad"
@@ -88,7 +89,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
 #            print countback
             if countback == 3 and FLAG_BACK1 == 0:
                 FLAG_BACK1 = 1
-                c.Flag += 1048576
+                c.Flag += 2**GetFlag('BACK_FAILED')
             countback += 1
     os.system('rm -f BackMask.fits')
     BackMask = n.swapaxes(BackMask, 0, 1)

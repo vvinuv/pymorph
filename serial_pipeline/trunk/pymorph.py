@@ -36,6 +36,7 @@ from bkgdfunc import *
 #from configbulgedisk import *
 from config_twostep import *
 from yetbackfunc import FindYetSky
+from flagfunc import *
 
 
 
@@ -282,33 +283,6 @@ def main():
         LinuxCommand = 'rm -f ' + str(RemoveMe) + 'R_I' + str(c.rootname) + \
                        '_' + str(gal_id) + '.html'
         os.system(LinuxCommand)
-    def GetFlag(flagname):
-        FlagDict = dict([('REPEAT', 0),
-                         ('FIT_BULGE_CNTR', 1),
-                         ('FIT_DISK_CNTR', 2),
-                         ('FIT_SKY', 3),
-                         ('EXCEED_SIZE', 4),
-                         ('ELLIPSE_FAIL', 5),
-                         ('CASGM_FAIL', 6),
-                         ('GALFIT_FAIL', 7),
-                         ('PLOT_FAIL', 8),
-                         ('FIT_BULGE', 9),
-                         ('FIT_DISK', 10),
-                         ('FIT_POINT', 11),
-                         ('NEIGHBOUR_FIT', 12),
-                         ('LARGE_CHISQ', 13),
-                         ('SMALL_GOODNESS', 14),
-                         ('FAKE_CNTR', 15),
-                         ('BULGE_AT_LIMIT', 16),
-                         ('DISK_AT_LIMIT', 17),
-                         ('ASYM_NOT_CONV', 18),
-                         ('ASYM_OUT_FRAME', 19),
-                         ('BACK_FAILED', 20),
-                         ('DETAIL_FAILED', 21)])
-        return FlagDict[flagname]
-    def isset(flag, bit):
-        """Return True if the specified bit is set in the given bit mask"""
-        return (flag & (1 << bit)) != 0
     try:
         ComP = c.components
     except:
@@ -752,19 +726,19 @@ def main():
                         run = 1 #run =1 when pipeline runs sucessfuly
                         c.Flag = 0
                         if c.repeat:
-                            c.Flag += 1
+                            c.Flag += 2**GetFlag('REPEAT')
                         else:
                             pass
                         if c.fitting[0]:
-                            c.Flag += 2
+                            c.Flag += 2**GetFlag('FIT_BULGE_CNTR')
                         else:
                             pass
                         if c.fitting[1]:
-                            c.Flag += 4
+                            c.Flag += 2**GetFlag('FIT_DISK_CNTR')
                         else:
                             pass
                         if c.fitting[2]:
-                            c.Flag += 8
+                            c.Flag += 2**GetFlag('FIT_SKY')
                         else:
                             pass
                         try:
@@ -874,7 +848,7 @@ def main():
                                     pass
                                 elif xminOut != 0 or yminOut !=0 or xmaxOut !=0\
                                      or ymaxOut != 0:
-                                    c.Flag += 16
+                                    c.Flag += 2**GetFlag('EXCEED_SIZE')
                                     if xminOut != 0:
                                         xcntr = SizeXB + xminOut + xcntrFrac
                                     else:
@@ -985,7 +959,7 @@ def main():
                                                            'or err  or ',\
                                                           'test.tab exists\n'])
                                                 run = 0
-                                                c.Flag += 32
+                                                c.Flag += 2**GetFlag('ELLIPSE_FAIL')
                                         except:
                                             f_err.writelines(['Exists ',\
                                                        str(cutimage),'.pl or ',\
@@ -1056,7 +1030,7 @@ def main():
                                     print inst           # __str__ allows args to printed directly
                                     f_err.writelines(['The CASGM module',\
                                                           ' failed\n'])   
-                                    c.Flag += 64
+                                    c.Flag += 2**GetFlag('CASGM_FAIL')
                             except:
                                 f_err.writelines(['Could not make mask ',\
                                                       'image for casgm\n'])
@@ -1259,7 +1233,7 @@ def main():
                                                        ' does not exist.\n'])  
                                             f_err.writelines(['GALFIT '\
 					              'MIGHT BE CRASHED\n'])
-                                            c.Flag += 128
+                                            c.Flag += GetFlag('GALFIT_FAIL')
                                             failedgalfit(cutimage)
                                             run = 0
                                     except:
@@ -1299,7 +1273,7 @@ def main():
                                                           'Mask image\n'])
                                     run = 0	
                                     Goodness = 9999
-                                    c.Flag += 256
+                                    c.Flag += GetFlag('PLOT_FAIL')
                                 try:
                                     EXPTIME = EXPTIME * 1.0
                                 except:

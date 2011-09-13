@@ -11,6 +11,7 @@ from clumfunc import *
 from ginifunc_modi import *
 #from momentfunc import *
 from runsexfunc import *
+from flagfunc import *
 
 class CasGm:
     """The class which will find CASGM parameters. The algorithm for each 
@@ -142,9 +143,9 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                                 back_extraction_radius, \
                                 sky, angle, 0, ABS_ZSUM)
             if asy.image_asymm[4] > 20 or back_asy.image_asymm[4] > 20:
-                c.Flag += 262144
+                c.Flag += 2**GetFlag('ASYM_NOT_CONV')
             if asy.image_asymm[5] == 1:
-                c.Flag += 524288 
+                c.Flag += 2**GetFlag('ASYM_OUT_FRAME')
             try:
                 back_asy1 = asymmetry(cutimage, maskimage, back_ini_xcntr1, \
                             back_ini_ycntr1, 0, 0, r50,\

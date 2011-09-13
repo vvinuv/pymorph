@@ -14,7 +14,7 @@ class PlotFunc:
        profile of the galaxy and model galaxy from ellipse fitting. The other
        plot it gives is the mask image. After plotting it saves the image
        as png file with name P_string(galid).png"""
-    def __init__(self, cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
+    def __init__(self, cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_name = '999'):
         self.cutimage  = cutimage
         self.outimage  = outimage
         self.maskimage = maskimage
@@ -22,7 +22,9 @@ class PlotFunc:
         self.ycntr     = ycntr
         self.sky       = sky
         self.skysig    = skysig
-        self.plot_profile = plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig)
+        if save_name == '999':
+            save_name = 'P_' + str(cutimage)[:-4] + 'png'
+        self.plot_profile = plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_name)
         return
 def get_data(ticker):
     """ Returns the values from the ellipse output table"""
@@ -47,7 +49,7 @@ def get_data(ticker):
     c1 = get_ticker(ticker)
     return c1
 
-def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
+def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_name):
     try:
         #Read the GALFIT output
         f=pyfits.open(outimage)
@@ -298,7 +300,7 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig):
     except:
         pass     
 #    show()
-    savefig('P_' + str(cutimage)[:-4] + 'png')
+    savefig(save_name)
     close()
     return goodness
 #PlotFunc('LFC1208I_1038.fits', 'O_LFC1208I_1038.fits', 'M_LFC1208I_1038.fits', 40, 40, 0.1, 0.02)

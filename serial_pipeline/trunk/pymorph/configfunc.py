@@ -4,6 +4,7 @@ import pyfits
 import config as c
 from os.path import exists
 from numpy import log10
+from flagfunc import *
 
 class ConfigFunc:
     """The class making configuration file for GALFIT. The configuration file 
@@ -55,7 +56,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
         for Co in ComP:
             if Co == 'bulge':
                 f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
-                        ' to ' + str(8.0) +  '\n')
+                        ' to ' + str(c.UN) +  '\n')
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
                     str(c.center_deviation - c.center_deviation / 4.0) + \
@@ -185,7 +186,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 	              'boxiness (> 0)\n'])
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
-        c.Flag += 512
+        c.Flag += 2**GetFlag('FIT_BULGE')
     if 'disk' in ComP:
         f.writelines(['# Exponential function\n\n'])
         f.writelines([' 0) expdisk 		# Object type\n'])
@@ -205,7 +206,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 	              'boxiness (> 0)\n'])
         f.writelines([' Z) 0             	# output image '\
                       '(see above)\n\n\n'])
-        c.Flag += 1024
+        c.Flag += 2**GetFlag('FIT_DISK')
 #    if 'point' in ComP:
 #        gmag = mag + 2.5 * log10(2.0)
 #        f.writelines(['# Gaussian function\n\n'])
@@ -221,7 +222,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 #                      'boxiness (> 0)\n'])
 #        f.writelines([' Z) 0                    # output image '\
 #                      '(see above)\n\n\n'])
-#        c.Flag += 2048
+#        c.Flag += 2**GetFlag('FIT_POINT')
 
     if 'point' in ComP:
         pmag = mag + 2.5 * log10(6.0)
@@ -232,7 +233,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
         f.writelines([' 3) ', str(pmag), ' 1             # total magnitude\n'])
         f.writelines([' Z) 0                    # output image '\
                       '(see above)\n\n\n'])
-        c.Flag += 2048
+        c.Flag += 2**GetFlag('FIT_POINT')
 
 #### BAR COMPONENT IMPLIMENTATION ####
     if 'bar' in ComP:
@@ -253,7 +254,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                       'boxiness (> 0)\n'])
         f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
-#        c.Flag += 512
+#        c.Flag += 2**GetFlag('FIT_BULGE')
  
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
@@ -318,7 +319,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
     f_constrain.close()
     f.close()
     if isneighbour:
-        c.Flag  += 4096
+        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
 #    f_fit = open('fit2.log','a')
 #    if exists('fit.log'):
 #        os.system('rm fit.log')

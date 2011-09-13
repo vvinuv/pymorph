@@ -9,6 +9,7 @@ import datetime
 import MySQLdb as mysql
 #from utilities import WriteDb
 import traceback
+from flagfunc import *
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
@@ -427,22 +428,26 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         error_mesg6 = '<a href="R_' + str(cutimage)[:-5] + \
 	              '_1.html"> Crashed </a>' 
     HitLimit = 1
+
+
     if 'bulge' in ComP:
         if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2 or \
-           abs(re - c.URe) < 1.0 or abs(re - c.LRe) < 0.1 or\
-           abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-            c.Flag += 65536
-            HitLimit = 0
+               abs(re - c.URe) < 1.0 or abs(re - c.LRe) < 0.1 or\
+               abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
+            if not c.detail:
+                c.Flag +=2**GetFlag('BULGE_AT_LIMIT')
+                HitLimit = 0
+            else:
+                pass
         else:
-            pass
-    else:
-        bulge_xcntr = xcntr
-        bulge_ycntr = ycntr
+            bulge_xcntr = xcntr
+            bulge_ycntr = ycntr
     if 'disk' in ComP:
         if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2 or \
-            abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
-            c.Flag += 131072
-            HitLimit = 0
+               abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
+            if not c.detail:
+                c.Flag += 2**GetFlag('DISK_AT_LIMIT')
+                HitLimit = 0
         else:
             pass
     else:
@@ -460,10 +465,10 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         if chi2nu > c.chi2sq:
             error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
             if chi2nu != 9999:
-                c.Flag += 8192
+                c.Flag += 2**GetFlag('LARGE_CHISQ')
         if Goodness < c.Goodness:
             error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-            c.Flag += 16384
+            c.Flag += 2**GetFlag('SMALL_GOODNESS')
         if HitLimit == 0:
             error_mesg4 = str(error_mesg4) + 'One of the parameters'
             error_mesg5 = str(error_mesg5) + '          hits limit!'
@@ -476,13 +481,13 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                disk_xcntr == 9999 or disk_ycntr == 9999:
                 pass
             else:
-                c.Flag += 32768
+                c.Flag += 2**GetFlag('FAKE_CNTR')
         img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
         good_fit = 0
     outfile.write(template %vars())
     outfile.close()
     run = 1
-    to_remove = len(c.rootname) + 2
+    to_remove = 0
     if exists('result.csv'):
         for line_res in csv.reader(open('result.csv').readlines()[1:]):    
             if(str(line_res[0]) == cutimage[to_remove:-5]):
