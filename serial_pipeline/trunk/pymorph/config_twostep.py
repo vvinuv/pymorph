@@ -1,3 +1,20 @@
+#####################################
+#
+# NAME: config_twostep.py
+#
+# DESCRIPTION: This script will perform an
+#  iterative fitting process when invoked using
+#  "detail = True" command in the config file.
+#  as it is currently configured, the program does
+#  a serexp fit first to estimate the sky. Then fixes
+#  the sky at that value. Then it does a 'ser' fit.
+#  this tells it the total sersic index for the galaxy.
+#  Then it fits a 'dev' profile. Finally it does a 'devexp'
+#  and 'serexp' profile choosing the starting parameters
+#  based on the 'ser' fit sersic index.
+#
+#########################################
+
 # import relevant python module
 import os
 import sys
@@ -67,7 +84,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
     threshold = c.threshold
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
-    c.sersic_loc  = 1
+    c.sersic_loc  = 2
+    c.sky_loc = 1
     try:
         ComP = c.components 
     except:
@@ -165,12 +183,12 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         ParamDict[0][AdComp] = {}
         ParamDict[0][AdComp][1] = 'expdisk'
         ParamDict[0][AdComp][2] = [xcntr_o, ycntr_o]
-        ParamDict[0][AdComp][3] = 9999#mag 
-        ParamDict[0][AdComp][4] = 9999#radius
-        ParamDict[0][AdComp][5] = 9999#axis_rat
-        ParamDict[0][AdComp][6] = 9999#pos_ang
-        ParamDict[0][AdComp][7] = 9999
-        ParamDict[0][AdComp][8] = 9999
+        ParamDict[0][AdComp][3] = mag 
+        ParamDict[0][AdComp][4] = radius
+        ParamDict[0][AdComp][5] = axis_rat
+        ParamDict[0][AdComp][6] = pos_ang
+        ParamDict[0][AdComp][7] = 0
+        ParamDict[0][AdComp][8] = 0
         ParamDict[0][AdComp][11] = 'Main'
 
         BlankDict[0][AdComp] = {}
@@ -284,12 +302,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
     bad_fit = 0
     failed_ser = 0
     bt_fit = -1
-
-    print c.Flag
-    time.sleep(5)
+    failed_sky = 0
+    bad_sky = 0
     
    #Write configuration file. RunNo is the number of iteration
-    for RunNo, fit_type in zip(range(4), ['ser','dev','devexp','serexp']):
+    for RunNo, fit_type in zip(range(5), ['sky','ser','dev','devexp','serexp']):
+        # note that the 'sky' fit is currently serexp
+        
         run_flag = c.Flag
         print 'run_flag', run_flag
         if exists('fit.log'):
@@ -330,15 +349,15 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                      ' objects interactively?\n\n\n'])
         f.close()
 
-        FitDict, run_flag = DecideFitting(ParamDict, RunNo,fit_type, bad_fit, failed_ser, run_flag)            
-        print 'run flag after fit dict ', run_flag, bad_fit, failed_ser
+        FitDict, run_flag = DecideFitting(ParamDict, RunNo,fit_type, bad_fit, failed_ser, run_flag, failed_sky, bad_sky)            
+
         for i in range(len(ParamDict[RunNo])):
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
                     run_flag += 2**GetFlag('FIT_BULGE')
                     print "ADDING FLAG FIT_BULGE"
-                    if RunNo > 0 and not bad_fit and ParamDict[c.sersic_loc][1][4]*2 < max_rad: # later fits
+                    if RunNo > 1 and not bad_fit and ParamDict[c.sersic_loc][1][4]*2 < max_rad: # later fits
                         SersicMainConstrain(constrain_file, i + 1, 2.0 , ParamDict[c.sersic_loc][1][4]*2)
                     else:
                         SersicMainConstrain(constrain_file, i + 1, c.center_constrain, max_rad)
@@ -346,8 +365,8 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                     SersicConstrain(constrain_file, i + 1)
  
             if ParamDict[RunNo][i + 1][1] == 'expdisk':
-                if RunNo <= 1:
-                    pass
+                if RunNo in [1 ,2]:
+                    pass #dont fit a disk in the cases of ser or dev fits 
                 else:
                     run_flag += 2**GetFlag('FIT_DISK')
                     print "ADDING FLAG FIT_DISK"
@@ -358,14 +377,14 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                         ExpdiskConstrain(constrain_file, i + 1, c.center_constrain)
 
             if  ParamDict[RunNo][i + 1][1] == 'sky':
-                if RunNo > 0 and not bad_fit: 
-                    SkyConstrain(constrain_file, i + 1, ParamDict[c.sersic_loc][i+1][2])
+                if RunNo > 0 and not bad_sky: 
+                    SkyConstrain(constrain_file, i + 1, ParamDict[c.sky_loc][i+1][2])
                 else:
                     SkyConstrain(constrain_file, i + 1, c.SexSky)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
 
-        if RunNo > 1: #later fits after single ser fit
-            bt_range = add_constrain(constrain_file, bt_fit)
+        if RunNo > 2 or RunNo == 0: #later fits after single ser fit
+            bt_range = add_constrain(constrain_file, bt_fit, fit_type)
         cmd = str(c.GALFIT_PATH) + ' ' + config_file
         os.system(cmd)
         # ReadLog(ParamDict, 2) => this function reads fig.log
@@ -432,6 +451,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 run_flag += 2**GetFlag('DETAIL_FAILED')
                 c.Flag += 2**GetFlag('DETAIL_FAILED')
                 print "ADDING FLAG DETAIL_FAILED"
+            elif fit_type == 'sky':
+                failed_sky = 1 #track that we did not fix the sky
+                run_flag += 2**GetFlag('DETAIL_FAILED')
+                c.Flag += 2**GetFlag('DETAIL_FAILED')
+                print "ADDING FLAG DETAIL_FAILED"
         try:
             c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
         except:
@@ -439,7 +463,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         c.Chi2DOFArr.append(Chi2DOF)
 
         if fit_type != 'serexp': #set flags for other fit types
-            bad_fit, bt_fit = DecideHowToMove2(ParamDict, RunNo + 1,fit_type,KpCArc, failed_ser )
+            bad_sky, bad_fit, bt_fit = DecideHowToMove2(ParamDict, RunNo + 1,fit_type,KpCArc, failed_ser, failed_sky )
 
             try:
                 plot_name = 'P_' + str(cutimage)[6:-5] \
@@ -491,48 +515,52 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
 
     return
 
-def add_constrain(constrain_file, bt):
+def add_constrain(constrain_file, bt, fit_type):
     f_constrain = open(constrain_file, 'ab')
     f_constrain.write('1/2     re     0.1  1.0\n')
     f_constrain.write('1-2     x      -0.001 to 0.001\n')
     f_constrain.write('1-2     y      -0.001 to 0.001\n')
 
-    absmin_bt = .0000001
-    absmax_bt = .9999999
-
-    min_down = .3
-    min_up = .3
-    d_trans1 = .4
-    d_trans2 = .49
-    u_trans1 = .3
-    u_trans2 = .49 
-
-    down_slope = (d_trans1 - min_down)/(d_trans2 - d_trans1)
-    up_slope = (u_trans2 - min_up)/(u_trans2 - u_trans1)
-
-    if bt <= d_trans1:
-        bt_min = absmin_bt
-    elif bt <= d_trans2:
-        bt_min = bt - min_down - down_slope*(d_trans2 - bt) 
+    if fit_type == 'sky':
+        bt_min = 0
+        bt_max = 1
     else:
-        bt_min = bt - min_down
+        absmin_bt = .0000001
+        absmax_bt = .9999999
 
-    if bt <= u_trans1:
-        bt_max = min_up + bt
-    elif bt <= u_trans2:
-        bt_max = bt + min_up + up_slope*(bt - u_trans1)
-    else:
-        bt_max = absmax_bt
+        min_down = .3
+        min_up = .3
+        d_trans1 = .4
+        d_trans2 = .49
+        u_trans1 = .3
+        u_trans2 = .49 
+
+        down_slope = (d_trans1 - min_down)/(d_trans2 - d_trans1)
+        up_slope = (u_trans2 - min_up)/(u_trans2 - u_trans1)
+
+        if bt <= d_trans1:
+            bt_min = absmin_bt
+        elif bt <= d_trans2:
+            bt_min = bt - min_down - down_slope*(d_trans2 - bt) 
+        else:
+            bt_min = bt - min_down
+
+        if bt <= u_trans1:
+            bt_max = min_up + bt
+        elif bt <= u_trans2:
+            bt_max = bt + min_up + up_slope*(bt - u_trans1)
+        else:
+            bt_max = absmax_bt
 
         
-    bd_min = (1.0/bt_min - 1.0)**(-1)
-    bd_max = (1.0/bt_max - 1.0)**(-1)
-    mag_min = -2.5*n.log10(bd_max)
-    mag_max = -2.5*n.log10(bd_min)
+        bd_min = (1.0/bt_min - 1.0)**(-1)
+        bd_max = (1.0/bt_max - 1.0)**(-1)
+        mag_min = -2.5*n.log10(bd_max)
+        mag_max = -2.5*n.log10(bd_min)
     
-    f_constrain.write('1-2      mag     ' + str(mag_min) +\
-                      ' to ' + str(mag_max) + '\n')
-    f_constrain.close()
+        f_constrain.write('1-2      mag     ' + str(mag_min) +\
+                          ' to ' + str(mag_max) + '\n')
+        f_constrain.close()
 
     return bt_min, bt_max
 
@@ -655,9 +683,45 @@ def SkyFunc(conffile, ParamDict, FitDict, No, RunNo):
     f.close()
 
     
-def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag):
+def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, failed_sky, bad_sky):
     FitDict = {}
     #print ParamDict 
+    if fit_type =='sky': # Perform a serexp fit for sky value 
+        for j in range(len(ParamDict[RunNo])):
+            i = j + 1
+            FitDict[i] = {}  
+            if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Main':
+                FitDict[i][1] = [1, 1] 
+                FitDict[i][2] = 1 
+                FitDict[i][3] = 1
+                run_flag += 2**GetFlag('FIT_BULGE_CNTR')
+                print "ADDING FLAG FIT_BULGE_CNTR"
+                FitDict[i][4] = 1 # free n
+                FitDict[i][5] = 1       
+                FitDict[i][6] = 1    
+            if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
+                FitDict[i][1] = [1, 1]
+                FitDict[i][2] = 1 
+                FitDict[i][3] = 1 
+                FitDict[i][4] = 1       
+                FitDict[i][5] = 1
+                run_flag += 2**GetFlag('FIT_DISK_CNTR')
+                print "ADDING FLAG FIT_DISK_CNTR"
+            if ParamDict[RunNo][i][1] == 'sky':
+                FitDict[i][1] = 1
+                FitDict[i][2] = 0 
+                FitDict[i][3] = 0
+                run_flag += 2**GetFlag('FIT_SKY')
+                print "ADDING FLAG FIT_SKY"
+            if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
+                #should this be all 1s or 0s?
+                FitDict[i][1] = [1, 1]
+                FitDict[i][2] = 1 
+                FitDict[i][3] = 1 
+                FitDict[i][4] = 1
+                FitDict[i][5] = 1       
+                FitDict[i][6] = 1    
+
     if fit_type == 'ser': # perform a single-sersic fit
         for j in range(len(ParamDict[RunNo])):
             i = j + 1
@@ -682,11 +746,12 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag):
                 FitDict[i][5] = 1
                 
             if ParamDict[RunNo][i][1] == 'sky':
-                FitDict[i][1] = 1
+                FitDict[i][1] = bad_sky
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 0
-                run_flag += GetFlag('FIT_SKY')
-                print "ADDING FLAG FIT_SKY"
+                if bad_fit:
+                    run_flag += GetFlag('FIT_SKY')
+                    print "ADDING FLAG FIT_SKY"
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
                 FitDict[i][1] = [1, 1]
                 FitDict[i][2] = 1 
@@ -695,7 +760,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag):
                 FitDict[i][5] = 1       
                 FitDict[i][6] = 1    
 
-    elif fit_type == 'dev': # Perform a either a single dev fit 
+    elif fit_type == 'dev': # Perform a single dev fit 
         for j in range(len(ParamDict[RunNo])):
             i = j + 1
             FitDict[i] = {}  
@@ -716,7 +781,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag):
                 FitDict[i][4] = 1       
                 FitDict[i][5] = 1  
             if ParamDict[RunNo][i][1] == 'sky':
-                FitDict[i][1] = bad_fit
+                FitDict[i][1] = bad_sky
                 FitDict[i][2] = 0 
                 FitDict[i][3] = 0
                 if bad_fit:
@@ -758,7 +823,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag):
                     run_flag += 2**GetFlag('FIT_DISK_CNTR')
                     print "ADDING FLAG FIT_DISK_CNTR"
             if ParamDict[RunNo][i][1] == 'sky':
-                FitDict[i][1] = bad_fit
+                FitDict[i][1] = bad_sky
                 FitDict[i][2] = 0 
                 FitDict[i][3] = 0
                 if bad_fit:
@@ -801,9 +866,11 @@ def FractionalError(ParamDict, ErrDict, RunNo):
     return toterr
 
 
-def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
+def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser, failed_sky):
     sersic_loc = c.sersic_loc # index location of the single sersic fit in the ParamDict used for decision-making in the dev+exp and Ser+exp fits
+    sky_loc = c.sky_loc
     bad_fit = 0
+    bad_sky = 0
     HitLimitCheck = 0
 
     n_points=n.array([0.5, 3,4,5,6, 7, 8])
@@ -811,18 +878,45 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
     fit_out=n.polyfit(n_points, b_points, 3)
     p=n.poly1d(fit_out)
 
-    if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0 or failed_ser:
-        print "bad sersic fit"
-        bad_fit = 1
-
-    # note that bad_fit will always be true when failed_ser is true, but bad_fit does not imply failed_ser
-    
-    if failed_ser:
-        look_loc = 0 # look only at SExtractor values  
+    if c.ParamDictBook[sky_loc][1][5] > 8.0 or c.ParamDictBook[sky_loc][1][4] *KpCArc > 40.0 or failed_sky:
+        print "bad sky fit"
+        bad_sky = 1
     else:
-        look_loc = sersic_loc #look at Sersic values where reasonable then look at SExtractor
+        bad_sky = 0
+        sky_loc = 0
+        
+    if fit_type != 'sky':
+        if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0 or failed_ser:
+            print "bad sersic fit"
+            bad_fit = 1
+            
+        # note that bad_fit will always be true when failed_ser is true, but bad_fit does not imply failed_ser
+        
+        if bad_fit:
+            look_loc = 0 # look only at SExtractor values  
+        else:
+            look_loc = sersic_loc #look at Sersic values where reasonable then look at SExtractor
 
-    if fit_type == 'ser': #prepares for the dev fit
+    if fit_type == 'sky': #prepares for the ser fit
+        bt_fit = -1
+                
+        ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[0][1][2][0])
+        ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[0][1][2][1])
+        
+        ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[0][1][3])
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[0][1][4])
+        ParamDict[RunNo][1][5] = 4.0
+        ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[0][1][6])
+        ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[0][1][7])    
+        ParamDict[RunNo][2][2][0] = 9999
+        ParamDict[RunNo][2][2][1] = 9999
+        ParamDict[RunNo][2][3] = 9999
+        ParamDict[RunNo][2][4] = 9999
+        ParamDict[RunNo][2][5] = 9999
+        ParamDict[RunNo][2][6] = 9999
+
+
+    elif fit_type == 'ser': #prepares for the dev fit
         bt_fit = -1
                 
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[look_loc][1][2][0])
@@ -839,9 +933,6 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
         ParamDict[RunNo][2][4] = 9999
         ParamDict[RunNo][2][5] = 9999
         ParamDict[RunNo][2][6] = 9999
-
-        if bad_fit:
-            look_loc = 0 # uses SExtractor sky
             
     elif bad_fit:
         bt_fit = .5
@@ -860,9 +951,6 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
         ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[0][1][4])
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[0][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[0][1][7])
-
-        look_loc = 0 # uses SExtractor Sky
-
     
     elif c.ParamDictBook[sersic_loc][1][5] <= 2.0: # disk-like galaxy -> so set disk parameters to bulge 
         print 'disky'
@@ -882,11 +970,6 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
 
-        try:
-            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sersic_loc][-1][2])
-        except:
-            pass
-
     else:  
         print 'mix'
         bt_fit = p(c.ParamDictBook[sersic_loc][1][5])
@@ -894,31 +977,25 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser):
         ParamDict[RunNo][1][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][1][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][1][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3]) - 2.5 * n.log10(bt_fit)
-        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])
+        ParamDict[RunNo][1][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])/2.0 
         ParamDict[RunNo][1][5] = 4.0
         ParamDict[RunNo][1][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][1][7] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
         ParamDict[RunNo][2][2][0] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][0])
         ParamDict[RunNo][2][2][1] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][2][1])
         ParamDict[RunNo][2][3] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][3])-2.5 * n.log10(1.0 - bt_fit)
-        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])
+        ParamDict[RunNo][2][4] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][4])*2.0
         ParamDict[RunNo][2][5] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][6])
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
-
-        try:
-            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sersic_loc][-1][2])
-        except:
-            pass
-
 
 
 
     try:
-            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[look_loc][-1][2])
+            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sky_loc][-1][2])
     except:
         try:
             ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[0][-1][2])
         except:
             pass
         
-    return bad_fit,bt_fit
+    return bad_sky, bad_fit,bt_fit

@@ -258,8 +258,12 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
  
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(c.SkyMin), '      ', str(c.fitting[2]), \
+    f.writelines([' 1) ', str(2.22604*(1.0+0.01)), ' ', str(c.fitting[2]), \
                   '	# sky background [ADU counts\n'])
+#    f.writelines([' 1) ', str(0.0), ' ', str(c.fitting[2]), \
+#                  '	# sky background [ADU counts\n'])
+#    f.writelines([' 1) ', str(c.SkyMin), '      ', str(c.fitting[2]), \
+#                  '	# sky background [ADU counts\n'])
     f.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                   ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                   ' Z) 0                  # output image\n\n\n'])
