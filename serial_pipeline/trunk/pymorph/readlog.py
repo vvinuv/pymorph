@@ -7,14 +7,18 @@ import config as c
 import numpy as n
 from numpy import random
 import copy
+import time
+import traceback
 
-def ReadLog(ParamDict, ErrDict, No, RunNo):
+def ReadLog(ParamDict, ErrDict, No, RunNo, detail = False):
     object_err = 1
     if exists('fit.log'):
         ParamDict[RunNo + 1] = copy.deepcopy(ParamDict[RunNo])
         ErrDict[RunNo + 1] = copy.deepcopy(ErrDict[RunNo])
         for line in open('fit.log','r'): 
-            values = line.split() 
+            print line
+            values = line.split()
+            print values
             try: 
                 if(str(values[0]) == 'Input'):
                     alpha_ned = str(alpha_j)[:6]
@@ -27,6 +31,11 @@ def ReadLog(ParamDict, ErrDict, No, RunNo):
                     chi2nu = float(values[2])
                     Distance = str(round(distance, 3))[:5]
                 if(str(values[0]) == 'sersic'):
+                    # Note Alan added this to prevent bugs in the
+                    # detailed fitting routine
+                    if detail and (No == 2):
+                        No += 1
+                        print "in the if statement...incrementing loop"
                     ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
                     ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
                     if RunNo == -10:
@@ -46,7 +55,7 @@ def ReadLog(ParamDict, ErrDict, No, RunNo):
                     ParamDict[RunNo + 1][No][7] = float(values[8])
 		    ParamDict[RunNo + 1][No][8] = float(values[9])
                     No += 1
-                if(str(values[0]) == 'expdisk'):
+                elif(str(values[0]) == 'expdisk'):
                     ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
                     ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
                     ParamDict[RunNo + 1][No][3] = float(values[4])
@@ -55,12 +64,12 @@ def ReadLog(ParamDict, ErrDict, No, RunNo):
                     ParamDict[RunNo + 1][No][6] = float(values[7])
                     ParamDict[RunNo + 1][No][7] = float(values[8])
                     No += 1
-                if(str(values[0]) == 'psf'):
+                elif(str(values[0]) == 'psf'):
                     ParamDict[RunNo + 1][No][2][0] = float(values[2][1:-1])
                     ParamDict[RunNo + 1][No][2][1] = float(values[3][:-1])
                     ParamDict[RunNo + 1][No][3] = float(values[4])
                     No += 1
-                if(str(values[0]) == 'sky'):
+                elif(str(values[0]) == 'sky'):
                     for j in range(len(ParamDict[RunNo + 1])):
                         i = j + 1
                         if ParamDict[RunNo + 1][i][1] == 'sky':
@@ -85,6 +94,9 @@ def ReadLog(ParamDict, ErrDict, No, RunNo):
                         object_err += 1
                 PreComp = values[0]
             except:
+                #print 'EXCEPTION!!!!!!!'
+                #traceback.print_exc()
+                #time.sleep(10)
                 pass
 #        if 'bulge' in ComP and 'disk' in ComP:
 #            BD = 10**(-0.4 * ( mag_b - mag_d))

@@ -152,9 +152,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                   ' mask(FITS image or ASCII coord list)\n'])
     f.writelines(['G) ', str(constrain_file), '       # File with parameter',\
                   ' constraints (ASCII file)\n'])
-#    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
-#                  ' Image region to fit (xmin xmax ymin ymax)\n'])
-    f.writelines(['H) ', str(int(xcntr - 8 * c.SexHalfRad)), ' ', str(int(xcntr + 8 * c.SexHalfRad)), ' ', str(int(ycntr - 8 * c.SexHalfRad)), ' ', str(int(ycntr + 8 * c.SexHalfRad)), '            # Image region to fit (xmin xmax ymin ymax)\n'])
+    f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
+                  ' Image region to fit (xmin xmax ymin ymax)\n'])
     f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
@@ -257,8 +256,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 #        c.Flag += 2**GetFlag('FIT_BULGE')
  
     f.writelines(['# sky\n\n']) 
-    f.writelines([' 0) sky\n'])
-    f.writelines([' 1) ', str(2.22604*(1.0+0.01)), ' ', str(c.fitting[2]), \
+    f.writelines([' 0) sky\n'])#str(2.22604*(1.0+0.01)), ' ', str(0.0)
+    f.writelines([' 1) ', str(c.SexSky),' ', str(c.fitting[2]), \
                   '	# sky background [ADU counts\n'])
 #    f.writelines([' 1) ', str(0.0), ' ', str(c.fitting[2]), \
 #                  '	# sky background [ADU counts\n'])

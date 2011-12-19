@@ -308,10 +308,12 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
    #Write configuration file. RunNo is the number of iteration
     for RunNo, fit_type in zip(range(5), ['sky','ser','dev','devexp','serexp']):
         # note that the 'sky' fit is currently serexp
+        #force batch fitting using standard operations
         
         run_flag = c.Flag
         print 'run_flag', run_flag
         if exists('fit.log'):
+            print "removing fit log"
             os.system('rm fit.log')
 
         print "RunNo ", RunNo, "fit type ", fit_type
@@ -383,9 +385,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                     SkyConstrain(constrain_file, i + 1, c.SexSky)
                 SkyFunc(config_file, ParamDict, FitDict, i+1, RunNo) 
 
+        # only if forcing normal fit
         if RunNo > 2 or RunNo == 0: #later fits after single ser fit
             bt_range = add_constrain(constrain_file, bt_fit, fit_type)
         cmd = str(c.GALFIT_PATH) + ' ' + config_file
+
+
+
         os.system(cmd)
         # ReadLog(ParamDict, 2) => this function reads fig.log
         # depends on whether, for example, the expdisk function
@@ -396,7 +402,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         # expdisk, other sersic etc
         try:
             print 'readlog'
-            ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo)
+            ParamDict, ErrDict, Chi2DOF = ReadLog(ParamDict, ErrDict, 1, RunNo, detail = True)
             print 'log read'
             print 'chi2dof ',Chi2DOF
             
@@ -498,7 +504,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 traceback.print_exc()
                 time.sleep(10)
         fit_log = 'fit_%s.log' %fit_type
-        
+
+        print "saving fit log to fit log %s" %(fit_log)
+
         f_fit = open(fit_log,'a')
         if exists('fit.log'):
             for line in open('fit.log','r'):
@@ -517,14 +525,17 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
 
 def add_constrain(constrain_file, bt, fit_type):
     f_constrain = open(constrain_file, 'ab')
-    f_constrain.write('1/2     re     0.1  1.0\n')
     f_constrain.write('1-2     x      -0.001 to 0.001\n')
     f_constrain.write('1-2     y      -0.001 to 0.001\n')
 
     if fit_type == 'sky':
+        rerdmin = 0.05
+        rerdmax = 1.0
         bt_min = 0
         bt_max = 1
     else:
+        rerdmin = 0.05
+        rerdmax = 1.0
         absmin_bt = .0000001
         absmax_bt = .9999999
 
@@ -560,7 +571,9 @@ def add_constrain(constrain_file, bt, fit_type):
     
         f_constrain.write('1-2      mag     ' + str(mag_min) +\
                           ' to ' + str(mag_max) + '\n')
-        f_constrain.close()
+
+    f_constrain.write('1/2     re     %s   %s\n' %(rerdmin, rerdmax))
+    f_constrain.close()
 
     return bt_min, bt_max
 
@@ -747,7 +760,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 
             if ParamDict[RunNo][i][1] == 'sky':
                 FitDict[i][1] = bad_sky
-                FitDict[i][2] = 1 
+                FitDict[i][2] = 0
                 FitDict[i][3] = 0
                 if bad_fit:
                     run_flag += GetFlag('FIT_SKY')
@@ -881,9 +894,9 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser, failed_sky):
     if c.ParamDictBook[sky_loc][1][5] > 8.0 or c.ParamDictBook[sky_loc][1][4] *KpCArc > 40.0 or failed_sky:
         print "bad sky fit"
         bad_sky = 1
+        sky_loc = 0
     else:
         bad_sky = 0
-        sky_loc = 0
         
     if fit_type != 'sky':
         if abs(c.ParamDictBook[sersic_loc][1][3] - (c.LMag - 1.0)) < 0.05 or abs(c.ParamDictBook[sersic_loc][1][3] - c.UMag) < 0.05 or c.ParamDictBook[sersic_loc][1][4] < 0.21 or  c.ParamDictBook[sersic_loc][1][5] > 8.0 or c.ParamDictBook[sersic_loc][1][4] *KpCArc > 40.0 or failed_ser:
@@ -989,13 +1002,17 @@ def DecideHowToMove2(ParamDict, RunNo,fit_type, KpCArc, failed_ser, failed_sky):
         ParamDict[RunNo][2][6] = copy.deepcopy(c.ParamDictBook[sersic_loc][1][7])
 
 
-
     try:
-            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sky_loc][-1][2])
+#            ParamDict[RunNo][c.SkyNo][2] = n.mean([copy.deepcopy(c.ParamDictBook[sky_loc][c.SkyNo][2]), c.SexSky, c.SkyMin])
+            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[sky_loc][c.SkyNo][2])
     except:
+        print 'EXCEPTION!!!!!!!'
+        traceback.print_exc()
         try:
-            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[0][-1][2])
+            ParamDict[RunNo][c.SkyNo][2] = copy.deepcopy(c.ParamDictBook[0][c.SkyNo][2])
         except:
             pass
-        
+
+
+    bad_sky = 0 # this will fix sky which we will calculate as the average of three skys        
     return bad_sky, bad_fit,bt_fit
