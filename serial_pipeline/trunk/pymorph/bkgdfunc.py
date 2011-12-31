@@ -1,6 +1,5 @@
 import pyfits,os
 import numpy as n
-import ndimage as im
 import config as c
 import numpy.ma as ma
 from flagfunc import *
@@ -48,7 +47,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
         bgmask = n.swapaxes(bgmask, 0, 1)
         bgmaskedgalaxy = ma.masked_array(z, bgmask)
         bgmaskedgalaxy1d = bgmaskedgalaxy.compressed()
-        skysig = im.standard_deviation(bgmaskedgalaxy1d)
+        skysig = ma.std(bgmaskedgalaxy1d)
         sky_iter = ma.average(bgmaskedgalaxy1d)
         skysig_iter = skysig * 1.5
         x = n.reshape(n.arange(nxpts * nypts),(nxpts, nypts)) / nypts

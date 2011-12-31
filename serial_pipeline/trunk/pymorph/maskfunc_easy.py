@@ -23,7 +23,7 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
     values = line_s.split()
-    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'M_' + c.fstring + '.fits'
     xcntr_o  = xcntr * 1.0 #x center of the object
     ycntr_o  = ycntr * 1.0 #y center of the object
     mag    = float(values[7]) #Magnitude

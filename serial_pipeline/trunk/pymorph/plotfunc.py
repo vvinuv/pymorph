@@ -23,31 +23,9 @@ class PlotFunc:
         self.sky       = sky
         self.skysig    = skysig
         if save_name == '999':
-            save_name = 'P_' + str(cutimage)[:-4] + 'png'
+            save_name = 'P_' + c.fstring + '.png'
         self.plot_profile = plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_name)
         return
-def get_data(ticker):
-    """ Returns the values from the ellipse output table"""
-    class C: pass
-    def get_ticker(ticker):
-        vals = []
-        lines = file( '%s' % ticker ).readlines()
-        for line in lines[1:]:
-            try:
-                vals.append([float(val) for val in line.split()[0:]])
-            except:
-                pass
-        M = array(vals)
-        c = C()
-        c.sma = M[:,0]
-        c.flux = M[:,1]
-        c.flux_err = M[:,2]
-        c.mag = M[:,3]
-        c.mag_uerr = M[:,4]
-        c.mag_lerr = M[:,5]
-        return c
-    c1 = get_ticker(ticker)
-    return c1
 
 def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_name):
     try:
@@ -62,10 +40,10 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_
         f_mask = pyfits.open(maskimage)
         mask = f_mask[0].data 
         f_mask.close()
-        galaxy = n.swapaxes(galaxy, 0, 1)
-        model = n.swapaxes(model, 0, 1)
-        residual = n.swapaxes(residual, 0, 1)
-        mask = n.swapaxes(mask, 0, 1)
+        galaxy = swapaxes(galaxy, 0, 1)
+        model = swapaxes(model, 0, 1)
+        residual = swapaxes(residual, 0, 1)
+        mask = swapaxes(mask, 0, 1)
         residual0 = residual
         NXPTS = galaxy.shape[0]
         NYPTS = galaxy.shape[1]
@@ -73,13 +51,13 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_
 #        image
 #
 #
-#        galzeromask = n.zeros((NXPTS, NYPTS))
-#        galzeromask[n.where(galaxy == 0.0)] = 1
+#        galzeromask = zeros((NXPTS, NYPTS))
+#        galzeromask[where(galaxy == 0.0)] = 1
 #        maskedGalaxy = ma.masked_array(galaxy, galzeromask)
 #        maskedGalaxy = ma.filled(maskedGalaxy, value=1)
 #        residual0 = (residual0 / maskedGalaxy) * 100.0
-#        residual0Avg = n.average(residual0)
-#        residual0Sig = n.std(residual0)
+#        residual0Avg = average(residual0)
+#        residual0Sig = std(residual0)
 #        anormRes = normalize(-0.05 * residual0Sig, \
 #                    0.05 * residual0Sig) 
 #
@@ -93,40 +71,40 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_
         #colorbar(shrink=0.90)
         valid_pixels = ma.count(maskedresidual)
         print 'No of valid pixels >>> ', valid_pixels
-        pixels_in_skysig = residual[n.where(abs(residual) <= skysig)].size
+        pixels_in_skysig = residual[where(abs(residual) <= skysig)].size
         print 'No of pixels within sky sigma >>> ', pixels_in_skysig
         try:
             goodness = pixels_in_skysig / float(valid_pixels)
         except:
             goodness = 9999
-        hist_mask = n.zeros((NXPTS, NYPTS))
-        hist_mask[n.where(abs(residual) > 12.0 * skysig)] = 1
+        hist_mask = zeros((NXPTS, NYPTS))
+        hist_mask[where(abs(residual) > 12.0 * skysig)] = 1
         hist_res = ma.masked_array(residual, hist_mask)
         #The procedure for chi2nu wrt radius is starting here
-        x = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
-        x = x.astype(n.float32)
-        y = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) / NYPTS
-        y = y.astype(n.float32)
+        x = reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
+        x = x.astype(float32)
+        y = reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) / NYPTS
+        y = y.astype(float32)
         tx = x - xcntr + 0.5
         ty = y - ycntr + 0.5
-        R = n.sqrt(tx**2.0 + ty**2.0)
+        R = sqrt(tx**2.0 + ty**2.0)
 #        Chi2Nu = []
 #        Chi2NuRad = []
 #        StartRad = 2.0
 #        TempRad = 0.0
 #        while StartRad <= max(NXPTS / 2.0, NYPTS / 2.0):
-#            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
-#                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
+#            Chi2NuEle = (ma.sum(abs(maskedresidual[where(R <= \
+#                         StartRad)])) - ma.sum(abs(maskedresidual[where(R <= \
 #                         TempRad)])))**2.0 / \
-#                         ((galaxy[n.where(R <= StartRad)].sum() - \
-#                         galaxy[n.where(R <= TempRad)].sum()) * \
-#                         (ma.count(maskedresidual[n.where(R <= StartRad)]) -\
-#                          ma.count(maskedresidual[n.where(R <= TempRad)])))
-#            Chi2NuEle = (ma.sum(abs(maskedresidual[n.where(R <= \
-#                         StartRad)])) - ma.sum(abs(maskedresidual[n.where(R <= \
+#                         ((galaxy[where(R <= StartRad)].sum() - \
+#                         galaxy[where(R <= TempRad)].sum()) * \
+#                         (ma.count(maskedresidual[where(R <= StartRad)]) -\
+#                          ma.count(maskedresidual[where(R <= TempRad)])))
+#            Chi2NuEle = (ma.sum(abs(maskedresidual[where(R <= \
+#                         StartRad)])) - ma.sum(abs(maskedresidual[where(R <= \
 #                         TempRad)])))**2.0 / \
-#                         (galaxy[n.where(R <= StartRad)].sum() - \
-#                         galaxy[n.where(R <= TempRad)].sum())
+#                         (galaxy[where(R <= StartRad)].sum() - \
+#                         galaxy[where(R <= TempRad)].sum())
 #            try:
 #                Chi2Nu.append(float(Chi2NuEle))
 #                Chi2NuRad.append(StartRad)
@@ -137,49 +115,44 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_
     except:
         pass
     try:
-        data = get_data('E_' + str(cutimage)[:-4] + 'txt')
-        sma = data.sma		#sma from ellise fitting
-        flux = data.flux	#Flux at various sma
-        flux_err =data.flux_err	#Error in Flux
-        mag = data.mag + float(c.mag_zero)  #Magnitude at various sma
-        mag_uerr = data.mag_uerr	#Upper error in magnitude
-        mag_lerr = data.mag_lerr	#lower error in Magnitude
+        data = n.genfromtxt('E_' + c.fstring + '.txt', delimiter=' ', \
+               names=False)
+        sma = data[:, 0]		#sma from ellise fitting
+        flux = data[:, 1]	#Flux at various sma
+        flux_err =data[:, 2]	#Error in Flux
+        mag = data[:, 3] + float(c.mag_zero) #Magnitude at various sma
+        mag_uerr = data[:, 5]	#Upper error in magnitude
+        mag_lerr = data[:, 4]	#lower error in Magnitude
         GalEll = 1
     except:
         GalEll = 0
-        pass
     try:
-        data1 = get_data('OE_' + str(cutimage)[:-4] + 'txt')
-        sma1 = data1.sma		#sma from ellise fitting
-        flux1 = data1.flux	#Flux at various sma
-        flux_err1 =data1.flux_err	#Error in Flux
-        mag1 = data1.mag + float(c.mag_zero)  #Magnitude at various sma
-        mag_uerr1 = data1.mag_uerr	#Upper error in magnitude
-        mag_lerr1 = data1.mag_lerr	#lower error in Magnitude
+        data1 = n.genfromtxt('OE_' + c.fstring + '.txt', delimiter=' ', \
+               names=False)
+        sma1 = data1[:, 0]		#sma from ellise fitting
+        flux1 = data1[:, 1]	#Flux at various sma
+        flux_err1 =data1[:, 2]	#Error in Flux
+        mag1 = data1[:, 3] + float(c.mag_zero)#Magnitude at various sma
+        mag_uerr1 = data1[:, 5]	#Upper error in magnitude
+        mag_lerr1 = data1[:, 4]	#lower error in Magnitude
         ModelEll = 1
     except:
         ModelEll = 0
-        pass
     try:
-        SmaCommon = []
-        MagDev = []
-        MagLErr = []
-        MagUErr = []
-        for i in range(len(sma)):
-            for j in range(len(sma1)):
-                if sma[i] == sma1[j]:
-                    try:
-                        SmaCommon.append(sma[i])
-                        MagDev.append(mag[i] - mag1[j])
-                        FluxErr = n.sqrt((flux_err[i] / flux[i])**2.0 + \
-                                  (flux_err1[j]/flux1[j])**2.0)
-                        MagLErr.append((n.log10(flux[i]/flux1[j]) - \
-                                        n.log10((flux[i]/flux1[j]) - FluxErr)) \
-                                        * -2.5)
-                        MagUErr.append((n.log10((flux[i]/flux1[j]) + FluxErr) -\
-                                       (n.log10(flux[i]/flux1[j]))) * -2.5) 
-                    except:
-                        pass
+        SmaCommon = n.logspace(0, np.log10(8.0 * c.SexHalfRad), \
+                                20, endpoint=True)
+        MagI = n.interp(SmaCommon, sma, mag)
+        MagI1 = n.interp(SmaCommon, sma1, mag1)
+        FluxI = n.interp(SmaCommon, sma, flux)
+        FluxI1 = n.interp(SmaCommon, sma1, flux1)
+        FluxErrI = n.interp(SmaCommon, sma, flux_err)
+        FluxErrI1 = n.interp(SmaCommon, sma1, flux_err1)
+        MagDev = MagI - MagI1
+        FluxErr = sqrt((FluxErrI / FluxI)**2.0 + (FluxErrI1 / FluxI1)**2.0)
+        MagLErr = (n.log10(FluxI / FluxI1) - \
+                        n.log10((FluxI / FluxI1) - FluxErr)) * -2.5
+        MagUErr = (n.log10((FluxI / FluxI1) + FluxErr) -\
+                       (n.log10(FluxI / FluxI1))) * -2.5
     except:
         pass
     #Plotting Starts
@@ -199,24 +172,24 @@ def plot_profile(cutimage, outimage, maskimage, xcntr, ycntr, sky, skysig, save_
     rect7 = [0.125, 0.075, 0.225, 1.5*0.225]
     try:
         axUL = axes(rect1)
-        image1 = imshow(n.flipud(n.swapaxes(galaxy, 0, 1)), \
+        image1 = imshow(flipud(n.swapaxes(galaxy, 0, 1)), \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
         colorbar(shrink=0.9, format='%.2f')
         title('Original Galaxy')
         axUM = axes(rect2)
-        image1 = imshow(n.flipud(n.swapaxes(model, 0, 1)), cmap=cm.jet, \
+        image1 = imshow(flipud(n.swapaxes(model, 0, 1)), cmap=cm.jet, \
                         extent=[0, NXPTS, 0, NYPTS], norm=anorm)
         colorbar(shrink=0.9, format='%.2f')
         title('Model Galaxy + Mask')
         axUR = axes(rect3)
-        image1 = imshow(n.flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
+        image1 = imshow(flipud(n.swapaxes(residual0, 0, 1)), cmap=cm.jet, \
                         extent=[0, NXPTS, 0, NYPTS], norm=anormRes)
         colorbar(shrink=0.9)
         title('Residual')
         axLR = axes(rect4)
 	hist_res1d = hist_res.compressed()
         nn, bins, patches = hist(hist_res1d, 50, normed=0)
-        nMaxArg = nn.argmax()
+        nMaxArg = nargmax()
         if(nMaxArg < 16):
             ArgInc = nMaxArg
         else:

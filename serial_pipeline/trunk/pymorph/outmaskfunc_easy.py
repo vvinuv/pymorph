@@ -21,6 +21,6 @@ def mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
     values = line_s.split()
-    mask_file = 'OEM_' + str(outimage)[:-5] + '.fits'
+    mask_file = 'OEM_' + c.fstring + '.fits'
     emask_file = 'EM_' + str(outimage)[2:-5] + '.fits'
     os.system('cp ' + emask_file + ' '+ mask_file)

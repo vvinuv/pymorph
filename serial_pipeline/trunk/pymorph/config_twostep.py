@@ -94,10 +94,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         ComP = ['bulge', 'disk']
     values = line_s.split()
     # create filenames
-    outfile   = 'O_' + str(cutimage)[:-5] + '.fits' # galfit output
-    mask_file = 'M_' + str(cutimage)[:-5] + '.fits' # mask file
-    config_file = 'G_' + str(cutimage)[:-5] + '.in' #GALFIT configuration file
-    constrain_file = str(cutimage)[:-5] + '.con' #galfit constraint file
+    outfile   = 'O_' + c.fstring + '.fits' # galfit output
+    mask_file = 'M_' + c.fstring + '.fits' # mask file
+    config_file = 'G_' + c.fstring + '.in' #GALFIT configuration file
+    constrain_file = c.fstring + '.con' #galfit constraint file
 
 
     xcntr_o  = xcntr  #x center of the object

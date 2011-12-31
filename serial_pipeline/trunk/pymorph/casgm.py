@@ -2,7 +2,6 @@ import pyfits,os
 import csv
 from os.path import exists
 import numpy as n
-import ndimage as im
 import config as c
 import numpy.ma as ma
 from concfunc import *

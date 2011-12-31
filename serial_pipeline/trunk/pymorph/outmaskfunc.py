@@ -25,7 +25,7 @@ def mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     y = n.reshape(n.arange(NXPTS * NYPTS),(NXPTS, NYPTS)) % NYPTS
     y = y.astype(n.float32)
     values = line_s.split()
-    mask_file = 'OEM_' + str(outimage)[:-5] + '.fits'
+    mask_file = 'OEM_' + c.fstring + '.fits'
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
     mag    = float(values[7]) #Magnitude

@@ -4,12 +4,12 @@ import sys
 import config as c
 import numpy as n
 import fileinput
-from cosmocal import *
+from cosmocal import cal 
 import datetime
 import MySQLdb as mysql
 #from utilities import WriteDb
 import traceback
-from flagfunc import *
+from flagfunc import GetFlag, isset
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
@@ -33,9 +33,9 @@ class WriteHtmlFunc:
         self.G            = G
         self.M            = M
         self.EXPTIME      = EXPTIME
-        self.write_params = write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
+        self.WriteParams = WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
 
-def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
+def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
 
     lanczosG = 7
     lanczos_coef = [0.99999999999980993, 676.5203681218851,\
@@ -67,7 +67,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     f_tpl = open(str(c.PYMORPH_PATH) + '/html/default.html', 'r')
     template = f_tpl.read()
     f_tpl.close()
-    outfile = open('R_' + str(cutimage)[:-4] + 'html','w')
+    outfile = open('R_' + c.fstring + '.html','w')
     ra1 = int(float(alpha_j) / 15.0)
     ra2 = int((float(alpha_j) / 15.0 - int(float(alpha_j) / 15.0))*60.0)
     ra3 = (((float(alpha_j) / 15.0 - int(float(alpha_j) / 15.0))*60.0) - ra2) * 60.0
@@ -117,8 +117,8 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
                 pass
         if NoImage:
             indexfile.writelines(['<a href="R_',\
-                                  str(cutimage)[:-5],'.html',\
-                                  '"> ', str(cutimage)[:-5],\
+                                  c.fstring,'.html',\
+                                  '"> ', c.fstring,\
                                   ' </a> <br>\n'])
         indexfile.writelines(['</BODY></HTML>\n'])
         indexfile.close()
@@ -246,7 +246,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
         else:
             BD = 'nan'
             BT = 'nan'
-    pngfile = 'P_' + str(cutimage)[:-4] + 'png'
+    pngfile = 'P_' + c.fstring + '.png'
     object = 1
     object_err = 1
     Neighbour_Sersic = ''
@@ -425,7 +425,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     error_mesg5 = ''
     error_mesg6 = ''
     if c.starthandle:
-        error_mesg6 = '<a href="R_' + str(cutimage)[:-5] + \
+        error_mesg6 = '<a href="R_' + c.fstring + \
 	              '_1.html"> Crashed </a>' 
     HitLimit = 1
 
@@ -575,7 +575,7 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
                     URL=pymorph.html"> \n'])
     outfile1.write('</HEAD> \n')
-    outfile = 'R_' + str(cutimage)[:-4] + 'html'
+    outfile = 'R_' + c.fstring + '.html'
     try:
         for line in open(outfile, 'r'):
             if(str(line) != '<html>'):
@@ -583,5 +583,5 @@ def write_params(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness
     except:
         pass
     outfile1.close()
-#write_params('I_EDCSNJ1216453-1201176.fits', 60.0, 60.0, 47.86, 188.6875, -12.7763, 0.67, 0.9887, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 1024)
+#WriteParams('I_EDCSNJ1216453-1201176.fits', 60.0, 60.0, 47.86, 188.6875, -12.7763, 0.67, 0.9887, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 1024)
 

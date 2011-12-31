@@ -4,7 +4,6 @@ import sys
 import pyfits
 import numpy as n
 import config as c
-import ndimage as im
 import convolve as conv
 
 
@@ -29,7 +28,7 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     thresh_area = c.thresh_area
     mask_reg = c.mask_reg
     values = line_s.split()
-    mask_file = 'EM_' + str(cutimage)[:-5] + '.fits'
+    mask_file = 'EM_' + c.fstring + '.fits'
     xcntr_o  = xcntr * 1.0 #x center of the object
     ycntr_o  = ycntr * 1.0 #y center of the object
     mag    = float(values[7]) #Magnitude
@@ -77,7 +76,6 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             pass
         hdu = pyfits.PrimaryHDU(tmp_mask.astype(n.float32))
         hdu.writeto("BMask.fits")
-        os.system("cp BMask.fits B.fits")
 #line = '1    193.378    158.284 214.8573569 +56.7789966      3555934     3804.634   8.8786   0.0012     36.075     1433.745 -54.4    1.668    19672    38.968  16  0.00'
 #ElliMaskFunc('n5585_lR.fits', 313, line, 0)
 

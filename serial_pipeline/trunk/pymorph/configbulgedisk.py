@@ -50,10 +50,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
     values = line_s.split()
-    outfile   = 'O_' + str(cutimage)[:-5] + '.fits'
-    mask_file = 'M_' + str(cutimage)[:-5] + '.fits'
-    config_file = 'G_' + str(cutimage)[:-5] + '.in' #Name of the GALFIT configuration file
-    constrain_file = str(cutimage)[:-5] + '.con'
+    outfile   = 'O_' + c.fstring + '.fits'
+    mask_file = 'M_' + c.fstring + '.fits'
+    config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
+    constrain_file = c.fstring + '.con'
     try:
 	c.center_constrain = c.center_constrain
     except:

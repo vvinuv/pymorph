@@ -2,8 +2,6 @@ import numpy as n
 import os
 import pyfits
 import convolve as conv
-#import scipy
-#import scipy.signal
 class clumpness:
 	"""The clumpness parameter and the algorithm used as follows
            1. The image is smoothed by a boxcar of width

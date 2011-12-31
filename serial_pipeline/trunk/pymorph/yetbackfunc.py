@@ -36,7 +36,7 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
     zmm[n.where(zmm > 0)] = 1
     return n.median(ma.masked_array(z, zmm).compressed())
 
-def FindYetSky(gimg, X0, Y0):
+def RunSegSex(gimg):
     try:
         SEx_GAIN = c.SEx_GAIN 
     except:
@@ -45,9 +45,6 @@ def FindYetSky(gimg, X0, Y0):
     SEx_FILTER_NAME = c.SEx_FILTER_NAME
     mag_zero = c.mag_zero 
     pymorph_path = c.PYMORPH_PATH
-    f = pyfits.open(gimg)
-    z = f[0].data
-    f.close()
     f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_seg.sex','r')
     template = f_tpl.read()
     f_tpl.close()
@@ -56,6 +53,12 @@ def FindYetSky(gimg, X0, Y0):
     f_sex.close()
     cmd = c.SEX_PATH + ' ' + gimg + ' -c default_seg.sex > /dev/null'
     os.system(cmd)
+   
+def FindYetSky(gimg, X0, Y0):
+    RunSegSex(gimg)
+    f = pyfits.open(gimg)
+    z = f[0].data
+    f.close()
     f = pyfits.open('seg.fits')
     zm = f[0].data
     f.close()

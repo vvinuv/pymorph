@@ -1,5 +1,4 @@
 import numpy as n
-import ndimage as im
 
 class gini:
 	"""gini coefficient"""

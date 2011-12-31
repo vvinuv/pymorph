@@ -1,0 +1,12 @@
+Tagged v2.9 is the final version before the major changes. In  the new update these are the major changes
+
+1. pymorph.py is broken into small functions and they are grouped into the module pymorphutils.py
+2. The pyraf dependency becomes optional now.
+3. In the absence of pyraf it generates the 1d profiles using FitEllipseManual function in pymorphutils.py
+4. ndimage depedency is removed completely
+5. Now the rotation of images is done using the function rotate in the rotate.py module. It is written based on the numerical reciepe.
+6. rotate_new.py becomes rotate_deprecated.py, _ni_support.py becomes _ni_support.py.deprecated
+7. asymfunc.py is modified based on the new rotate function. The old module is now asymfunc.py.deprecated. asymfunc.py.deprecated_test.py is nothing but the old module with two additional line to test it. run that using 'python asymfunc.py.deprecated_test.py'
+8. In plotfunc.py the magnitude difference in profiles are found using interpolation function. It is better than old method
+9. Some other modules are cleaned up.
+
