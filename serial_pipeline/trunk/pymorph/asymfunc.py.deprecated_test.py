@@ -2,7 +2,7 @@ import os
 import numpy as n	
 import numpy.ma as ma
 import pyfits
-from rotate_new import *
+from rotate_deprecated import *
 
 class asymmetry:
     """Finding Asymmetry parameter. The algorithm is as follows
@@ -254,6 +254,6 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     print Aabso, error_asym, ini_xcntr, ini_ycntr, nn, flag_out, abs_zsum, sh_sum, extraction_radius
     return Aabso, error_asym, ini_xcntr, ini_ycntr, nn, flag_out, abs_zsum, sh_sum, extraction_radius
 
-aaa = asymmetry('n5585_lR.fits','BMask.fits', 192.03,157.42,0.0,0.0, 50, 100.0, 1390.377,180.0, 1, 1000000)
+aaa = asymmetry('n5585_lR.fits','BMask.fits', 192.03,157.42,0.0,0.0, 50, 150.0, 1390.377,180.0, 1, 1000000)
 print aaa
 
