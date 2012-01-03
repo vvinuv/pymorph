@@ -1,16 +1,17 @@
-import pyfits,os
+import os
 import csv
 from os.path import exists
-import numpy as n
-import config as c
+import pyfits
+import numpy as np
 import numpy.ma as ma
-from concfunc import *
-from asymfunc import *
-from clumfunc import *
-from ginifunc_modi import *
-#from momentfunc import *
-from runsexfunc import *
-from flagfunc import *
+from concfunc import concentration
+from asymfunc import asymmetry
+from clumfunc import clumpness 
+from ginifunc_modi import gini
+from runsexfunc import RunSex
+from flagfunc import GetFlag
+from pymorphutils import WriteError
+import config as c
 
 class CasGm:
     """The class which will find CASGM parameters. The algorithm for each 
@@ -33,27 +34,28 @@ class CasGm:
         return
 
 def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg, pa, sky, skysig):
-    xcntr = xcntr #this is because python index statrs from 0
-    ycntr = ycntr
-#    cmd = 'ds9 ' + str(maskimage)
-#    os.system(cmd)
+    # following till END will find better center of image
     FoundNewCntr = 0
     if xcntr > 35.0 or ycntr > 35.0:
         dectThre = 18.0
     else:
 	dectThre = 12.0
     while FoundNewCntr == 0:
-	RunSex(c.datadir +cutimage, 'None', 'CaSsEx.cat', dectThre, dectThre, 1)
+	RunSex(c.datadir + cutimage, 'None', 'CaSsEx.cat', dectThre, \
+               dectThre, 1)
         for line in open('CaSsEx.cat', 'r'):
   	    try:
 	        values = line.split()
-	        if abs(float(values[1]) - xcntr) < 4.001 and abs(float(values[2]) - ycntr) < 4.001:
+	        if abs(float(values[1]) - xcntr) < 4.001 and \
+                   abs(float(values[2]) - ycntr) < 4.001:
                     xcntr = float(values[1]) - 1.0
                     ycntr = float(values[2]) - 1.0
 		    FoundNewCntr = 1
             except:
 	        pass
-	os.system('rm -f CaSsEx.cat CaSsEx.cat.sex')
+        for myfile in ['CaSsEx.cat', 'CaSsEx.cat.sex']:
+            if os.access(myfile, os.F_OK):
+                os.remove(myfile)
 	if dectThre < 2.0:
 	    dectThre -= 0.5
 	else:
@@ -62,34 +64,30 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 	    xcntr = xcntr
 	    ycntr = ycntr
             FoundNewCntr = 1
+    # END
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    f = pyfits.open(c.datadir +cutimage)
+    # open cutimage
+    f = pyfits.open(c.datadir + cutimage)
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):
         sky = header['sky']
     f.close()
-    z = n.swapaxes(z, 0, 1)
-#    print cutimage
-    nxpts = z.shape[0]
-    nypts = z.shape[1]
-    f_err = open('error.log', 'a')
     try:
         print "Initial background Center >>> (", back_ini_xcntr, \
                back_ini_ycntr, ")"
         casgmrun = 1
     except:
         casgmrun = 0
-        f_err.writelines(['Failed to find the background region!!!\n'])
-    f_err.close()
+        WriteError('Failed to find the background region!!!\n')
     z = z - sky
-    f=pyfits.open(maskimage)
+    f = pyfits.open(maskimage)
     mask = f[0].data
     f.close()
-    mask = n.swapaxes(mask, 0, 1)
     maskedgalaxy = ma.masked_array(z, mask)
-    z = ma.filled(maskedgalaxy, 0.0)
+    z = ma.filled(maskedgalaxy, 0.0) # filling 0 in mask regions
+
     ########################
     #   CONCENTRATION      #
     ########################
@@ -101,10 +99,12 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 	          'circular'
 	    ApErTuRe = 1
 	if ApErTuRe:
-            con=concentration(z, mask, xcntr, ycntr, nxpts, nypts, 0.0, 0.0, sky)
+            con = concentration(z, mask, xcntr, ycntr, nxpts, nypts, 0.0, \
+                                0.0, sky)
 	else:
-	    con=concentration(z, mask, xcntr, ycntr, nxpts, nypts, pa - 90.0, eg, sky)
-        extraction_radius=con.total_rad
+	    con = concentration(z, mask, xcntr, ycntr, nxpts, nypts, \
+                                pa - 90.0, eg, sky)
+        extraction_radius = con.total_rad
         r20 = con.r20
         r50 = con.r50
         r80 = con.r80
@@ -114,11 +114,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     if(extraction_radius == 9999):
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
     else:
-        sigma=0.25*extraction_radius/1.5
-
+        sigma = 0.25 * extraction_radius / 1.5 # The kernal size for 
+                                               # clumpiness
         print "R20 R50 R80 R90 Extraction Radius >>> ", str(r20)[:5], \
               str(r50)[:5], str(r80)[:5], str(r90)[:5], str(con.total_rad)[:5]
-#        print "CONCENTRATIN AND ERROR ", con.concen,con.error_con
         
         ########################
         #   ASYMMETRY          #
@@ -134,15 +133,20 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                                 r20, sky, angle, 1, 0)
             ABS_ZSUM_r20 = asy.image_asymm[6] * (r20 * r20) / \
                        (extraction_radius * extraction_radius * 1.0)
-#            asy_r20_zsum = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0,\
-#                                r50, r20, sky, angle, 0, ABS_ZSUM_r20) This was commented on sep13 as i forgot what this is
-            asy_r20_zsum = 0 # This line is added to compensate the above commenting of line. I have replaced the corresponding value to 0 at the line 239
+            # asy_r20_zsum = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, \
+            # 0, r50, r20, sky, angle, 0, ABS_ZSUM_r20) This was commented \
+            # on sep13 as i forgot what this is
+            asy_r20_zsum = 0 # This line is added to compensate the above
+                             # commenting of line. I have replaced the 
+                             # corresponding value to 0 at the line 239
             back_asy = asymmetry(cutimage, maskimage, back_ini_xcntr, \
-                                back_ini_ycntr, 0, 0, r50, \
-                                back_extraction_radius, \
-                                sky, angle, 0, ABS_ZSUM)
+                                 back_ini_ycntr, 0, 0, r50, \
+                                 back_extraction_radius, \
+                                 sky, angle, 0, ABS_ZSUM)
+            # asymmetry is not converging w. r. t. the center
             if asy.image_asymm[4] > 20 or back_asy.image_asymm[4] > 20:
                 c.Flag += 2**GetFlag('ASYM_NOT_CONV')
+            # the extraction radius is larger than the image size
             if asy.image_asymm[5] == 1:
                 c.Flag += 2**GetFlag('ASYM_OUT_FRAME')
             try:
@@ -151,11 +155,11 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                             back_extraction_radius, sky, angle, 0, ABS_ZSUM)
                 ASY = asy.image_asymm[0] - (back_asy.image_asymm[0] +\
                                       back_asy1.image_asymm[0]) / 2.0
-                ASY_ERROR = 2 * n.sqrt(asy.image_asymm[1]**2 + \
-                       back_asy.image_asymm[1]**2 + back_asy1.image_asymm[1]**2)
+                ASY_ERROR = 2 * np.sqrt(asy.image_asymm[1]**2 + \
+                     back_asy.image_asymm[1]**2 + back_asy1.image_asymm[1]**2)
             except:
                 ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
-                ASY_ERROR = 2 * n.sqrt(asy.image_asymm[1]**2 \
+                ASY_ERROR = 2 * np.sqrt(asy.image_asymm[1]**2 \
                             + back_asy.image_asymm[1]**2)
 #		print asy.image_asymm[0] ,  back_asy.image_asymm[0]
             try:
@@ -167,7 +171,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 #                   back_asy.image_asymm[0], asy_r20.image_asymm[0],\
 #                   asy_r20_zsum.image_asymm[0]
         except:
-            ASY = ASY_ERROR = 9999 
+            ASY, ASY_ERROR = 9999, 9999
         ########################
         #   CLUMPNESS          #
         ########################
@@ -175,10 +179,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             sigma = int(sigma)
             if(sigma / 2.0 == int(sigma / 2.0)):
                 sigma = sigma + 1.0
-            clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 0, 0, \
-                              extraction_radius, sigma, sky, 1)
+            clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 0, \
+                              0, extraction_radius, sigma, sky, 1)
             S1 = 10.0 * clump.image_clumpness[0] / clump.image_clumpness[2]
-            error_S1 = n.sqrt((clump.image_clumpness[1] + \
+            error_S1 = np.sqrt((clump.image_clumpness[1] + \
                              clump.image_clumpness[3] / \
                              clump.image_clumpness[4]) * S1**2.0)
             if(sigma > back_extraction_radius):
@@ -186,7 +190,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             back_clump = clumpness(z, back_ini_xcntr, back_ini_ycntr, 0, 0,\
                                    back_extraction_radius, sigma, sky, 0)
             S2 = 10.0 * back_clump.image_clumpness[0] / clump.image_clumpness[2]
-            error_S2 = n.sqrt((back_clump.image_clumpness[1] \
+            error_S2 = np.sqrt((back_clump.image_clumpness[1] \
                             + clump.image_clumpness[3] \
                             / clump.image_clumpness[4]) * S2**2.0)
             try:
@@ -194,60 +198,63 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                               0, 0, back_extraction_radius, sigma, sky, 0)
                 S3 = 10.0 * back_clump1.image_clumpness[0] / \
                      clump.image_clumpness[2]
-                error_S3 = n.sqrt((back_clump1.image_clumpness[1] + \
+                error_S3 = np.sqrt((back_clump1.image_clumpness[1] + \
                            clump.image_clumpness[3]  / \
                            clump.image_clumpness[4]) * S3**2.0)
                 S = S1 - (S2 +S3) / 2.0
-                ERROR_SMOO = n.sqrt(error_S1**2.0 + error_S2**2.0 + error_S3**2.0)
+                ERROR_SMOO = np.sqrt(error_S1**2.0 + error_S2**2.0 + \
+                             error_S3**2.0)
             except:
                 S = S1 - S2
-                ERROR_SMOO = n.sqrt(error_S1**2.0 + error_S2**2.0)
+                ERROR_SMOO = np.sqrt(error_S1**2.0 + error_S2**2.0)
             try:
                 ERROR_SMOO = round(ERROR_SMOO, 4)
             except:
                 ERROR_SMOO = 9999
 #            print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
         except:
-             S = ERROR_SMOO = 9999
+             S, ERROR_SMOO = 9999, 9999
 
-        ########################
-        #   GINI COEFFICIENT   #
-        ########################
+        ###########################
+        #   GINI COEFFICIENT  M20 #
+        ###########################
 
-        extraction_radius = con.total_rad
-#        print 'sky sigma ', skysig
-        gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, extraction_radius, sky, skysig)
-#        gini_coef = gin.gini_coef
+        extraction_radius = con.total_rad # ext. rad was over riden by asym.
+        gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, \
+                   extraction_radius, sky, skysig)
 	gini_coef = gin.segmentation
-#        print "GINI COEFFI ",gini_coef
-#        for myfile in ['segmentation.fits']:
-#            if os.access(myfile,os.F_OK):
-#                os.remove(myfile)
+        # for myfile in ['segmentation.fits']:
+        #     if os.access(myfile,os.F_OK):
+        #         os.remove(myfile)
         # Write Model galaxy image
-#        hdu = pyfits.PrimaryHDU(gin.segmentation.astype(Float32))
-#        hdu.writeto('segmentation.fits')
-
-        ########################
-        #   MOMENT CALCULATION #
-        ########################
-#        mo=moment(gin.segmentation, xcntr, ycntr)
-#        M=mo.moment_of_light[0]
-#        print "MOMENT ",M
-        to_remove = len(c.rootname) + 2
+        # hdu = pyfits.PrimaryHDU(gin.segmentation.astype(Float32))
+        # hdu.writeto('segmentation.fits')
+        
+        # Writing all the casgm parameters to agm_result_with_radius.csv
         if exists("agm_result_with_radius.csv"):
             pass
         else:
             f_tmp = open("agm_result_with_radius.csv", "ab")
             tmp_writer = csv.writer(f_tmp)
-            tmp_ParamToWrite = ['gal_id','C','C_err','A','A_err','A_flag','image_A','back_A','A_20','A_20_with_zsum','S','S_err','r20','r50','r80','r90','extraction_radius','G','G_res','G80','G50','G20','M','M_res','M80','M50','M20']
+            tmp_ParamToWrite = ['gal_id','C','C_err','A','A_err','A_flag', \
+                                'image_A','back_A','A_20','A_20_with_zsum', \
+                                'S','S_err','r20','r50','r80','r90', \
+                                'extraction_radius','G','G_res','G80', \
+                                'G50','G20','M','M_res','M80','M50','M20']
             tmp_writer.writerow(tmp_ParamToWrite)
-#            f_tmp.writelines(['gal_id', '\t', 'C', '\t','C_err', '\t', 'A', '\t', 'A_err', '\t', 'A_flag', '\t', 'image_A', '\t', 'back_A', '\t', 'A_20', '\t', 'A_20_with_zsum', '\t', 'S', '\t', 'S_err', '\t', 'r20', '\t', 'r50', '\t', 'r80', '\t', 'r90', '\t','extraction_radius', '\t', 'G', '\t', 'G_res', '\t', 'G80', '\t', 'G50', '\t', 'G20', '\t', 'M', '\t', 'M_res', '\t', 'M80', '\t', 'M50', '\t', 'M20\n'])
             f_tmp.close()
         f_tmp = open("agm_result_with_radius.csv", "ab")
         tmp_writer = csv.writer(f_tmp)
-        tmp_ParamToWrite = [str(cutimage)[to_remove:-5], str(con.concen), str(con.error_con), str(ASY), str(ASY_ERROR), str(asy.image_asymm[5]), str(asy.image_asymm[0]), str(back_asy.image_asymm[0]), str(asy_r20.image_asymm[0]), str(0.0), str(S), str(ERROR_SMOO), str(con.r20), str(con.r50), str(con.r80), str(con.r90), str(extraction_radius), str(gini_coef[0]), str(gini_coef[1]), str(gini_coef[2]), str(gini_coef[3]), str(gini_coef[4]), str(gini_coef[5]), str(gini_coef[6]), str(gini_coef[7]), str(gini_coef[8]), str(gini_coef[9])]
+        tmp_ParamToWrite = [c.fstring, con.concen, con.error_con, \
+                            ASY, ASY_ERROR, asy.image_asymm[5], \
+                            asy.image_asymm[0], back_asy.image_asymm[0], \
+                            asy_r20.image_asymm[0], 0.0, S, ERROR_SMOO, \
+                            con.r20, con.r50, con.r80, con.r90, \
+                            extraction_radius, gini_coef[0], gini_coef[1],\
+                            gini_coef[2], gini_coef[3], gini_coef[4], \
+                            gini_coef[5], gini_coef[6], gini_coef[7], \
+                            gini_coef[8], gini_coef[9]]
         tmp_writer.writerow(tmp_ParamToWrite)
-#        f_tmp.writelines([str(cutimage)[to_remove:-5], '\t', str(con.concen), '\t', str(con.error_con), '\t', str(ASY), '\t', str(ASY_ERROR), '\t',str(asy.image_asymm[5]), '\t',str(asy.image_asymm[0]), '\t',str(back_asy.image_asymm[0]), '\t',str(asy_r20.image_asymm[0]), '\t',str(asy_r20_zsum.image_asymm[0]), '\t', str(S), '\t', str(ERROR_SMOO), '\t', str(con.r20), '\t', str(con.r50), '\t', str(con.r80), '\t', str(con.r90), '\t', str(extraction_radius), '\t', str(gini_coef[0]), '\t', str(gini_coef[1]), '\t', str(gini_coef[2]), '\t', str(gini_coef[3]), '\t', str(gini_coef[4]), '\t', str(gini_coef[5]), '\t', str(gini_coef[6]), '\t', str(gini_coef[7]), '\t', str(gini_coef[8]), '\t', str(gini_coef[9]), '\n'])
         f_tmp.close()
         if str(con.concen) in ('nan', 'inf', '-inf', '-nan'):
             con.concen = 9999
@@ -281,6 +288,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             M20_coef = 9999
         else:
             M20_coef = float(gini_coef[5])
-        return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, Gini_Coef, M20_coef
+        return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, \
+               Gini_Coef, M20_coef
 
 #CasGm('n5585_lR.fits', 'BMask.fits', 192.03, 157.42, 40.0, 40.0, 0.0, 0.0, 0.0)
