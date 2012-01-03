@@ -99,12 +99,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 	          'circular'
 	    ApErTuRe = 1
 	if ApErTuRe:
-            con = concentration(z, mask, xcntr, ycntr, nxpts, nypts, 0.0, \
-                                0.0, sky)
+            con = concentration(z, mask, xcntr, ycntr, 0.0, 0.0, sky)
 	else:
-	    con = concentration(z, mask, xcntr, ycntr, nxpts, nypts, \
-                                pa - 90.0, eg, sky)
-        extraction_radius = con.total_rad
+	    con = concentration(z, mask, xcntr, ycntr, pa - 90.0, eg, sky)
+        extraction_radius = con.TotRad
         r20 = con.r20
         r50 = con.r50
         r80 = con.r80
@@ -117,7 +115,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         sigma = 0.25 * extraction_radius / 1.5 # The kernal size for 
                                                # clumpiness
         print "R20 R50 R80 R90 Extraction Radius >>> ", str(r20)[:5], \
-              str(r50)[:5], str(r80)[:5], str(r90)[:5], str(con.total_rad)[:5]
+              str(r50)[:5], str(r80)[:5], str(r90)[:5], str(con.TotRad)[:5]
         
         ########################
         #   ASYMMETRY          #
@@ -219,7 +217,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         #   GINI COEFFICIENT  M20 #
         ###########################
 
-        extraction_radius = con.total_rad # ext. rad was over riden by asym.
+        extraction_radius = con.TotRad # ext. rad was over riden by asym.
         gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, \
                    extraction_radius, sky, skysig)
 	gini_coef = gin.segmentation
