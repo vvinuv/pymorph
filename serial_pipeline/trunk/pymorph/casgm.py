@@ -175,30 +175,30 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         ########################
         try:
             sigma = int(sigma)
-            if(sigma / 2.0 == int(sigma / 2.0)):
+            if sigma / 2.0 == int(sigma / 2.0):
                 sigma = sigma + 1.0
             clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 0, \
                               0, extraction_radius, sigma, sky, 1)
-            S1 = 10.0 * clump.image_clumpness[0] / clump.image_clumpness[2]
-            error_S1 = np.sqrt((clump.image_clumpness[1] + \
-                             clump.image_clumpness[3] / \
-                             clump.image_clumpness[4]) * S1**2.0)
-            if(sigma > back_extraction_radius):
+            S1 = 10.0 * clump.clumpness[0] / clump.clumpness[2]
+            error_S1 = np.sqrt((clump.clumpness[1] + \
+                             clump.clumpness[3] / \
+                             clump.clumpness[4]) * S1**2.0)
+            if sigma > back_extraction_radius:
                 back_extraction_radius = sigma + 2.0
             back_clump = clumpness(z, back_ini_xcntr, back_ini_ycntr, 0, 0,\
                                    back_extraction_radius, sigma, sky, 0)
-            S2 = 10.0 * back_clump.image_clumpness[0] / clump.image_clumpness[2]
-            error_S2 = np.sqrt((back_clump.image_clumpness[1] \
-                            + clump.image_clumpness[3] \
-                            / clump.image_clumpness[4]) * S2**2.0)
+            S2 = 10.0 * back_clump.clumpness[0] / clump.clumpness[2]
+            error_S2 = np.sqrt((back_clump.clumpness[1] \
+                            + clump.clumpness[3] \
+                            / clump.clumpness[4]) * S2**2.0)
             try:
                 back_clump1 = clumpness(z, back_ini_xcntr1, back_ini_ycntr1, \
                               0, 0, back_extraction_radius, sigma, sky, 0)
-                S3 = 10.0 * back_clump1.image_clumpness[0] / \
-                     clump.image_clumpness[2]
-                error_S3 = np.sqrt((back_clump1.image_clumpness[1] + \
-                           clump.image_clumpness[3]  / \
-                           clump.image_clumpness[4]) * S3**2.0)
+                S3 = 10.0 * back_clump1.clumpness[0] / \
+                     clump.clumpness[2]
+                error_S3 = np.sqrt((back_clump1.clumpness[1] + \
+                           clump.clumpness[3]  / \
+                           clump.clumpness[4]) * S3**2.0)
                 S = S1 - (S2 +S3) / 2.0
                 ERROR_SMOO = np.sqrt(error_S1**2.0 + error_S2**2.0 + \
                              error_S3**2.0)

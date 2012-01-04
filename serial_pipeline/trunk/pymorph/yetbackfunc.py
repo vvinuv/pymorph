@@ -3,7 +3,7 @@ import os
 import numpy as n
 import pylab as p
 import pyfits
-import convolve as conv
+import pymconvolve
 import numpy.ma as ma
 
 def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
@@ -77,7 +77,8 @@ def FindYetSky(gimg, X0, Y0):
             hr = n.float(v_s[9])
             sky = n.float(v_s[10])
             if n.abs(X0 - xcntr) < 5.0 and n.abs(Y0 - ycntr) < 5.0:
-               zm = conv.boxcar(zm, (3, 3), mode='nearest')
+               boxcar = np.reshape(np.ones(3 * 3), (3, 3))
+               zm = pymconvolve.Convolve(zm, boxcar)
                zm[n.where(zm > 0)] = 1
                SkyQua = []
                for ii in n.arange(1, 5): 

@@ -1,7 +1,7 @@
 import os, sys, pyfits
 import numpy as n
 import config as c
-import convolve as conv
+import pymconvolve
 
 class MaskFunc:
     """The class for making mask for GALFIT. It uses the masking conditions 
@@ -71,7 +71,8 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
         tmp_mask[n.where(tmp_mask > 0)] = 0
     elif c.NormMask:
         pass
-    tmp_mask = conv.boxcar(tmp_mask, (3, 3), mode='nearest')
+    boxcar = np.reshape(np.ones(3 * 3), (3, 3))
+    tmp_mask = pymconvolve.Convolve(tmp_mask, boxcar)
     tmp_mask[n.where(tmp_mask > 0)] = 1
     hdu = pyfits.PrimaryHDU(tmp_mask.astype(n.float32))
     hdu.writeto(mask_file)

@@ -4,7 +4,7 @@ import sys
 import pyfits
 import numpy as n
 import config as c
-import convolve as conv
+import pymconvolve 
 
 
 class ElliMaskFunc:
@@ -64,7 +64,8 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
                 tmp_mask[n.where(tmp_mask == id_n)] = 0
         except:
             pass
-    tmp_mask = conv.boxcar(tmp_mask, (3, 3), mode='nearest')
+    boxcar = np.reshape(np.ones(3 * 3), (3, 3))
+    tmp_mask = pymconvolve.Convolve(tmp_mask, boxcar)
     tmp_mask[n.where(tmp_mask > 0)] = 1
     if(galflag):
         hdu = pyfits.PrimaryHDU(tmp_mask.astype(n.float32))

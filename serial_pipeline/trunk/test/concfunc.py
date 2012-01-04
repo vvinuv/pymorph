@@ -28,21 +28,15 @@ class concentration:
 
        7. Compute concentration parameter as 5*log(r(80%)/r(20%))         
     """        
-    def __init__(self, z, mask, xcntr, ycntr, nxpts, nypts, pa, eg, background):
+    def __init__(self, z, mask, xcntr, ycntr, pa, eg, sky):
         self.z              = z
         self.mask           = mask
         self.xcntr          = xcntr
         self.ycntr          = ycntr
-        self.nxpts          = nxpts
-        self.nypts          = nypts
-        self.eta_radius     = 2.0
         self.pa             = pa
         self.eg             = eg
         self.oversamp       = 10.
-        self.incr           = 1.0
-        self.incrl          = 1.0
-        self.background     = background
-        self.oversamp       = self.oversamp * 1.0
+        self.sky     = sky
         xmin = np.floor(self.xcntr - 10)
         ymin = np.floor(self.ycntr - 10)
         xmax = np.floor(self.xcntr + 10)
@@ -84,12 +78,14 @@ class concentration:
             if total:
                 con = (r < rbins)
                 TotI = marray[con].sum()
-                return TotI
+                TotN = ma.count(marray[con]) / (oversamp * oversamp * 1.0)
+                return TotI, TotN
             else:
                 AvgIAtR = []
                 AvgIInR = []
                 IInRArr = []
                 RArr = []
+                NInRArr = []
                 letbreak = 0 # this will be used to break the loop if eta is 
                              # less than 0.2 for 20 ri's
                 for ri in rbins:
@@ -107,6 +103,7 @@ class concentration:
                         AvgIInR.append(IInR / NInR)
                         IInRArr.append(IInR)
                         RArr.append(ri)
+                        NInRArr.append(NInR)
                         if IAtR * NInR / (NAtR * IInR) < 0.2:
                             letbreak += 1
                     if letbreak > 20:
@@ -115,34 +112,38 @@ class concentration:
                 AvgIInR = np.asarray(AvgIInR)
                 IInRArr = np.asarray(IInRArr)
                 RArr = np.asarray(RArr) 
-                return AvgIAtR, AvgIInR, IInRArr, RArr
+                NInRArr = np.asarray(NInRArr) / (oversamp * oversamp * 1.0)
+                return AvgIAtR, AvgIInR, IInRArr, RArr, NInRArr
         Rbin1 = np.linspace(0.2, 10, num= 9.8 * self.oversamp) # finner bins 
                                                                # at small R
-        AvgIAtR, AvgIInR, IInRArr, RArr = ReturnIs(ZoomZM, 9., 9., Rbin1, \
-                                                   self.oversamp)
+        AvgIAtR, AvgIInR, IInRArr, RArr, NInRArr = ReturnIs(ZoomZM, 9., 9., \
+                                                Rbin1, self.oversamp)
         Rbin2 = np.arange(10, np.max(ZM.shape))
-        AvgIAtR1, AvgIInR1, IInRArr1, RArr1 = ReturnIs(ZM, self.xcntr, \
-                                              self.ycntr, Rbin2, 1)
+        AvgIAtR1, AvgIInR1, IInRArr1, RArr1, NInRArr1 = ReturnIs(ZM, \
+                                           self.xcntr, self.ycntr, Rbin2, 1)
         AvgIAtR = np.concatenate((AvgIAtR, AvgIAtR1))
         AvgIInR = np.concatenate((AvgIInR, AvgIInR1))
         IInRArr = np.concatenate((IInRArr, IInRArr1))
         RArr = np.concatenate((RArr, RArr1)) 
+        NInRArr = np.concatenate((NInRArr, NInRArr1))
         Eta = AvgIAtR / AvgIInR
         polz = np.poly1d(np.polyfit(RArr, Eta - 0.2, 3))
         print polz.r
         EtaRad = RArr[np.argmin(np.abs(Eta - 0.2))]
         self.TotRad = EtaRad * 1.5
         if self.TotRad < 10:
-            TotI = ReturnIs(ZoomZM, 9.0, 9.0, self.TotRad, 1, total=1)
+            TotI, TotN = ReturnIs(ZoomZM, 9.0, 9.0, self.TotRad, 1, total=1)
         else:
-            TotI = ReturnIs(ZM, self.xcntr, self.ycntr, self.TotRad, 1, total=1)
+            TotI, TotN = ReturnIs(ZM, self.xcntr, self.ycntr, \
+                                  self.TotRad, 1, total=1)
         print RArr[-1], IInRArr[-1], TotI, EtaRad, self.TotRad
 
         FracI = IInRArr / TotI
         print RArr.shape, FracI.shape
         # IInRe = np.sqrt(IInR)
         # TotI = np.sqrt(TotI)
-        FracIe = FracI * np.sqrt((1 / IInRArr) + (1 / TotI))
+        FracIe = FracI * np.sqrt(((IInRArr + self.sky * NInRArr) / \
+                 IInRArr**2.) + ((TotI + self.sky * TotN) / TotI**2.))
         pylab.plot(RArr, FracI)
         pylab.show()
 
@@ -159,14 +160,14 @@ class concentration:
         self.r50e = (self.r50 / 0.5) * FracIe[np.argmin(np.abs(FracI - 0.5))]
         self.r80e = (self.r80 / 0.8) * FracIe[np.argmin(np.abs(FracI - 0.8))]
         self.r90e = (self.r90 / 0.9) * FracIe[np.argmin(np.abs(FracI - 0.9))]
-        # print self.r20, self.r20e, self.r50, self.r50e, self.r80, \
-        #  self.r80e, self.r90, self.r90e
+        print self.r20, self.r20e, self.r50, self.r50e, self.r80, \
+         self.r80e, self.r90, self.r90e
         rat2080 = self.r80 / self.r20
         self.concen = 5 * np.log10(rat2080)
         rat2080e = rat2080 * np.sqrt((self.r20e / self.r20)**2. + \
                    (self.r80e / self.r80)**2.)
         self.error_con = 5 * 0.434 * rat2080e / rat2080
-        # print self.concen, self.error_con
+        print self.concen, self.error_con
 f = pyfits.open('n5585_lR.fits')
 z = f[0].data
 f.close() 
