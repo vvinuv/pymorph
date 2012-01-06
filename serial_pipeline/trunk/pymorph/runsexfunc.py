@@ -12,7 +12,7 @@ class RunSex:
 	self.detect_thr = detect_thr
 	self.ana_thr = ana_thr
         self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas)
-        print self.whtimage
+        # print self.whtimage
 
 def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
     if sex_cata == 'None':

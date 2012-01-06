@@ -112,7 +112,7 @@ def main():
     if len(ComP) == 0:
         print "No model specified. Asuming bulge+disk model"
         ComP = ['bulge', 'disk']
-
+    # Writing csvn header
     if exists('result.csv'):
         pass
     else:
@@ -556,9 +556,9 @@ def main():
                             ut.WriteError('Sky estimation failed\n')
                         # Estimate CASGM  
                         if(c.cas):
-                            print 'one ', 1
                             C, C_err, A, A_err, S, S_err, G, M = \
                             ut.HandleCasgm(cutimage, cut_xcntr, cut_ycntr, \
+                                           alpha_j, delta_j, z,
                                            SizeX, SizeY, line_s, bxcntr, \
                                            bycntr)
                         else:

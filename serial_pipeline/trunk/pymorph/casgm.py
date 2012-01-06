@@ -121,7 +121,6 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
         #   ASYMMETRY          #
         ########################
         try:
-            print 1
             asy = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0, r50, \
                   extraction_radius, sky, angle, 1, 0)
             extraction_radius = asy.image_asymm[8]
@@ -169,7 +168,6 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
 #                   ASY, ASY_ERROR, asy.image_asymm[5], asy.image_asymm[0], \
 #                   back_asy.image_asymm[0], asy_r20.image_asymm[0],\
 #                   asy_r20_zsum.image_asymm[0]
-            print 2
         except:
             ASY, ASY_ERROR = 9999, 9999
         ########################

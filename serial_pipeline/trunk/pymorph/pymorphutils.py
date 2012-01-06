@@ -200,24 +200,29 @@ def CrashHandlerToRemove(gal_id):
 
 def PyMorphOutputParams():
     """Returns the output parameters from pymorph"""
-    params = ['Name_0', 'ra__1', 'dec__2', 'z_3', 'mag_auto_4',\
-             'magerr_auto_5', 'Ie_6', 'Ie_err_7', 're_pix_8',\
-             're_err_pix_9', 're_kpc_10', 're_err_kpc_11', \
-             'n_12', 'n_err_13', 'AvgIe_14', 'AvgIe_err_15', \
-             'eb_16', 'eb_err_17', 'bboxy_18', 'bboxy_err_19',\
-             'Id_20', 'Id_err_21', 'rd_pix_22', \
-             'rd_err_pix_23', 'rd_kpc_24', 'rd_err_kpc_25', \
-             'ed_26', 'ed_err_27', 'dboxy_28', 'dboxy_err_29',\
-             'BD_30', 'BT_31', 'Point_32', 'Point_err_33', \
-             'Pfwhm_34', 'Pfwhm_kpc_35', 'chi2nu_36', \
-             'Goodness_37', 'run_38', 'C_39', 'C_err_40',\
-             'A_41', 'A_err_42', 'S_43', 'S_err_44', 'G_45', \
-             'M_46', 'SexSky_47', 'GalSky_48', 'dis_modu_49', \
-             'distance_50', 'fit_51', 'flag_52', \
-             'HalfRadius_53', 'BarMag_54', 'BarMagErr_55', \
-             'BarRePix_56', 'BarRePixErr_57', 'BarReKpc_58',\
-             'BarReKpcErr_59', 'BarIndex_60', 'BarIndexErr_61',\
-             'BarEll_62', 'BarEllErr_63', 'BarBoxy_64', 'Comments_65']
+    if c.decompose:
+        params = ['Name_0', 'ra_1', 'dec_2', 'z_3', 'mag_auto_4',\
+                  'magerr_auto_5', 'Ie_6', 'Ie_err_7', 're_pix_8',\
+                  're_err_pix_9', 're_kpc_10', 're_err_kpc_11', \
+                  'n_12', 'n_err_13', 'AvgIe_14', 'AvgIe_err_15', \
+                  'eb_16', 'eb_err_17', 'bboxy_18', 'bboxy_err_19',\
+                  'Id_20', 'Id_err_21', 'rd_pix_22', \
+                  'rd_err_pix_23', 'rd_kpc_24', 'rd_err_kpc_25', \
+                  'ed_26', 'ed_err_27', 'dboxy_28', 'dboxy_err_29',\
+                  'BD_30', 'BT_31', 'Point_32', 'Point_err_33', \
+                  'Pfwhm_34', 'Pfwhm_kpc_35', 'chi2nu_36', \
+                  'Goodness_37', 'run_38', 'C_39', 'C_err_40',\
+                  'A_41', 'A_err_42', 'S_43', 'S_err_44', 'G_45', \
+                  'M_46', 'SexSky_47', 'GalSky_48', 'dis_modu_49', \
+                  'distance_50', 'fit_51', 'flag_52', \
+                  'HalfRadius_53', 'BarMag_54', 'BarMagErr_55', \
+                  'BarRePix_56', 'BarRePixErr_57', 'BarReKpc_58',\
+                  'BarReKpcErr_59', 'BarIndex_60', 'BarIndexErr_61',\
+                  'BarEll_62', 'BarEllErr_63', 'BarBoxy_64', 'Comments_65']
+    else:
+        params = ['Name_0', 'ra_1', 'dec_2', 'z_3', 'mag_auto_4', \
+                  'magerr_auto_5', 'C_6', 'C_err_7', 'A_8', 'A_err_9', \
+                  'S_10', 'S_err_11', 'G_12', 'M_13', 'Flag_14', 'HalfRad_15']
     return params
 
 def ReadGalfitConfig(cfile):
@@ -600,7 +605,7 @@ def HandleCASGMBack(cutimage, cut_xcntr, cut_ycntr, SizeX, SizeY, \
         return 9999, 9999
 
 
-def HandleCasgm(cutimage, xcntr, ycntr, SizeX, SizeY, line_s, bxcntr, bycntr):
+def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY, line_s, bxcntr, bycntr):
     """Run casgm module and its associated functions"""
     #Finding blank sky
     mask_file = 'EM_' + c.fstring + '.fits'
@@ -627,7 +632,7 @@ def HandleCasgm(cutimage, xcntr, ycntr, SizeX, SizeY, line_s, bxcntr, bycntr):
             f_res = open("result.csv", "ab")
             writer = csv.writer(f_res)
             GalId = c.fstring
-            writer.writerow([GalId, alpha_j, delta_j, z, c.SexMagAuto, \
+            writer.writerow([GalId, alpha_j, delta_j, redshift, c.SexMagAuto, \
                              c.SexMagAutoErr, C, C_err, A, A_err, S, \
                              S_err, G, M, c.Flag, c.SexHalfRad])
             f_res.close()
@@ -637,14 +642,3 @@ def HandleCasgm(cutimage, xcntr, ycntr, SizeX, SizeY, line_s, bxcntr, bycntr):
         WriteError('The CASGM module failed\n')
         c.Flag += 2**GetFlag('CASGM_FAIL')
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
-
-
-
-
-
-
-
-
-
-
-

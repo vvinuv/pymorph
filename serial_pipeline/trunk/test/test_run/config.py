@@ -80,7 +80,7 @@ angle = 180.0
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
 galcut = True                        #True if we provide cutouts
-decompose = False
+decompose = True
 detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
@@ -100,7 +100,8 @@ fitting = [1, 1, 0]                    # = 0, Fix params at SExtractor value
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
 PYMORPH_PATH = '/home/vinu/vinucodes/serial_pipeline/trunk/pymorph'
-galfitv = '3.0.2'
+#galfitv = '3.0.2'
+galfitv = '2.0'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 1.9                          #< chi2sq
