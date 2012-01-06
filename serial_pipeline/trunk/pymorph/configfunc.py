@@ -1,10 +1,10 @@
 import os
 import sys
 import pyfits
-import config as c
 from os.path import exists
-from numpy import log10
-from flagfunc import *
+import numpy as np
+from flagfunc import GetFlag, isset
+import config as c
 
 class ConfigFunc:
     """The class making configuration file for GALFIT. The configuration file 
@@ -27,7 +27,6 @@ class ConfigFunc:
 		
 
 def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
-    reload(c)
     imagefile = c.imagefile
     threshold = c.threshold
     thresh_area = c.thresh_area
@@ -174,17 +173,28 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
         f.writelines([' 4) ', str(radius), ' 1		# R_e [Pixels]\n'])
         f.writelines([' 5) 4.0 ', str(int(not c.devauc)) ,\
                       '		#Sersic exponent (deVauc=4, expdisk=1)\n'])
-        f.writelines([' 8) ', str(axis_rat), ' 1	# axis ratio (b/a)\n'])
-        f.writelines([' 9) ', str(pos_ang), ' 1		# position angle (PA)',\
-                      '[Degrees: Up=0, Left=90]\n'])
-        if c.bdbox or c.bbox:
-            f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
-                      'boxiness (> 0)\n'])
-        else:
-            f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
-	              'boxiness (> 0)\n'])
-        f.writelines([' Z) 0 			# output image',\
+        if np.float(c.galfitv.split('.')[0]) >= 3.0:
+            f.writelines([' 9) ', str(axis_rat), ' 1		', \
+                          '# axis ratio (b/a)\n'])
+            f.writelines([' 10) ', str(pos_ang), ' 1		',\
+                          '# position angle (PA)',\
+                          '[Degrees: Up=0, Left=90]\n'])
+            f.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
+        else:
+            f.writelines([' 8) ', str(axis_rat), ' 1		',\
+                          '# axis ratio (b/a)\n'])
+            f.writelines([' 9) ', str(pos_ang), ' 1		',\
+                          '# position angle (PA)',\
+                          '[Degrees: Up=0, Left=90]\n'])
+            if c.bdbox or c.bbox:
+                f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
+                              'boxiness (> 0)\n'])
+            else:
+                f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
+	                      'boxiness (> 0)\n'])
+            f.writelines([' Z) 0 			# output image',\
+                          ' (see above)\n\n\n']) 
         c.Flag += 2**GetFlag('FIT_BULGE')
     if 'disk' in ComP:
         f.writelines(['# Exponential function\n\n'])
@@ -194,20 +204,31 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                       ' position x, y [pixel]\n'])
         f.writelines([' 3) ', str(mag), ' 1     	# total magnitude\n'])
         f.writelines([' 4) ', str(radius), ' 1 		# R_e [Pixels]\n'])
-        f.writelines([' 8) ', str(axis_rat), ' 1     # axis ratio (b/a)\n'])
-        f.writelines([' 9) ', str(pos_ang), ' 1         	# position '\
-                      'angle(PA) [Degrees: Up=0, Left=90]\n'])
-        if c.bdbox or c.dbox:
-            f.writelines(['10) 0.0 1         	# diskiness (< 0) or '\
-                      'boxiness (> 0)\n']) 
+        if np.float(c.galfitv.split('.')[0]) >= 3.0:
+            f.writelines([' 9) ', str(axis_rat), ' 1		', \
+                          '# axis ratio (b/a)\n'])
+            f.writelines([' 10) ', str(pos_ang), ' 1		',\
+                          '# position angle (PA)',\
+                          '[Degrees: Up=0, Left=90]\n'])
+            f.writelines([' Z) 0 			# output image',\
+                      ' (see above)\n\n\n']) 
         else:
-            f.writelines(['10) 0.0 0            # diskiness (< 0) or '\
-	              'boxiness (> 0)\n'])
-        f.writelines([' Z) 0             	# output image '\
-                      '(see above)\n\n\n'])
+            f.writelines([' 8) ', str(axis_rat), ' 1		',\
+                          '# axis ratio (b/a)\n'])
+            f.writelines([' 9) ', str(pos_ang), ' 1		',\
+                          '# position angle (PA)',\
+                          '[Degrees: Up=0, Left=90]\n'])
+            if c.bdbox or c.bbox:
+                f.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
+                              'boxiness (> 0)\n'])
+            else:
+                f.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
+	                      'boxiness (> 0)\n'])
+            f.writelines([' Z) 0 			# output image',\
+                          ' (see above)\n\n\n']) 
         c.Flag += 2**GetFlag('FIT_DISK')
 #    if 'point' in ComP:
-#        gmag = mag + 2.5 * log10(2.0)
+#        gmag = mag + 2.5 * np.log10(2.0)
 #        f.writelines(['# Gaussian function\n\n'])
 #        f.writelines([' 0) gaussian              # Object type\n'])
 #        f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
@@ -224,7 +245,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 #        c.Flag += 2**GetFlag('FIT_POINT')
 
     if 'point' in ComP:
-        pmag = mag + 2.5 * log10(6.0)
+        pmag = mag + 2.5 * np.log10(6.0)
         f.writelines(['#point source\n\n'])
         f.writelines([' 0) psf              # Object type\n'])
         f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' 1 1  #',\
@@ -236,7 +257,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
 
 #### BAR COMPONENT IMPLIMENTATION ####
     if 'bar' in ComP:
-        barmag = mag + 2.5 * log10(3.0)
+        barmag = mag + 2.5 * np.log10(3.0)
         f.write('# Sersic function for bar\n\n')
         f.writelines([' 0) sersic		# Object type\n'])
         f.writelines([' 1) ', str(xcntr), ' ', str(ycntr),' ', \
@@ -300,15 +321,24 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                                '# R_e [Pixels]\n'])
                 f.writelines([' 5) 4.0 1        	#Sersic exponent', \
                               ' (deVauc=4, expdisk=1)\n'])
-                f.writelines([' 8) ', str(axis_rat), ' 1        # axis',\
-                              ' ratio (b/a)\n'])
-                f.writelines([' 9) ', str(pos_ang), ' 1 	       ',\
-                              ' # position angle (PA)  [Degrees: Up=0,'\
-                                ' Left=90]\n'])
-                f.writelines(['10) 0.0 0         	# diskiness',\
-                              ' (< 0) or boxiness (> 0)\n'])
-                f.writelines([' Z) 0 	           	# output',\
-                              ' image (see above)\n\n\n'])
+                if np.float(c.galfitv.split('.')[0]) >= 3.0:
+                    f.writelines([' 9) ', str(axis_rat), ' 1        # axis',\
+                                  ' ratio (b/a)\n'])
+                    f.writelines([' 10) ', str(pos_ang), ' 1 	       ',\
+                                  ' # position angle (PA)  [Degrees: Up=0,'\
+                                  ' Left=90]\n'])
+                    f.writelines([' Z) 0 	           	# output',\
+                                  ' image (see above)\n\n\n'])
+                else:
+                    f.writelines([' 8) ', str(axis_rat), ' 1        # axis',\
+                                  ' ratio (b/a)\n'])
+                    f.writelines([' 9) ', str(pos_ang), ' 1 	       ',\
+                                  ' # position angle (PA)  [Degrees: Up=0,'\
+                                  ' Left=90]\n'])
+                    f.writelines(['10) 0.0 0         	# diskiness',\
+                                  ' (< 0) or boxiness (> 0)\n'])
+                    f.writelines([' Z) 0 	           	# output',\
+                                  ' image (see above)\n\n\n'])
                 if MakeConstrain:
                     f_constrain.write(str(cO) + '      n      0.02 to 20.0  \n')
                     f_constrain.write(str(cO) + '     mag    -100.0 to 100.0\n')

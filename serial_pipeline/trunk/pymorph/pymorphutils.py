@@ -304,7 +304,7 @@ def FindCutSize(ReSize, VarSize, Square, FracRad, FixSize, SizeXX, SizeYY):
             SizeY = FixSize
     return SizeX, SizeY
 
-def MakeCutOut(xcntr, ycntr, SizeX, SizeY, TX, TY, cutimage, whtimage, ReSize):
+def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, whtimage, ReSize):
     """Make cutout image. The xcntr, ycntr are like iraf.  SizeX, SizeY are half size"""
     ExceedSize = 0
     #All are floor to make the size even number
@@ -411,9 +411,10 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         R = []
         IntR = []
         IntRE = []
+        MaxRad = np.min([np.log10(8 * c.SexHalfRad), np.min(galaxy.shape)])
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
-        for i in np.logspace(0, np.log10(8 * c.SexHalfRad), 20, endpoint=True):
+        for i in np.logspace(0, MaxRad, 20, endpoint=True):
             Isub = maskedgalaxy[np.where(np.abs(r - i) <= 1.0)]
             NonMaskNo = len(ma.compressed(Isub))
             if NonMaskNo > 0 and ma.sum(Isub) > 0.0:
@@ -445,13 +446,9 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
             writer.writerow(p)
         f.close()
            
-def CleanEllipse(out, after):
+def CleanEllipse(ell_out, after):
     """Cleaning temp files from Ellipse task. after=1 means cleaning after \
        the task. before = 0"""
-    if out:
-        ell_out = 'OE_' + c.fstring + '.txt'
-    else:
-        ell_out = 'E_' + c.fstring + '.txt'
     if after:
         ftorlist = ['ellip', 'err', 'test.tab', 'GalEllFit.fits', \
                 'GalEllFit.fits.pl']
@@ -477,10 +474,12 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     if use_pyraf:
         if out:
             ell_mask_file = 'OEM_' + c.fstring + '.fits'
+            ell_out = 'OE_' + c.fstring + '.txt'
         else:
             ell_mask_file = 'EM_' + c.fstring + '.fits'
+            ell_out = 'E_' + c.fstring + '.txt'
         plfile = 'GalEllFit.fits.pl'
-        CleanEllipse(out, 0)
+        CleanEllipse(ell_out, 0)
         try:
             iraf.imcopy(ell_mask_file, plfile, verbose='no')
             iraf.flpr()
@@ -489,11 +488,15 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         try:
             run_elli(cutimage, ell_out, xcntr, ycntr, c.eg, \
                      c.pos_ang, c.major_axis, sky)
-            CleanEllipse(out, 1)
+            CleanEllipse(ell_out, 1)
             try:
                 iraf.flpr()
             except:
                 pass
+            if exists(ell_out):
+                pass
+            else:
+                manual_profile = 1
         except:
             manual_profile = 1
             WriteError('Error in ellipse task. Trying manual profile finder\n')
@@ -533,19 +536,19 @@ def Distance(psffile, ra, dec):
     """Find the distance between psf and object in arcsec. Ra and dec is the \
        position of the object. Psf coordinates will be read from the header"""
     try:
-        p = pyfits.open( psffile)
+        p = pyfits.open(psffile)
         header = p[0].header
         if(header.has_key('RA_TARG')):
             ra_p = header['RA_TARG']
         if (header.has_key('DEC_TARG')):
             dec_p = header['DEC_TARG']
         p.close()
-        distance = 3600.0*np.sqrt((dec - dec_p)**2.0 + \
+        distance = 3600.0 * np.sqrt((dec - dec_p)**2.0 + \
                    ((ra - ra_p) * np.cos(dec * Get_R()))**2.0)
     except:
         distance = 9999
     if distance == 9999:
-        raise ValueError('Distance between psf and image is 9999')
+        print 'Distance between psf and image is 9999'
     return distance
     
 def HandlePsf(cfile, UserGivenPsf, ra, dec):
@@ -600,13 +603,14 @@ def HandleCASGMBack(cutimage, cut_xcntr, cut_ycntr, SizeX, SizeY, \
 def HandleCasgm(cutimage, xcntr, ycntr, SizeX, SizeY, line_s, bxcntr, bycntr):
     """Run casgm module and its associated functions"""
     #Finding blank sky
+    mask_file = 'EM_' + c.fstring + '.fits'
     if bxcntr == 9999 or bycntr == 9999:
         bxcntr, bycntr = HandleCASGMBack(cutimage, xcntr, ycntr, SizeX, \
                                          SizeY, line_s, bxcntr, bycntr)
     else:
         pass
     try:
-        caSgm = casgm(cutimage, 'TmpElliMask.fits', xcntr, ycntr, bxcntr, \
+        caSgm = casgm(cutimage, mask_file, xcntr, ycntr, bxcntr, \
                       bycntr, c.eg, c.pos_ang, c.SexSky, c.SkySig)
         C = caSgm[0]
         C_err = caSgm[1]

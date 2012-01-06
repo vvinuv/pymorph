@@ -27,7 +27,10 @@ from config_twostep import ConfigIter
 from yetbackfunc import FindYetSky, RunSegSex
 from plotfunc import PlotFunc
 from runsexfunc import RunSex, SexShallow
-from writehtmlfunc import WriteParams
+if np.float(c.galfitv.split('.')[0]) >= 3.0:
+    from writehtmlfuncv3 import WriteParams
+else:
+    from writehtmlfunc import WriteParams
 
 #from configiter import *
 #from configbarpoint import *
@@ -449,15 +452,18 @@ def main():
                             c.Flag += 2**GetFlag('FIT_SKY')
                         else:
                             pass
-                        # Calculating the cutout size (half size)
+                        # Calculating the cutout size (half size).
+                        # SizeX, SizeY return from MakeCutOut are full sizes
                         SizeX, SizeY = ut.FindCutSize(ReSize, VarSize, \
                                        Square, FracRad, c.size[4], TX/2, TY/2) 
-                        print 'Calculated half Sizes ', SizeX, SizeY
+                        print 'Calculated half sizes ', SizeX, SizeY
                         # Finding psf and the distance between psf and image
                         if c.decompose:
                             psffile, distance = ut.HandlePsf(cfile, \
                                                UserGivenPsf, alpha_j, delta_j)
-                        print 'psffile, distance > ', psffile, distance
+                            print 'psffile, distance > ', psffile, distance
+                        else:
+                            psffile, distance = 'None', 9999
                         # For the new run
                         if c.repeat == False:
                             if c.galcut == False:
@@ -467,20 +473,34 @@ def main():
                                     c.run = 0
                                     break #Breaking the sextractor loop
                                 # Sizes are total size
-                                cut_xcntr, cut_ycntr, SizeX, SizeY, \
-                                ExceedSize = \
-                                ut.MakeCutOut(xcntr, ycntr, SizeX, SizeY, \
+                                try: 
+                                    cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                                    ExceedSize = \
+                                    ut.MakeCutOut(xcntr, ycntr, alpha_j, \
+                                            delta_j, SizeX, SizeY, \
                                             TX, TY, cutimage, whtimage, ReSize) 
-                            if c.galcut and ReSize:
-                                if exists(cutimage):
-                                    ut.WriteError('The file ' + cutimage +\
-                                                  ' exists\n')
-                                    c.run = 0
-                                    break #Breaking the sextractor loop
-                                cut_xcntr, cut_ycntr, SizeX, SizeY, \
-                                ExceedSize = \
-                                ut.MakeCutOut(xcntr, ycntr, SizeX, SizeY, \
+                                except:
+                                    ut.WriteError('Cutout exists!')
+                                    break
+                            if c.galcut:
+                                if ReSize: 
+                                    if exists(cutimage):
+                                        ut.WriteError('The file ' + cutimage +\
+                                                      ' exists\n')
+                                        c.run = 0
+                                        break #Breaking the sextractor loop
+                                    try:
+                                        cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                                        ExceedSize = \
+                                        ut.MakeCutOut(xcntr, ycntr, alpha_j, \
+                                                      delta_j, SizeX, SizeY, \
                                             TX, TY, cutimage, whtimage, ReSize)
+                                    except:
+                                        ut.WriteError('Cutout exists!')
+                                        break
+                                else:
+                                    cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                                    ExceedSize = xcntr, ycntr, TX, TY, 0
                             print 'Center of cutimage and exceed size ', \
                                   cut_xcntr, cut_ycntr, ExceedSize
                             print 'Full Sizes ', SizeX, SizeY
@@ -536,6 +556,7 @@ def main():
                             ut.WriteError('Sky estimation failed\n')
                         # Estimate CASGM  
                         if(c.cas):
+                            print 'one ', 1
                             C, C_err, A, A_err, S, S_err, G, M = \
                             ut.HandleCasgm(cutimage, cut_xcntr, cut_ycntr, \
                                            SizeX, SizeY, line_s, bxcntr, \
@@ -653,7 +674,11 @@ def main():
                                 if os.access(myfile,os.F_OK):
                                     os.remove(myfile)
                 except:
-                    pass
+                    if values[0].strip().isdigit():
+                        print 'Something happend in the pipeline. ' + \
+                              'Check error.log'
+                    else:
+                        pass
             if(c.galcut == True):
                 if os.access(sex_cata, os.F_OK):
                     os.remove(sex_cata)
@@ -1004,7 +1029,7 @@ def run_test(option, opt, value, parser):
 
 if __name__ == '__main__':
     c.FirstCreateDB = 1 #Won't create table when c.FirstCreateDB=0
-    c.VERSION = 1.7
+    c.VERSION = 3.0
     c.FILTER = 'UNKNOWN'
     c.Filter = 'UNKNOWN'
     try:

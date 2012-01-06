@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pyfits
-import convolve
+import pymconvolve
 from rotate import ImSec
 
 class clumpness:

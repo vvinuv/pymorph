@@ -1,5 +1,5 @@
 import os, sys, pyfits
-import numpy as n
+import numpy as np
 import config as c
 import pymconvolve
 
@@ -50,8 +50,8 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
             sky      = float(values[10]) #sky
             pos_ang = float(values[11])  #position angle
             axis_rat = 1.0/float(values[12]) #axis ration b/a
-            si = n.sin(pos_ang * n.pi / 180.0)
-            co = n.cos(pos_ang * n.pi / 180.0)
+            si = np.sin(pos_ang * np.pi / 180.0)
+            co = np.cos(pos_ang * np.pi / 180.0)
             area_n = float(values[13]) #neighbour area
             maj_axis = float(values[14])#major axis of neighbour
             eg = 1.0 - axis_rat
@@ -61,18 +61,19 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
               (major_axis + maj_axis) or area_n < thresh_area * area_o):
                 if abs(xcntr_n - xcntr_o) < 5.0 and \
                   abs(ycntr_n - ycntr_o) < 5.0:    
-                    tmp_mask[n.where(tmp_mask == id_n)] = 0
+                    tmp_mask[np.where(tmp_mask == id_n)] = 0
                 pass
             else:
-                tmp_mask[n.where(tmp_mask == id_n)] = 0
+                tmp_mask[np.where(tmp_mask == id_n)] = 0
         except:
             pass
     if c.NoMask:
-        tmp_mask[n.where(tmp_mask > 0)] = 0
+        tmp_mask[np.where(tmp_mask > 0)] = 0
     elif c.NormMask:
         pass
     boxcar = np.reshape(np.ones(3 * 3), (3, 3))
     tmp_mask = pymconvolve.Convolve(tmp_mask, boxcar)
-    tmp_mask[n.where(tmp_mask > 0)] = 1
-    hdu = pyfits.PrimaryHDU(tmp_mask.astype(n.float32))
+    tmp_mask[tmp_mask > 1e-5] = 1
+    tmp_mask[tmp_mask != 1] = 0
+    hdu = pyfits.PrimaryHDU(tmp_mask.astype(np.float32))
     hdu.writeto(mask_file)
