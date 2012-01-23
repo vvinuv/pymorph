@@ -363,19 +363,17 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         print 'c.NCOMBINE have value -9999. Something wrong?'
     hdu.writeto(c.datadir + cutimage)
     # FIX
-    #Making weight image cut 
-    if os.path.exists(c.datadir + c.whtfile):
-        z2 = c.weightdata[ymin:ymax,xmin:xmax]
+    #Making weight image cut
+    try:
+        z2 = c.weightdata[ymin:ymax,xmin:xmax].copy()
+        print whtimage 
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
+        print 1
         hdu.writeto(c.datadir + whtimage)
-        if c.galcut and ReSize:
-            if os.path.exists(c.datadir + c.whtfile):
-                fWZcuT = pyfits.open(c.datadir + c.whtfile)
-                WZcuT = fWZcuT[0].data
-                fWZcuT.close()
-                WZcuT1 = WZcuT[ymin:ymax,xmin:xmax]
-                hdu = pyfits.PrimaryHDU(WZcuT1.astype(np.float32))
-                hdu.writeto(c.datadir + whtimage)
+        print 2
+    except:
+        print 'Cannot creat weight image. If you supply weight image please ',\
+              'check whether it exists or report a bug'
     #END
     return cut_xcntr, cut_ycntr, SizeX, SizeY, ExceedSize 
 
@@ -387,13 +385,16 @@ def WriteError(err):
 
 def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Find 1-d profile of image"""
+    print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
     if out:
         ell_mask_file = 'OEM_' + c.fstring + '.fits'
         ell_out = 'OE_' + c.fstring + '.txt'
+        cutimage = c.outdir + cutimage 
     else:
         ell_mask_file = 'EM_' + c.fstring + '.fits'
         ell_out = 'E_' + c.fstring + '.txt'
-    if exists(cutimage) and exists(ell_mask_file): 
+        cutimage = c.datadir + cutimage
+    if exists(cutimage) and exists(ell_mask_file):
         f = pyfits.open(cutimage)
         galaxy = f[0].data
         galaxy = galaxy - sky
@@ -401,9 +402,9 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         f = pyfits.open(ell_mask_file)
         mask = f[0].data
         f.close()
-        x = np.reshape(np.arange(SizeX * SizeY), (SizeX, SizeY)) % SizeY
+        x = np.reshape(np.arange(SizeX * SizeY), (SizeY, SizeX)) % SizeX
         x = x.astype(np.float32)
-        y = np.reshape(np.arange(SizeX * SizeY), (SizeX, SizeY)) / SizeY
+        y = np.reshape(np.arange(SizeX * SizeY), (SizeY, SizeX)) / SizeX
         y = y.astype(np.float32)
         # r is the radius parameter
         co = np.cos(c.SexPosAng * Get_R())
@@ -416,16 +417,20 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         R = []
         IntR = []
         IntRE = []
-        MaxRad = np.min([np.log10(8 * c.SexHalfRad), np.min(galaxy.shape)])
+        MaxRad = np.min([np.log10(8 * c.SexHalfRad), \
+                 np.log10(np.min(galaxy.shape))])
+        NoOfPoints = int(30 * 10**MaxRad / 50.)
+        print MaxRad, NoOfPoints
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
-        for i in np.logspace(0, MaxRad, 20, endpoint=True):
+        for i in np.logspace(0, MaxRad, NoOfPoints, endpoint=True):
             Isub = maskedgalaxy[np.where(np.abs(r - i) <= 1.0)]
             NonMaskNo = len(ma.compressed(Isub))
             if NonMaskNo > 0 and ma.sum(Isub) > 0.0:
                 R.append(i)
                 IntRE.append(np.sqrt(ma.sum(Isub)) / (1.0 * NonMaskNo))
                 IntR.append(np.mean(Isub))
+            print i, NonMaskNo
             # If you want to see the ellipse anulus, uncoment the following
             # START
             #if i > 10 and out:
@@ -445,8 +450,9 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         mag_l = np.abs(-2.5 * (np.log10(IntR) - np.log10(IntR - IntRE))) 
         mag_u = np.abs(-2.5 * (np.log10(IntR + IntRE) - np.log10(IntR)))
         f = open(ell_out, 'w')
+        writer = csv.writer(f, delimiter=' ')
+        writer.writerow(['sma', 'inte', 'intee', 'mag', 'magl', 'magu'])
         for i in range(len(IntR)):
-            writer = csv.writer(f, delimiter=' ')
             p = [R[i], IntR[i], IntRE[i], mag[i], mag_l[i], mag_u[i]]
             writer.writerow(p)
         f.close()
@@ -468,6 +474,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Running the ellipse task. SizeX, SizeY are the total size"""
     manual_profile = 0
     try:
+        import unknown
         from pyraf import iraf
         from fitellifunc import run_elli
         use_pyraf = 1
@@ -536,7 +543,6 @@ def HandleGalfitOutput(outimage, xcntr, ycntr,  SizeX, SizeY, line_s):
         FailedGalfit(cutimage)
         c.run = 0
 
-
 def Distance(psffile, ra, dec):
     """Find the distance between psf and object in arcsec. Ra and dec is the \
        position of the object. Psf coordinates will be read from the header"""
@@ -563,10 +569,10 @@ def HandlePsf(cfile, UserGivenPsf, ra, dec):
             psffile = UserGivenPsf
             UpdatePsfRaDec(psffile)
             distance = Distance(psffile, ra, dec)
-        elif alpha_s == 9999 or delta_s == 9999:
+        elif np.abs(ra) == 9999 or np.abs(dec) == 9999:
             psffile = c.psflist[c.psfcounter]
             UpdatePsfRaDec(psffile)
-            distance = Distance(psffile)
+            distance = 9999
             c.psfcounter += 1
         else:
             psffile, distance = SelectPsf(alpha_j, delta_j)
@@ -578,7 +584,7 @@ def HandlePsf(cfile, UserGivenPsf, ra, dec):
         else:
             psffile = c.pfile
             UpdatePsfRaDec(c.pfile)
-            distance = Distance(c.pfile)
+            distance = Distance(c.pfile, ra, dec)
     return psffile, distance 
 
 def HandleCASGMBack(cutimage, cut_xcntr, cut_ycntr, SizeX, SizeY, \
@@ -636,7 +642,7 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
                              c.SexMagAutoErr, C, C_err, A, A_err, S, \
                              S_err, G, M, c.Flag, c.SexHalfRad])
             f_res.close()
-        WriteError('(((((CASGM Successful)))))')
+        WriteError('(((((CASGM Successful)))))\n')
         return C, C_err, A, A_err, S, S_err, G, M
     except:
         WriteError('The CASGM module failed\n')

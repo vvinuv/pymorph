@@ -261,9 +261,15 @@ def main():
                 ut.CheckHeader(header0) #Will set up global header parameters
                 TX = c.imagedata.shape[1]
                 TY = c.imagedata.shape[0]
+                if wimg != 'None':
+                    gwimg = pyfits.open(c.datadir + wimg)
+                    c.weightdata = gwimg[0].data
+                    gwimg.close()
                 print 'Using cutouts'
             try:
                 ximg = float(pdb["ximg"])
+                if ReSize and c.galcut and c.repeat:
+                    ximg = TX / 2.0
             except:
                 print 'No ximg is given. Trying to find from the cutout if '\
                       'no ra dec in the image header'
@@ -273,6 +279,8 @@ def main():
                     ximg = -9999
             try:
                 yimg = float(pdb["yimg"])
+                if ReSize and c.galcut and c.repeat:
+                    yimg = TY / 2.0
             except:
                 print 'No yimg is given. Trying to find from the cutout if '\
                       'no ra dec in the image header'
@@ -355,7 +363,7 @@ def main():
             else:
                 alpha_j = ut.HMSToDeg(alpha1, alpha2, alpha3)
                 delta_j = ut.DMSToDeg(delta1, delta2, delta3)
-            for line_s in open(sex_cata,'r'):
+            for line_s in open(sex_cata, 'r'):
                 try:
                     values = line_s.split()
                     alpha_s = float(values[3])
@@ -609,7 +617,7 @@ def main():
                                 if os.access('P_' + c.fstring + '.png', \
                                              os.F_OK):	
                                     os.remove('P_' + c.fstring + '.png')
-                                GoodNess = PlotFunc(cutimage, outimage, \
+                                GoodNess = PlotFunc(outimage, \
                                   maskimage, cut_xcntr, cut_ycntr, \
                                   c.SexSky, c.SkySig)
                                 Goodness = GoodNess.plot_profile
@@ -1038,7 +1046,7 @@ if __name__ == '__main__':
             c.imagedata = img[0].data
             c.HeAdEr0 = img[0].header
             img.close()
-            ut.CheckHeader(header0)
+            ut.CheckHeader(c.HeAdEr0)
     except IOError, (errno, strerror):
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
@@ -1291,7 +1299,7 @@ if __name__ == '__main__':
                                    str(gal_id) + '.fits'
                         else:
                             wimg = 'None'
-                    GiMg = pyfit.open(c.datadir + gimg)
+                    GiMg = pyfits.open(c.datadir + gimg)
                     headerGiMg = GiMg[0].header
                     if (headerGiMg.has_key('GAIN')):
                         c.SEx_GAIN = headerGiMg['GAIN']
@@ -1352,16 +1360,16 @@ if __name__ == '__main__':
             main()
 
 #The old function for psfselect=1
-#   elif c.psfselect == 1:
-#       c.Interactive = 1
-#       os.system('ds9 &')
-#       time.sleep(2)
-#       runpsfselect()
-#       os.system('xpaset -p ds9 quit')
-#new function for psfselect=1 non-interactive for webservice (abhishek rawat)
     elif c.psfselect == 1:
-        c.Interactive = 0
+        c.Interactive = 1
+        os.system('ds9 &')
+        time.sleep(2)
         runpsfselect()
+        os.system('xpaset -p ds9 quit')
+#new function for psfselect=1 non-interactive for webservice (abhishek rawat)
+#    elif c.psfselect == 1:
+#        c.Interactive = 0
+#        runpsfselect()
         
 
 
