@@ -205,10 +205,10 @@ def PyMorphOutputParams():
                   'magerr_auto_5', 'Ie_6', 'Ie_err_7', 're_pix_8',\
                   're_err_pix_9', 're_kpc_10', 're_err_kpc_11', \
                   'n_12', 'n_err_13', 'AvgIe_14', 'AvgIe_err_15', \
-                  'eb_16', 'eb_err_17', 'bboxy_18', 'bboxy_err_19',\
+                  'eb_16', 'eb_err_17', 'bpa_18', 'bpa_err_19',\
                   'Id_20', 'Id_err_21', 'rd_pix_22', \
                   'rd_err_pix_23', 'rd_kpc_24', 'rd_err_kpc_25', \
-                  'ed_26', 'ed_err_27', 'dboxy_28', 'dboxy_err_29',\
+                  'ed_26', 'ed_err_27', 'dpa_28', 'dpa_err_29',\
                   'BD_30', 'BT_31', 'Point_32', 'Point_err_33', \
                   'Pfwhm_34', 'Pfwhm_kpc_35', 'chi2nu_36', \
                   'Goodness_37', 'run_38', 'C_39', 'C_err_40',\

@@ -511,8 +511,8 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
                           SersicIndex, SersicIndexErr, AvgMagInsideRe,\
                           AvgMagInsideReErr, SersicEllipticity, \
-                          SersicEllipticityErr, SersicBoxy, \
-			  SersicBoxyErr]:
+                          SersicEllipticityErr, SersicPA, \
+			  SersicPAErr]:
             ParamToWrite.append(bulgecomp)
     else:
         for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
@@ -521,7 +521,7 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     if 'disk' in ComP:
         for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc,\
                          DiskEllipticity, DiskEllipticityErr, \
-			 DiskBoxy, DiskBoxyErr]:
+			 DiskPA, DiskPAErr]:
             ParamToWrite.append(diskcomp)
     else:
         for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
