@@ -364,14 +364,11 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
     hdu.writeto(c.datadir + cutimage)
     # FIX
     #Making weight image cut
-    try:
+    if c.weightexists:
         z2 = c.weightdata[ymin:ymax,xmin:xmax].copy()
-        print whtimage 
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
-        print 1
         hdu.writeto(c.datadir + whtimage)
-        print 2
-    except:
+    else:
         print 'Cannot creat weight image. If you supply weight image please ',\
               'check whether it exists or report a bug'
     #END

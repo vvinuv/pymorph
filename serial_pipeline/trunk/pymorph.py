@@ -44,6 +44,7 @@ def main():
     sex_cata = c.sex_cata
     clus_cata = c.clus_cata
     out_cata = c.out_cata
+    c.weightexists = 0
 
     ReSize = c.size[0]
     try:
@@ -96,6 +97,7 @@ def main():
                 c.weightdata = wht[0].data
                 wht.close()
                 print "whtfile >>> ", whtfile
+                c.weightexists = 1
             else:
                print 'No weight image found\n'
     
@@ -198,9 +200,9 @@ def main():
                 gimg = pdb["gimg"]    #Galaxy cutout
             except:
                 print "No gimg given."
-                if exists('I' + c.fstring + '.fits'):
+                if exists(c.datadir + 'I' + c.fstring + '.fits'):
                     gimg = 'I' + c.fstring + '.fits'
-                elif exists(str(gal_id) + '.fits'): 
+                elif exists(c.datadir + str(gal_id) + '.fits'): 
                     gimg = str(gal_id) + '.fits'
                 else:
                     print "No possible gimg found"
@@ -209,12 +211,13 @@ def main():
             try:
                 wimg = pdb["wimg"]   #Weight cut
             except:
-                print "No wimg given"
-                if exists('W' + c.fstring + '.fits'):
-                    wimg = 'W' + c.fstring + '.fits'
-                else:
-                    print "No possible wimg found"
-                    wimg = 'None'
+                if c.galcut:
+                    print "No wimg given"
+                    if exists(c.datadir + 'W' + c.fstring + '.fits'):
+                        wimg = 'W' + c.fstring + '.fits'
+                    else:
+                        print "No possible wimg found"
+                        wimg = 'None'
             try:
                 cfile = pdb["cfile"]  #GALFIT configuration file
             except:
@@ -248,10 +251,6 @@ def main():
             else:
                 cutimage = 'I' + c.fstring + '.fits'
                 whtimage = 'W' + c.fstring + '.fits'
-            if exists(whtimage):
-                pass
-            else:
-                whtimage = 'None'
             if c.galcut == True:
                 print 'Image is >>> ', gimg
                 ggimg = pyfits.open(c.datadir + gimg)
@@ -261,10 +260,13 @@ def main():
                 ut.CheckHeader(header0) #Will set up global header parameters
                 TX = c.imagedata.shape[1]
                 TY = c.imagedata.shape[0]
-                if wimg != 'None':
+                if exists(c.datadir + whtimage):
                     gwimg = pyfits.open(c.datadir + wimg)
                     c.weightdata = gwimg[0].data
                     gwimg.close()
+                    c.weightexists = 1
+                else:
+                    whtimage = 'None'
                 print 'Using cutouts'
             try:
                 ximg = float(pdb["ximg"])
