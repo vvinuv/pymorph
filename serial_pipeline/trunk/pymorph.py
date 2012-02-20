@@ -1,4 +1,4 @@
-#!/home/vinu/software/Python2.5/bin/python
+#!/data2/home/ameert/python/bin/python2.5
 
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
 
@@ -27,11 +27,8 @@ from config_twostep import ConfigIter
 from yetbackfunc import FindYetSky, RunSegSex
 from plotfunc import PlotFunc
 from runsexfunc import RunSex, SexShallow
-if np.float(c.galfitv.split('.')[0]) >= 3.0:
-    from writehtmlfuncv3 import WriteParams
-else:
-    from writehtmlfunc import WriteParams
-
+from writehtmlfuncv3 import WriteParams
+    
 #from configiter import *
 #from configbarpoint import *
 #from configbulgedisk import *
@@ -365,6 +362,26 @@ def main():
             else:
                 alpha_j = ut.HMSToDeg(alpha1, alpha2, alpha3)
                 delta_j = ut.DMSToDeg(delta1, delta2, delta3)
+            # Determine Search Radius 
+            try:
+                SearchRad = c.searchrad
+            except:
+                if RaDecInfo:
+                    SearchRad = '1arc'
+                    print 'No search radius found. Setting to 1 arc sec'
+                else:
+                    SearchRad = '10pix'
+                    print 'No search radius found. Setting to 10 pix'
+            if SearchRad.endswith('arc'):
+                SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
+                SeaPix = 10.0
+            elif SearchRad.endswith('pix'):
+                SeaPix = float(SearchRad[:-3])
+                SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
+
+            # first count the number of "potential" targets in the search radius
+            c.SexTargets = 0
+            good_objects = []
             for line_s in open(sex_cata, 'r'):
                 try:
                     values = line_s.split()
@@ -376,25 +393,32 @@ def main():
                     sex_id = values[0]
                     xcntr  = float(values[1])
                     ycntr  = float(values[2])
-                    try:
-                        SearchRad = c.searchrad
-                    except:
-                        if RaDecInfo:
-                            SearchRad = '1arc'
-                            print 'No search radius found. Setting to 1 arc sec'
-                        else:
-                            SearchRad = '10pix'
-                            print 'No search radius found. Setting to 10 pix'
-                    if SearchRad.endswith('arc'):
-                        SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
-                        SeaPix = 10.0
-                    elif SearchRad.endswith('pix'):
-                        SeaPix = float(SearchRad[:-3])
-                        SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
                     if(abs(alpha_j - alpha_s) < SeaDeg and \
                        abs(delta_s - delta_j) < SeaDeg or \
                        abs(xcntr - ximg) < SeaPix and \
                        abs(ycntr - yimg) < SeaPix):
+                        c.SexTargets +=1
+                        good_objects.append(int(values[0]))
+                except:
+                    if values[0].strip().isdigit():
+                        print 'Something happend in the pipeline. ' + \
+                              'Check error.log'
+                    else:
+                        pass
+            # now loop over all located objects            
+            for line_s in open(sex_cata, 'r'):
+                try:
+                    values = line_s.split()
+                    alpha_s = float(values[3])
+                    delta_s = float(values[4])
+                    if RaDecInfo == 0:
+                        alpha_s = 9999
+                        delta_s = 9999
+                    sex_id = values[0]
+                    xcntr  = float(values[1])
+                    ycntr  = float(values[2])
+                    # for now, just analyze the first good object detected
+                    if int(values[0]) in good_objects:
                         print "SExtractor ID >>> ", values[0]
 			c.SexMagAuto = float(values[17])
 			c.SexMagAutoErr = float(values[18])

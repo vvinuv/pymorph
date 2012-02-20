@@ -133,63 +133,83 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     object_err = 1
     if exists('fit.log'):
         for line in open('fit.log','r'): 
-            values = line.split() 
-            if(str(values[0]) == 'Input'):
-                alpha_ned = str(alpha_j)[:10]
-                delta_ned = str(delta_j)[:10]
-            if(str(values[0]) == 'Init.'):
-                initial_conf = str(values[4])
-            if(str(values[0]) == 'Restart'):
-                restart_conf = str(values[3])
-            if(str(values[0]) == 'Chi^2/nu'):
-                chi2nu = float(values[2])
-                Distance = str(round(distance, 3))[:5]
-            #if(str(values[0]) == 'sersic' and object == 2):
-            #    mag_bar = float(values[4])
-            #    re_bar = float(values[5])
-            #    SersicIndexBar = float(values[6])
-            #    SersicEllipticityBar = float(values[7])
-            #    SersicBoxyBar = float(values[9])
-            #    object += 1
-            if(str(values[0]) == 'sersic' and object == 1):
-                mag_b = parGal(values[4])
-                re = parGal(values[5])
-                SersicIndex = parGal(values[6])
-                SersicEllipticity = parGal(values[7])
-                SersicBoxy = parGal(values[9])
-                object += 1
-            if(str(values[0]) == 'expdisk'):
-                mag_d = parGal(values[4])
-                rd = parGal(values[5])
-                DiskEllipticity = parGal(values[6])
-                DiskBoxy = parGal(values[8])
-            if(str(values[0]) == 'psf'):
-                mag_p = parGal(values[4])
-            if(str(values[0]) == 'sky'):
-                galfit_sky = parGal(values[4])
-            if(str(values[0])[:1] == '('):
-                # if(str(a) == 'sersic' and object_err == 2):
-                #     mag_bar_err = float(values[2])
-                #     re_bar_err  = float(values[3])
-                #     SersicIndexBarErr = float(values[4])
-                #     SersicEllipticityBarErr = float(values[5])
-                #     SersicBoxyBarErr = float(values[7])
-                #     object_err += 1
-                if(str(a) == 'sersic' and object_err == 1):
-                    mag_b_err = parGal(values[2])
-                    re_err  = parGal(values[3])
-                    SersicIndexErr = parGal(values[4])
-                    SersicEllipticityErr = parGal(values[5])
-                    SersicBoxyErr = parGal(values[7])
-                    object_err += 1
-                if(str(a) == 'expdisk'):
-                    mag_d_err = parGal(values[2])
-                    rd_err = parGal(values[3])
-                    DiskEllipticityErr = parGal(values[4])
-                    DiskBoxyErr = parGal(values[6])
-                if(str(a) == 'psf'):
-                    mag_p_err = parGal(values[2])
-            a=values[0]			
+            values = line.split()
+            try:
+                if(str(values[0]) == 'Input'):
+                    alpha_ned = str(alpha_j)[:10]
+                    delta_ned = str(delta_j)[:10]
+                if(str(values[0]) == 'Init.'):
+                    initial_conf = str(values[4])
+                if(str(values[0]) == 'Restart'):
+                    restart_conf = str(values[3])
+                if(str(values[0]) == 'Chi^2/nu'):
+                    chi2nu = float(values[2])
+                    Distance = str(round(distance, 3))[:5]
+                #if(str(values[0]) == 'sersic' and object == 2):
+                #    mag_bar = float(values[4])
+                #    re_bar = float(values[5])
+                #    SersicIndexBar = float(values[6])
+                #    SersicEllipticityBar = float(values[7])
+                #    SersicBoxyBar = float(values[9])
+                #    object += 1
+                if(str(values[0]) == 'sersic' and object == 1):
+                    bulge_xcntr = parGal(str(values[2])[1:-1])
+                    bulge_ycntr = parGal(str(values[3])[:-1])
+                    mag_b = parGal(values[4])
+                    re = parGal(values[5])
+                    SersicIndex = parGal(values[6])
+                    SersicEllipticity = parGal(values[7])
+                    SersicPA = parGal(values[8])
+                    SersicBoxy = parGal(values[9])
+                    object += 1
+                if(str(values[0]) == 'expdisk'):
+                    disk_xcntr = parGal(str(values[2])[1:-1])
+                    disk_ycntr = parGal(str(values[3])[:-1])
+                    mag_d = parGal(values[4])
+                    rd = parGal(values[5])
+                    DiskEllipticity = parGal(values[6])
+                    DiskPA = parGal(values[7])
+                    DiskBoxy = parGal(values[8])
+                if(str(values[0]) == 'psf'):
+                    psf_xcntr = parGal(str(values[2])[1:-1])
+                    psf_ycntr = parGal(str(values[3])[:-1])
+                    mag_p = parGal(values[4])
+                if(str(values[0]) == 'sky'):
+                    galfit_sky = parGal(values[4])
+                if(str(values[0])[:1] == '('):
+                    # if(str(a) == 'sersic' and object_err == 2):
+                    #     mag_bar_err = float(values[2])
+                    #     re_bar_err  = float(values[3])
+                    #     SersicIndexBarErr = float(values[4])
+                    #     SersicEllipticityBarErr = float(values[5])
+                    #     SersicBoxyBarErr = float(values[7])
+                    #     object_err += 1
+                    if(str(a) == 'sersic' and object_err == 1):
+                        bulge_xcntr_err = parGal(str(values[0])[1:-1])
+                        bulge_ycntr_err = parGal(str(values[1])[:-1])
+                        mag_b_err = parGal(values[2])
+                        re_err  = parGal(values[3])
+                        SersicIndexErr = parGal(values[4])
+                        SersicEllipticityErr = parGal(values[5])
+                        SersicPAErr = parGal(values[6])
+                        SersicBoxyErr = parGal(values[7])
+                        object_err += 1
+                    if(str(a) == 'expdisk'):
+                        disk_xcntr_err = parGal(str(values[0])[1:-1])
+                        disk_ycntr_err = parGal(str(values[1])[:-1])
+                        mag_d_err = parGal(values[2])
+                        rd_err = parGal(values[3])
+                        DiskEllipticityErr = parGal(values[4])
+                        DiskPAErr = parGal(values[5])
+                        DiskBoxyErr = parGal(values[6])
+                    if(str(a) == 'psf'):
+                        psf_xcntr_err = parGal(str(values[0])[1:-1])
+                        psf_ycntr_err = parGal(str(values[1])[:-1])
+                        mag_p_err = parGal(values[2])
+                a=values[0]
+            except IndexError:
+                pass
+                        			
     else:
     	print 'No fit.log exists'
     # Converting fitted params to physical params
@@ -284,8 +304,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                                           str(values[8]) + ' </TD> <TD> ' + \
                                           str(values[9]) + ' </TD> </TR>'
                     if object == 1 and 'bulge' in ComP:
-                        bulge_xcntr = float(str(values[2])[1:-1])
-                        bulge_ycntr = float(str(values[3])[:-1])
                         Object_Sersic = '<TR align="center" ' +\
                                         'bgcolor="#99CCFF">' +\
                                        '<TD>' + str(values[0]) + '</TD> <TD> '\
@@ -300,8 +318,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                                        + str(values[9]) + ' </TD></TR>'
                         object += 1
                 if(str(values[0]) == 'expdisk'):
-                    disk_xcntr = float(str(values[2])[1:-1])
-                    disk_ycntr = float(str(values[3])[:-1])
                     Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
                                 '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
                                 str(values[2])[1:-1] + ' </TD> <TD> ' + \
@@ -313,8 +329,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                                 ' </TD> <TD> ' + str(values[7]) + \
                                 ' </TD> <TD> ' + str(values[8]) + ' </TD></TR>'
                 if(str(values[0]) == 'psf'):
-                    point_xcntr = float(str(values[2])[1:-1])
-                    point_ycntr = float(str(values[3])[:-1])
                     Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
                                  '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
                                str(values[2])[1:-1] + ' </TD> <TD> ' + \

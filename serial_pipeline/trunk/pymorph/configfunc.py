@@ -75,6 +75,9 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                 f_constrain.write(str(cO) + '      q       0.0 to 1.0\n')
                 f_constrain.write(str(cO) + '      pa       -360.0 to 360.0\n')
             if Co == 'disk':
+                # we want to force bulge and disk to share same center
+                f_constrain.write('1-2     x      -0.001 to 0.001\n')
+                f_constrain.write('1-2     y      -0.001 to 0.001\n')
                 if c.center_deviated:
                     f_constrain.write(str(cO) + '      x      -' + \
 		    str(c.center_deviation - c.center_deviation / 4.0) + \
@@ -153,7 +156,10 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                   ' constraints (ASCII file)\n'])
     f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
                   ' Image region to fit (xmin xmax ymin ymax)\n'])
-    f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
+    #f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'		#',\
+    #              ' Size of convolution box (x y)\n'])
+    # This really shouldn't be hardcoded!!!!
+    f.writelines(['I) ', str(100), ' ', str(100),	'		#',\
                   ' Size of convolution box (x y)\n'])
     f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
                   ' photometric zeropoint\n'])

@@ -13,6 +13,29 @@ from casgm import casgm
 from flagfunc import GetFlag, isset
 from outmaskfunc_easy import OutMaskFunc
 
+def Gamma(z):
+    """This is the Lanczos approximation for Gamma function"""
+    lanczosG = 7
+    lanczos_coef = [0.99999999999980993, 676.5203681218851,\
+                    -1259.1392167224028, 771.32342877765313,\
+                    -176.61502916214059, 12.507343278686905, \
+                    -0.13857109526572012, 9.9843695780195716e-6,\
+                    1.5056327351493116e-7]
+    if z < 0.5:
+        answer =  n.pi / (n.sin(n.pi*z)*Gamma(1-z))
+    else:
+        z -= 1
+        x = lanczos_coef[0]
+        for i in range(1, lanczosG + 2):
+            x += lanczos_coef[i]/(z + i)
+        t = z + lanczosG + 0.5
+        answer =  n.sqrt(2*n.pi) * t**(z + 0.5) * n.exp(-t) * x
+    return answer
+
+def bfunc(x):
+        """ This function gives value of b_n given the Sersic index"""
+        return 0.868242*x -0.142058 # Khosroshahi et al. 2000 approximation
+    
 def Get_R():
     """Return 3.14159265 / 180.0"""
     return np.pi / 180.0
@@ -201,28 +224,40 @@ def CrashHandlerToRemove(gal_id):
 def PyMorphOutputParams():
     """Returns the output parameters from pymorph"""
     if c.decompose:
-        params = ['Name_0', 'ra_1', 'dec_2', 'z_3', 'mag_auto_4',\
-                  'magerr_auto_5', 'Ie_6', 'Ie_err_7', 're_pix_8',\
-                  're_err_pix_9', 're_kpc_10', 're_err_kpc_11', \
-                  'n_12', 'n_err_13', 'AvgIe_14', 'AvgIe_err_15', \
-                  'eb_16', 'eb_err_17', 'bpa_18', 'bpa_err_19',\
-                  'Id_20', 'Id_err_21', 'rd_pix_22', \
-                  'rd_err_pix_23', 'rd_kpc_24', 'rd_err_kpc_25', \
-                  'ed_26', 'ed_err_27', 'dpa_28', 'dpa_err_29',\
-                  'BD_30', 'BT_31', 'Point_32', 'Point_err_33', \
-                  'Pfwhm_34', 'Pfwhm_kpc_35', 'chi2nu_36', \
-                  'Goodness_37', 'run_38', 'C_39', 'C_err_40',\
-                  'A_41', 'A_err_42', 'S_43', 'S_err_44', 'G_45', \
-                  'M_46', 'SexSky_47', 'GalSky_48', 'dis_modu_49', \
-                  'distance_50', 'fit_51', 'flag_52', \
-                  'HalfRadius_53', 'BarMag_54', 'BarMagErr_55', \
-                  'BarRePix_56', 'BarRePixErr_57', 'BarReKpc_58',\
-                  'BarReKpcErr_59', 'BarIndex_60', 'BarIndexErr_61',\
-                  'BarEll_62', 'BarEllErr_63', 'BarBoxy_64', 'Comments_65']
+        params = ['Name', 'ra_gal', 'dec_gal', 'z', 'mag_auto',\
+                  'magerr_auto', 'num_targets', 
+                  'bulge_xctr','bulge_xctr_err',
+                  'bulge_yctr','bulge_yctr_err', 'Ie', 'Ie_err',
+                  're_pix','re_err_pix', 're_kpc', 're_err_kpc', \
+                  'n', 'n_err', 'AvgIe', 'AvgIe_err', \
+                  'eb', 'eb_err', 'bpa', 'bpa_err',\
+                  'bboxy','bboxyerr',
+                  'disk_xctr','disk_xctr_err','disk_yctr',
+                  'disk_yctr_err', 'Id', 'Id_err', 'rd_pix', \
+                  'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
+                  'ed', 'ed_err', 'dpa', 'dpa_err',\
+                  'dboxy','dboxyerr',
+                  'BD', 'BT', 'Point', 'Point_err', \
+                  'Pfwhm', 'Pfwhm_kpc', 'chi2nu', \
+                  'Goodness', 'run', 'C', 'C_err',\
+                  'A', 'A_err', 'S', 'S_err', 'G', \
+                  'M', 'SexSky', 'GalSky', 'GalSky_err', 'dis_modu', \
+                  'distance', 'fit', 'flag', \
+                  'HalfRadius',
+                  'bar_xctr','bar_xctr_err','bar_yctr',
+                  'bar_yctr_err'
+                  'BarMag', 'BarMagErr', \
+                  'BarRePix', 'BarRePixErr', 'BarReKpc',\
+                  'BarReKpcErr', 'BarIndex', 'BarIndexErr',\
+                  'BarEll', 'BarEllErr', 'BarBoxy', 'Comments']
     else:
-        params = ['Name_0', 'ra_1', 'dec_2', 'z_3', 'mag_auto_4', \
-                  'magerr_auto_5', 'C_6', 'C_err_7', 'A_8', 'A_err_9', \
-                  'S_10', 'S_err_11', 'G_12', 'M_13', 'Flag_14', 'HalfRad_15']
+        params = ['Name', 'ra_gal', 'dec_gal', 'z', 'mag_auto', \
+                  'magerr_auto', 'num_targets', 'C', 'C_err', 'A', 'A_err', \
+                  'S', 'S_err', 'G', 'M', 'Flag', 'HalfRad']
+
+    # append column names for easier reading
+    for pos, p in enumerate(params):
+        params[pos] = p+'_' + str(pos)
     return params
 
 def ReadGalfitConfig(cfile):

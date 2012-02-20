@@ -6,11 +6,11 @@ import fileinput
 from cosmocal import cal 
 import datetime
 import MySQLdb as mysql
-#from utilities import WriteDb
 import traceback
 from flagfunc import GetFlag, isset
 from pymorphutils import RaDegToHMS, DecDegToDMS
 import config as c
+import os
 
 class WriteHtmlFunc:
     """The class which will write html and csv output. This class will also 
@@ -37,36 +37,6 @@ class WriteHtmlFunc:
         self.WriteParams = WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
 
 def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
-    lanczosG = 7
-    lanczos_coef = [0.99999999999980993, 676.5203681218851,\
-                    -1259.1392167224028, 771.32342877765313,\
-                    -176.61502916214059, 12.507343278686905, \
-                    -0.13857109526572012, 9.9843695780195716e-6,\
-                    1.5056327351493116e-7]
-    def Gamma(z):
-        """This is the Lanczos approximation for Gamma function"""
-        if z < 0.5:
-            return n.pi / (n.sin(n.pi*z)*Gamma(1-z))
-        else:
-            z -= 1
-            x = lanczos_coef[0]
-            for i in range(1, lanczosG + 2):
-                x += lanczos_coef[i]/(z + i)
-            t = z + lanczosG + 0.5
-            return n.sqrt(2*n.pi) * t**(z + 0.5) * n.exp(-t) * x
-    def bfunc(x):
-        """ This function gives value of b_n given the Sersic index"""
-        return 0.868242*x -0.142058 # Khosroshahi et al. 2000 approximation
-    def parGal(x):
-        try:
-            x = float(x)
-        except:
-            c.GalOut = 0
-            try:
-                x = float(x[1:-1])
-            except:
-                x = 9999
-        return x
     try:
         ComP = c.components
     except:
@@ -130,76 +100,157 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         indexfile.writelines(['</BODY></HTML>\n'])
         indexfile.close()
     # Reading fit.log
-    object = 1
-    object_err = 1
-    if exists('fit.log'):
-        for line in open('fit.log','r'): 
-            values = line.split()
-            try: 
-                if(str(values[0]) == 'Input'):
-                    alpha_ned = str(alpha_j)[:10]
-                    delta_ned = str(delta_j)[:10]
-                if(str(values[0]) == 'Init.'):
-                    initial_conf = str(values[4])
-                if(str(values[0]) == 'Restart'):
-                    restart_conf = str(values[3])
-                if(str(values[0]) == 'Chi^2/nu'):
-                    chi2nu = float(values[2])
-                    Distance = str(round(distance, 3))[:5]
-                #if(str(values[0]) == 'sersic' and object == 2):
-                #    mag_bar = float(values[4])
-                #    re_bar = float(values[5])
-                #    SersicIndexBar = float(values[6])
-                #    SersicEllipticityBar = float(values[7])
-                #    SersicBoxyBar = float(values[9])
-                 #    object += 1
-                if(str(values[0]) == 'sersic' and object == 1):
-                    mag_b = parGal(values[5])
-                    re = parGal(values[6])
-                    SersicIndex = parGal(values[7])
-                    SersicEllipticity = parGal(values[8])
-                    SersicPA = parGal(values[9])
-                    SersicBoxy = 0.0
-                    object += 1
-                if(str(values[0]) == 'expdisk'):
-                    mag_d = parGal(values[5])
-                    rd = parGal(values[6])
-                    DiskEllipticity = parGal(values[7])
-                    DiskPA = parGal(values[8])
-                    DiskBoxy = 0.0
-                if(str(values[0]) == 'psf'):
-                    mag_p = parGal(values[5])
-                if(str(values[0]) == 'sky'):
-                    galfit_sky = parGal(values[5][1:-1])
-                if(str(values[0])[:1] == '('):
-                    # if(str(a) == 'sersic' and object_err == 2):
-                    #     mag_bar_err = float(values[2])
-                    #     re_bar_err  = float(values[3])
-                    #     SersicIndexBarErr = float(values[4])
-                    #     SersicEllipticityBarErr = float(values[5])
-                    #     SersicBoxyBarErr = float(values[7])
-                    #     object_err += 1
-                    if(str(a) == 'sersic' and object_err == 1):
-                        mag_b_err = parGal(values[3])
-                        re_err  = parGal(values[4])
-                        SersicIndexErr = parGal(values[5])
-                        SersicEllipticityErr = parGal(values[6])
-                        SersicPAErr = parGal(values[7])
-                        SersicBoxyErr = 0.0
-                        object_err += 1
-                    if(str(a) == 'expdisk'):
-                        mag_d_err = parGal(values[3])
-                        rd_err = parGal(values[4])
-                        DiskEllipticityErr = parGal(values[5])
-                        DiskPAErr = parGal(values[6])
-                        DiskBoxyErr = 0.0
-                    if(str(a) == 'psf'):
-                        mag_p_err = parGal(values[3])
-                a=values[0]			
-            except: 
-                pass
+    if 'bar' in ComP:
+        basic_info, fit_info = read_fitlog(filename = 'fit.log', yes_bar = 1)
     else:
-    	print 'No fit.log exists'
+        basic_info, fit_info = read_fitlog(filename = 'fit.log', yes_bar = 0)
+
+
+    if 'Input' in basic_info:
+        alpha_ned = str(alpha_j)[:10]
+        delta_ned = str(delta_j)[:10]
+        
+    initial_conf = basic_info['initial_conf']
+    restart_conf = basic_info['restart_conf']
+
+    # move the restart file to a reasonably named output file
+    new_outname = initial_conf.replace('in','out')
+    os.rename(restart_conf, new_outname)
+    basic_info['restart_conf'] = new_outname
+
+    
+    chi2nu = basic_info['chi2nu']
+    Distance = str(round(distance, 3))[:5]
+    if 'bulge' in fit_info:
+        bulge_xcntr = fit_info['bulge']['xctr'][0]
+        bulge_ycntr = fit_info['bulge']['yctr'][0]
+        mag_b = fit_info['bulge']['mag'][0]
+        re = fit_info['bulge']['rad'][0]
+        SersicIndex = fit_info['bulge']['n'][0]
+        SersicEllipticity = fit_info['bulge']['ell'][0]
+        SersicPA = fit_info['bulge']['pa'][0]
+        SersicBoxy = fit_info['bulge']['boxy'][0]
+
+        bulge_xcntr_err = fit_info['bulge']['xctr'][1]
+        bulge_ycntr_err = fit_info['bulge']['yctr'][1]
+        mag_b_err = fit_info['bulge']['mag'][1]
+        re_err = fit_info['bulge']['rad'][1]
+        SersicIndexErr = fit_info['bulge']['n'][1]
+        SersicEllipticityErr = fit_info['bulge']['ell'][1]
+        SersicPAErr = fit_info['bulge']['pa'][1]
+        SersicBoxyErr = fit_info['bulge']['boxy'][1]
+    else:
+        bulge_xcntr = -999.
+        bulge_ycntr = -999.
+        mag_b = -999.
+        re = -999.
+        SersicIndex = -999.
+        SersicEllipticity = -999.
+        SersicPA = -999.
+        SersicBoxy = -999.
+
+        bulge_xcntr_err = -999.
+        bulge_ycntr_err = -999.
+        mag_b_err = -999.
+        re_err = -999.
+        SersicIndexErr = -999. 
+        SersicEllipticityErr = -999.
+        SersicPAErr = -999.
+        SersicBoxyErr = -999.
+
+    if 'disk' in fit_info:
+        disk_xcntr = fit_info['disk']['xctr'][0]
+        disk_ycntr = fit_info['disk']['yctr'][0]
+        mag_d = fit_info['disk']['mag'][0]
+        rd = fit_info['disk']['rad'][0]
+        DiskEllipticity = fit_info['disk']['ell'][0]
+        DiskPA = fit_info['disk']['pa'][0]
+        DiskBoxy = fit_info['disk']['boxy'][0]
+
+        disk_xcntr_err = fit_info['disk']['xctr'][1]
+        disk_ycntr_err = fit_info['disk']['yctr'][1]
+        mag_d_err = fit_info['disk']['mag'][1]
+        rd_err = fit_info['disk']['rad'][1]
+        DiskEllipticityErr = fit_info['disk']['ell'][1]
+        DiskPAErr = fit_info['disk']['pa'][1]
+        DiskBoxyErr = fit_info['disk']['boxy'][1]
+    else:
+        disk_xcntr = -999.
+        disk_ycntr = -999.
+        mag_d = -999.
+        rd = -999.
+        DiskEllipticity = -999.
+        DiskPA = -999.
+        DiskBoxy = -999.
+
+        disk_xcntr_err = -999.
+        disk_ycntr_err = -999.
+        mag_d_err = -999.
+        rd_err = -999.
+        DiskEllipticityErr = -999.
+        DiskPAErr = -999.
+        DiskBoxyErr = -999.
+
+    if 'psf' in fit_info:
+        psf_xcntr = fit_info['disk']['xctr'][0]
+        psf_ycntr = fit_info['disk']['yctr'][0]
+        mag_p = fit_info['disk']['mag'][0]
+        
+        psf_xcntr_err = fit_info['disk']['xctr'][1]
+        psf_ycntr_err = fit_info['disk']['yctr'][1]
+        mag_p_err = fit_info['disk']['mag'][1]
+    else:
+        psf_xcntr = -999.
+        psf_ycntr = -999.
+        mag_p = -999.
+        
+        psf_xcntr_err = -999.
+        psf_ycntr_err = -999.
+        mag_p_err = -999.
+
+    if 'bar' in fit_info:
+        bar_xcntr = fit_info['bulge']['xctr'][0]
+        bar_ycntr = fit_info['bulge']['yctr'][0]
+        mag_bar = fit_info['bulge']['mag'][0]
+        rbar = fit_info['bulge']['rad'][0]
+        BarIndex = fit_info['bulge']['n'][0]
+        BarEllipticity = fit_info['bulge']['ell'][0]
+        BarPA = fit_info['bulge']['pa'][0]
+        BarBoxy = fit_info['bulge']['boxy'][0]
+
+        bar_xcntr_err = fit_info['bulge']['xctr'][1]
+        bar_ycntr_err = fit_info['bulge']['yctr'][1]
+        mag_bar_err = fit_info['bulge']['mag'][1]
+        rbar_err = fit_info['bulge']['rad'][1]
+        BarIndexErr = fit_info['bulge']['n'][1]
+        BarEllipticityErr = fit_info['bulge']['ell'][1]
+        BarPAErr = fit_info['bulge']['pa'][1]
+        BarBoxyErr = fit_info['bulge']['boxy'][1]
+    else:
+        bar_xcntr = -999.
+        bar_ycntr = -999.
+        mag_bar = -999.
+        rbar = -999.
+        BarIndex = -999.
+        BarEllipticity = -999.
+        BarPA = -999.
+        BarBoxy = -999.
+
+        bar_xcntr_err = -999.
+        bar_ycntr_err = -999.
+        mag_bar_err = -999.
+        rbar_err = -999.
+        BarIndexErr = -999. 
+        BarEllipticityErr = -999.
+        BarPAErr = -999.
+        BarBoxyErr = -999.
+    if 'sky' in fit_info:
+        galfit_sky = fit_info['sky']['mag'][0]
+        galfit_sky_err = fit_info['sky']['mag'][1]
+    else:
+        galfit_sky = -999.
+        galfit_sky_err = -999.
+                                       
     # Converting fitted params to physical params
     if(z == 9999):
         re_kpc = 9999
@@ -230,10 +281,10 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         else:
             re_bar_kpc = 9999
             re_bar_err_kpc = 9999
-    # if 'point' in ComP:
-    #     fwhm_kpc = 0.5 * phy_parms[3]
-    # else:
-    #     fwhm_kpc = 9999
+        if 'point' in ComP:
+            fwhm_kpc = 0.5 * phy_parms[3]
+        else:
+            fwhm_kpc = 9999
     # Finding derived parameters
     if 'bulge' in ComP and 'disk' in ComP:
         if 'point' in ComP:
@@ -262,8 +313,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         BT = 'nan'
     # Start writing html file. Now the template keywords will get values
     pngfile = 'P_' + c.fstring + '.png'
-    object = 1
-    object_err = 1
     Neighbour_Sersic = ''
     Object_Sersic = ''
     Object_Sersic_err = ''
@@ -271,136 +320,118 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     Object_Exp_err = ''
     Point_Vals = ''
     Point_Vals_err = ''
-    if exists('fit.log'):
-        for line in open('fit.log','r'): 
-            values = line.split() 
-            try: 
-                if(str(values[0].strip()) == 'sersic'):
-                    if object > 1 or 'bulge' not in ComP:
-                        Neighbour_Sersic = str(Neighbour_Sersic) + \
-                                          '<TR align="center" bgcolor=' + \
-                                          '"#99CCFF"><TD>' + str(values[0]) + \
-                                          ' </TD> <TD> ' + \
-                                          str(values[3])[:-1] + '</TD> <TD> '\
-                                          + str(values[4])[:-1] + \
-                                          ' </TD> <TD> ' + str(values[5]) + \
-                                          ' </TD> <TD> ' + \
-                                          str(values[6]) + ' </TD> <TD> ' + \
-                                          ' ' + ' </TD> <TD> ' + \
-                                          str(values[7]) + ' </TD> <TD> ' +\
-                                          str(values[8]) + ' </TD> <TD> ' +\
-                                          str(values[9]) + ' </TD> <TD> ' + \
-                                          str(0.0) + ' </TD> </TR>'
-                    if object == 1 and 'bulge' in ComP:
-                        bulge_xcntr = float(str(values[3])[:-1])
-                        bulge_ycntr = float(str(values[4])[:-1])
-                        Object_Sersic = '<TR align="center" ' +\
-                                        'bgcolor="#99CCFF">' +\
-                                       '<TD>' + str(values[0]) + '</TD> <TD> '\
-                                       + str(values[3])[:-1] + ' </TD> <TD> '\
-                                       + str(values[4])[:-1] + ' </TD> <TD> ' \
-                                       + str(values[5]) + ' </TD> <TD> ' \
-                                       + str(values[6]) +  ' </TD> <TD> ' + \
-                                       str(round(re_kpc, 3))[:5] +'</TD> <TD>'\
-                                       + str(values[7]) + ' </TD> <TD> ' \
-                                       + str(values[8]) + ' </TD> <TD> ' \
-                                       + str(values[9]) + ' </TD> <TD> ' \
-                                       + str(0.0) + ' </TD></TR>'
-                        object += 1
-                if(str(values[0].strip()) == 'expdisk'):
-                    disk_xcntr = float(str(values[3])[:-1])
-                    disk_ycntr = float(str(values[4])[:-1])
-                    Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
-                                '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
-                                str(values[3])[:-1] + ' </TD> <TD> ' + \
-                                str(values[4])[:-1] + ' </TD> <TD> ' + \
-                                str(values[5]) + ' </TD> <TD> ' + \
-                                str(values[6]) +  ' </TD> <TD> ' + \
-                                str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
-                                ' ' + ' </TD> <TD> ' + str(values[7]) +  \
-                                ' </TD> <TD> ' + str(values[8]) + \
-                                ' </TD> <TD> ' + str(0.0) + ' </TD></TR>'
-                if(str(values[0]) == 'psf'):
-                    point_xcntr = float(str(values[3])[:-1])
-                    point_ycntr = float(str(values[4])[:-1])
-                    Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
-                                 '<TD>' + str(values[0]) + ' </TD> <TD> ' + \
-                               str(values[3])[:-1] + ' </TD> <TD> ' + \
-                               str(values[4])[:-1] + ' </TD> <TD> ' + \
-                               str(values[5]) + ' </TD> <TD> ' + \
-                               str('9999') +  ' </TD> <TD> ' + \
-                               str('9999') + ' </TD> <TD> ' + \
-                               ' ' + ' </TD> <TD> ' + str('9999') +  \
-                               ' </TD> <TD> ' + str('9999') + \
-                               ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
-                if(str(values[0].strip()) == '('):
-                    if(str(a) == 'sersic' and object_err > 1 or \
-                        str(a) == 'sersic'  and 'bulge' not in ComP):
-                        Neighbour_Sersic = str(Neighbour_Sersic) + \
-                                           '<TR align="center" ' + \
-                                           'bgcolor="#CCFFFF"> <TD>' + ' ' + \
-                                           ' </TD> <TD> ' + \
-                                           str(values[1])[:-1] + \
-                                           ' </TD> <TD> ' + \
-                                           str(values[2])[:-1] + \
-                                           ' </TD> <TD> ' + str(values[3]) + \
-                                           ' </TD> <TD> ' + str(values[4]) + \
-                                           ' </TD> <TD> ' + ' ' + \
-                                           ' </TD> <TD> ' + str(values[5]) + \
-                                           ' </TD> <TD> ' + str(values[6]) + \
-                                           ' </TD> <TD> ' + str(values[7]) + \
-                                           ' </TD> <TD> ' + str(0) + \
-                                           ' </TD> </TR> '
-                    if(str(a) == 'sersic' and object_err == 1 and \
-                        'bulge' in ComP ):
-                        Object_Sersic_err = '<TR align="center" ' + \
-                                           'bgcolor="#CCFFFF">' + \
-                                           '<TD>' + ' ' + '</TD> <TD>' + \
-                                          str(values[1])[:-1] + '</TD> <TD>'\
-                                           + str(values[2])[:-1] + \
-                                           ' </TD> <TD> ' + str(values[3]) + \
-                                           ' </TD> <TD> ' + str(values[4]) + \
-                                           ' </TD> <TD> ' + \
-                                           str(round(re_err_kpc, 3))[:5] + \
-                                           ' </TD> <TD> ' + str(values[5]) + \
-                                           ' </TD> <TD> ' + str(values[6]) + \
-                                           ' </TD> <TD> ' + str(values[7]) + \
-                                           ' </TD> <TD> ' + str(0) + \
-                                           ' </TD></TR>'
-                        object_err += 1
-                    if(str(a) == 'expdisk'):
-                        Object_Exp_err = '<TR align="center" ' + \
-                                         'bgcolor="#CCFFFF">' + \
-                                         '<TD>' + ' ' + '</TD> <TD>' + \
-                                         str(values[1])[:-1] + '</TD> <TD>'\
-                                         + str(values[2])[:-1] + \
-                                         ' </TD> <TD> ' + str(values[3]) + \
-                                         ' </TD> <TD> ' + str(values[4]) + \
-                                         ' </TD> <TD> ' + \
-                                         str(round(rd_err_kpc, 3))[:5] + \
-                                         ' </TD> <TD> ' + ' ' + \
-                                         ' </TD> <TD> ' + str(values[5]) + \
-                                         ' </TD> <TD> ' + str(values[6]) + \
-                                         ' </TD> <TD> ' + str(0) + \
-                                         ' </TD></TR>'
-                    if(str(a) == 'psf'):
-                        Point_Vals_err = '<TR align="center" ' + \
-                                         'bgcolor="#CCFFFF">' + \
-                                         '<TD>' + ' ' + '</TD> <TD>' + \
-                                         str(values[1])[:-1] + '</TD> <TD>'\
-                                         + str(values[2])[:-1] + \
-                                         ' </TD> <TD> ' + str(values[3]) + \
-                                         ' </TD> <TD> ' + str('9999') + \
-                                         ' </TD> <TD> ' + \
-                                         str('9999') + \
-                                         ' </TD> <TD> ' + ' ' + \
-                                         ' </TD> <TD> ' + str('9999') + \
-                                         ' </TD> <TD> ' + str('9999') + \
-                                         ' </TD> <TD> ' + str('9999') + \
-                                         ' </TD></TR>'
-                a=values[0]				
-            except:
-                pass
+    try:
+        for key in fit_info.keys():
+            if 'neighbor' in key:
+                Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                   '<TR align="center" bgcolor=' + \
+                                   '"#99CCFF"><TD> neighbor sersic' + \
+                                   ' </TD> <TD> ' + \
+                                   str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                   + str(fit_info[key]['yctr'][0]) + \
+                                   ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
+                                   ' </TD> <TD> ' + \
+                                   str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                                   ' ' + ' </TD> <TD> ' + \
+                                   str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
+                                   str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                                   str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
+                                   str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+                Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                   '<TR align="center" ' + \
+                                   'bgcolor="#CCFFFF"> <TD>' + ' ' + \
+                                   ' </TD> <TD> ' + \
+                                   str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                   + str(fit_info[key]['yctr'][1]) + \
+                                   ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                   ' </TD> <TD> ' + \
+                                   str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                   ' ' + ' </TD> <TD> ' + \
+                                   str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
+                                   str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                   str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                   str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+            if 'bulge' in key:
+                Object_Sersic = '<TR align="center" ' +\
+                                'bgcolor="#99CCFF">' +\
+                                '<TD> sersic bulge</TD> <TD> ' +\
+                                str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                + str(fit_info[key]['yctr'][0]) + \
+                                ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
+                                ' </TD> <TD> ' + \
+                                str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                                str(round(re_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
+                                str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                                str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
+                                str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+                Object_Sersic_err = '<TR align="center" ' + \
+                                    'bgcolor="#CCFFFF">' + \
+                                    '<TD>' + ' ' + '</TD> <TD>' + \
+                                    str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                    + str(fit_info[key]['yctr'][1]) + \
+                                    ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                    ' </TD> <TD> ' + \
+                                    str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                    str(round(re_err_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                    str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
+                                    str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                    str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                    str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+            if 'disk' in key:
+                Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
+                             '<TD> disk </TD> <TD> ' + \
+                             str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                             + str(fit_info[key]['yctr'][0]) + \
+                             ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
+                             ' </TD> <TD> ' + \
+                             str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                             str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                             ' </TD> <TD> </TD> <TD> ' +\
+                             str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                             str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
+                             str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+
+                Object_Exp_err = '<TR align="center" ' + \
+                                 'bgcolor="#CCFFFF">' + \
+                                 '<TD>' + ' ' + '</TD> <TD>' + \
+                                 str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                 + str(fit_info[key]['yctr'][1]) + \
+                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                 ' </TD> <TD> ' + \
+                                 str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                 str(round(rd_err_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                 ' </TD> <TD> </TD> <TD> ' +\
+                                 str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                 str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                 str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+
+
+            if(str(values[0]) == 'psf'):
+                Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
+                             '<TD> point </TD> <TD> ' + \
+                             str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                             + str(fit_info[key]['yctr'][0]) + \
+                             ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) +\
+                             ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
+                             str('9999') + ' </TD> <TD> ' + \
+                             ' ' + ' </TD> <TD> ' + str('9999') +  \
+                             ' </TD> <TD> ' + str('9999') + \
+                             ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
+                Point_Vals_err = '<TR align="center" ' + \
+                                 'bgcolor="#CCFFFF">' + \
+                                 '<TD>' + ' ' + '</TD> <TD>' + \
+                                 str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                 + str(fit_info[key]['yctr'][1]) + \
+                             ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) +\
+                             ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
+                             str('9999') + ' </TD> <TD> ' + \
+                             ' ' + ' </TD> <TD> ' + str('9999') +  \
+                             ' </TD> <TD> ' + str('9999') + \
+                             ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
+                            
+    except:
+        pass
     if 'bulge' in ComP:
         try:
               pixelscale = c.pixelscale
@@ -408,7 +439,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
               pixelscale = 1
         AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * pixelscale * \
                       pixelscale * re * re * n.sqrt(1 - SersicEllipticity**2.0))
-        # AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + (2.17 * re_err / re)**2.0)
         AvgMagInsideReErr2 = (1.085 * n.sqrt((2 * re * re_err)**2.0 + \
                              ((SersicEllipticity * SersicEllipticityErr) / \
                              n.sqrt(1 - SersicEllipticity**2.0))**2.0)) / \
@@ -446,9 +476,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                 HitLimit = 0
             else:
                 pass
-        else:
-            bulge_xcntr = xcntr
-            bulge_ycntr = ycntr
     if 'disk' in ComP:
         if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2 or \
                abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
@@ -457,9 +484,7 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                 HitLimit = 0
         else:
             pass
-    else:
-        disk_xcntr = xcntr
-        disk_ycntr = ycntr
+    
     if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
         HitLimit and c.GalOut and \
         abs(bulge_xcntr - xcntr) <= c.center_deviation and \
@@ -485,7 +510,7 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
              abs(disk_ycntr - ycntr) > c.center_deviation:
             error_mesg3 = str(error_mesg3) + 'Fake Center!'
             if bulge_xcntr == 9999 or bulge_ycntr == 9999 or \
-               disk_xcntr == 9999 or disk_ycntr == 9999:
+                   disk_xcntr == 9999 or disk_ycntr == 9999:
                 pass
             else:
                 c.Flag += 2**GetFlag('FAKE_CNTR')
@@ -506,26 +531,30 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     f_res = open("result.csv", "ab")
     writer = csv.writer(f_res)
     galid = c.fstring
-    ParamToWrite = [galid, alpha_j, delta_j, z, c.SexMagAuto, c.SexMagAutoErr]
+    ParamToWrite = [galid, alpha_j, delta_j, z, c.SexMagAuto, c.SexMagAutoErr,
+                    c.SexTargets]
     if 'bulge' in ComP:
-        for bulgecomp in [mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, \
+        for bulgecomp in [bulge_xcntr,bulge_xcntr_err,bulge_ycntr,bulge_ycntr_err,
+                          mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, 
                           SersicIndex, SersicIndexErr, AvgMagInsideRe,\
                           AvgMagInsideReErr, SersicEllipticity, \
-                          SersicEllipticityErr, SersicPA, \
-			  SersicPAErr]:
+                          SersicEllipticityErr, SersicPA, 
+			  SersicPAErr, SersicBoxy, SersicBoxyErr]:
             ParamToWrite.append(bulgecomp)
     else:
         for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999, 9999, 9999, 9999]:
+                          9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
+                          9999, 9999, 9999]:
             ParamToWrite.append(bulgecomp)
     if 'disk' in ComP:
-        for diskcomp in [mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc,\
-                         DiskEllipticity, DiskEllipticityErr, \
-			 DiskPA, DiskPAErr]:
+        for diskcomp in [disk_xcntr,disk_xcntr_err,disk_ycntr,disk_ycntr_err,
+                         mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, 
+                         DiskEllipticity, DiskEllipticityErr, DiskPA, 
+                         DiskPAErr, DiskBoxy, DiskBoxyErr]:
             ParamToWrite.append(diskcomp)
     else:
-        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-		        9999, 9999]:
+        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999,
+                         9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
             ParamToWrite.append(diskcomp)
     ParamToWrite.append(BD)
     ParamToWrite.append(BT)
@@ -542,33 +571,36 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     try:
         galfit_sky * 1.0
     except:
+        print "galfit sky was wierd: ", galfit_sky
         galfit_sky = 9999
+        galfit_sky_err = 9999
         print 'GALFIT does not report sky'
     if c.GalSky != 9999:
         galfit_sky = c.GalSky
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
-                       M, c.SexSky, galfit_sky, DisMoD, \
+                       M, c.SexSky, galfit_sky, galfit_sky_err, DisMoD, \
                        distance, good_fit, c.Flag, c.SexHalfRad]:
         ParamToWrite.append(otherparam)
     if 'bar' in ComP:
-        for barcomp in [mag_bar, mag_bar_err, re_bar, re_bar_err, re_bar_kpc, \
-                          re_bar_err_kpc, \
-                          SersicIndexBar, SersicIndexBarErr, \
-                          SersicEllipticityBar, \
-                          SersicEllipticityBarErr, SersicBoxyBar]:
+        for barcomp in [bar_xcntr,bar_xcntr_err,bar_ycntr,bar_ycntr_err,
+                        mag_bar, mag_bar_err, re_bar, re_bar_err, re_bar_kpc, \
+                        re_bar_err_kpc, \
+                        SersicIndexBar, SersicIndexBarErr, \
+                        SersicEllipticityBar, \
+                        SersicEllipticityBarErr, SersicBoxyBar]:
             ParamToWrite.append(barcomp)
     else:
         for barcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999]:
+                          9999, 9999, 9999, 9999,9999, 9999, 9999]:
             ParamToWrite.append(barcomp)
-    writer.writerow(ParamToWrite)
-    f_res.close()
     # Remove any nan or inf from the parameter
     for p in ParamToWrite:
         if str(p) in ('nan', '-nan', 'inf', '-inf'):
             ParamToWrite[ParamToWrite.index(p)] = 9999
         else:
             pass
+    writer.writerow(ParamToWrite)
+    f_res.close()
     # Writing data base
     try:
         from utilities import WriteDb
@@ -597,3 +629,194 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     outfile1.close()
 #c.fstring = 'test_n5585_lR'
 #WriteParams('Itest_n5585_lR.fits', 81.71, 82.53, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 1)
+
+
+
+def getline(values):
+    line = values.pop(0)
+    line = line.split()
+    return line
+
+def getfit(f):
+    values = f.read()
+    values = values.replace('\n\n','\n')
+    values = values.split('\n')
+    return values
+
+def read_fitlog(filename = 'fit.log', yes_bar = 0):
+    """ This function will read the fit log and return all the relevant
+    information in 2 Dictionaries, 1 with the basic info and one with
+    the fit info"""
+
+    neighbor = 0
+    basic_info = {}
+    fit_info = {}
+    if exists(filename):
+        f = open(filename,'r')
+        values = getfit(f)
+        f.close()
+        while len(values) > 0:
+            line = getline(values)
+            try: 
+                if(str(line[0]) == 'Input'):
+                    basic_info['Input'] = 1
+                elif(str(line[0]) == 'Init.'):
+                    basic_info['initial_conf'] = str(line[4])
+                elif(str(line[0]) == 'Restart'):
+                    basic_info['restart_conf'] = str(line[3])
+                elif(str(line[0]) == 'Chi^2/nu'):
+                    basic_info['chi2nu'] = float(line[2])
+
+                # for galaxy bulge
+                elif(str(line[0]) == 'sersic' and 'bulge' not in fit_info):
+                    fit_info['bulge'] = {'xctr':[-999.,-999.],
+                                         'yctr':[-999.,-999.],
+                                         'mag':[-999.,-999.],
+                                         'rad':[-999.,-999.],
+                                         'n':[-999.,-999.],
+                                         'ell':[-999.,-999.],
+                                         'pa':[-999.,-999.],
+                                         'boxy':[-999.,-999.]
+                                         }
+                    fit_info['bulge']['xctr'][0]=float(str(line[2])[1:-1])
+                    fit_info['bulge']['yctr'][0]=float(str(line[3])[:-1])
+                    fit_info['bulge']['mag'][0]=float(line[4])
+                    fit_info['bulge']['rad'][0]=float(line[5])
+                    fit_info['bulge']['n'][0]=float(line[6])
+                    fit_info['bulge']['ell'][0]=float(line[7])
+                    fit_info['bulge']['pa'][0]=float(line[8])
+                    fit_info['bulge']['boxy'][0]=float(line[9])
+                    # and get the error
+                    line = getline(values)
+                    fit_info['bulge']['xctr'][1]=float(str(line[0])[1:-1])
+                    fit_info['bulge']['yctr'][1]=float(str(line[1])[:-1])
+                    fit_info['bulge']['mag'][1]=float(line[2])
+                    fit_info['bulge']['rad'][1]=float(line[3])
+                    fit_info['bulge']['n'][1]=float(line[4])
+                    fit_info['bulge']['ell'][1]=float(line[5])
+                    fit_info['bulge']['pa'][1]=float(line[6])
+                    fit_info['bulge']['boxy'][1]=float(line[7])
+                    
+                # for galaxy disk
+                elif(str(line[0]) == 'expdisk'):
+                    fit_info['disk'] = {'xctr':[-999.,-999.],
+                                        'yctr':[-999.,-999.],
+                                        'mag':[-999.,-999.],
+                                        'rad':[-999.,-999.],
+                                        'n':[-999.,-999.],
+                                        'ell':[-999.,-999.],
+                                        'pa':[-999.,-999.],
+                                        'boxy':[-999.,-999.]
+                                             }
+                    fit_info['disk']['xctr'][0]=float(str(line[2])[1:-1])
+                    fit_info['disk']['yctr'][0]=float(str(line[3])[:-1])
+                    fit_info['disk']['mag'][0]=float(line[4])
+                    fit_info['disk']['rad'][0]=float(line[5])
+                    fit_info['disk']['ell'][0]=float(line[6])
+                    fit_info['disk']['pa'][0]=float(line[7])
+                    fit_info['disk']['boxy'][0]=float(line[8])
+                    # and get the error
+                    line = getline(values)
+                    fit_info['disk']['xctr'][1]=float(str(line[0])[1:-1])
+                    fit_info['disk']['yctr'][1]=float(str(line[1])[:-1])
+                    fit_info['disk']['mag'][1]=float(line[2])
+                    fit_info['disk']['rad'][1]=float(line[3])
+                    fit_info['disk']['ell'][1]=float(line[4])
+                    fit_info['disk']['pa'][1]=float(line[5])
+                    fit_info['disk']['boxy'][1]=float(line[6])
+
+                # for a point source
+                elif(str(line[0]) == 'psf'):
+                    fit_info['psf'] = {'xctr':[-999.,-999.],
+                                       'yctr':[-999.,-999.],
+                                       'mag':[-999.,-999.],
+                                       }
+                    fit_info['psf']['xctr'][0]=float(str(line[2])[1:-1])
+                    fit_info['psf']['yctr'][0]=float(str(line[3])[:-1])
+                    fit_info['psf']['mag'][0]=float(line[4])
+                    # and get the error
+                    line = getline(values)
+                    fit_info['psf']['xctr'][1]=float(str(line[0])[1:-1])
+                    fit_info['psf']['yctr'][1]=float(str(line[1])[:-1])
+                    fit_info['psf']['mag'][1]=float(line[2])
+                
+                # for the sky
+                elif(str(line[0]) == 'sky'):
+                    fit_info['sky'] = {'mag':[-999.,-999.]
+                                       }
+                    fit_info['sky']['mag'][0]=float(line[4])
+                    # and get the error
+                    line = getline(values)
+                    fit_info['sky']['mag'][1]=float(line[0])
+                    
+                # if there is a bar
+                elif(str(line[0]) == 'sersic' and 'bar' not in fit_info
+                     and yes_bar and 'bulge' in fit_info):
+                    fit_info['bar'] = {'xctr':[-999.,-999.],
+                                       'yctr':[-999.,-999.],
+                                       'mag':[-999.,-999.],
+                                       'rad':[-999.,-999.],
+                                       'n':[-999.,-999.],
+                                       'ell':[-999.,-999.],
+                                       'pa':[-999.,-999.],
+                                       'boxy':[-999.,-999.]
+                                       }
+                    fit_info['bar']['xctr'][0]=float(str(line[2])[1:-1])
+                    fit_info['bar']['yctr'][0]=float(str(line[3])[:-1])
+                    fit_info['bar']['mag'][0]=float(line[4])
+                    fit_info['bar']['rad'][0]=float(line[5])
+                    fit_info['bar']['n'][0]=float(line[6])
+                    fit_info['bar']['ell'][0]=float(line[7])
+                    fit_info['bar']['pa'][0]=float(line[8])
+                    fit_info['bar']['boxy'][0]=float(line[9])
+                    # and get the error
+                    line = getline(values)
+                    fit_info['bar']['xctr'][1]=float(str(line[0])[1:-1])
+                    fit_info['bar']['yctr'][1]=float(str(line[1])[:-1])
+                    fit_info['bar']['mag'][1]=float(line[2])
+                    fit_info['bar']['rad'][1]=float(line[3])
+                    fit_info['bar']['n'][1]=float(line[4])
+                    fit_info['bar']['ell'][1]=float(line[5])
+                    fit_info['bar']['pa'][1]=float(line[6])
+                    fit_info['bar']['boxy'][1]=float(line[7])			
+
+                # for galaxy neighbors
+                elif(str(line[0]) == 'sersic' and 'bulge' in fit_info and
+                     ((yes_bar and 'bar' in fit_info) or 'bar' not in fit_info)):
+                    neighbor +=1
+                    key = 'neighbor' + str(neighbor) 
+                    fit_info[key] = {'xctr':[-999.,-999.],
+                                     'yctr':[-999.,-999.],
+                                     'mag':[-999.,-999.],
+                                     'rad':[-999.,-999.],
+                                     'n':[-999.,-999.],
+                                     'ell':[-999.,-999.],
+                                     'pa':[-999.,-999.],
+                                     'boxy':[-999.,-999.]
+                                     }
+                    fit_info[key]['xctr'][0]=float(str(line[2])[1:-1])
+                    fit_info[key]['yctr'][0]=float(str(line[3])[:-1])
+                    fit_info[key]['mag'][0]=float(line[4])
+                    fit_info[key]['rad'][0]=float(line[5])
+                    fit_info[key]['n'][0]=float(line[6])
+                    fit_info[key]['ell'][0]=float(line[7])
+                    fit_info[key]['pa'][0]=float(line[8])
+                    fit_info[key]['boxy'][0]=float(line[9])
+                    # and get the error
+                    line = getline(values)
+                    fit_info[key]['xctr'][1]=float(str(line[0])[1:-1])
+                    fit_info[key]['yctr'][1]=float(str(line[1])[:-1])
+                    fit_info[key]['mag'][1]=float(line[2])
+                    fit_info[key]['rad'][1]=float(line[3])
+                    fit_info[key]['n'][1]=float(line[4])
+                    fit_info[key]['ell'][1]=float(line[5])
+                    fit_info[key]['pa'][1]=float(line[6])
+                    fit_info[key]['boxy'][1]=float(line[7])
+
+            except: 
+                pass
+            
+    else:
+        print "File does not exist!!!!"
+    
+    return     basic_info, fit_info
