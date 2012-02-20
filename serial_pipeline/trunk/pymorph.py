@@ -433,7 +433,7 @@ def main():
                         if c.UMag > -9999.0:
                             c.UMag = c.SexMagAuto - 7.0
                         if c.LMag < 9999.0:
-                            c.LMag = c.SexMagAuto + 7.0
+                            c.LMag = c.SexMagAuto + 20.0
 
                         # FIX
                         if c.URe < 9999.0:
@@ -631,13 +631,13 @@ def main():
                                                 cut_ycntr, SizeX, SizeY, line_s)
                                     #END
                             except Exception, inst:
+                                print traceback.print_exc()
                                 print type(inst)     # the exception instance
                                 print inst.args      # arguments stored in\
                                                      # .args
                                 print inst           # __str__ allows args\
                                                      # to printed directly
                                 print "something bad happened!!!!\n\n"
-                                print traceback.print_exc()
                                     
                             try:
                                 if os.access('P_' + c.fstring + '.png', \
@@ -999,7 +999,7 @@ def SExtractorConf():
     try:
         c.SEx_SEEING_FWHM = float(SEx_SEEING_FWHM )
     except:
-        c.SEx_SEEING_FWHM = 0.11
+        c.SEx_SEEING_FWHM = c.pixelscale * 3.37
     SEx_BACK_SIZE = raw_input('BACK_SIZE (64) >>> ')
     try:
         c.SEx_BACK_SIZE = float(SEx_BACK_SIZE)
@@ -1085,7 +1085,7 @@ if __name__ == '__main__':
     c.SEx_DEBLEND_MINCONT = 0.005
     c.SEx_PHOT_FLUXFRAC = 0.5
     c.SEx_PIXEL_SCALE = c.pixelscale
-    c.SEx_SEEING_FWHM = 0.11
+    c.SEx_SEEING_FWHM = c.pixelscale * 3.37 
     c.SEx_BACK_SIZE = 64
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'

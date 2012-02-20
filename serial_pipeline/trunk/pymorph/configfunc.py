@@ -5,6 +5,7 @@ from os.path import exists
 import numpy as np
 from flagfunc import GetFlag, isset
 import config as c
+import traceback
 
 class ConfigFunc:
     """The class making configuration file for GALFIT. The configuration file 
@@ -355,6 +356,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
                 isneighbour = 1
         except:
             pass
+
     f_constrain.close()
     f.close()
     if isneighbour:
