@@ -1,9 +1,8 @@
-#import MySQLdb as mysql
-#import sys
-#import datetime
+import datetime
 import config as c
 import time
 from writehtmlfunc import *
+
 def WriteDb(ParamValues):
     gal_id = ParamValues[0]
     hst = c.host
@@ -212,12 +211,9 @@ def WriteDb(ParamValues):
     cursor.execute(cmd)
     cursor.close()
     Conn.close()
-#A = ['EDCSNJ1216490-1200091',184.204,-12.0025277778,0.7863,22.76,0.03,1.55,0.04,0.521182261202,0.0134498648052,1.24,0.12,18.8371116745,0.0316672494062,0.47,0.02,21.23,0.01,8.95,0.12,3.00940725017,0.0403495944157,0.35,0.0,0.244343055269,0.196363096362,9999,9999,9999,9999,1.146,0.664,1,3.63747679805,3.88004211969,0.130618587136,9999,0.365522099184,1.4538,0.546744991269,-2.24971293032,25.1297510444,1,1542]
-#WriteDb(A)
-#CREATE TABLE IF NOT EXISTS book (name char(40), lastname char(40), petname char (40))
 
 
-def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, Chi2nu, model_type = '', goodness = 9999):
+def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, FitFlag, Chi2nu, model_type = '', goodness = 9999):
     gal_id = Name
     hst = c.host
     dba = c.database
@@ -267,21 +263,22 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
                           'ed':'float', \
                           'BT':'float', 'chi2nu':'float', 'run':'int', \
                           'SexSky':'float', 'GalSky':'float', \
-                          'flag':'bigint', 'dpa':'float', 'bpa':'float',\
+                          'flag':'bigint','FitFlag':'bigint',\
+                          'dpa':'float', 'bpa':'float',\
                           'ismain':'varchar(10)', 'SexHalfRad':'float', \
                           'goodness':'float'}
     ParamToWrite = ['xb', 'yb', 'xd', 'yd','bpa', 'dpa', 'Ie','Ie_err',\
                     're_pix','re_err_pix', 'n', 'n_err', 'eb', \
                     'Id', 'Id_err', 'rd_pix', 'rd_err_pix', \
                     'ed', 'BT', 'chi2nu', 'run', \
-                    'SexSky', 'GalSky', 'flag', 'ismain', 'SexHalfRad', \
-                    'goodness']
+                    'SexSky', 'GalSky', 'flag', 'FitFlag', 'ismain',
+                    'SexHalfRad', 'goodness']
     ParamType = ['float', 'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', 'float', \
                  'float', 'float', 'float', 'float', \
-                 'int', 'float', 'float', 'bigint', 'varchar(10)','float', \
-                 'float']
+                 'int', 'float', 'float', 'bigint', 'bigint',
+                 'varchar(10)','float', 'float']
     DictParamWithType = {}  #Dictionary with Type
     DictParamWithType.update(DictParamWithType1)
     DictParamWithType.update(DictParamWithType2)
@@ -315,6 +312,7 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, C
     DictParamWithValue['SexSky'] = SexSky
     DictParamWithValue['GalSky'] = GalSky
     DictParamWithValue['flag'] = flag
+    DictParamWithValue['FitFlag'] = FitFlag
     for p in ParamToWrite:
         AllParams.append(p)
     cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(p, \

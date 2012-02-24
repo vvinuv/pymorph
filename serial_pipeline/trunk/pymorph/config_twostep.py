@@ -311,7 +311,6 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         #force batch fitting using standard operations
         
         run_flag = c.Flag
-        print 'run_flag', run_flag
         if exists('fit.log'):
             print "removing fit log"
             os.system('rm fit.log')
@@ -409,43 +408,44 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             c.ParamDictBook[RunNo+1] = copy.deepcopy(ParamDict[RunNo+1])
 
             # Set limit flags
+            Fitflag = 0
             mag_b = ParamDict[RunNo + 1][1][3]
             re = ParamDict[RunNo+1][1][4]
             SersicIndex = ParamDict[RunNo+1][1][5]
-            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2 or \
-                   abs(re - max_rad) < 1.0 or abs(re - c.LRe) < 0.1 or \
-                   abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-                run_flag += 2**GetFlag('BULGE_AT_LIMIT')
-                print "ADDING FLAG BULGE_AT_LIMIT"
+            SersicEllipticity = ParamDict[RunNo+1][1][6]
+            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2):
+                FitFlag += 2**Get_FitFlag('IE_AT_LIMIT')
+            if abs(re - c.LRe) < 0.1 or abs(re - max_rad) < 1.0:
+                FitFlag += 2**Get_FitFlag('RE_AT_LIMIT')
+            if abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
+                FitFlag += 2**Get_FitFlag('N_AT_LIMIT')
+            if abs(SersicEllipticity - 0.0) < 0.05 or abs(SersicEllipticity - 0.0) > 0.95:
+                FitFlag += 2**Get_FitFlag('EB_AT_LIMIT')
 
-                if abs(re - max_rad) < 1.0 or abs(re - c.LRe) < 0.1:
-                    run_flag += 2**GetFlag('RE_AT_LIMIT')
-                    print "ADDING FLAG RE_AT_LIMIT"
-                if abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-                    run_flag += 2**GetFlag('N_AT_LIMIT')
-                    print "ADDING FLAG N_AT_LIMIT"
             if fit_type in ['devexp', 'serexp']:
                 mag_d = ParamDict[RunNo + 1][2][3]
                 rd = ParamDict[RunNo+1][2][4]
-
+                DiskEllipticity = ParamDict[RunNo+1][2][5]
+            
                 fb = 10**(-0.4*mag_b)
                 fd = 10**(-0.4*mag_d)
 
-                if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2 or \
-                       abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
-                    run_flag += 2**GetFlag('DISK_AT_LIMIT')
-                    print "ADDING FLAG DISK_AT_LIMIT"
-
+                if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2:
+                    FitFlag += 2**Get_FitFlag('ID_AT_LIMIT')
+                if abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
+                    FitFlag += 2**Get_FitFlag('RD_AT_LIMIT')
                 if abs((re/rd) - 1.0) < 0.02 or abs((re/rd) - 0.1) < 0.02:
-                    run_flag += 2**GetFlag('RERD_AT_LIMIT')
-                    print "ADDING FLAG RERD_AT_LIMIT"
+                    FitFlag += 2**Get_FitFlag('RERD_AT_LIMIT')
+                if abs(DiskEllipticity - 0.0) < 0.05 or abs(DiskEllipticity - 0.0) > 0.95:
+                    FitFlag += 2**Get_FitFlag('ED_AT_LIMIT')
+                
                 try:
                     BT = fb / (fb + fd)
                 except:
                     BT = 9999.0
 
                 if abs(BT - bt_range[0]) < .02 or abs(BT - bt_range[1]) < .02:
-                    run_flag += 2**GetFlag('BT_AT_LIMIT')
+                    FitFlag += 2**Get_FitFlag('BT_AT_LIMIT')
                     print "ADDING FLAG BT_AT_LIMIT"
         except:
             print "failure at readlog!!!"
@@ -488,17 +488,16 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 print "ADDING FLAG PLOT_FAIL"
                                 
             if Goodness < c.Goodness:
-                run_flag += 2**GetFlag('SMALL_GOODNESS')
+                FitFlag += 2**Get_FitFlag('SMALL_GOODNESS')
                 print "ADDING FLAG SMALL_GOODNESS"
             if Chi2DOF > c.chi2sq:
                 if chi2nu != 9999:
-                    run_flag += 2**GetFlag('LARGE_CHISQ')
+                    FitFlag += 2**Get_FitFlag('LARGE_CHISQ')
                     print "ADDING FLAG LARGE_CHISQ"
-
-            print 'write flags ', run_flag 
+ 
             print 'writing db'
             try:
-                WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo+1], ErrDict[RunNo + 1], c.SexSky, c.ParamDictBook[RunNo+1][c.SkyNo][2], RunNo, run_flag, Chi2DOF, model_type = fit_type, goodness = Goodness)
+                WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo+1], ErrDict[RunNo + 1], c.SexSky, c.ParamDictBook[RunNo+1][c.SkyNo][2], RunNo, run_flag, FitFlag, Chi2DOF, model_type = fit_type, goodness = Goodness)
             except:
                 print 'No database'
                 traceback.print_exc()

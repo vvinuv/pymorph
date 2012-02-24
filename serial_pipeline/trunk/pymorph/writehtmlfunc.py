@@ -7,7 +7,7 @@ from cosmocal import cal
 import datetime
 import MySQLdb as mysql
 import traceback
-from flagfunc import GetFlag, isset
+from flagfunc import GetFlag, isset, Get_FitFlag
 from pymorphutils import RaDegToHMS, DecDegToDMS
 import config as c
 import os
@@ -43,7 +43,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         ComP = ['bulge', 'disk']
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
-    c.GalOut = 1 # This will be 1 if galfit says the output is ok
     Goodness = float(str(round(Goodness, 3))[:5])
     f_tpl = open(str(c.PYMORPH_PATH) + '/html/default.html', 'r')
     template = f_tpl.read()
@@ -466,56 +465,55 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     if c.starthandle:
         error_mesg6 = '<a href="R_' + c.fstring + \
 	              '_1.html"> Crashed </a>' 
-    HitLimit = 1
-    if 'bulge' in ComP:
-        if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2 or \
-               abs(re - c.URe) < 1.0 or abs(re - c.LRe) < 0.1 or\
-               abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-            if not c.detail:
-                c.Flag +=2**GetFlag('BULGE_AT_LIMIT')
-                HitLimit = 0
-            else:
-                pass
-    if 'disk' in ComP:
-        if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2 or \
-               abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
-            if not c.detail:
-                c.Flag += 2**GetFlag('DISK_AT_LIMIT')
-                HitLimit = 0
-        else:
-            pass
+
+    # Now test for fitting problems and set flags for analysis
+    FitFlag = 0
+    HitLimit = 0
+
+    if not c.detail:
+        if 'bulge' in ComP:
+            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2):
+                FitFlag += 2**Get_FitFlag('IE_AT_LIMIT')
+            if abs(re - c.LRe) < 0.1 or abs(re - c.URe) < 1.0:
+                FitFlag += 2**Get_FitFlag('RE_AT_LIMIT')
+            if abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
+                FitFlag += 2**Get_FitFlag('N_AT_LIMIT')
+            if abs(SersicEllipticity - 0.0) < 0.05 or abs(SersicEllipticity - 0.0) > 0.95:
+                FitFlag += 2**Get_FitFlag('EB_AT_LIMIT')
+        if 'disk' in ComP:
+            if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2:
+                FitFlag += 2**Get_FitFlag('ID_AT_LIMIT')
+            if abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
+                FitFlag += 2**Get_FitFlag('RD_AT_LIMIT')
+            if abs(DiskEllipticity - 0.0) < 0.05 or abs(DiskEllipticity - 0.0) > 0.95:
+                FitFlag += 2**Get_FitFlag('ED_AT_LIMIT')
+
+    if not FitFlag:
+        error_mesg4 = str(error_mesg4) + 'One of the parameters'
+        error_mesg5 = str(error_mesg5) + '          hits limit!'
     
-    if chi2nu <= c.chi2sq and Goodness >= c.Goodness and \
-        HitLimit and c.GalOut and \
-        abs(bulge_xcntr - xcntr) <= c.center_deviation and \
-        abs(bulge_ycntr - ycntr) <= c.center_deviation and \
-        abs(disk_xcntr - xcntr) <= c.center_deviation and \
-        abs(disk_ycntr - ycntr) <= c.center_deviation:
+    if Goodness < c.Goodness:
+        error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
+        FitFlag += 2**Get_FitFlag('SMALL_GOODNESS')
+    if chi2nu > c.chi2sq:
+        error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
+        if chi2nu != 9999:
+            FitFlag += 2**Get_FitFlag('LARGE_CHISQ')
+    if abs(bulge_xcntr - xcntr) > c.center_deviation or \
+           abs(bulge_ycntr - ycntr) > c.center_deviation or \
+           abs(disk_xcntr - xcntr) > c.center_deviation or \
+           abs(disk_ycntr - ycntr) > c.center_deviation:
+        error_mesg3 = str(error_mesg3) + 'Fake Center!'
+        if bulge_xcntr == 9999 or bulge_ycntr == 9999 or \
+               disk_xcntr == 9999 or disk_ycntr == 9999:
+            pass
+        else:
+            FitFlag += 2**Get_FitFlag('FAKE_CNTR')
+
+    if FitFlag > 0:
         img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
         good_fit = 1
     else:
-        if chi2nu > c.chi2sq:
-            error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-            if chi2nu != 9999:
-                c.Flag += 2**GetFlag('LARGE_CHISQ')
-        if Goodness < c.Goodness:
-            error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-            c.Flag += 2**GetFlag('SMALL_GOODNESS')
-        if HitLimit == 0:
-            error_mesg4 = str(error_mesg4) + 'One of the parameters'
-            error_mesg5 = str(error_mesg5) + '          hits limit!'
-        if abs(bulge_xcntr - xcntr) > c.center_deviation or \
-             abs(bulge_ycntr - ycntr) > c.center_deviation or \
-             abs(disk_xcntr - xcntr) > c.center_deviation or \
-             abs(disk_ycntr - ycntr) > c.center_deviation:
-            error_mesg3 = str(error_mesg3) + 'Fake Center!'
-            if bulge_xcntr == 9999 or bulge_ycntr == 9999 or \
-                   disk_xcntr == 9999 or disk_ycntr == 9999:
-                pass
-            else:
-                c.Flag += 2**GetFlag('FAKE_CNTR')
-        if c.GalOut == 0:
-            error_mesg7 += 'GALFIT says results can not be trusted!'    
         img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
         good_fit = 0
     outfile = open('R_' + c.fstring + '.html','w')
@@ -579,7 +577,7 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
         galfit_sky = c.GalSky
     for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
                        M, c.SexSky, galfit_sky, galfit_sky_err, DisMoD, \
-                       distance, good_fit, c.Flag, c.SexHalfRad]:
+                       distance, good_fit, c.Flag, FitFlag, c.SexHalfRad]:
         ParamToWrite.append(otherparam)
     if 'bar' in ComP:
         for barcomp in [bar_xcntr,bar_xcntr_err,bar_ycntr,bar_ycntr_err,
@@ -627,8 +625,6 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     except:
         pass
     outfile1.close()
-#c.fstring = 'test_n5585_lR'
-#WriteParams('Itest_n5585_lR.fits', 81.71, 82.53, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 1)
 
 
 
@@ -639,9 +635,70 @@ def getline(values):
 
 def getfit(f):
     values = f.read()
-    values = values.replace('\n\n','\n')
-    values = values.split('\n')
+    values = values.replace('\n\n','\n') # remove unnecessary whitespace
+    # now replace any unneeded charaters that might affect the I/O process...
+    for bad_char in ['(',')','[',']',',','*', '--']:
+        values = values.replace(bad_char,' ') 
+
     return values
+
+
+def load_component(data_line, err_line):
+    """This function will construct and load dictionaries for a object when passed the already split
+    data_line containing fit parameters and err_line containing errors on the fit parameters"""
+    # construct object dictionary
+    # these are all fitted values, but many may be unused for a particular object type
+    obj = {'xctr':[-999.,-999.],
+           'yctr':[-999.,-999.],
+           'mag':[-999.,-999.],
+           'rad':[-999.,-999.],
+           'n':[-999.,-999.],
+           'ell':[-999.,-999.],
+           'pa':[-999.,-999.],
+           'boxy':[-999.,-999.]
+           }
+    
+    # now load data
+    obj['xctr'][0]=float(str(data_line[2]))
+    obj['yctr'][0]=float(str(data_line[3]))
+    obj['mag'][0]=float(data_line[4])
+
+    if data_line[0] == "sky": 
+        obj['mag'][1]=float(err_line[0])
+
+    else:
+        obj['xctr'][1]=float(str(err_line[0]))
+        obj['yctr'][1]=float(str(err_line[1]))
+        obj['mag'][1]=float(err_line[2])
+
+        if data_line[0] in ['sersic','expdisk']:
+            obj['rad'][0]=float(data_line[5])
+            obj['rad'][1]=float(err_line[3])
+
+            if data_line[0] = 'sersic':
+                obj['n'][0]=float(data_line[6])
+                obj['n'][1]=float(err_line[4])
+                pos = 7
+            else:
+                pos = 6
+            
+            
+            obj['ell'][0]=float(data_line[pos])
+            obj['ell'][1]=float(err_line[pos-2])
+            pos +=1
+            
+            obj['pa'][0]=float(data_line[pos])
+            obj['pa'][1]=float(err_line[pos-2])
+            pos +=1
+
+            try:
+                obj['boxy'][0]=float(data_line[pos])
+                obj['boxy'][1]=float(err_line[pos-2])
+            except IndexError: #if Galfit version 3.0 or later, then no boxyness is reported
+                obj['boxy'][0]=-999.
+                obj['boxy'][1]=-999.                
+
+    return obj
 
 def read_fitlog(filename = 'fit.log', yes_bar = 0):
     """ This function will read the fit log and return all the relevant
@@ -666,153 +723,29 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                     basic_info['restart_conf'] = str(line[3])
                 elif(str(line[0]) == 'Chi^2/nu'):
                     basic_info['chi2nu'] = float(line[2])
-
+                elif(str(line[0]) in ['Output', 'Chi^2']):
+                    continue
                 # for galaxy bulge
-                elif(str(line[0]) == 'sersic' and 'bulge' not in fit_info):
-                    fit_info['bulge'] = {'xctr':[-999.,-999.],
-                                         'yctr':[-999.,-999.],
-                                         'mag':[-999.,-999.],
-                                         'rad':[-999.,-999.],
-                                         'n':[-999.,-999.],
-                                         'ell':[-999.,-999.],
-                                         'pa':[-999.,-999.],
-                                         'boxy':[-999.,-999.]
-                                         }
-                    fit_info['bulge']['xctr'][0]=float(str(line[2])[1:-1])
-                    fit_info['bulge']['yctr'][0]=float(str(line[3])[:-1])
-                    fit_info['bulge']['mag'][0]=float(line[4])
-                    fit_info['bulge']['rad'][0]=float(line[5])
-                    fit_info['bulge']['n'][0]=float(line[6])
-                    fit_info['bulge']['ell'][0]=float(line[7])
-                    fit_info['bulge']['pa'][0]=float(line[8])
-                    fit_info['bulge']['boxy'][0]=float(line[9])
-                    # and get the error
-                    line = getline(values)
-                    fit_info['bulge']['xctr'][1]=float(str(line[0])[1:-1])
-                    fit_info['bulge']['yctr'][1]=float(str(line[1])[:-1])
-                    fit_info['bulge']['mag'][1]=float(line[2])
-                    fit_info['bulge']['rad'][1]=float(line[3])
-                    fit_info['bulge']['n'][1]=float(line[4])
-                    fit_info['bulge']['ell'][1]=float(line[5])
-                    fit_info['bulge']['pa'][1]=float(line[6])
-                    fit_info['bulge']['boxy'][1]=float(line[7])
+                else: # it must be part of the fit...
+                    if str(line[0]) == 'sersic':
+                        if 'bulge' not in fit_info:
+                            key = 'bulge'
+                        elif ('bar' not in fit_info and yes_bar):
+                            key = 'bar'
+                        else:
+                            neighbor +=1
+                            key = 'neighbor' + str(neighbor) 
+                    elif (str(line[0]) == 'expdisk'):
+                        key = 'disk'
+                    elif(str(line[0]) == 'psf'):
+                        key = 'psf'
+                    elif(str(line[0]) == 'sky'):
+                        key = 'sky'
                     
-                # for galaxy disk
-                elif(str(line[0]) == 'expdisk'):
-                    fit_info['disk'] = {'xctr':[-999.,-999.],
-                                        'yctr':[-999.,-999.],
-                                        'mag':[-999.,-999.],
-                                        'rad':[-999.,-999.],
-                                        'n':[-999.,-999.],
-                                        'ell':[-999.,-999.],
-                                        'pa':[-999.,-999.],
-                                        'boxy':[-999.,-999.]
-                                             }
-                    fit_info['disk']['xctr'][0]=float(str(line[2])[1:-1])
-                    fit_info['disk']['yctr'][0]=float(str(line[3])[:-1])
-                    fit_info['disk']['mag'][0]=float(line[4])
-                    fit_info['disk']['rad'][0]=float(line[5])
-                    fit_info['disk']['ell'][0]=float(line[6])
-                    fit_info['disk']['pa'][0]=float(line[7])
-                    fit_info['disk']['boxy'][0]=float(line[8])
-                    # and get the error
-                    line = getline(values)
-                    fit_info['disk']['xctr'][1]=float(str(line[0])[1:-1])
-                    fit_info['disk']['yctr'][1]=float(str(line[1])[:-1])
-                    fit_info['disk']['mag'][1]=float(line[2])
-                    fit_info['disk']['rad'][1]=float(line[3])
-                    fit_info['disk']['ell'][1]=float(line[4])
-                    fit_info['disk']['pa'][1]=float(line[5])
-                    fit_info['disk']['boxy'][1]=float(line[6])
-
-                # for a point source
-                elif(str(line[0]) == 'psf'):
-                    fit_info['psf'] = {'xctr':[-999.,-999.],
-                                       'yctr':[-999.,-999.],
-                                       'mag':[-999.,-999.],
-                                       }
-                    fit_info['psf']['xctr'][0]=float(str(line[2])[1:-1])
-                    fit_info['psf']['yctr'][0]=float(str(line[3])[:-1])
-                    fit_info['psf']['mag'][0]=float(line[4])
-                    # and get the error
-                    line = getline(values)
-                    fit_info['psf']['xctr'][1]=float(str(line[0])[1:-1])
-                    fit_info['psf']['yctr'][1]=float(str(line[1])[:-1])
-                    fit_info['psf']['mag'][1]=float(line[2])
-                
-                # for the sky
-                elif(str(line[0]) == 'sky'):
-                    fit_info['sky'] = {'mag':[-999.,-999.]
-                                       }
-                    fit_info['sky']['mag'][0]=float(line[4])
-                    # and get the error
-                    line = getline(values)
-                    fit_info['sky']['mag'][1]=float(line[0])
+                    err_line = getline(values)
                     
-                # if there is a bar
-                elif(str(line[0]) == 'sersic' and 'bar' not in fit_info
-                     and yes_bar and 'bulge' in fit_info):
-                    fit_info['bar'] = {'xctr':[-999.,-999.],
-                                       'yctr':[-999.,-999.],
-                                       'mag':[-999.,-999.],
-                                       'rad':[-999.,-999.],
-                                       'n':[-999.,-999.],
-                                       'ell':[-999.,-999.],
-                                       'pa':[-999.,-999.],
-                                       'boxy':[-999.,-999.]
-                                       }
-                    fit_info['bar']['xctr'][0]=float(str(line[2])[1:-1])
-                    fit_info['bar']['yctr'][0]=float(str(line[3])[:-1])
-                    fit_info['bar']['mag'][0]=float(line[4])
-                    fit_info['bar']['rad'][0]=float(line[5])
-                    fit_info['bar']['n'][0]=float(line[6])
-                    fit_info['bar']['ell'][0]=float(line[7])
-                    fit_info['bar']['pa'][0]=float(line[8])
-                    fit_info['bar']['boxy'][0]=float(line[9])
-                    # and get the error
-                    line = getline(values)
-                    fit_info['bar']['xctr'][1]=float(str(line[0])[1:-1])
-                    fit_info['bar']['yctr'][1]=float(str(line[1])[:-1])
-                    fit_info['bar']['mag'][1]=float(line[2])
-                    fit_info['bar']['rad'][1]=float(line[3])
-                    fit_info['bar']['n'][1]=float(line[4])
-                    fit_info['bar']['ell'][1]=float(line[5])
-                    fit_info['bar']['pa'][1]=float(line[6])
-                    fit_info['bar']['boxy'][1]=float(line[7])			
-
-                # for galaxy neighbors
-                elif(str(line[0]) == 'sersic' and 'bulge' in fit_info and
-                     ((yes_bar and 'bar' in fit_info) or 'bar' not in fit_info)):
-                    neighbor +=1
-                    key = 'neighbor' + str(neighbor) 
-                    fit_info[key] = {'xctr':[-999.,-999.],
-                                     'yctr':[-999.,-999.],
-                                     'mag':[-999.,-999.],
-                                     'rad':[-999.,-999.],
-                                     'n':[-999.,-999.],
-                                     'ell':[-999.,-999.],
-                                     'pa':[-999.,-999.],
-                                     'boxy':[-999.,-999.]
-                                     }
-                    fit_info[key]['xctr'][0]=float(str(line[2])[1:-1])
-                    fit_info[key]['yctr'][0]=float(str(line[3])[:-1])
-                    fit_info[key]['mag'][0]=float(line[4])
-                    fit_info[key]['rad'][0]=float(line[5])
-                    fit_info[key]['n'][0]=float(line[6])
-                    fit_info[key]['ell'][0]=float(line[7])
-                    fit_info[key]['pa'][0]=float(line[8])
-                    fit_info[key]['boxy'][0]=float(line[9])
-                    # and get the error
-                    line = getline(values)
-                    fit_info[key]['xctr'][1]=float(str(line[0])[1:-1])
-                    fit_info[key]['yctr'][1]=float(str(line[1])[:-1])
-                    fit_info[key]['mag'][1]=float(line[2])
-                    fit_info[key]['rad'][1]=float(line[3])
-                    fit_info[key]['n'][1]=float(line[4])
-                    fit_info[key]['ell'][1]=float(line[5])
-                    fit_info[key]['pa'][1]=float(line[6])
-                    fit_info[key]['boxy'][1]=float(line[7])
-
+                    fit_info[key]= load_component(line, err_line)    
+                    
             except: 
                 pass
             

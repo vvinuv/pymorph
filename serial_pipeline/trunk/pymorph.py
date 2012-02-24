@@ -319,9 +319,20 @@ def main():
                     CrashFlag = int(CrashFlag)
                 except:
                     CrashFlag = 0
-                if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or\
-                   isset(CrashFlag, GetFlag("BULGE_AT_LIMIT")) or \
-                   isset(CrashFlag, GetFlag("DISK_AT_LIMIT")):
+                try:
+                    CrashFitFlag = float(pdb["FitFlag"])
+                    CrashFitFlag = int(CrashFitFlag)
+                except:
+                    CrashFitFlag = 0
+
+                if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or \
+                   isset(CrashFitFlag, Get_FitFlag("IE_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("RE_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("N_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("EB_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("ID_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("RD_AT_LIMIT")) or \
+                   isset(CrashFitFlag, Get_FitFlag("ED_AT_LIMIT")):
                     if isset(CrashFlag, GetFlag("FIT_SKY")):
                         c.fitting[2] = 0
                     else:
@@ -332,14 +343,14 @@ def main():
                     else:
                         c.fitting[0] = 1
                         c.fitting[1] = 1
-                if isset(CrashFlag, GetFlag("LARGE_CHISQ")):
+                if isset(CrashFitFlag, Get_FitFlag("LARGE_CHISQ")):
                     if isset(CrashFlag, GetFlag("FIT_BULGE_CNTR")) and\
                        isset(CrashFlag, GetFlag("FIT_DISK_CNTR")):
                         pass
                     else:
                         c.fitting[0] = 1
                         c.fitting[1] = 1
-                if isset(CrashFlag, GetFlag("FAKE_CNTR")):
+                if isset(CrashFitFlag, Get_FitFlag("FAKE_CNTR")):
                     c.center_deviated = 1
 
             #The sextractor runs on the cutout before resizing to estimate 
@@ -398,321 +409,319 @@ def main():
                        abs(xcntr - ximg) < SeaPix and \
                        abs(ycntr - yimg) < SeaPix):
                         c.SexTargets +=1
-                        good_objects.append(int(values[0]))
+                        if c.SexTargets == 1:
+                            good_object = line_s
                 except:
                     if values[0].strip().isdigit():
                         print 'Something happend in the pipeline. ' + \
                               'Check error.log'
                     else:
                         pass
-            # now loop over all located objects            
-            for line_s in open(sex_cata, 'r'):
-                try:
-                    values = line_s.split()
-                    alpha_s = float(values[3])
-                    delta_s = float(values[4])
-                    if RaDecInfo == 0:
-                        alpha_s = 9999
-                        delta_s = 9999
-                    sex_id = values[0]
-                    xcntr  = float(values[1])
-                    ycntr  = float(values[2])
-                    # for now, just analyze the first good object detected
-                    if int(values[0]) in good_objects:
-                        print "SExtractor ID >>> ", values[0]
-			c.SexMagAuto = float(values[17])
-			c.SexMagAutoErr = float(values[18])
-			c.SexHalfRad = float(values[9]) #Sex halfrad 
-                        c.SexPosAng = float(values[11])
-                        c.pos_ang = ut.pa(float(values[11]))
-                        c.axis_rat = 1.0 / float(values[12]) #axis ration b/a
-                        c.eg = 1 - c.axis_rat
-                        if c.eg <= 0.05:
-                            c.eg = 0.07
-                        c.major_axis = float(values[14])
-                        if c.UMag > -9999.0:
-                            c.UMag = c.SexMagAuto - 7.0
-                        if c.LMag < 9999.0:
-                            c.LMag = c.SexMagAuto + 20.0
+            # now fit best object            
+            try:
+                values = good_object.split()
+                alpha_s = float(values[3])
+                delta_s = float(values[4])
+                if RaDecInfo == 0:
+                    alpha_s = 9999
+                    delta_s = 9999
+                sex_id = values[0]
+                xcntr  = float(values[1])
+                ycntr  = float(values[2])
+                print "SExtractor ID >>> ", values[0]
+                c.SexMagAuto = float(values[17])
+                c.SexMagAutoErr = float(values[18])
+                c.SexHalfRad = float(values[9]) #Sex halfrad 
+                c.SexPosAng = float(values[11])
+                c.pos_ang = ut.pa(float(values[11]))
+                c.axis_rat = 1.0 / float(values[12]) #axis ration b/a
+                c.eg = 1 - c.axis_rat
+                if c.eg <= 0.05:
+                    c.eg = 0.07
+                c.major_axis = float(values[14])
+                if c.UMag > -9999.0:
+                    c.UMag = c.SexMagAuto - 7.0
+                if c.LMag < 9999.0:
+                    c.LMag = c.SexMagAuto + 7.0
 
-                        # FIX
-                        if c.URe < 9999.0:
-                            c.URe = c.SexHalfRad * 50.0
-                        if c.URd < 9999.0:
-                            c.URd = c.SexHalfRad * 50.0
-                        # END
-                        # The shallow sky from the shallow run. If no shallow
-                        # sky it uses the deep sky
-			ShallowSky = 9999
-			if exists(str(c.sex_cata) + '.Shallow'):
-	                    f_sex_shallow = open(str(c.sex_cata) + \
-			                    '.Shallow', 'r')
-			    for line_shallow in f_sex_shallow:
-				v_shallow = line_shallow.split()
-				try:
-				    if str(v_shallow[19]) == str(values[0]):
-				        ShallowSky = float(v_shallow[10])
-				except:
-			            pass
-			    f_sex_shallow.close()
-			if ShallowSky == 9999:
-                            c.SexSky = float(values[10])
-                            c.GalSky = 9999
-			else:
-			    c.SexSky = ShallowSky
-                            c.GalSky = 9999
-                        if(alpha_j == -9999 or delta_j == -9999):
-                            if RaDecInfo: 
-                                alpha_j = alpha_s
-                                delta_j = delta_s
-                        ut.WriteError('\n\n###########   ' + str(gal_id) + \
-                                          '   ###########\n')
-                        c.run = 1 #run =1 if pipeline runs sucessfuly
-                        # Adding initial setup to the flag
-                        c.Flag = 0
-                        if c.repeat:
-                            c.Flag += 2**GetFlag('REPEAT')
-                        else:
-                            pass
-                        if c.fitting[0]:
-                            c.Flag += 2**GetFlag('FIT_BULGE_CNTR')
-                        else:
-                            pass
-                        if c.fitting[1]:
-                            c.Flag += 2**GetFlag('FIT_DISK_CNTR')
-                        else:
-                            pass
-                        if c.fitting[2]:
-                            c.Flag += 2**GetFlag('FIT_SKY')
-                        else:
-                            pass
-                        # Calculating the cutout size (half size).
-                        # SizeX, SizeY return from MakeCutOut are full sizes
-                        SizeX, SizeY = ut.FindCutSize(ReSize, VarSize, \
-                                       Square, FracRad, c.size[4], TX/2, TY/2) 
-                        print 'Calculated half sizes ', SizeX, SizeY
-                        # Finding psf and the distance between psf and image
-                        if c.decompose:
-                            psffile, distance = ut.HandlePsf(cfile, \
-                                               UserGivenPsf, alpha_j, delta_j)
-                            print 'psffile, distance > ', psffile, distance
-                        else:
-                            psffile, distance = 'None', 9999
-                        # For the new run
-                        if c.repeat == False:
-                            if c.galcut == False:
-                                if exists(cutimage):
-                                    ut.WriteError('The file ' + cutimage +\
-                                                  ' exists\n')
-                                    c.run = 0
-                                    break #Breaking the sextractor loop
-                                # Sizes are total size
-                                try: 
-                                    cut_xcntr, cut_ycntr, SizeX, SizeY, \
-                                    ExceedSize = \
-                                    ut.MakeCutOut(xcntr, ycntr, alpha_j, \
-                                            delta_j, SizeX, SizeY, \
-                                            TX, TY, cutimage, whtimage, ReSize) 
-                                except:
-                                    ut.WriteError('Cutout exists!')
-                                    break
-                            if c.galcut:
-                                if ReSize: 
-                                    if exists(cutimage):
-                                        ut.WriteError('The file ' + cutimage +\
-                                                      ' exists\n')
-                                        c.run = 0
-                                        break #Breaking the sextractor loop
-                                    try:
-                                        cut_xcntr, cut_ycntr, SizeX, SizeY, \
-                                        ExceedSize = \
-                                        ut.MakeCutOut(xcntr, ycntr, alpha_j, \
-                                                      delta_j, SizeX, SizeY, \
-                                            TX, TY, cutimage, whtimage, ReSize)
-                                    except:
-                                        ut.WriteError('Cutout exists!')
-                                        break
-                                else:
-                                    cut_xcntr, cut_ycntr, SizeX, SizeY, \
-                                    ExceedSize = xcntr, ycntr, TX, TY, 0
-                            print 'Center of cutimage and exceed size ', \
-                                  cut_xcntr, cut_ycntr, ExceedSize
-                            print 'Full Sizes ', SizeX, SizeY
-                            if c.galcut and ReSize == 0:
-                                pass
-                            elif ExceedSize:
-                                c.Flag += 2**GetFlag('EXCEED_SIZE')
-                            # Runs sextractor to find the segmentation map
-                            RunSegSex(c.datadir + cutimage)
-
-                            # This creates ellipse mask and used for 
-                            # ellipse fitting and casgm
-                            ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                         SizeX, SizeY, line_s, 1)
-                            # Fitting ellipse task or the manual 1d finder
-                            if c.decompose:
-                                ut.HandleEllipseTask(cutimage, cut_xcntr, \
-                                               cut_ycntr, \
-                                               SizeX, SizeY, c.SexSky, 0)
-                                MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                                 SizeX, SizeY, line_s)
-                                maskimage = 'M_' + c.fstring  + '.fits'
-                                config_file = 'G_' + c.fstring + '.in'
-                                outimage = 'O_' + c.fstring + '.fits'
-                                ConfigFunc(cutimage, whtimage,  cut_xcntr,\
-                                           cut_ycntr, SizeX, SizeY, line_s, \
-                                           psffile, 'SegCat.cat')
-                        else:
-                            cut_xcntr, cut_ycntr = TX / 2.0, TY / 2.0
-                            maskimage = mimg
-                            if exists(mimg):
-                                pass
-                            else:
-                                MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                         SizeX, SizeY, line_s)
-                            config_file = cfile
-                            outimage = str(oimg)
-                        # Estimates sky parameters
+                # FIX
+                if c.URe < 9999.0:
+                    c.URe = c.SexHalfRad * 50.0
+                if c.URd < 9999.0:
+                    c.URd = c.SexHalfRad * 50.0
+                # END
+                # The shallow sky from the shallow run. If no shallow
+                # sky it uses the deep sky
+                ShallowSky = 9999
+                if exists(str(c.sex_cata) + '.Shallow'):
+                    f_sex_shallow = open(str(c.sex_cata) + \
+                                    '.Shallow', 'r')
+                    for line_shallow in f_sex_shallow:
+                        v_shallow = line_shallow.split()
                         try:
-                            SexySky, SkyYet, SkyMed, SkyMin, SkyQua, \
-                            SkySig = \
-                            FindYetSky(c.datadir + cutimage, \
-                                      cut_xcntr, cut_ycntr)
-                            if SkyMin != 9999:
-                                c.SkyMin = SkyYet * 1.0
-                                c.SkySig = SkySig * 1.0
-                            else:
-                                c.SkyMin = c.SexSky * 1.0 
-                                c.SkySig = np.sqrt(np.abs(c.SexSky))
-                            print 'Sky Sigma >>> ', c.SkySig
-                            print 'SkyMin SexSky > ', c.SkyMin, c.SexSky
+                            if str(v_shallow[19]) == str(values[0]):
+                                ShallowSky = float(v_shallow[10])
                         except:
-                            ut.WriteError('Sky estimation failed\n')
-                        # Estimate CASGM  
-                        if(c.cas):
-                            C, C_err, A, A_err, S, S_err, G, M = \
-                            ut.HandleCasgm(cutimage, cut_xcntr, cut_ycntr, \
-                                           alpha_j, delta_j, z,
-                                           SizeX, SizeY, line_s, bxcntr, \
-                                           bycntr)
+                            pass
+                    f_sex_shallow.close()
+                if ShallowSky == 9999:
+                    c.SexSky = float(values[10])
+                    c.GalSky = 9999
+                else:
+                    c.SexSky = ShallowSky
+                    c.GalSky = 9999
+                if(alpha_j == -9999 or delta_j == -9999):
+                    if RaDecInfo: 
+                        alpha_j = alpha_s
+                        delta_j = delta_s
+                ut.WriteError('\n\n###########   ' + str(gal_id) + \
+                                  '   ###########\n')
+                c.run = 1 #run =1 if pipeline runs sucessfuly
+                # Adding initial setup to the flag
+                c.Flag = 0
+                if c.repeat:
+                    c.Flag += 2**GetFlag('REPEAT')
+                else:
+                    pass
+                if c.fitting[0]:
+                    c.Flag += 2**GetFlag('FIT_BULGE_CNTR')
+                else:
+                    pass
+                if c.fitting[1]:
+                    c.Flag += 2**GetFlag('FIT_DISK_CNTR')
+                else:
+                    pass
+                if c.fitting[2]:
+                    c.Flag += 2**GetFlag('FIT_SKY')
+                else:
+                    pass
+                # Calculating the cutout size (half size).
+                # SizeX, SizeY return from MakeCutOut are full sizes
+                SizeX, SizeY = ut.FindCutSize(ReSize, VarSize, \
+                               Square, FracRad, c.size[4], TX/2, TY/2) 
+                print 'Calculated half sizes ', SizeX, SizeY
+                # Finding psf and the distance between psf and image
+                if c.decompose:
+                    psffile, distance = ut.HandlePsf(cfile, \
+                                       UserGivenPsf, alpha_j, delta_j)
+                    print 'psffile, distance > ', psffile, distance
+                else:
+                    psffile, distance = 'None', 9999
+                # For the new run
+                if c.repeat == False:
+                    if c.galcut == False:
+                        if exists(cutimage):
+                            ut.WriteError('The file ' + cutimage +\
+                                          ' exists\n')
+                            c.run = 0
+                            break #Breaking the sextractor loop
+                        # Sizes are total size
+                        try: 
+                            cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                            ExceedSize = \
+                            ut.MakeCutOut(xcntr, ycntr, alpha_j, \
+                                    delta_j, SizeX, SizeY, \
+                                    TX, TY, cutimage, whtimage, ReSize) 
+                        except:
+                            ut.WriteError('Cutout exists!')
+                            break
+                    if c.galcut:
+                        if ReSize: 
+                            if exists(cutimage):
+                                ut.WriteError('The file ' + cutimage +\
+                                              ' exists\n')
+                                c.run = 0
+                                break #Breaking the sextractor loop
+                            try:
+                                cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                                ExceedSize = \
+                                ut.MakeCutOut(xcntr, ycntr, alpha_j, \
+                                              delta_j, SizeX, SizeY, \
+                                    TX, TY, cutimage, whtimage, ReSize)
+                            except:
+                                ut.WriteError('Cutout exists!')
+                                break
                         else:
-                            C, C_err, A, A_err, S, S_err, G, M = \
-                            9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
-                        # Removing CASGM temp files
-                        for ff in ['BMask.fits', 'MRotated.fits', \
-                                  'MaskedGalaxy.fits', 'Rotated.fits']:
-                            if os.access(ff, os.F_OK):
-                                os.remove(ff)
-                        # Decomposition
-                        if c.decompose:
-                            try:
-                                if os.access('fit.log', os.F_OK):
-                                    os.remove('fit.log')
-                                try:
-                                    DetailFit = c.detail
-                                except:
-                                    DetailFit = 0
-                                if c.galfit and DetailFit:
-                                    ConfigIter(cutimage, whtimage, cut_xcntr,\
-                                               cut_ycntr, SizeX, \
-                                               SizeY, line_s, psffile, z)
-                                elif c.galfit:
-                                    cmd = str(c.GALFIT_PATH) + ' ' + \
-                                              config_file
-                                    os.system(cmd)
-                                    f_fit = open('fit2.log','a')
-                                    if exists('fit.log'):
-                                        for line in open('fit.log','r'):
-                                            f_fit.writelines([str(line)])
-                                    f_fit.close()
-                                    # FIX
-                                    # Mainly the ellipse fit problem
-                                    ut.HandleGalfitOutput(outimage, cut_xcntr, \
-                                                cut_ycntr, SizeX, SizeY, line_s)
-                                    #END
-                            except Exception, inst:
-                                print traceback.print_exc()
-                                print type(inst)     # the exception instance
-                                print inst.args      # arguments stored in\
-                                                     # .args
-                                print inst           # __str__ allows args\
-                                                     # to printed directly
-                                print "something bad happened!!!!\n\n"
-                                    
-                            try:
-                                if os.access('P_' + c.fstring + '.png', \
-                                             os.F_OK):	
-                                    os.remove('P_' + c.fstring + '.png')
-                                GoodNess = PlotFunc(outimage, \
-                                  maskimage, cut_xcntr, cut_ycntr, \
-                                  c.SexSky, c.SkySig)
-                                Goodness = GoodNess.plot_profile
-                            except:
-                                ut.WriteError('Error in plotting \n')
-                                if maskimage == 'None':
-                                    ut.WriteError('Could not find Mask image\n')
-                                c.run = 0	
-                                Goodness = 9999
-                                c.Flag += GetFlag('PLOT_FAIL')
-                            try:
-                                WriteParams(cutimage, cut_xcntr, cut_ycntr, \
-                                             distance, alpha_j, \
-                                             delta_j, z, Goodness, \
-                                             C, C_err, A, A_err, S, S_err, \
-                                             G, M, c.EXPTIME)
-                            except:
-                                try:
-                                    WriteParams(cutimage, cut_xcntr, \
-                                                 cut_ycntr, \
-                                                 distance, alpha_j,\
-                                                 delta_j, z, Goodness, \
-                                                 9999, 9999, 9999,\
-                                                 9999, 9999, 9999, 9999, \
-                                                 9999, c.EXPTIME)
-                                except:
-                                    ut.WriteError('Error in writing html\n')
-                                    c.run = 0
-                            if(c.run == 1):
-                                ut.WriteError('((((( Decomposition '\
-                                                  'Successful )))))\n')
-						
-                            if isset(c.Flag, GetFlag("GALFIT_FAIL")) or \
-                               isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
-                               isset(c.Flag, GetFlag("FAKE_CNTR")) or \
-                               isset(c.Flag, GetFlag("BULGE_AT_LIMIT")) or \
-                               isset(c.Flag, GetFlag("DISK_AT_LIMIT")):
-                                FailedValues = line_j.split()
-                                for FailedValue in FailedValues:
-                                    f_failed.writelines([str(FailedValue), ' '])
-                                f_failed.writelines([str(c.Flag), '\n'])
-                            f_cat.writelines([str(gal_id), ' '])
-                            f_cat.write(line_s)
-                            #The following removes all the temporary files 
-                            #after every fit
-                            ToClean = 0
-                            if ToClean:
-                                ClaCli = 'E*fits E*txt G_* I*fits *.pl \
-                                     *.con M_* \
-                                     O*fits O*txt P*png R*html error.log  \
-                                     galfit.*  \
-                                     Tmp* SO* agm_r* \
-                                     BMask.fits MaskedGalaxy.fits \
-                                     MRotated.fits   \
-                                     B.fits GalEllFit.fits AResidual.fits \
-                                     ellip err BackMask.fits'
-                                vClaCli = ClaCli.split()
-                                for v1ClaCli in vClaCli:
-                                    if os.access(v1ClaCli, os.F_OK):
-                                        os.remove(v1ClaCli)
-                            for myfile in ['ellip','err','test.tab']:
-                                if os.access(myfile,os.F_OK):
-                                    os.remove(myfile)
-                except:
-                    if values[0].strip().isdigit():
-                        print 'Something happend in the pipeline. ' + \
-                              'Check error.log'
-                    else:
+                            cut_xcntr, cut_ycntr, SizeX, SizeY, \
+                            ExceedSize = xcntr, ycntr, TX, TY, 0
+                    print 'Center of cutimage and exceed size ', \
+                          cut_xcntr, cut_ycntr, ExceedSize
+                    print 'Full Sizes ', SizeX, SizeY
+                    if c.galcut and ReSize == 0:
                         pass
+                    elif ExceedSize:
+                        c.Flag += 2**GetFlag('EXCEED_SIZE')
+                    # Runs sextractor to find the segmentation map
+                    RunSegSex(c.datadir + cutimage)
+
+                    # This creates ellipse mask and used for 
+                    # ellipse fitting and casgm
+                    ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                                 SizeX, SizeY, line_s, 1)
+                    # Fitting ellipse task or the manual 1d finder
+                    if c.decompose:
+                        ut.HandleEllipseTask(cutimage, cut_xcntr, \
+                                       cut_ycntr, \
+                                       SizeX, SizeY, c.SexSky, 0)
+                        MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                                         SizeX, SizeY, line_s)
+                        maskimage = 'M_' + c.fstring  + '.fits'
+                        config_file = 'G_' + c.fstring + '.in'
+                        outimage = 'O_' + c.fstring + '.fits'
+                        ConfigFunc(cutimage, whtimage,  cut_xcntr,\
+                                   cut_ycntr, SizeX, SizeY, line_s, \
+                                   psffile, 'SegCat.cat')
+                else:
+                    cut_xcntr, cut_ycntr = TX / 2.0, TY / 2.0
+                    maskimage = mimg
+                    if exists(mimg):
+                        pass
+                    else:
+                        MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                                 SizeX, SizeY, line_s)
+                    config_file = cfile
+                    outimage = str(oimg)
+                # Estimates sky parameters
+                try:
+                    SexySky, SkyYet, SkyMed, SkyMin, SkyQua, \
+                    SkySig = \
+                    FindYetSky(c.datadir + cutimage, \
+                              cut_xcntr, cut_ycntr)
+                    if SkyMin != 9999:
+                        c.SkyMin = SkyYet * 1.0
+                        c.SkySig = SkySig * 1.0
+                    else:
+                        c.SkyMin = c.SexSky * 1.0 
+                        c.SkySig = np.sqrt(np.abs(c.SexSky))
+                    print 'Sky Sigma >>> ', c.SkySig
+                    print 'SkyMin SexSky > ', c.SkyMin, c.SexSky
+                except:
+                    ut.WriteError('Sky estimation failed\n')
+                # Estimate CASGM  
+                if(c.cas):
+                    C, C_err, A, A_err, S, S_err, G, M = \
+                    ut.HandleCasgm(cutimage, cut_xcntr, cut_ycntr, \
+                                   alpha_j, delta_j, z,
+                                   SizeX, SizeY, line_s, bxcntr, \
+                                   bycntr)
+                else:
+                    C, C_err, A, A_err, S, S_err, G, M = \
+                    9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
+                # Removing CASGM temp files
+                for ff in ['BMask.fits', 'MRotated.fits', \
+                          'MaskedGalaxy.fits', 'Rotated.fits']:
+                    if os.access(ff, os.F_OK):
+                        os.remove(ff)
+                # Decomposition
+                if c.decompose:
+                    try:
+                        if os.access('fit.log', os.F_OK):
+                            os.remove('fit.log')
+                        try:
+                            DetailFit = c.detail
+                        except:
+                            DetailFit = 0
+                        if c.galfit and DetailFit:
+                            ConfigIter(cutimage, whtimage, cut_xcntr,\
+                                       cut_ycntr, SizeX, \
+                                       SizeY, line_s, psffile, z)
+                        elif c.galfit:
+                            cmd = str(c.GALFIT_PATH) + ' ' + \
+                                      config_file
+                            os.system(cmd)
+                            f_fit = open('fit2.log','a')
+                            if exists('fit.log'):
+                                for line in open('fit.log','r'):
+                                    f_fit.writelines([str(line)])
+                            f_fit.close()
+                            # FIX
+                            # Mainly the ellipse fit problem
+                            ut.HandleGalfitOutput(outimage, cut_xcntr, \
+                                        cut_ycntr, SizeX, SizeY, line_s)
+                            #END
+                    except Exception, inst:
+                        print type(inst)     # the exception instance
+                        print inst.args      # arguments stored in\
+                                             # .args
+                        print inst           # __str__ allows args\
+                                             # to printed directly
+                        print "something bad happened!!!!\n\n"
+                        print traceback.print_exc()
+
+                    try:
+                        if os.access('P_' + c.fstring + '.png', \
+                                     os.F_OK):	
+                            os.remove('P_' + c.fstring + '.png')
+                        GoodNess = PlotFunc(outimage, \
+                          maskimage, cut_xcntr, cut_ycntr, \
+                          c.SexSky, c.SkySig)
+                        Goodness = GoodNess.plot_profile
+                    except:
+                        ut.WriteError('Error in plotting \n')
+                        if maskimage == 'None':
+                            ut.WriteError('Could not find Mask image\n')
+                        c.run = 0	
+                        Goodness = 9999
+                        c.Flag += GetFlag('PLOT_FAIL')
+                    try:
+                        WriteParams(cutimage, cut_xcntr, cut_ycntr, \
+                                     distance, alpha_j, \
+                                     delta_j, z, Goodness, \
+                                     C, C_err, A, A_err, S, S_err, \
+                                     G, M, c.EXPTIME)
+                    except:
+                        try:
+                            WriteParams(cutimage, cut_xcntr, \
+                                         cut_ycntr, \
+                                         distance, alpha_j,\
+                                         delta_j, z, Goodness, \
+                                         9999, 9999, 9999,\
+                                         9999, 9999, 9999, 9999, \
+                                         9999, c.EXPTIME)
+                        except:
+                            ut.WriteError('Error in writing html\n')
+                            c.run = 0
+                    if(c.run == 1):
+                        ut.WriteError('((((( Decomposition '\
+                                          'Successful )))))\n')
+
+                    if isset(c.Flag, GetFlag("GALFIT_FAIL")): #or \
+                       #isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
+                       #isset(c.Flag, GetFlag("FAKE_CNTR")) or \
+                       #isset(c.Flag, GetFlag("BULGE_AT_LIMIT")) or \
+                       #isset(c.Flag, GetFlag("DISK_AT_LIMIT")):
+                        FailedValues = line_j.split()
+                        for FailedValue in FailedValues:
+                            f_failed.writelines([str(FailedValue), ' '])
+                        f_failed.writelines([str(c.Flag), '\n'])
+                    f_cat.writelines([str(gal_id), ' '])
+                    f_cat.write(line_s)
+                    #The following removes all the temporary files 
+                    #after every fit
+                    ToClean = 0
+                    if ToClean:
+                        ClaCli = 'E*fits E*txt G_* I*fits *.pl \
+                             *.con M_* \
+                             O*fits O*txt P*png R*html error.log  \
+                             galfit.*  \
+                             Tmp* SO* agm_r* \
+                             BMask.fits MaskedGalaxy.fits \
+                             MRotated.fits   \
+                             B.fits GalEllFit.fits AResidual.fits \
+                             ellip err BackMask.fits'
+                        vClaCli = ClaCli.split()
+                        for v1ClaCli in vClaCli:
+                            if os.access(v1ClaCli, os.F_OK):
+                                os.remove(v1ClaCli)
+                    for myfile in ['ellip','err','test.tab']:
+                        if os.access(myfile,os.F_OK):
+                            os.remove(myfile)
+            except:
+                if values[0].strip().isdigit():
+                    print 'Something happend in the pipeline. ' + \
+                          'Check error.log'
+                else:
+                    pass
             if(c.galcut == True):
                 if os.access(sex_cata, os.F_OK):
                     os.remove(sex_cata)
