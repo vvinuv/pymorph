@@ -413,7 +413,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             re = ParamDict[RunNo+1][1][4]
             SersicIndex = ParamDict[RunNo+1][1][5]
             SersicEllipticity = ParamDict[RunNo+1][1][6]
-            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2):
+            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2:
                 FitFlag += 2**Get_FitFlag('IE_AT_LIMIT')
             if abs(re - c.LRe) < 0.1 or abs(re - max_rad) < 1.0:
                 FitFlag += 2**Get_FitFlag('RE_AT_LIMIT')

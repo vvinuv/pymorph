@@ -111,14 +111,17 @@ def main():
     if len(ComP) == 0:
         print "No model specified. Asuming bulge+disk model"
         ComP = ['bulge', 'disk']
-    # Writing csvn header
+    # Writing csvn header and findeing the output parameters
+    ParamToWrite = ut.PyMorphOutputParams(c.dbparams, c.decompose)    
     if exists('result.csv'):
         pass
     else:
         f_res = open("result.csv", "ab")
+        csvlist = ['%s_%d'%(ParamToWrite[par_key][0], par_key)
+                   for par_key in ParamToWrite.keys()]
+        print csvlist
         writer = csv.writer(f_res)
-        ParamToWrite = ut.PyMorphOutputParams()
-        writer.writerow(ParamToWrite)
+        writer.writerow(csvlist)
         f_res.close()
 
     f_cat = open(out_cata, 'w')
@@ -664,23 +667,25 @@ def main():
                         Goodness = 9999
                         c.Flag += GetFlag('PLOT_FAIL')
                     try:
-                        WriteParams(cutimage, cut_xcntr, cut_ycntr, \
+                        WriteParams(ParamToWrite, cutimage, cut_xcntr, cut_ycntr, \
                                      distance, alpha_j, \
                                      delta_j, z, Goodness, \
                                      C, C_err, A, A_err, S, S_err, \
                                      G, M, c.EXPTIME)
-                    except:
-                        try:
-                            WriteParams(cutimage, cut_xcntr, \
-                                         cut_ycntr, \
-                                         distance, alpha_j,\
-                                         delta_j, z, Goodness, \
-                                         9999, 9999, 9999,\
-                                         9999, 9999, 9999, 9999, \
-                                         9999, c.EXPTIME)
-                        except:
-                            ut.WriteError('Error in writing html\n')
-                            c.run = 0
+                    except Exception, inst:
+                        print type(inst)     # the exception instance
+                        print inst.args      # arguments stored in\
+                                             # .args
+                        print inst           # __str__ allows args\
+                                             # to printed directly
+                        print "something bad happened!!!!\n\n"
+                        print traceback.print_exc()
+
+                    #except:
+                    #    ut.WriteError('Error in writing html\n')
+                    #    c.run = 0
+
+                            
                     if(c.run == 1):
                         ut.WriteError('((((( Decomposition '\
                                           'Successful )))))\n')

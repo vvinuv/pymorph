@@ -221,43 +221,67 @@ def CrashHandlerToRemove(gal_id):
         if os.path.exists(f):
             os.remove(c.outdir + f)
 
-def PyMorphOutputParams():
-    """Returns the output parameters from pymorph"""
-    if c.decompose:
-        params = ['Name', 'ra_gal', 'dec_gal', 'z', 'mag_auto',\
-                  'magerr_auto', 'num_targets', 
-                  'bulge_xctr','bulge_xctr_err',
-                  'bulge_yctr','bulge_yctr_err', 'Ie', 'Ie_err',
-                  're_pix','re_err_pix', 're_kpc', 're_err_kpc', \
-                  'n', 'n_err', 'AvgIe', 'AvgIe_err', \
-                  'eb', 'eb_err', 'bpa', 'bpa_err',\
-                  'bboxy','bboxyerr',
-                  'disk_xctr','disk_xctr_err','disk_yctr',
-                  'disk_yctr_err', 'Id', 'Id_err', 'rd_pix', \
-                  'rd_err_pix', 'rd_kpc', 'rd_err_kpc', \
-                  'ed', 'ed_err', 'dpa', 'dpa_err',\
-                  'dboxy','dboxyerr',
-                  'BD', 'BT', 'Point', 'Point_err', \
-                  'Pfwhm', 'Pfwhm_kpc', 'chi2nu', \
-                  'Goodness', 'run', 'C', 'C_err',\
-                  'A', 'A_err', 'S', 'S_err', 'G', \
-                  'M', 'SexSky', 'GalSky', 'GalSky_err', 'dis_modu', \
-                  'distance', 'fit', 'flag', \
-                  'HalfRadius',
-                  'bar_xctr','bar_xctr_err','bar_yctr',
-                  'bar_yctr_err'
-                  'BarMag', 'BarMagErr', \
-                  'BarRePix', 'BarRePixErr', 'BarReKpc',\
-                  'BarReKpcErr', 'BarIndex', 'BarIndexErr',\
-                  'BarEll', 'BarEllErr', 'BarBoxy', 'Comments']
+def PyMorphOutputParams(dbparams, decompose = 0):
+    """Returns the output parameters from pymorph in two shapes. One shape is for writing and the other is for passing to writehtml"""
+    params = {1:['Name','varchar(500)'],2:['ra_gal','float'],3:['dec_gal','float'],
+              4:['z','float'], 5:[ 'MorphType','int'],6:[ 'mag_auto','float'],
+              7:['magerr_auto','float'],8:['SexHalfRad','float'],
+              9:[ 'num_targets','float'],10:[ 'C','float'],
+              11:['C_err','float'], 12:[ 'A','float'],13:[ 'A_err','float'],
+              14:['S','float'], 15:[ 'S_err','float'],16:[ 'G','float'],17:[ 'M','float']}
+    
+    if decompose:
+        extra_params = [['bulge_xctr','float'],['bulge_xctr_err','float'],
+                         ['bulge_yctr','float'],['bulge_yctr_err','float'],
+                         [ 'Ie','float'],['Ie_err','float'],
+                         [ 'AvgIe','float'],[ 'AvgIe_err','float'],['re_pix','float'],
+                         [ 're_pix_err','float'],['re_kpc','float'],
+                         [ 're_kpc_err','float' ],['n','float'],['n_err','float'],
+                         ['eb','float'],[ 'eb_err','float'],['bpa','float'],
+                         ['bpa_err','float'], [ 'bboxy','float'],[ 'bboxy_err','float'],
+                         ['disk_xctr','float'],['disk_xctr_err','float'],
+                         ['disk_yctr','float'],['disk_yctr_err','float'],
+                         ['Id','float'],[ 'Id_err','float'],
+                         [ 'rd_pix','float'],['rd_pix_err','float'],[ 'rd_kpc','float'],
+                         ['rd_kpc_err','float'],[ 'ed','float'],[ 'ed_err','float'],
+                         ['dpa','float'],[ 'dpa_err','float'],['dboxy','float'],
+                         [ 'dboxy_err','float'],['BD','float'],[ 'BT','float'],
+                         ['p_xctr','float'],['p_xctr_err','float'],
+                         ['p_yctr','float'],['p_yctr_err','float'],
+                         [ 'Ip','float'],['Ip_err','float'],[ 'Pfwhm','float'],
+                         [ 'Pfwhm_kpc','float'],['bar_xctr','float'],
+                         ['bar_xctr_err','float'],['bar_yctr','float'],
+                         ['bar_yctr_err','float'],['Ibar','float'],
+                         [ 'Ibar_err','float'],['rbar_pix','float'],
+                         [ 'rbar_pix_err','float'],['rbar_kpc','float'],
+                         [ 'rbar_kpc_err','float'],['n_bar','float'],
+                         [ 'n_bar_err','float'],['ebar','float'],['ebar_err','float'],
+                         [ 'barpa','float'],[ 'barpa_err','float'],[ 'barboxy','float'],
+                         [ 'barboxy_err','float'],[ 'chi2nu','float'],['Goodness','float'],
+                         [ 'run','int'],['SexSky','float'],[ 'YetSky','float'],
+                         ['GalSky','float'],['GalSky_err','float'],['dis_modu','float'],
+                         ['distance','float'],[ 'fit','int'],['FitFlag','bigint']]
     else:
-        params = ['Name', 'ra_gal', 'dec_gal', 'z', 'mag_auto', \
-                  'magerr_auto', 'num_targets', 'C', 'C_err', 'A', 'A_err', \
-                  'S', 'S_err', 'G', 'M', 'Flag', 'HalfRad']
+        extra_params = []
 
-    # append column names for easier reading
-    for pos, p in enumerate(params):
-        params[pos] = p+'_' + str(pos)
+    extra_params +=[['flag','bigint'],['Manual_flag','int'],['Comments','varchar(1000)'], ['Date', 'varchar(50)'], 
+                    ['Version','float'],['Filter','varchar(500)'],['Total_Run','int'], ['rootname', 'varchar(500)']]
+
+    # add additional keys to params
+    fill_key = max(params.keys()) 
+    for add_param in extra_params:
+        fill_key +=1
+        params[fill_key] = add_param
+
+    fill_key = max(params.keys()) 
+    for dbparam in dbparams:
+        fill_key +=1
+        DBparam = dbparam.split(':')
+        try:
+            params[fill_key] = [DBparam[0],DBparam[2]]
+        except:
+            params[fill_key] = [DBparam[0],'varchar(500)']
+        
     return params
 
 def ReadGalfitConfig(cfile):

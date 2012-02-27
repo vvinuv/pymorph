@@ -36,14 +36,42 @@ class WriteHtmlFunc:
         self.EXPTIME      = EXPTIME
         self.WriteParams = WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME)
 
-def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness, C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
+def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
+                C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
+
+    # this dictionary will hold any parameters that may be printed
+    all_params = dict((ParamNamesToWrite[key][0], -999) for key in ParamNamesToWrite.keys())
+
+    # load some of the passed in parameters
+    all_params['Name'] = c.fstring
+    all_params['ra_gal'] = alpha_j
+    all_params['dec_gal'] = delta_j
+    all_params['z'] = z
+    all_params['Goodness'] = float(str(round(Goodness, 3))[:5])
+    all_params['C'] = C
+    all_params['C_err'] = C_err 
+    all_params['A'] = A
+    all_params['A_err'] = A_err
+    all_params['S'] = S
+    all_params['S_err'] = S_err
+    all_params['G'] = G
+    all_params['M'] = M
+    all_params['distance'] = float(str(round(distance, 3))[:5])
+    all_params['mag_auto'] = c.SexMagAuto
+    all_params['magerr_auto'] = c.SexMagAutoErr
+    all_params['num_targets'] = c.SexTargets
+    all_params['SexSky'] = c.SexSky
+    all_params['flag'] = c.Flag
+    all_params['SexHalfRad'] = c.SexHalfRad
+
+
+    # Now continue
     try:
         ComP = c.components
     except:
         ComP = ['bulge', 'disk']
     if len(ComP) == 0:
         ComP = ['bulge', 'disk']
-    Goodness = float(str(round(Goodness, 3))[:5])
     f_tpl = open(str(c.PYMORPH_PATH) + '/html/default.html', 'r')
     template = f_tpl.read()
     f_tpl.close()
@@ -108,208 +136,123 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
     if 'Input' in basic_info:
         alpha_ned = str(alpha_j)[:10]
         delta_ned = str(delta_j)[:10]
+    else:
+        alpha_ned = ''
+        delta_ned = ''
         
     initial_conf = basic_info['initial_conf']
     restart_conf = basic_info['restart_conf']
-
+    print restart_conf 
     # move the restart file to a reasonably named output file
     new_outname = initial_conf.replace('in','out')
     os.rename(restart_conf, new_outname)
     basic_info['restart_conf'] = new_outname
 
     
-    chi2nu = basic_info['chi2nu']
-    Distance = str(round(distance, 3))[:5]
+    all_params['chi2nu'] = basic_info['chi2nu']
     if 'bulge' in fit_info:
-        bulge_xcntr = fit_info['bulge']['xctr'][0]
-        bulge_ycntr = fit_info['bulge']['yctr'][0]
-        mag_b = fit_info['bulge']['mag'][0]
-        re = fit_info['bulge']['rad'][0]
-        SersicIndex = fit_info['bulge']['n'][0]
-        SersicEllipticity = fit_info['bulge']['ell'][0]
-        SersicPA = fit_info['bulge']['pa'][0]
-        SersicBoxy = fit_info['bulge']['boxy'][0]
+        all_params['bulge_xctr'] = fit_info['bulge']['xctr'][0]
+        all_params['bulge_yctr'] = fit_info['bulge']['yctr'][0]
+        all_params['Ie'] = fit_info['bulge']['mag'][0]
+        all_params['re_pix'] = fit_info['bulge']['rad'][0]
+        all_params['n'] = fit_info['bulge']['n'][0]
+        all_params['eb'] = fit_info['bulge']['ell'][0]
+        all_params['bpa'] = fit_info['bulge']['pa'][0]
+        all_params['bboxy'] = fit_info['bulge']['boxy'][0]
 
-        bulge_xcntr_err = fit_info['bulge']['xctr'][1]
-        bulge_ycntr_err = fit_info['bulge']['yctr'][1]
-        mag_b_err = fit_info['bulge']['mag'][1]
-        re_err = fit_info['bulge']['rad'][1]
-        SersicIndexErr = fit_info['bulge']['n'][1]
-        SersicEllipticityErr = fit_info['bulge']['ell'][1]
-        SersicPAErr = fit_info['bulge']['pa'][1]
-        SersicBoxyErr = fit_info['bulge']['boxy'][1]
-    else:
-        bulge_xcntr = -999.
-        bulge_ycntr = -999.
-        mag_b = -999.
-        re = -999.
-        SersicIndex = -999.
-        SersicEllipticity = -999.
-        SersicPA = -999.
-        SersicBoxy = -999.
-
-        bulge_xcntr_err = -999.
-        bulge_ycntr_err = -999.
-        mag_b_err = -999.
-        re_err = -999.
-        SersicIndexErr = -999. 
-        SersicEllipticityErr = -999.
-        SersicPAErr = -999.
-        SersicBoxyErr = -999.
-
+        all_params['bulge_xctr_err'] = fit_info['bulge']['xctr'][1]
+        all_params['bulge_yctr_err'] = fit_info['bulge']['yctr'][1]
+        all_params['Ie_err'] = fit_info['bulge']['mag'][1]
+        all_params['re_pix_err'] = fit_info['bulge']['rad'][1]
+        all_params['n_err'] = fit_info['bulge']['n'][1]
+        all_params['eb_err'] = fit_info['bulge']['ell'][1]
+        all_params['bpa_err'] = fit_info['bulge']['pa'][1]
+        all_params['bboxy_err'] = fit_info['bulge']['boxy'][1]
+    
     if 'disk' in fit_info:
-        disk_xcntr = fit_info['disk']['xctr'][0]
-        disk_ycntr = fit_info['disk']['yctr'][0]
-        mag_d = fit_info['disk']['mag'][0]
-        rd = fit_info['disk']['rad'][0]
-        DiskEllipticity = fit_info['disk']['ell'][0]
-        DiskPA = fit_info['disk']['pa'][0]
-        DiskBoxy = fit_info['disk']['boxy'][0]
+        all_params['disk_xctr'] = fit_info['disk']['xctr'][0]
+        all_params['disk_yctr'] = fit_info['disk']['yctr'][0]
+        all_params['Id'] = fit_info['disk']['mag'][0]
+        all_params['rd_pix'] = fit_info['disk']['rad'][0]
+        all_params['ed'] = fit_info['disk']['ell'][0]
+        all_params['dpa'] = fit_info['disk']['pa'][0]
+        all_params['dboxy'] = fit_info['disk']['boxy'][0]
 
-        disk_xcntr_err = fit_info['disk']['xctr'][1]
-        disk_ycntr_err = fit_info['disk']['yctr'][1]
-        mag_d_err = fit_info['disk']['mag'][1]
-        rd_err = fit_info['disk']['rad'][1]
-        DiskEllipticityErr = fit_info['disk']['ell'][1]
-        DiskPAErr = fit_info['disk']['pa'][1]
-        DiskBoxyErr = fit_info['disk']['boxy'][1]
-    else:
-        disk_xcntr = -999.
-        disk_ycntr = -999.
-        mag_d = -999.
-        rd = -999.
-        DiskEllipticity = -999.
-        DiskPA = -999.
-        DiskBoxy = -999.
-
-        disk_xcntr_err = -999.
-        disk_ycntr_err = -999.
-        mag_d_err = -999.
-        rd_err = -999.
-        DiskEllipticityErr = -999.
-        DiskPAErr = -999.
-        DiskBoxyErr = -999.
-
-    if 'psf' in fit_info:
-        psf_xcntr = fit_info['disk']['xctr'][0]
-        psf_ycntr = fit_info['disk']['yctr'][0]
-        mag_p = fit_info['disk']['mag'][0]
+        all_params['disk_xctr_err'] = fit_info['disk']['xctr'][1]
+        all_params['disk_yctr_err'] = fit_info['disk']['yctr'][1]
+        all_params['Id_err'] = fit_info['disk']['mag'][1]
+        all_params['rd_pix_err'] = fit_info['disk']['rad'][1]
+        all_params['ed_err'] = fit_info['disk']['ell'][1]
+        all_params['dpa_err'] = fit_info['disk']['pa'][1]
+        all_params['dboxy_err'] = fit_info['disk']['boxy'][1]
         
-        psf_xcntr_err = fit_info['disk']['xctr'][1]
-        psf_ycntr_err = fit_info['disk']['yctr'][1]
-        mag_p_err = fit_info['disk']['mag'][1]
-    else:
-        psf_xcntr = -999.
-        psf_ycntr = -999.
-        mag_p = -999.
+    if 'point' in fit_info:
+        all_params['p_xctr'] = fit_info['point']['xctr'][0]
+        all_params['p_yctr'] = fit_info['point']['yctr'][0]
+        all_params['Ip'] = fit_info['point']['mag'][0]
         
-        psf_xcntr_err = -999.
-        psf_ycntr_err = -999.
-        mag_p_err = -999.
-
+        all_params['p_xctr_err'] = fit_info['point']['xctr'][1]
+        all_params['p_yctr_err'] = fit_info['point']['yctr'][1]
+        all_params['Ip_err'] = fit_info['point']['mag'][1]
+        
     if 'bar' in fit_info:
-        bar_xcntr = fit_info['bulge']['xctr'][0]
-        bar_ycntr = fit_info['bulge']['yctr'][0]
-        mag_bar = fit_info['bulge']['mag'][0]
-        rbar = fit_info['bulge']['rad'][0]
-        BarIndex = fit_info['bulge']['n'][0]
-        BarEllipticity = fit_info['bulge']['ell'][0]
-        BarPA = fit_info['bulge']['pa'][0]
-        BarBoxy = fit_info['bulge']['boxy'][0]
+        all_params['bar_xctr'] = fit_info['bar']['xctr'][0]
+        all_params['bar_yctr'] = fit_info['bar']['yctr'][0]
+        all_params['Ibar'] = fit_info['bar']['mag'][0]
+        all_params['rbar_pix'] = fit_info['bar']['rad'][0]
+        all_params['n_bar'] = fit_info['bar']['n'][0]
+        all_params['ebar'] = fit_info['bar']['ell'][0]
+        all_params['barpa'] = fit_info['bar']['pa'][0]
+        all_params['barboxy'] = fit_info['bar']['boxy'][0]
 
-        bar_xcntr_err = fit_info['bulge']['xctr'][1]
-        bar_ycntr_err = fit_info['bulge']['yctr'][1]
-        mag_bar_err = fit_info['bulge']['mag'][1]
-        rbar_err = fit_info['bulge']['rad'][1]
-        BarIndexErr = fit_info['bulge']['n'][1]
-        BarEllipticityErr = fit_info['bulge']['ell'][1]
-        BarPAErr = fit_info['bulge']['pa'][1]
-        BarBoxyErr = fit_info['bulge']['boxy'][1]
-    else:
-        bar_xcntr = -999.
-        bar_ycntr = -999.
-        mag_bar = -999.
-        rbar = -999.
-        BarIndex = -999.
-        BarEllipticity = -999.
-        BarPA = -999.
-        BarBoxy = -999.
+        all_params['bar_xctr_err'] = fit_info['bar']['xctr'][1]
+        all_params['bar_yctr_err'] = fit_info['bar']['yctr'][1]
+        all_params['Ibar_err'] = fit_info['bar']['mag'][1]
+        all_params['rbar_pix_err'] = fit_info['bar']['rad'][1]
+        all_params['nbar_err'] = fit_info['bar']['n'][1]
+        all_params['ebar_err'] = fit_info['bar']['ell'][1]
+        all_params['barpa_err'] = fit_info['bar']['pa'][1]
+        all_params['barboxy_err'] = fit_info['bar']['boxy'][1]
 
-        bar_xcntr_err = -999.
-        bar_ycntr_err = -999.
-        mag_bar_err = -999.
-        rbar_err = -999.
-        BarIndexErr = -999. 
-        BarEllipticityErr = -999.
-        BarPAErr = -999.
-        BarBoxyErr = -999.
     if 'sky' in fit_info:
-        galfit_sky = fit_info['sky']['mag'][0]
-        galfit_sky_err = fit_info['sky']['mag'][1]
-    else:
-        galfit_sky = -999.
-        galfit_sky_err = -999.
-                                       
+        all_params['GalSky'] = fit_info['sky']['mag'][0]
+        all_params['GalSky_err'] = fit_info['sky']['mag'][1]
+                                           
     # Converting fitted params to physical params
-    if(z == 9999):
-        re_kpc = 9999
-        re_err_kpc = 9999
-        rd_kpc = 9999
-        rd_err_kpc = 9999
-        DisMoD = 9999
-        re_bar_kpc = 9999
-        re_bar_err_kpc = 9999
-    else:
+    if(z != 9999):
         phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
-        DisMoD = phy_parms[2]
+        all_params['dis_modu'] = phy_parms[2]
         if 'bulge' in ComP:
-            re_kpc = phy_parms[3] * re
-            re_err_kpc = phy_parms[3] * re_err
-        else:
-            re_kpc = 9999
-            re_err_kpc = 9999
+            all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
+            all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
         if 'disk' in ComP:
-            rd_kpc = phy_parms[3] * rd
-            rd_err_kpc = phy_parms[3] * rd_err
-        else:
-            rd_kpc = 9999
-            rd_err_kpc = 9999
+            all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
+            all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
         if 'bar' in ComP:
-            re_bar_kpc = phy_parms[3] * re_bar
-            re_bar_err_kpc = phy_parms[3] * re_bar_err
-        else:
-            re_bar_kpc = 9999
-            re_bar_err_kpc = 9999
+            all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
+            all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
         if 'point' in ComP:
-            fwhm_kpc = 0.5 * phy_parms[3]
-        else:
-            fwhm_kpc = 9999
+            all_params['Pfwhm_kpc'] = 0.5 * phy_parms[3]
     # Finding derived parameters
     if 'bulge' in ComP and 'disk' in ComP:
+        fb = 10**(-0.4 * (all_params['Ie'] - c.mag_zero))
+        fd = 10**(-0.4 * (all_params['Id'] - c.mag_zero))
+        all_params['BD'] = fb / fd 
         if 'point' in ComP:
-            fb = 10**(-0.4 * (mag_b - c.mag_zero))
-            fd = 10**(-0.4 * (mag_d - c.mag_zero))
-            fp = 10**(-0.4 * (mag_p - c.mag_zero))
-            BD = fb / fd 
-            BT = fb / (fb + fd + fp)
-        elif 'bar' in ComP:
-            fb = 10**(-0.4 * (mag_b - c.mag_zero))
-            fd = 10**(-0.4 * (mag_d - c.mag_zero))
-            fbar = 10**(-0.4 * (mag_bar - c.mag_zero)) 
-            BD = fb / fd
-            BT = fb / (fb + fd + fbar)
+            fp = 10**(-0.4 * (all_params['Ip'] - c.mag_zero))
         else:
-            BD = 10**(-0.4 * ( mag_b - mag_d))
-            BT = 1.0 / (1.0 + 1.0 / BD)
+            fp = 0.0
+        if 'bar' in ComP:
+            fbar = 10**(-0.4 * (all_params['Ibar'] - c.mag_zero)) 
+        else:
+            fbar = 0.0
+        
+        all_params['BT'] = fb / (fb + fd + fp + fbar)
     elif 'bulge' in ComP:
-        BD = 'nan'
-        BT = 1.0
+        all_params['BT'] = 1.0
     elif 'disk' in ComP:
-        BD = 0.0
-        BT = 0.0
-    else:
-        BD = 'nan'
-        BT = 'nan'
+        all_params['BD'] = 0.0
+        all_params['BT'] = 0.0
     # Start writing html file. Now the template keywords will get values
     pngfile = 'P_' + c.fstring + '.png'
     Neighbour_Sersic = ''
@@ -406,7 +349,7 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
                                  str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
 
 
-            if(str(values[0]) == 'psf'):
+            if 'point' in key:
                 Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
                              '<TD> point </TD> <TD> ' + \
                              str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
@@ -436,25 +379,22 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
               pixelscale = c.pixelscale
         except:
               pixelscale = 1
-        AvgMagInsideRe = mag_b + 2.5 * n.log10(2 * 3.14 * pixelscale * \
-                      pixelscale * re * re * n.sqrt(1 - SersicEllipticity**2.0))
-        AvgMagInsideReErr2 = (1.085 * n.sqrt((2 * re * re_err)**2.0 + \
-                             ((SersicEllipticity * SersicEllipticityErr) / \
-                             n.sqrt(1 - SersicEllipticity**2.0))**2.0)) / \
-                             (n.sqrt(1 - SersicEllipticity**2.0) * 2 * 3.14 * \
-                             re * re)
-        AvgMagInsideReErr = n.sqrt(mag_b_err**2.0 + AvgMagInsideReErr2**2.0)
-    else:
-        AvgMagInsideRe = 9999
-        AvgMagInsideReErr = 9999
+        all_params['AvgIe'] = all_params['Ie'] + 2.5 * n.log10(2 * 3.14 * pixelscale * \
+                      pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * n.sqrt(1 -  all_params['eb']**2.0))
+        AvgMagInsideReErr2 = (1.085 * n.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
+                             (( all_params['eb'] *  all_params['eb_err']) / \
+                             n.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
+                             (n.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
+                              all_params['re_pix'] *  all_params['re_pix'])
+        all_params['AvgIe_err'] = n.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
     wC = str(C)[:5]
     wA = str(A)[:5]
     wS = str(S)[:5]
     wG = str(G)[:5]
     wM = str(M)[:5]
-    wBD = str(BD)[:5]
-    wBT = str(BT)[:5]
-    wAvgMagInsideRe = str(AvgMagInsideRe)[:5]
+    wBD = str( all_params['BD'])[:5]
+    wBT = str( all_params['BT'])[:5]
+    wAvgMagInsideRe = str( all_params['AvgIe'])[:5]
     error_mesg1 = ''
     error_mesg2 = ''
     error_mesg3 = ''
@@ -467,148 +407,85 @@ def WriteParams(cutimage, xcntr, ycntr, distance, alpha_j, delta_j, z, Goodness,
 	              '_1.html"> Crashed </a>' 
 
     # Now test for fitting problems and set flags for analysis
-    FitFlag = 0
+    all_params['FitFlag'] = 0
     HitLimit = 0
 
     if not c.detail:
         if 'bulge' in ComP:
-            if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2):
-                FitFlag += 2**Get_FitFlag('IE_AT_LIMIT')
-            if abs(re - c.LRe) < 0.1 or abs(re - c.URe) < 1.0:
-                FitFlag += 2**Get_FitFlag('RE_AT_LIMIT')
-            if abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-                FitFlag += 2**Get_FitFlag('N_AT_LIMIT')
-            if abs(SersicEllipticity - 0.0) < 0.05 or abs(SersicEllipticity - 0.0) > 0.95:
-                FitFlag += 2**Get_FitFlag('EB_AT_LIMIT')
+            if abs(all_params['Ie'] - c.UMag) < 0.2 or abs(all_params['Ie'] - c.LMag) < 0.2:
+                all_params['FitFlag'] += 2**Get_FitFlag('IE_AT_LIMIT')
+            if abs(all_params['re_pix'] - c.LRe) < 0.1 or abs(all_params['re_pix'] - c.URe) < 1.0:
+                all_params['FitFlag'] += 2**Get_FitFlag('RE_AT_LIMIT')
+            if abs(all_params['n'] - c.LN) < 0.03 or abs(all_params['n'] - c.UN) < 0.5:
+                all_params['FitFlag'] += 2**Get_FitFlag('N_AT_LIMIT')
+            if abs(all_params['eb'] - 0.0) < 0.05 or abs(all_params['eb'] - 0.0) > 0.95:
+                all_params['FitFlag'] += 2**Get_FitFlag('EB_AT_LIMIT')
         if 'disk' in ComP:
-            if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2:
-                FitFlag += 2**Get_FitFlag('ID_AT_LIMIT')
-            if abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
-                FitFlag += 2**Get_FitFlag('RD_AT_LIMIT')
-            if abs(DiskEllipticity - 0.0) < 0.05 or abs(DiskEllipticity - 0.0) > 0.95:
-                FitFlag += 2**Get_FitFlag('ED_AT_LIMIT')
+            if abs(all_params['Id'] - c.UMag) < 0.2 or abs(all_params['Id'] - c.LMag) < 0.2:
+                all_params['FitFlag'] += 2**Get_FitFlag('ID_AT_LIMIT')
+            if abs(all_params['rd_pix'] - c.LRd) < 0.1 or abs(all_params['rd_pix'] - c.URd) < 1.0:
+                all_params['FitFlag'] += 2**Get_FitFlag('RD_AT_LIMIT')
+            if abs(all_params['ed'] - 0.0) < 0.05 or abs(all_params['ed'] - 0.0) > 0.95:
+                all_params['FitFlag'] += 2**Get_FitFlag('ED_AT_LIMIT')
 
-    if not FitFlag:
+    if not all_params['FitFlag']:
         error_mesg4 = str(error_mesg4) + 'One of the parameters'
         error_mesg5 = str(error_mesg5) + '          hits limit!'
     
-    if Goodness < c.Goodness:
+    if all_params['Goodness'] < c.Goodness:
         error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-        FitFlag += 2**Get_FitFlag('SMALL_GOODNESS')
-    if chi2nu > c.chi2sq:
+        all_params['FitFlag'] += 2**Get_FitFlag('SMALL_GOODNESS')
+    if all_params['chi2nu'] > c.chi2sq:
         error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-        if chi2nu != 9999:
-            FitFlag += 2**Get_FitFlag('LARGE_CHISQ')
-    if abs(bulge_xcntr - xcntr) > c.center_deviation or \
-           abs(bulge_ycntr - ycntr) > c.center_deviation or \
-           abs(disk_xcntr - xcntr) > c.center_deviation or \
-           abs(disk_ycntr - ycntr) > c.center_deviation:
+        if all_params['chi2nu'] != 9999:
+            all_params['FitFlag'] += 2**Get_FitFlag('LARGE_CHISQ')
+    if abs(all_params['bulge_xctr'] - xcntr) > c.center_deviation or \
+           abs(all_params['bulge_yctr'] - ycntr) > c.center_deviation or \
+           abs(all_params['disk_xctr'] - xcntr) > c.center_deviation or \
+           abs(all_params['disk_yctr'] - ycntr) > c.center_deviation:
         error_mesg3 = str(error_mesg3) + 'Fake Center!'
-        if bulge_xcntr == 9999 or bulge_ycntr == 9999 or \
-               disk_xcntr == 9999 or disk_ycntr == 9999:
+        if all_params['bulge_xctr'] == 9999 or all_params['bulge_yctr'] == 9999 or \
+               all_params['disk_xctr'] == 9999 or all_params['disk_yctr'] == 9999:
             pass
         else:
-            FitFlag += 2**Get_FitFlag('FAKE_CNTR')
+            all_params['FitFlag'] += 2**Get_FitFlag('FAKE_CNTR')
 
-    if FitFlag > 0:
+    if all_params['FitFlag'] > 0:
         img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
         good_fit = 1
     else:
         img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
         good_fit = 0
     outfile = open('R_' + c.fstring + '.html','w')
+    chi2nu = all_params['chi2nu']
+    Distance = all_params['distance']
     outfile.write(template %vars())
     outfile.close()
     # Finding number of runs in the csv file 
-    run = 1
+    all_params['run'] = 1
     if exists('result.csv'):
         for line_res in csv.reader(open('result.csv').readlines()[1:]):    
             if(str(line_res[0]) == c.fstring):
-                run += 1
-    # Writing csv file 
-    f_res = open("result.csv", "ab")
-    writer = csv.writer(f_res)
-    galid = c.fstring
-    ParamToWrite = [galid, alpha_j, delta_j, z, c.SexMagAuto, c.SexMagAutoErr,
-                    c.SexTargets]
-    if 'bulge' in ComP:
-        for bulgecomp in [bulge_xcntr,bulge_xcntr_err,bulge_ycntr,bulge_ycntr_err,
-                          mag_b, mag_b_err, re, re_err, re_kpc, re_err_kpc, 
-                          SersicIndex, SersicIndexErr, AvgMagInsideRe,\
-                          AvgMagInsideReErr, SersicEllipticity, \
-                          SersicEllipticityErr, SersicPA, 
-			  SersicPAErr, SersicBoxy, SersicBoxyErr]:
-            ParamToWrite.append(bulgecomp)
-    else:
-        for bulgecomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999]:
-            ParamToWrite.append(bulgecomp)
-    if 'disk' in ComP:
-        for diskcomp in [disk_xcntr,disk_xcntr_err,disk_ycntr,disk_ycntr_err,
-                         mag_d, mag_d_err, rd, rd_err, rd_kpc, rd_err_kpc, 
-                         DiskEllipticity, DiskEllipticityErr, DiskPA, 
-                         DiskPAErr, DiskBoxy, DiskBoxyErr]:
-            ParamToWrite.append(diskcomp)
-    else:
-        for diskcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999,
-                         9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999]:
-            ParamToWrite.append(diskcomp)
-    ParamToWrite.append(BD)
-    ParamToWrite.append(BT)
-    if 'point' in ComP:
-        ParamToWrite.append(mag_p)
-        ParamToWrite.append(mag_p_err)
-        ParamToWrite.append(0.5)
-        ParamToWrite.append(9999)
-    else:
-        ParamToWrite.append(9999)
-        ParamToWrite.append(9999)
-        ParamToWrite.append(9999)
-        ParamToWrite.append(9999)
-    try:
-        galfit_sky * 1.0
-    except:
-        print "galfit sky was wierd: ", galfit_sky
-        galfit_sky = 9999
-        galfit_sky_err = 9999
-        print 'GALFIT does not report sky'
+                all_params['run'] += 1
     if c.GalSky != 9999:
-        galfit_sky = c.GalSky
-    for otherparam in [chi2nu, Goodness, run, C, C_err, A, A_err, S, S_err, G,\
-                       M, c.SexSky, galfit_sky, galfit_sky_err, DisMoD, \
-                       distance, good_fit, c.Flag, FitFlag, c.SexHalfRad]:
-        ParamToWrite.append(otherparam)
-    if 'bar' in ComP:
-        for barcomp in [bar_xcntr,bar_xcntr_err,bar_ycntr,bar_ycntr_err,
-                        mag_bar, mag_bar_err, re_bar, re_bar_err, re_bar_kpc, \
-                        re_bar_err_kpc, \
-                        SersicIndexBar, SersicIndexBarErr, \
-                        SersicEllipticityBar, \
-                        SersicEllipticityBarErr, SersicBoxyBar]:
-            ParamToWrite.append(barcomp)
-    else:
-        for barcomp in [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, \
-                          9999, 9999, 9999, 9999,9999, 9999, 9999]:
-            ParamToWrite.append(barcomp)
-    # Remove any nan or inf from the parameter
-    for p in ParamToWrite:
-        if str(p) in ('nan', '-nan', 'inf', '-inf'):
-            ParamToWrite[ParamToWrite.index(p)] = 9999
-        else:
-            pass
-    writer.writerow(ParamToWrite)
-    f_res.close()
+        all_params['GalSky'] = c.GalSky
+    
     # Writing data base
     try:
         from utilities import WriteDb
     except:
         print 'DB writing Problem'
     try:
-        WriteDb(ParamToWrite)
+        WriteDb(ParamNamesToWrite, all_params)
     except:
         print 'No database can be created!'
         traceback.print_exc()
+
+    # Writing csv file 
+    f_res = open("result.csv", "ab")
+    writer = csv.writer(f_res)
+    writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in ParamNamesToWrite.keys()])
+    f_res.close()
     # Writing quick view html pymorph.html
     outfile1 = open('pymorph.html', 'w')
     outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
@@ -640,6 +517,7 @@ def getfit(f):
     for bad_char in ['(',')','[',']',',','*', '--']:
         values = values.replace(bad_char,' ') 
 
+    values = values.split('\n')
     return values
 
 
@@ -675,7 +553,7 @@ def load_component(data_line, err_line):
             obj['rad'][0]=float(data_line[5])
             obj['rad'][1]=float(err_line[3])
 
-            if data_line[0] = 'sersic':
+            if data_line[0] == 'sersic':
                 obj['n'][0]=float(data_line[6])
                 obj['n'][1]=float(err_line[4])
                 pos = 7
@@ -738,7 +616,7 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                     elif (str(line[0]) == 'expdisk'):
                         key = 'disk'
                     elif(str(line[0]) == 'psf'):
-                        key = 'psf'
+                        key = 'point'
                     elif(str(line[0]) == 'sky'):
                         key = 'sky'
                     
