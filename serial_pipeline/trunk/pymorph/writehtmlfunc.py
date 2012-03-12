@@ -63,7 +63,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     all_params['SexSky'] = c.SexSky
     all_params['flag'] = c.Flag
     all_params['SexHalfRad'] = c.SexHalfRad
-
+    all_params['magzp'] = c.mag_zero
 
     # Now continue
     try:

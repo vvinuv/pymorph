@@ -560,19 +560,19 @@ def main():
                     # This creates ellipse mask and used for 
                     # ellipse fitting and casgm
                     ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                 SizeX, SizeY, line_s, 1)
+                                 SizeX, SizeY, good_object, 1)
                     # Fitting ellipse task or the manual 1d finder
                     if c.decompose:
                         ut.HandleEllipseTask(cutimage, cut_xcntr, \
                                        cut_ycntr, \
                                        SizeX, SizeY, c.SexSky, 0)
                         MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                         SizeX, SizeY, line_s)
+                                         SizeX, SizeY, good_object)
                         maskimage = 'M_' + c.fstring  + '.fits'
                         config_file = 'G_' + c.fstring + '.in'
                         outimage = 'O_' + c.fstring + '.fits'
                         ConfigFunc(cutimage, whtimage,  cut_xcntr,\
-                                   cut_ycntr, SizeX, SizeY, line_s, \
+                                   cut_ycntr, SizeX, SizeY, good_object, \
                                    psffile, 'SegCat.cat')
                 else:
                     cut_xcntr, cut_ycntr = TX / 2.0, TY / 2.0
@@ -581,7 +581,7 @@ def main():
                         pass
                     else:
                         MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                 SizeX, SizeY, line_s)
+                                 SizeX, SizeY, good_object)
                     config_file = cfile
                     outimage = str(oimg)
                 # Estimates sky parameters
@@ -605,7 +605,7 @@ def main():
                     C, C_err, A, A_err, S, S_err, G, M = \
                     ut.HandleCasgm(cutimage, cut_xcntr, cut_ycntr, \
                                    alpha_j, delta_j, z,
-                                   SizeX, SizeY, line_s, bxcntr, \
+                                   SizeX, SizeY, good_object, bxcntr, \
                                    bycntr)
                 else:
                     C, C_err, A, A_err, S, S_err, G, M = \
@@ -627,7 +627,7 @@ def main():
                         if c.galfit and DetailFit:
                             ConfigIter(cutimage, whtimage, cut_xcntr,\
                                        cut_ycntr, SizeX, \
-                                       SizeY, line_s, psffile, z)
+                                       SizeY, good_object, psffile, z)
                         elif c.galfit:
                             cmd = str(c.GALFIT_PATH) + ' ' + \
                                       config_file
@@ -640,7 +640,7 @@ def main():
                             # FIX
                             # Mainly the ellipse fit problem
                             ut.HandleGalfitOutput(outimage, cut_xcntr, \
-                                        cut_ycntr, SizeX, SizeY, line_s)
+                                        cut_ycntr, SizeX, SizeY, good_object)
                             #END
                     except Exception, inst:
                         print type(inst)     # the exception instance
@@ -700,7 +700,7 @@ def main():
                             f_failed.writelines([str(FailedValue), ' '])
                         f_failed.writelines([str(c.Flag), '\n'])
                     f_cat.writelines([str(gal_id), ' '])
-                    f_cat.write(line_s)
+                    f_cat.write(good_object)
                     #The following removes all the temporary files 
                     #after every fit
                     ToClean = 0

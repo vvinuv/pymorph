@@ -228,7 +228,8 @@ def PyMorphOutputParams(dbparams, decompose = 0):
               7:['magerr_auto','float'],8:['SexHalfRad','float'],
               9:[ 'num_targets','float'],10:[ 'C','float'],
               11:['C_err','float'], 12:[ 'A','float'],13:[ 'A_err','float'],
-              14:['S','float'], 15:[ 'S_err','float'],16:[ 'G','float'],17:[ 'M','float']}
+              14:['S','float'], 15:[ 'S_err','float'],16:[ 'G','float'],
+              17:[ 'M','float'], 18:['magzp', 'float']}
     
     if decompose:
         extra_params = [['bulge_xctr','float'],['bulge_xctr_err','float'],
