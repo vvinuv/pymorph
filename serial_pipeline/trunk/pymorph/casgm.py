@@ -236,7 +236,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
             tmp_writer = csv.writer(f_tmp)
             tmp_ParamToWrite = ['gal_id','C','C_err','A','A_err','A_flag', \
                                 'image_A','back_A','A_20','A_20_with_zsum', \
-                                'S','S_err','r20','r50','r80','r90', \
+                                'S','S_err','r20', 'r20e', 'r50', 'r50e', \
+                                'r80', 'r80e', 'r90', 'r90e', \
                                 'extraction_radius','G','G_res','G80', \
                                 'G50','G20','M','M_res','M80','M50','M20']
             tmp_writer.writerow(tmp_ParamToWrite)
@@ -247,7 +248,8 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                             ASY, ASY_ERROR, asy.image_asymm[5], \
                             asy.image_asymm[0], back_asy.image_asymm[0], \
                             asy_r20.image_asymm[0], 0.0, S, ERROR_SMOO, \
-                            con.r20, con.r50, con.r80, con.r90, \
+                            con.r20, con.r20e, con.r50, con.r50e, con.r80, \
+                            con.r80e, con.r90, con.r90e,\
                             extraction_radius, gini_coef[0], gini_coef[1],\
                             gini_coef[2], gini_coef[3], gini_coef[4], \
                             gini_coef[5], gini_coef[6], gini_coef[7], \
