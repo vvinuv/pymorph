@@ -90,6 +90,7 @@ fitting = [1, 1, 1]                    # = 0, Fix params at SExtractor value
 GALFIT_PATH ='/Users/ameert/galfit/modified/galfit' 
 SEX_PATH = '/sw/bin/sex'
 PYMORPH_PATH = '/Users/ameert/pymorph/trunk/pymorph'
+galfitv = '3.0.2'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 2.5                          #< chi2sq
