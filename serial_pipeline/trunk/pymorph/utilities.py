@@ -1,6 +1,8 @@
 import datetime
 import config as c
 import time
+import MySQLdb as mysql
+
 from writehtmlfunc import *
 
 def WriteDb(ParamValues, all_params):

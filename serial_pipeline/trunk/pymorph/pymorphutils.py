@@ -705,3 +705,30 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         WriteError('The CASGM module failed\n')
         c.Flag += 2**GetFlag('CASGM_FAIL')
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
+
+def returngimg():
+    print "No gimg given."
+    if exists(c.datadir + 'I' + c.fstring + '.fits'):
+        gimg = 'I' + c.fstring + '.fits'
+    elif exists(c.datadir + str(gal_id) + '.fits'):
+        gimg = str(gal_id) + '.fits'
+    else:
+        print "No possible gimg found"
+        gimg = 'None'
+    return gimg
+
+def returnthenames(gal_id, gimg, wimg):
+    """This function returns the names of cutout, weight \
+       based on the parameters set in the config.py"""
+    if c.galcut:
+        if c.ReSize:
+            cutimage = 'I' + gimg
+            whtimage = 'W' + wimg 
+        else:
+            cutimage = gimg
+            whtimage = wimg
+    else:
+        cutimage = 'I' + gimg
+        whtimage = 'W' + wimg
+    return gimg, wimg
+

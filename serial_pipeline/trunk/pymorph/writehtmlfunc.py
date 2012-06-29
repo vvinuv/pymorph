@@ -5,7 +5,6 @@ import numpy as n
 import fileinput
 from cosmocal import cal 
 import datetime
-import MySQLdb as mysql
 import traceback
 from flagfunc import GetFlag, isset, Get_FitFlag
 from pymorphutils import RaDegToHMS, DecDegToDMS

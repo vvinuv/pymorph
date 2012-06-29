@@ -368,8 +368,16 @@ def main():
                                9999, 9999, 0)
                         SexShallow(c.datadir + gimg, c.datadir + wimg, \
                                    'None', 9999, 9999, 0)
-                    except:
-                        print 'Problem running Sextractor (line no. 342)' 
+                    except Exception, inst:
+                        print type(inst)     # the exception instance
+                        print inst.args      # arguments stored in\
+                                             # .args
+                        print inst           # __str__ allows args\
+                                             # to printed directly
+                        print "something bad happened!!!!\n\n"
+                        print traceback.print_exc()
+                        
+                        #print 'Problem running Sextractor (line no. 342)' 
             if(alpha1 == -9999 or delta1 == -9999):
                 alpha_j = -9999
                 delta_j = -9999
@@ -721,10 +729,18 @@ def main():
                     for myfile in ['ellip','err','test.tab']:
                         if os.access(myfile,os.F_OK):
                             os.remove(myfile)
-            except:
+            except Exception, inst:
+                print type(inst)     # the exception instance
+                print inst.args      # arguments stored in\
+                                            # .args
+                print inst           # __str__ allows args\
+                                             # to printed directly
+                print "something bad happened!!!!\n\n"
+                print traceback.print_exc()
+
                 if values[0].strip().isdigit():
                     print 'Something happend in the pipeline. ' + \
-                          'Check error.log'
+                          'Check error.log 2'
                 else:
                     pass
             if(c.galcut == True):

@@ -87,9 +87,9 @@ devauc = False # set to False to fit sersic bulge, set to true to fit devacouler
 fitting = [1, 1, 1]                    # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
-GALFIT_PATH ='/Users/ameert/galfit/modified/galfit' 
-SEX_PATH = '/sw/bin/sex'
-PYMORPH_PATH = '/Users/ameert/pymorph/trunk/pymorph'
+GALFIT_PATH ='/home/vinu/software/galfit/modified/galfit' 
+SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
+PYMORPH_PATH = '/home/vinu/vinucodes/serial_pipeline/trunk/pymorph'
 galfitv = '3.0.2'
 
 ###----The following conditions are used to classify fit goo/bad----###
