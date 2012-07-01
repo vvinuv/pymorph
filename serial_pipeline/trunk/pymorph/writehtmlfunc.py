@@ -301,11 +301,11 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
                                 ' </TD> <TD> ' + \
                                 str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                                str(round(re_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                str(round(all_params['re_kpc'], 3))[:5] + ' </TD> <TD> ' + \
                                 str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
                                 str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
                                 str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
-                                str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+                                str(0) + ' </TD> </TR>'
                 Object_Sersic_err = '<TR align="center" ' + \
                                     'bgcolor="#CCFFFF">' + \
                                     '<TD>' + ' ' + '</TD> <TD>' + \
@@ -314,11 +314,11 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                     ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
                                     ' </TD> <TD> ' + \
                                     str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                    str(round(re_err_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                    str(round(all_params['re_kpc_err'], 3))[:5] + ' </TD> <TD> ' + \
                                     str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
                                     str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
                                     str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
-                                    str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+                                    str(0) + ' </TD> </TR>'
             if 'disk' in key:
                 Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
                              '<TD> disk </TD> <TD> ' + \
@@ -327,11 +327,11 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                              ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
                              ' </TD> <TD> ' + \
                              str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                             str(round(rd_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                             str(round(all_params['rd_kpc'], 3))[:5] + ' </TD> <TD> ' + \
                              ' </TD> <TD> </TD> <TD> ' +\
                              str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
                              str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
-                             str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+                             str(0) + ' </TD> </TR>'
 
                 Object_Exp_err = '<TR align="center" ' + \
                                  'bgcolor="#CCFFFF">' + \
@@ -341,11 +341,11 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                  ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
                                  ' </TD> <TD> ' + \
                                  str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                 str(round(rd_err_kpc, 3))[:5] + ' </TD> <TD> ' + \
+                                 str(round(all_params['rd_kpc_err'], 3))[:5] + ' </TD> <TD> ' + \
                                  ' </TD> <TD> </TD> <TD> ' +\
                                  str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
                                  str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
-                                 str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+                                 str(0) + ' </TD> </TR>'
 
 
             if 'point' in key:
@@ -370,9 +370,14 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                              ' ' + ' </TD> <TD> ' + str('9999') +  \
                              ' </TD> <TD> ' + str('9999') + \
                              ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
-                            
-    except:
-        pass
+    except Exception, inst:
+        print type(inst)     # the exception instance
+        print inst.args      # arguments stored in\
+                                             # .args
+        print inst           # __str__ allows args\
+                                             # to printed directly
+        print "something bad happened writing!!!!\n\n"
+        print traceback.print_exc()                   
     if 'bulge' in ComP:
         try:
               pixelscale = c.pixelscale
@@ -455,11 +460,8 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     else:
         img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
         good_fit = 0
-    outfile = open('R_' + c.fstring + '.html','w')
     chi2nu = all_params['chi2nu']
     Distance = all_params['distance']
-    outfile.write(template %vars())
-    outfile.close()
     # Finding number of runs in the csv file 
     all_params['run'] = 1
     if exists('result.csv'):
@@ -485,6 +487,12 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     writer = csv.writer(f_res)
     writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in ParamNamesToWrite.keys()])
     f_res.close()
+
+    #writing html
+    outfile = open('R_' + c.fstring + '.html','w')
+    outfile.write(template %vars())
+    outfile.close()
+
     # Writing quick view html pymorph.html
     outfile1 = open('pymorph.html', 'w')
     outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
