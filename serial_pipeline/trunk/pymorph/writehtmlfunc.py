@@ -89,6 +89,8 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         alpha3 = '0' + str(ra3)[:3]
     else:
         alpha3 = str(ra3)[:4]
+    if abs(ra1) > 12:
+        alpha1, alpha2, alpha3 = 9999, '', ''
     if abs(dec1) < 10:
         delta1 = '0' + str(dec1)
     else:
@@ -105,6 +107,8 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         delta3 = '0' + str(dec3)[:3]
     else:
         delta3 = str(dec3)[:4]
+    if abs(dec1) > 90:
+        delta1, delta2, delta3 = 9999, '', ''
     # Writing index file
     if(c.repeat == False or c.repeat):
         for line_i in fileinput.input("index.html",inplace =1):
@@ -327,7 +331,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                              ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
                              ' </TD> <TD> ' + \
                              str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                             str(round(all_params['rd_kpc'], 3))[:5] + ' </TD> <TD> ' + \
+                             str(round(all_params['rd_kpc'], 3))[:5] +\
                              ' </TD> <TD> </TD> <TD> ' +\
                              str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
                              str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
@@ -341,7 +345,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                  ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
                                  ' </TD> <TD> ' + \
                                  str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                 str(round(all_params['rd_kpc_err'], 3))[:5] + ' </TD> <TD> ' + \
+                                 str(round(all_params['rd_kpc_err'], 3))[:5] + \
                                  ' </TD> <TD> </TD> <TD> ' +\
                                  str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
                                  str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
