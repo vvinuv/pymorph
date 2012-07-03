@@ -1096,16 +1096,6 @@ if __name__ == '__main__':
     c.VERSION = 3.0
     c.FILTER = 'UNKNOWN'
     c.Filter = 'UNKNOWN'
-    try:
-        if(c.repeat == False and c.galcut == False):
-            img = pyfits.open(c.datadir + c.imagefile)
-            c.imagedata = img[0].data
-            c.HeAdEr0 = img[0].header
-            img.close()
-            ut.CheckHeader(c.HeAdEr0)
-    except IOError, (errno, strerror):
-        print imagefile, "I/O error(%s): %s" % (errno, strerror)
-        os._exit(0)
     c.SEx_DETECT_MINAREA = 6
     c.SEx_DETECT_THRESH = 1.5
     c.SEx_ANALYSIS_THRESH = 1.5
@@ -1286,6 +1276,16 @@ if __name__ == '__main__':
     print "thisdir is ", thisdir
     print "outdir is ", c.outdir
     os.chdir(c.outdir)
+    try:
+        if(c.repeat == False and c.galcut == False):
+            img = pyfits.open(c.datadir + c.imagefile)
+            c.imagedata = img[0].data
+            c.HeAdEr0 = img[0].header
+            img.close()
+            ut.CheckHeader(c.HeAdEr0)
+    except IOError, (errno, strerror):
+        print imagefile, "I/O error(%s): %s" % (errno, strerror)
+        os._exit(0)
 
     if exists(sex_cata):
         pass
