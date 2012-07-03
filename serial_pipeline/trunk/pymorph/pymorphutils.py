@@ -632,7 +632,7 @@ def HandlePsf(cfile, UserGivenPsf, ra, dec):
             distance = 9999
             c.psfcounter += 1
         else:
-            psffile, distance = SelectPsf(alpha_j, delta_j)
+            psffile, distance = SelectPsf(ra, dec)
             distance = distance * 60.0 * 60.0
     else:
         if np.abs(ra) == 9999 or np.abs(dec) == 9999:
