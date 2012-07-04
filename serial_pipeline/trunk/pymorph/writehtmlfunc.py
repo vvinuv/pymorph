@@ -89,7 +89,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         alpha3 = '0' + str(ra3)[:3]
     else:
         alpha3 = str(ra3)[:4]
-    if abs(ra1) > 12:
+    if abs(ra1) > 360:
         alpha1, alpha2, alpha3 = 9999, '', ''
     if abs(dec1) < 10:
         delta1 = '0' + str(dec1)
