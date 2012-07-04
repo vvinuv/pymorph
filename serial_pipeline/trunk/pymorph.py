@@ -91,10 +91,19 @@ def main():
             TY = c.imagedata.shape[0]
             if exists(c.datadir + whtfile):
                 wht = pyfits.open(c.datadir + whtfile)
-                c.weightdata = wht[0].data
+                if re.search("rms", whtfile.lower()):
+                    c.weightdata = wht[0].data
+                    print "whtfile >>> ", whtfile
+                    c.weightexists = 1
+                elif re.search("weight", whtfile.lower()):
+                    c.weightdata = 1 / np.sqrt(wht[0].data)
+                    print "whtfile >>> ", whtfile
+                    c.weightexists = 1
+                else:
+                    print 'Weight file is not understood. Please include ' + \
+                          'the word weight/rms to the weight file name. ' + \
+                          'If it is weight the rms will be found by 1/sqrt(w)' 
                 wht.close()
-                print "whtfile >>> ", whtfile
-                c.weightexists = 1
             else:
                print 'No weight image found\n'
     
