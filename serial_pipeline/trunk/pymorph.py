@@ -11,6 +11,7 @@ import traceback
 from optparse import OptionParser, OptParseError
 import pyfits
 import numpy as np
+import re
 
 configdir = '.'
 
