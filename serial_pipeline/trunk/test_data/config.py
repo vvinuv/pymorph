@@ -1,7 +1,7 @@
 """Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi 2008"""
 ###----Specify the input images and Catalogues----###
-imagefile = 'j8f643-1-1_drz_sci.fits'
-whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. If it contains the 
+imagefile = '00000002_r_stamp.fits'
+whtfile = '00000002_r__r_W.fits'   #The weight image. If it contains the 
                                       #string 'rms', this will treated as 
 				      #RMS_MAP and if it contains weight, then 
                                       #that will be treated as WEIGHT_MAP. 
@@ -9,7 +9,7 @@ whtfile = 'j8f643-1-1_drz_rms.fits'   #The weight image. If it contains the
 				      #is treated as MAP_RMS 
 sex_cata = 'sdss_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'sdss_r.cat'         #catalogue of galaxies from
+clus_cata = 'sdss_r.cat.field'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
@@ -69,7 +69,7 @@ angle = 180.0
 
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
-galcut = True                        #True if we provide cutouts
+galcut = False                        #True if we provide cutouts
 decompose = True
 detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
