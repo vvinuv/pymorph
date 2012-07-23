@@ -1,1 +1,5 @@
-1. Need to fix the error in writing html when using galfit 2.0
+1. Need to fix the error in writing html when using galfit 2.0 -- FIXED!!
+2. Need to fix "nan" values output where error from galfit is undefined druing fitting--prevents writing to database
+3. Need to fix AvgIe = inf when radii is too small --prevents writing to database
+4. Need to fix "--" output for C parameter when improperly masked -- prevents mysql database writing 
+5. Select "the best brightest galaxy" (means avoid bright nearby stars and faintgalaxies) for fitting if there are more than one galaxy within searchrad.
