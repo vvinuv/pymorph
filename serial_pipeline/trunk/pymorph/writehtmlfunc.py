@@ -222,7 +222,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         all_params['GalSky_err'] = fit_info['sky']['mag'][1]
                                            
     # Converting fitted params to physical params
-    if(z != 9999):
+    if(z != 9999 and z > 0):
         phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
         all_params['dis_modu'] = phy_parms[2]
         if 'bulge' in ComP:

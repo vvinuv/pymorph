@@ -285,6 +285,8 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
  
     f.writelines(['# sky\n\n']) 
     f.writelines([' 0) sky\n'])#str(2.22604*(1.0+0.01)), ' ', str(0.0)
+#    f.writelines([' 1) ', str(2.41154*(1.0+0.01)),' ', str(c.fitting[2]), \
+#                  '	# sky background [ADU counts\n'])
     f.writelines([' 1) ', str(c.SexSky),' ', str(c.fitting[2]), \
                   '	# sky background [ADU counts\n'])
 #    f.writelines([' 1) ', str(0.0), ' ', str(c.fitting[2]), \
@@ -297,6 +299,7 @@ def conff(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_c
     f.writelines(['# Neighbour sersic function\n\n'])
     isneighbour = 0
     f_constrain = open(constrain_file, 'ab')
+    
     for line_j in open(sex_cata,'r'):
         try:
             values = line_j.split()

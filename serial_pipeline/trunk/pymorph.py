@@ -657,8 +657,9 @@ def main():
                             f_fit.close()
                             # FIX
                             # Mainly the ellipse fit problem
-                            ut.HandleGalfitOutput(outimage, cut_xcntr, \
-                                        cut_ycntr, SizeX, SizeY, good_object)
+                            ut.HandleGalfitOutput(cutimage, outimage, \
+                                                  cut_xcntr, cut_ycntr, \
+                                                  SizeX, SizeY, good_object)
                             #END
                     except Exception, inst:
                         print type(inst)     # the exception instance
@@ -748,7 +749,9 @@ def main():
                 print "something bad happened!!!!\n\n"
                 print traceback.print_exc()
 
-                if values[0].strip().isdigit():
+                #NOTE CHANGE THIS ADD ADDITIONAL IF len > 0 HERE
+
+		if values[0].strip().isdigit():
                     print 'Something happend in the pipeline. ' + \
                           'Check error.log 2'
                 else:

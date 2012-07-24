@@ -573,7 +573,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     if use_pyraf == 0 or manual_profile:
         FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
 
-def HandleGalfitOutput(outimage, xcntr, ycntr,  SizeX, SizeY, line_s):
+def HandleGalfitOutput(cutimage, outimage, xcntr, ycntr,  SizeX, SizeY, line_s):
     """Handling the output images of galfit inclding ellipse fit"""
     if exists(outimage):
         if(c.repeat == False):
