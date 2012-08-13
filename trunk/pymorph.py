@@ -1,6 +1,6 @@
 #!/data2/home/ameert/python/bin/python2.5
 
-"""PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb"""
+"""PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb, Alan Meert 2010"""
 
 import os
 from os.path import exists
@@ -20,7 +20,7 @@ sys.path.append(configdir)
 
 import config as c
 import pymorphutils as ut
-from flagfunc import GetFlag, isset
+from flagfunc import GetFlag, isset, SetFlag
 from ellimaskfunc_easy import ElliMaskFunc
 from maskfunc_easy import MaskFunc
 from configfunc import ConfigFunc
@@ -149,6 +149,9 @@ def main():
     pdb = {}                        #The parameter dictionary
     c.psfcounter = 0                  #For getting psf in the case of unknown ra
     for line_j in obj_file:
+        # declare the flag
+        c.Flag = 0
+        
         try:
             values = line_j.split()
             k = 0
@@ -414,6 +417,10 @@ def main():
             # first count the number of "potential" targets in the search radius
             c.SexTargets = 0
             good_objects = []
+            bad_objects = []
+            good_distance = []
+            bad_distance = []
+            good_object = ''
             for line_s in open(sex_cata, 'r'):
                 try:
                     values = line_s.split()
@@ -425,6 +432,7 @@ def main():
                     sex_id = values[0]
                     xcntr  = float(values[1])
                     ycntr  = float(values[2])
+                    
                     if(abs(alpha_j - alpha_s) < SeaDeg and \
                        abs(delta_s - delta_j) < SeaDeg or \
                        abs(xcntr - ximg) < SeaPix and \
@@ -438,6 +446,13 @@ def main():
                               'Check error.log'
                     else:
                         pass
+            if len(good_object) <1:
+                # No suitable target found
+                print "NO TARGET FOUND!!!!"
+                good_object = ' 9999  9999 9999  9999 9999  9999 9999  9999 9999  9999 9999  0 9999  9999 9999  9999 9999 9999 9999\n'
+                c.Flag = SetFlag(c.Flag,GetFlag('NO_TARGET'))  
+                
+
             # now fit best object            
             try:
                 values = good_object.split()
@@ -499,23 +514,15 @@ def main():
                                   '   ###########\n')
                 c.run = 1 #run =1 if pipeline runs sucessfuly
                 # Adding initial setup to the flag
-                c.Flag = 0
                 if c.repeat:
-                    c.Flag += 2**GetFlag('REPEAT')
-                else:
-                    pass
-                if c.fitting[0]:
-                    c.Flag += 2**GetFlag('FIT_BULGE_CNTR')
-                else:
-                    pass
-                if c.fitting[1]:
-                    c.Flag += 2**GetFlag('FIT_DISK_CNTR')
-                else:
-                    pass
+                    c.Flag = SetFlag(c.Flag,GetFlag('REPEAT'))
+                if c.fitting[0] and 'bulge' in ComP:
+                    c.Flag = SetFlag(c.Flag,GetFlag('FIT_BULGE_CNTR'))
+                if c.fitting[1] and 'disk' in ComP:
+                    c.Flag = SetFlag(c.Flag,GetFlag('FIT_DISK_CNTR'))
                 if c.fitting[2]:
-                    c.Flag += 2**GetFlag('FIT_SKY')
-                else:
-                    pass
+                    c.Flag = SetFlag(c.Flag,GetFlag('FIT_SKY'))
+                
                 # Calculating the cutout size (half size).
                 # SizeX, SizeY return from MakeCutOut are full sizes
                 SizeX, SizeY = ut.FindCutSize(ReSize, VarSize, \
@@ -571,7 +578,7 @@ def main():
                     if c.galcut and ReSize == 0:
                         pass
                     elif ExceedSize:
-                        c.Flag += 2**GetFlag('EXCEED_SIZE')
+                        c.Flag = SetFlag(c.Flag,GetFlag('EXCEED_SIZE'))
                     # Runs sextractor to find the segmentation map
                     RunSegSex(c.datadir + cutimage)
 
@@ -683,8 +690,8 @@ def main():
                         if maskimage == 'None':
                             ut.WriteError('Could not find Mask image\n')
                         c.run = 0	
-                        Goodness = 9999
-                        c.Flag += GetFlag('PLOT_FAIL')
+                        Goodness = -9999
+                        c.Flag = SetFlag(c.Flag,GetFlag('PLOT_FAIL'))
                     try:
                         WriteParams(ParamToWrite, cutimage, cut_xcntr, cut_ycntr, \
                                      distance, alpha_j, \
@@ -759,8 +766,14 @@ def main():
             if(c.galcut == True):
                 if os.access(sex_cata, os.F_OK):
                     os.remove(sex_cata)
-        except:
-            pass
+        except Exception, inst:
+            print type(inst)     # the exception instance
+            print inst.args      # arguments stored in\
+            # .args
+            print inst           # __str__ allows args\
+            # to printed directly
+            print "something bad happened!!!!\n\n"
+            print traceback.print_exc()
     f_cat.close()
     f_failed.close()
 def selectpsf(ImG, CaT):

@@ -499,13 +499,13 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
            abs(all_params['bulge_yctr'] - ycntr) > c.center_deviation or \
            abs(all_params['disk_xctr'] - xcntr) > c.center_deviation or \
            abs(all_params['disk_yctr'] - ycntr) > c.center_deviation:
-        error_mesg3 = str(error_mesg3) + 'Fake Center!'
-        if all_params['bulge_xctr'] == 9999 or all_params['bulge_yctr'] == 9999 or \
-               all_params['disk_xctr'] == 9999 or all_params['disk_yctr'] == 9999:
+        if all_params['bulge_xctr'] == -999 or all_params['bulge_yctr'] == -999 or \
+               all_params['disk_xctr'] == -999 or all_params['disk_yctr'] == -999:
             pass
         else:
             all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('FAKE_CNTR'))
-
+            error_mesg3 = str(error_mesg3) + 'Fake Center!'
+        
     if all_params['FitFlag'] > 0:
         img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
         good_fit = 1
