@@ -120,8 +120,6 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     if(galflag):
         if exists("TmpElliMask1.fits"):
             os.remove("TmpElliMask1.fits")
-        else:
-            pass
         hdu = pyfits.PrimaryHDU(n.swapaxes(z1, 0, 1).astype(n.float32))
         hdu.writeto("TmpElliMask1.fits")
 	if c.NoMask:
@@ -131,12 +129,12 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
         else:
             z = z + tmp_mask
             z[n.where(z > 0)] = 1
+            
         if exists("TmpElliMask.fits"):
             os.remove("TmpElliMask.fits")
-        else:
-            pass
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto("TmpElliMask.fits")
+
         hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
         hdu.writeto(mask_file)
     else:

@@ -127,18 +127,18 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         KpCArc = 9999.0
 
     # Modify flags for the detailed fitting process
-    if c.Flag & 2**GetFlag('FIT_BULGE_CNTR'):
-        c.Flag -= 2**GetFlag('FIT_BULGE_CNTR')
-    if c.Flag & 2**GetFlag('FIT_DISK_CNTR'):
-        c.Flag -= 2**GetFlag('FIT_DISK_CNTR')
-    if c.Flag & 2**GetFlag('FIT_SKY'):
-        c.Flag -= 2**GetFlag('FIT_SKY')
-    if c.Flag & 2**GetFlag('FIT_BULGE'):
-        c.Flag -= 2**GetFlag('FIT_BULGE')
-    if c.Flag & 2**GetFlag('FIT_DISK'):
-        c.Flag -= 2**GetFlag('FIT_DISK')
-    if c.Flag & 2**GetFlag('FIT_POINT'):
-        c.Flag -= 2**GetFlag('FIT_POINT')
+    if isset(c.Flag, GetFlag('FIT_BULGE_CNTR')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_BULGE_CNTR'))
+    if isset(c.Flag, GetFlag('FIT_DISK_CNTR')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_DISK_CNTR'))
+    if isset(c.Flag, GetFlag('FIT_SKY')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_SKY'))
+    if isset(c.Flag, GetFlag('FIT_BULGE')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_BULGE'))
+    if isset(c.Flag, GetFlag('FIT_DISK')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_DISK'))
+    if isset(c.Flag, GetFlag('FIT_POINT')):
+        c.Flag = ClrFlag(c.Flag, GetFlag('FIT_POINT'))
         
 
     # define initial fitting parameters for single sersic fit
@@ -259,11 +259,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 BlankDict[0][AdComp][9] = 0
                 BlankDict[0][AdComp][11] = 'Other'
 
-                isneighbour = 1
+                isneighbour += 1
                 AdComp += 1
-                c.Flag = c.Flag & 2**GetFlag('NEIGHBOUR_FIT')
+                
         except:
             pass
+    if isneighbor > 0:
+        c.Flag = SetFlag(c.Flag,GetFlag('NEIGHBOUR_FIT'))
     f_constrain.close()
     #Sky component
     ParamDict[0][AdComp] = {}
@@ -356,7 +358,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             if ParamDict[RunNo][i + 1][1] == 'sersic':
                 SersicFunc(config_file, ParamDict, FitDict, i+1, RunNo)
                 if ParamDict[RunNo][i + 1][11] == 'Main':
-                    run_flag += 2**GetFlag('FIT_BULGE')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_BULGE'))
                     print "ADDING FLAG FIT_BULGE"
                     if RunNo > 1 and not bad_fit and ParamDict[c.sersic_loc][1][4]*2 < max_rad: # later fits
                         SersicMainConstrain(constrain_file, i + 1, 2.0 , ParamDict[c.sersic_loc][1][4]*2)
@@ -369,7 +371,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 if RunNo in [1 ,2]:
                     pass #dont fit a disk in the cases of ser or dev fits 
                 else:
-                    run_flag += 2**GetFlag('FIT_DISK')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_DISK'))
                     print "ADDING FLAG FIT_DISK"
                     ExpFunc(config_file, ParamDict, FitDict, i + 1, RunNo)
                     if RunNo > 0 and not bad_fit: # later runs 
@@ -414,13 +416,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             SersicIndex = ParamDict[RunNo+1][1][5]
             SersicEllipticity = ParamDict[RunNo+1][1][6]
             if abs(mag_b - c.UMag) < 0.2 or abs(mag_b - c.LMag) < 0.2:
-                FitFlag += 2**Get_FitFlag('IE_AT_LIMIT')
+                FitFlag = SetFlag(FitFlag, Get_FitFlag('IE_AT_LIMIT'))
             if abs(re - c.LRe) < 0.1 or abs(re - max_rad) < 1.0:
-                FitFlag += 2**Get_FitFlag('RE_AT_LIMIT')
+                FitFlag = SetFlag(FitFlag, Get_FitFlag('RE_AT_LIMIT'))
             if abs(SersicIndex - c.LN) < 0.03 or abs(SersicIndex - c.UN) < 0.5:
-                FitFlag += 2**Get_FitFlag('N_AT_LIMIT')
+                FitFlag = SetFlag(FitFlag, Get_FitFlag('N_AT_LIMIT'))
             if abs(SersicEllipticity - 0.0) < 0.05 or abs(SersicEllipticity - 0.0) > 0.95:
-                FitFlag += 2**Get_FitFlag('EB_AT_LIMIT')
+                FitFlag = SetFlag(FitFlag, Get_FitFlag('EB_AT_LIMIT'))
 
             if fit_type in ['devexp', 'serexp']:
                 mag_d = ParamDict[RunNo + 1][2][3]
@@ -431,13 +433,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 fd = 10**(-0.4*mag_d)
 
                 if abs(mag_d - c.UMag) < 0.2 or abs(mag_d - c.LMag) < 0.2:
-                    FitFlag += 2**Get_FitFlag('ID_AT_LIMIT')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('ID_AT_LIMIT'))
                 if abs(rd - c.LRd) < 0.1 or abs(rd - c.URd) < 1.0:
-                    FitFlag += 2**Get_FitFlag('RD_AT_LIMIT')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('RD_AT_LIMIT'))
                 if abs((re/rd) - 1.0) < 0.02 or abs((re/rd) - 0.1) < 0.02:
-                    FitFlag += 2**Get_FitFlag('RERD_AT_LIMIT')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('RERD_AT_LIMIT'))
                 if abs(DiskEllipticity - 0.0) < 0.05 or abs(DiskEllipticity - 0.0) > 0.95:
-                    FitFlag += 2**Get_FitFlag('ED_AT_LIMIT')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('ED_AT_LIMIT'))
                 
                 try:
                     BT = fb / (fb + fd)
@@ -445,7 +447,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                     BT = 9999.0
 
                 if abs(BT - bt_range[0]) < .02 or abs(BT - bt_range[1]) < .02:
-                    FitFlag += 2**Get_FitFlag('BT_AT_LIMIT')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('BT_AT_LIMIT'))
                     print "ADDING FLAG BT_AT_LIMIT"
         except:
             print "failure at readlog!!!"
@@ -454,13 +456,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
             ErrDict[RunNo + 1] = copy.deepcopy(ErrDict[0])
             if fit_type == 'ser':
                 failed_ser = 1 #track the failure of the single sersic fit
-                run_flag += 2**GetFlag('DETAIL_FAILED')
-                c.Flag += 2**GetFlag('DETAIL_FAILED')
+                run_flag = SetFlag(run_flag, GetFlag('DETAIL_FAILED'))
+                c.Flag = SetFlag(c.Flag, GetFlag('DETAIL_FAILED'))
                 print "ADDING FLAG DETAIL_FAILED"
             elif fit_type == 'sky':
                 failed_sky = 1 #track that we did not fix the sky
-                run_flag += 2**GetFlag('DETAIL_FAILED')
-                c.Flag += 2**GetFlag('DETAIL_FAILED')
+                run_flag = SetFlag(run_flag, GetFlag('DETAIL_FAILED'))
+                c.Flag = SetFlag(c.Flag, GetFlag('DETAIL_FAILED'))
                 print "ADDING FLAG DETAIL_FAILED"
         try:
             c.ErrArr.append(FractionalError(ParamDict, ErrDict, RunNo + 1))
@@ -484,15 +486,15 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
                 Goodness = GoodNess.plot_profile
             except:
                 Goodness = 9999
-                run_flag += GetFlag('PLOT_FAIL')
+                run_flag = SetFlag(run_flag, GetFlag('PLOT_FAIL'))
                 print "ADDING FLAG PLOT_FAIL"
                                 
             if Goodness < c.Goodness:
-                FitFlag += 2**Get_FitFlag('SMALL_GOODNESS')
+                FitFlag = SetFlag(FitFlag, Get_FitFlag('SMALL_GOODNESS'))
                 print "ADDING FLAG SMALL_GOODNESS"
             if Chi2DOF > c.chi2sq:
                 if chi2nu != 9999:
-                    FitFlag += 2**Get_FitFlag('LARGE_CHISQ')
+                    FitFlag = SetFlag(FitFlag, Get_FitFlag('LARGE_CHISQ'))
                     print "ADDING FLAG LARGE_CHISQ"
  
             print 'writing db'
@@ -706,7 +708,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][1] = [1, 1] 
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1
-                run_flag += 2**GetFlag('FIT_BULGE_CNTR')
+                run_flag = SetFlag(run_flag, GetFlag('FIT_BULGE_CNTR'))
                 print "ADDING FLAG FIT_BULGE_CNTR"
                 FitDict[i][4] = 1 # free n
                 FitDict[i][5] = 1       
@@ -717,13 +719,13 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][3] = 1 
                 FitDict[i][4] = 1       
                 FitDict[i][5] = 1
-                run_flag += 2**GetFlag('FIT_DISK_CNTR')
+                run_flag = SetFlag(run_flag, GetFlag('FIT_DISK_CNTR'))
                 print "ADDING FLAG FIT_DISK_CNTR"
             if ParamDict[RunNo][i][1] == 'sky':
                 FitDict[i][1] = 1
                 FitDict[i][2] = 0 
                 FitDict[i][3] = 0
-                run_flag += 2**GetFlag('FIT_SKY')
+                run_flag = SetFlag(run_flag, GetFlag('FIT_SKY'))
                 print "ADDING FLAG FIT_SKY"
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
                 #should this be all 1s or 0s?
@@ -746,7 +748,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][5] = 1       
                 FitDict[i][6] = 1    
 
-                run_flag += 2**GetFlag('FIT_BULGE_CNTR')
+                run_flag = SetFlag(run_flag, GetFlag('FIT_BULGE_CNTR'))
                 print "ADDING FLAG FIT_BULGE_CNTR"
             #In the first run the disk will not be fitted.
             #This is to keep the order of ParamDict and FitDict 
@@ -762,7 +764,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][2] = 0
                 FitDict[i][3] = 0
                 if bad_fit:
-                    run_flag += GetFlag('FIT_SKY')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_SKY'))
                     print "ADDING FLAG FIT_SKY"
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
                 FitDict[i][1] = [1, 1]
@@ -784,7 +786,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][5] = 1       
                 FitDict[i][6] = 1
                 if failed_ser:
-                    run_flag += 2**GetFlag('FIT_BULGE_CNTR')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_BULGE_CNTR'))
                     print "ADDING FLAG FIT_BULGE_CNTR"
             if ParamDict[RunNo][i][1] == 'expdisk' and ParamDict[RunNo][i][11] == 'Main':
                 FitDict[i][1] = [failed_ser, failed_ser]
@@ -797,7 +799,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][2] = 0 
                 FitDict[i][3] = 0
                 if bad_fit:
-                    run_flag += 2**GetFlag('FIT_SKY')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_SKY'))
                     print "ADDING FLAG FIT_SKY"
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
                 #should this be all 1s or 0s?
@@ -817,7 +819,7 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][2] = 1 
                 FitDict[i][3] = 1
                 if failed_ser:
-                    run_flag += 2**GetFlag('FIT_BULGE_CNTR')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_BULGE_CNTR'))
                     print "ADDING FLAG FIT_BULGE_CNTR"
                 if fit_type == 'devexp':
                     FitDict[i][4] = 0 # fix n
@@ -832,14 +834,14 @@ def DecideFitting(ParamDict, RunNo, fit_type, bad_fit, failed_ser, run_flag, fai
                 FitDict[i][4] = 1       
                 FitDict[i][5] = 1
                 if failed_ser:
-                    run_flag += 2**GetFlag('FIT_DISK_CNTR')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_DISK_CNTR'))
                     print "ADDING FLAG FIT_DISK_CNTR"
             if ParamDict[RunNo][i][1] == 'sky':
                 FitDict[i][1] = bad_sky
                 FitDict[i][2] = 0 
                 FitDict[i][3] = 0
                 if bad_fit:
-                    run_flag += 2**GetFlag('FIT_SKY')
+                    run_flag = SetFlag(run_flag, GetFlag('FIT_SKY'))
                     print "ADDING FLAG FIT_SKY"
             if ParamDict[RunNo][i][1] == 'sersic' and ParamDict[RunNo][i][11] == 'Other':
                 #should this be all 1s or 0s?

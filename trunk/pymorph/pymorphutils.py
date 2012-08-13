@@ -10,7 +10,7 @@ import csv
 from ellimaskfunc_easy import ElliMaskFunc
 from bkgdfunc import BkgdFunc
 from casgm import casgm
-from flagfunc import GetFlag, isset
+from flagfunc import GetFlag, isset, SetFlag
 from outmaskfunc_easy import OutMaskFunc
 
 def Gamma(z):
@@ -569,7 +569,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         except:
             manual_profile = 1
             WriteError('Error in ellipse task. Trying manual profile finder\n')
-            c.Flag += 2**GetFlag('ELLIPSE_FAIL')
+            c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
     if use_pyraf == 0 or manual_profile:
         FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
 
@@ -596,7 +596,7 @@ def HandleGalfitOutput(cutimage, outimage, xcntr, ycntr,  SizeX, SizeY, line_s):
     else:
         WriteError('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
-        c.Flag += GetFlag('GALFIT_FAIL')
+        c.Flag = SetFlag(c.Flag, GetFlag('GALFIT_FAIL'))
         FailedGalfit(cutimage)
         c.run = 0
 
@@ -691,6 +691,7 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         print 'C, C_err, A, A_err, S, S_err, G, M >>> ', \
               str(C)[:5], str(C_err)[:5], str(A)[:5], str(A_err)[:5], \
               str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5]
+        
         if(c.decompose == False):
             f_res = open("result.csv", "ab")
             writer = csv.writer(f_res)
@@ -703,7 +704,7 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         return C, C_err, A, A_err, S, S_err, G, M
     except:
         WriteError('The CASGM module failed\n')
-        c.Flag += 2**GetFlag('CASGM_FAIL')
+        c.Flag = SetFlag(c.Flag, GetFlag('CASGM_FAIL'))
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
 
 def returngimg():

@@ -9,7 +9,7 @@ from asymfunc import asymmetry
 from clumfunc import clumpness 
 from ginifunc_modi import gini
 from runsexfunc import RunSex
-from flagfunc import GetFlag
+from flagfunc import GetFlag, SetFlag
 import pymorphutils as ut
 import config as c
 
@@ -143,10 +143,10 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                                  sky, angle, 0, ABS_ZSUM)
             # asymmetry is not converging w. r. t. the center
             if asy.image_asymm[4] > 20 or back_asy.image_asymm[4] > 20:
-                c.Flag += 2**GetFlag('ASYM_NOT_CONV')
+                c.Flag = SetFlag(c.Flag, GetFlag('ASYM_NOT_CONV'))
             # the extraction radius is larger than the image size
             if asy.image_asymm[5] == 1:
-                c.Flag += 2**GetFlag('ASYM_OUT_FRAME')
+                c.Flag = SetFlag(c.Flag, GetFlag('ASYM_OUT_FRAME'))
             try:
                 back_asy1 = asymmetry(cutimage, maskimage, back_ini_xcntr1, \
                             back_ini_ycntr1, 0, 0, r50,\
@@ -256,38 +256,31 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
                             gini_coef[8], gini_coef[9]]
         tmp_writer.writerow(tmp_ParamToWrite)
         f_tmp.close()
-        if str(con.concen) in ('nan', 'inf', '-inf', '-nan'):
+        # check for nan and inf values and overmasking
+        if np.isnan(con.concen) or np.isinf(con.concen):
             con.concen = 9999
-        else:
-            pass
-        if str(con.error_con) in ('nan', 'inf', '-inf', '-nan'):
+        if np.isnan(con.error_con) or np.isinf(con.error_con) or  isinstance(con.error_con, np.ma.core.MaskedConstant):
+        #the last test is to see if the error failed because it is overmasked 
             con.error_con = 9999
-        else:
-            pass
-        if str(ASY) in ('nan', 'inf', '-inf', '-nan'):
+        if np.isnan(ASY) or np.isinf(ASY):
             ASY = 9999
-        else:
-            pass
-        if str(ASY_ERROR) in ('nan', 'inf', '-inf', '-nan'):
+        if np.isnan(ASY_ERROR) or np.isinf(ASY_ERROR):
             ASY_ERROR = 9999
-        else:
-            pass
-        if str(S) in ('nan', 'inf', '-inf', '-nan'):
+        if np.isnan(S) or np.isinf(S):
             S = 9999
-        else:
-            pass
-        if str(ERROR_SMOO)  in ('nan', 'inf', '-inf', '-nan'):
+        if np.isnan(ERROR_SMOO) or np.isinf(ERROR_SMOO):
             ERROR_SMOO = 9999
-        else:
-            pass
-        if str(gini_coef[0])  in ('nan', 'inf', '-inf', '-nan'):
-            Gini_Coef = 9999
+
+        if np.isnan(gini_coef[0]) or np.isinf(gini_coef[0]):
+           Gini_Coef = 9999
         else:
             Gini_Coef = gini_coef[0]
-        if str(gini_coef[5])  in ('nan', 'inf', '-inf', '-nan'):
+
+        if np.isnan(gini_coef[5]) or np.isinf(gini_coef[5]):
             M20_coef = 9999
         else:
             M20_coef = float(gini_coef[5])
+
         return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, \
                Gini_Coef, M20_coef
 

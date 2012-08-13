@@ -88,7 +88,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
 #            print countback
             if countback == 3 and FLAG_BACK1 == 0:
                 FLAG_BACK1 = 1
-                c.Flag += 2**GetFlag('BACK_FAILED')
+                c.Flag = SetFlag(c.Flag, GetFlag('BACK_FAILED'))
             countback += 1
     os.system('rm -f BackMask.fits')
     BackMask = n.swapaxes(BackMask, 0, 1)

@@ -261,7 +261,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             pass
     f_constrain.close()
 #    if isneighbour: No need to add flag again. configfunction add that
-#        c.Flag  += 2**GetFlag('NEIGHBOUR_FIT')
+#        c.Flag  = SetFlag(c.Flag, GetFlag('NEIGHBOUR_FIT'))
 #    print c.Flag 
     #Sky component
     ParamDict[0][AdComp] = {}
@@ -732,7 +732,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
                 SkyNo = len(ParamDict[0]) #GalSky has to do better
                 c.GalSky = ParamDict[RunNo + 1][SkyNo][2]
             else:
-                c.Flag += 2**GetFlag('DETAIL_FAILED')
+                c.Flag = SetFlag(c.Flag, GetFlag('DETAIL_FAILED'))
                 SerIndArr = []
                 RePixArr = []
                 IeArr = []

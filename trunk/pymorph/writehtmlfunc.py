@@ -6,7 +6,7 @@ import fileinput
 from cosmocal import cal 
 import datetime
 import traceback
-from flagfunc import GetFlag, isset, Get_FitFlag
+from flagfunc import *
 from pymorphutils import RaDegToHMS, DecDegToDMS
 import config as c
 import os
@@ -131,11 +131,18 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         indexfile.close()
     # Reading fit.log
     if 'bar' in ComP:
-        basic_info, fit_info = read_fitlog(filename = 'fit.log', yes_bar = 1)
+        basic_info, fit_info, isnan = read_fitlog(filename = 'fit.log', yes_bar = 1)
     else:
-        basic_info, fit_info = read_fitlog(filename = 'fit.log', yes_bar = 0)
+        basic_info, fit_info, isnan = read_fitlog(filename = 'fit.log', yes_bar = 0)
 
-
+    if isnan:
+        try:
+            #set the flag
+            all_params['flag'] = SetFlag(all_params['flag'], GetFlag('ERRORS_FAILED'))
+        except badflag:
+            # the flag is already set
+            pass
+        
     if 'Input' in basic_info:
         alpha_ned = str(alpha_j)[:10]
         delta_ned = str(delta_j)[:10]
@@ -148,11 +155,18 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     print restart_conf 
     # move the restart file to a reasonably named output file
     new_outname = initial_conf.replace('in','out')
-    os.rename(restart_conf, new_outname)
+    try:
+        os.rename(restart_conf, new_outname)
+    except:
+        print "Failed to find restart file!! Galfit may have crashed!!"
     basic_info['restart_conf'] = new_outname
 
     
     all_params['chi2nu'] = basic_info['chi2nu']
+
+    # first check all err components and replace if nan or inf
+    
+    
     if 'bulge' in fit_info:
         all_params['bulge_xctr'] = fit_info['bulge']['xctr'][0]
         all_params['bulge_yctr'] = fit_info['bulge']['yctr'][0]
@@ -226,21 +240,32 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
         all_params['dis_modu'] = phy_parms[2]
         if 'bulge' in ComP:
-            all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
-            all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
+            if all_params['re_pix'] != 9999:
+                all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
+                all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
+            else:
+                all_params['re_kpc'] = 9999
+                all_params['re_kpc_err'] = 9999
         if 'disk' in ComP:
-            all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
-            all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
+            if all_params['rd_pix'] != 9999:
+                all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
+                all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
+            else:
+                all_params['rd_kpc'] = 9999
+                all_params['rd_kpc_err'] = 9999
         if 'bar' in ComP:
-            all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
-            all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
+            if all_params['rbar_pix'] != 9999:
+                all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
+                all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
+            else:
+                all_params['rbar_kpc'] = 9999
+                all_params['rbar_kpc_err'] = 9999
         if 'point' in ComP:
             all_params['Pfwhm_kpc'] = 0.5 * phy_parms[3]
     # Finding derived parameters
     if 'bulge' in ComP and 'disk' in ComP:
         fb = 10**(-0.4 * (all_params['Ie'] - c.mag_zero))
         fd = 10**(-0.4 * (all_params['Id'] - c.mag_zero))
-        all_params['BD'] = fb / fd 
         if 'point' in ComP:
             fp = 10**(-0.4 * (all_params['Ip'] - c.mag_zero))
         else:
@@ -249,8 +274,14 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
             fbar = 10**(-0.4 * (all_params['Ibar'] - c.mag_zero)) 
         else:
             fbar = 0.0
+
+        try:
+            all_params['BD'] = fb / fd
+            all_params['BT'] = fb / (fb + fd + fp + fbar)
+        except:
+            all_params['BD'] = 9999
+            all_params['BT'] = 9999
         
-        all_params['BT'] = fb / (fb + fd + fp + fbar)
     elif 'bulge' in ComP:
         all_params['BT'] = 1.0
     elif 'disk' in ComP:
@@ -387,14 +418,31 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
               pixelscale = c.pixelscale
         except:
               pixelscale = 1
-        all_params['AvgIe'] = all_params['Ie'] + 2.5 * n.log10(2 * 3.14 * pixelscale * \
-                      pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * n.sqrt(1 -  all_params['eb']**2.0))
-        AvgMagInsideReErr2 = (1.085 * n.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
-                             (( all_params['eb'] *  all_params['eb_err']) / \
-                             n.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
-                             (n.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
-                              all_params['re_pix'] *  all_params['re_pix'])
-        all_params['AvgIe_err'] = n.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
+        try:
+            all_params['AvgIe'] = all_params['Ie'] + 2.5 * n.log10(2 * 3.14 * pixelscale * \
+                                  pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * n.sqrt(1 -  all_params['eb']**2.0))
+            AvgMagInsideReErr2 = (1.085 * n.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
+                                                 (( all_params['eb'] *  all_params['eb_err']) / \
+                                                  n.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
+                                                  (n.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
+                                                   all_params['re_pix'] *  all_params['re_pix'])
+            all_params['AvgIe_err'] = n.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
+        except OverflowError:
+            all_params['AvgIe'] = n.inf
+            all_params['AvgIe_err'] = n.inf
+        for key in ['AvgIe', 'AvgIe_err']:
+            if n.isnan(all_params[key]) or n.isinf(all_params[key]):
+                if n.isnan(all_params[key]):
+                    all_params[key] = -9999.99
+                else:
+                    all_params[key] = -6666.66
+                try:
+                    #set the AVGIe flag
+                    all_params['flag'] = SetFlag(all_params['flag'], GetFlag('AVGIE_FAILED'))
+                except badflag:
+                    # the flag is already set
+                    pass
+                
     wC = str(C)[:5]
     wA = str(A)[:5]
     wS = str(S)[:5]
@@ -421,20 +469,20 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     if not c.detail:
         if 'bulge' in ComP:
             if abs(all_params['Ie'] - c.UMag) < 0.2 or abs(all_params['Ie'] - c.LMag) < 0.2:
-                all_params['FitFlag'] += 2**Get_FitFlag('IE_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('IE_AT_LIMIT'))
             if abs(all_params['re_pix'] - c.LRe) < 0.1 or abs(all_params['re_pix'] - c.URe) < 1.0:
-                all_params['FitFlag'] += 2**Get_FitFlag('RE_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RE_AT_LIMIT'))
             if abs(all_params['n'] - c.LN) < 0.03 or abs(all_params['n'] - c.UN) < 0.5:
-                all_params['FitFlag'] += 2**Get_FitFlag('N_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('N_AT_LIMIT'))
             if abs(all_params['eb'] - 0.0) < 0.05 or abs(all_params['eb'] - 0.0) > 0.95:
-                all_params['FitFlag'] += 2**Get_FitFlag('EB_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('EB_AT_LIMIT'))
         if 'disk' in ComP:
             if abs(all_params['Id'] - c.UMag) < 0.2 or abs(all_params['Id'] - c.LMag) < 0.2:
-                all_params['FitFlag'] += 2**Get_FitFlag('ID_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ID_AT_LIMIT'))
             if abs(all_params['rd_pix'] - c.LRd) < 0.1 or abs(all_params['rd_pix'] - c.URd) < 1.0:
-                all_params['FitFlag'] += 2**Get_FitFlag('RD_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RD_AT_LIMIT'))
             if abs(all_params['ed'] - 0.0) < 0.05 or abs(all_params['ed'] - 0.0) > 0.95:
-                all_params['FitFlag'] += 2**Get_FitFlag('ED_AT_LIMIT')
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ED_AT_LIMIT'))
 
     if not all_params['FitFlag']:
         error_mesg4 = str(error_mesg4) + 'One of the parameters'
@@ -442,11 +490,11 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     
     if all_params['Goodness'] < c.Goodness:
         error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-        all_params['FitFlag'] += 2**Get_FitFlag('SMALL_GOODNESS')
+        all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('SMALL_GOODNESS'))
     if all_params['chi2nu'] > c.chi2sq:
         error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
         if all_params['chi2nu'] != 9999:
-            all_params['FitFlag'] += 2**Get_FitFlag('LARGE_CHISQ')
+            all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
     if abs(all_params['bulge_xctr'] - xcntr) > c.center_deviation or \
            abs(all_params['bulge_yctr'] - ycntr) > c.center_deviation or \
            abs(all_params['disk_xctr'] - xcntr) > c.center_deviation or \
@@ -456,7 +504,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                all_params['disk_xctr'] == 9999 or all_params['disk_yctr'] == 9999:
             pass
         else:
-            all_params['FitFlag'] += 2**Get_FitFlag('FAKE_CNTR')
+            all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('FAKE_CNTR'))
 
     if all_params['FitFlag'] > 0:
         img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
@@ -466,6 +514,8 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         good_fit = 0
     chi2nu = all_params['chi2nu']
     Distance = all_params['distance']
+    
+    # This can be a waste of time if the list is wrong...
     # Finding number of runs in the csv file 
     all_params['run'] = 1
     if exists('result.csv'):
@@ -535,6 +585,7 @@ def getfit(f):
 def load_component(data_line, err_line):
     """This function will construct and load dictionaries for a object when passed the already split
     data_line containing fit parameters and err_line containing errors on the fit parameters"""
+    isnan = False # for tracking problems with the err params on galfit 
     # construct object dictionary
     # these are all fitted values, but many may be unused for a particular object type
     obj = {'xctr':[-999.,-999.],
@@ -587,13 +638,23 @@ def load_component(data_line, err_line):
                 obj['boxy'][0]=-999.
                 obj['boxy'][1]=-999.                
 
-    return obj
+    # now replace any nan or inf parameters
+    for key in obj.keys():
+        if n.isnan(obj[key][1]):
+            obj[key][1] = -9999.99
+            isnan = True
+        elif n.isinf(obj[key][1]):
+            obj[key][1] = -6666.66
+            isnan = True
+    return obj, isnan
 
 def read_fitlog(filename = 'fit.log', yes_bar = 0):
     """ This function will read the fit log and return all the relevant
     information in 2 Dictionaries, 1 with the basic info and one with
     the fit info"""
 
+    isnan = False
+    
     neighbor = 0
     basic_info = {}
     fit_info = {}
@@ -633,12 +694,12 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                     
                     err_line = getline(values)
                     
-                    fit_info[key]= load_component(line, err_line)    
-                    
+                    fit_info[key], isnan_loop= load_component(line, err_line)    
+                    isnan = isnan or isnan_loop
             except: 
                 pass
             
     else:
         print "File does not exist!!!!"
     
-    return     basic_info, fit_info
+    return     basic_info, fit_info, isnan

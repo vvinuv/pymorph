@@ -1,6 +1,11 @@
 # These functions standardize the flags across all files
 
-
+class badflag(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr('Bad flag operation: '+self.value)
+    
 def GetFlag(flagname):
         FlagDict = dict([('REPEAT', 0),
                          ('FIT_BULGE_CNTR', 1),
@@ -17,6 +22,10 @@ def GetFlag(flagname):
                          ('NEIGHBOUR_FIT', 12),
                          ('ASYM_NOT_CONV', 13),
                          ('ASYM_OUT_FRAME', 14),
+			 ('FIT_BAR', 15),
+			 ('ERRORS_FAILED', 16),
+			 ('AVGIE_FAILED', 17),
+                         ('NO_TARGET', 18),
                          ('BACK_FAILED', 20),
                          ('DETAIL_FAILED', 21),
                          ])
@@ -35,7 +44,8 @@ def Get_FitFlag(flagname):
 			 ('RE_AT_LIMIT', 9),
 			 ('RD_AT_LIMIT', 10),
 			 ('EB_AT_LIMIT', 11),
-			 ('ED_AT_LIMIT', 12)])
+			 ('ED_AT_LIMIT', 12)
+			 ])	                 
         return FlagDict[flagname]
 
 
@@ -43,4 +53,15 @@ def Get_FitFlag(flagname):
 def isset(flag, bit):
         """Return True if the specified bit is set in the given bit mask"""
         return (flag & (1 << bit)) != 0
-    
+
+def SetFlag(Flag, bit):
+	if isset(Flag, bit):
+		raise badflag("Tried to set a flag that was already set")
+	Flag += 2**bit
+	return Flag
+
+def ClrFlag(Flag, bit):
+	if not isset(Flag, bit):
+		raise badflag("Tried to clear a flag that was not set")
+	Flag -= 2**bit
+	return Flag
