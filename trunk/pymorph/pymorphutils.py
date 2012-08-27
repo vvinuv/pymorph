@@ -265,7 +265,7 @@ def PyMorphOutputParams(dbparams, decompose = 0):
     else:
         extra_params = []
 
-    extra_params +=[['flag','bigint'],['Manual_flag','int'],['Comments','varchar(1000)'], ['Date', 'varchar(50)'], 
+    extra_params +=[['flag','bigint'],['Manual_flag','bigint'],['Comments','varchar(1000)'], ['Date', 'varchar(50)'], 
                     ['Version','float'],['Filter','varchar(500)'],['Total_Run','int'], ['rootname', 'varchar(500)']]
 
     # add additional keys to params
