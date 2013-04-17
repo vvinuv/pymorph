@@ -21,8 +21,13 @@ sys.path.append(configdir)
 import config as c
 import pymorphutils as ut
 from flagfunc import GetFlag, isset, SetFlag
-from ellimaskfunc_easy import ElliMaskFunc
-from maskfunc_easy import MaskFunc
+
+#from ellimaskfunc_easy import ElliMaskFunc
+from ellimaskfunc import ElliMaskFunc
+
+#from maskfunc_easy import MaskFunc
+from maskfunc import MaskFunc
+
 from configfunc import ConfigFunc
 from config_twostep import ConfigIter
 from yetbackfunc import FindYetSky, RunSegSex

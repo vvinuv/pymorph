@@ -531,6 +531,9 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     except:
         print 'DB writing Problem'
     try:
+        #pass
+        #I have temporarily suppressed this in order to keep mysql
+        # connections free for others.
         WriteDb(ParamNamesToWrite, all_params)
     except:
         print 'No database can be created!'
