@@ -40,6 +40,12 @@ def mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
             
             if target.mask_or_fit(neighbor,threshold,thresh_area,avoidme)>=0:
                 #neighbor.set_axis_rat(1.0) #make masks circular
+
+                # recenter in chip coordinates
+                xn = xcntr - target.xcntr + neighbor.xcntr
+                yn = ycntr - target.ycntr + neighbor.ycntr
+                neighbor.set_center(xn, yn)
+
                 R = neighbor.calc_rad(x,y)
                 z[n.where(R<=mask_reg*neighbor.maj_axis)] = 1
 	

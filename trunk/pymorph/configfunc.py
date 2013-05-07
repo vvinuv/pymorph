@@ -25,10 +25,10 @@ class ConfigFunc:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
-        self.conff    = self.write_conff(line_s, sex_cata)
+        self.conff    = self.write_conff(line_s, sex_cata, xcntr, ycntr)
         return
 
-    def write_conff(self, line_s, sex_cata):
+    def write_conff(self, line_s, sex_cata, xcntr, ycntr):
         imagefile = c.imagefile
         threshold = c.threshold
         thresh_area = c.thresh_area
@@ -40,8 +40,11 @@ class ConfigFunc:
             ComP = ['bulge', 'disk']
         if len(ComP) == 0:
             ComP = ['bulge', 'disk']
-
+            
         target = SEx_obj(self.NXPTS, self.NYPTS, line_s)
+        target_imcenter =[target.xcntr,target.ycntr]
+        target.set_center(xcntr, ycntr)
+        
         outfile   = 'O_' + c.fstring + '.fits'
         mask_file = 'M_' + c.fstring + '.fits'
         config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
@@ -115,13 +118,18 @@ class ConfigFunc:
         isneighbour = 0
         for line_j in open(sex_cata,'r'):
             if line_j[0] != '#': #line is not a comment
-                try:
+                #try:
                     neighbor = SEx_obj(self.NXPTS, self.NYPTS, line_j)
-                    if mask_or_fit(target,neighbor,threshold,thresh_area,avoidme)==0:
+                    if target.mask_or_fit(neighbor,threshold,thresh_area,avoidme)==0:
                         isneighbour = 1
+                        # recenter in chip coordinates
+                        xn = xcntr - target_imcenter[0] + neighbor.xcntr
+                        yn = ycntr - target_imcenter[1] + neighbor.ycntr
+                        neighbor.set_center(xn, yn)
+
                         confiles.write_neighbor(neighbor)
-                except:
-                    pass
+                #except:
+                #    pass
 
         if isneighbour:
             c.Flag  = SetFlag(c.Flag, GetFlag('NEIGHBOUR_FIT'))

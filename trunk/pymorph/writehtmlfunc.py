@@ -150,380 +150,382 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         alpha_ned = ''
         delta_ned = ''
         
-    initial_conf = basic_info['initial_conf']
-    restart_conf = basic_info['restart_conf']
-    print restart_conf 
-    # move the restart file to a reasonably named output file
-    new_outname = initial_conf.replace('in','out')
-    try:
-        os.rename(restart_conf, new_outname)
-    except:
-        print "Failed to find restart file!! Galfit may have crashed!!"
-    basic_info['restart_conf'] = new_outname
-
-    
-    all_params['chi2nu'] = basic_info['chi2nu']
-
-    # first check all err components and replace if nan or inf
-    
-    
-    if 'bulge' in fit_info:
-        all_params['bulge_xctr'] = fit_info['bulge']['xctr'][0]
-        all_params['bulge_yctr'] = fit_info['bulge']['yctr'][0]
-        all_params['Ie'] = fit_info['bulge']['mag'][0]
-        all_params['re_pix'] = fit_info['bulge']['rad'][0]
-        all_params['n'] = fit_info['bulge']['n'][0]
-        all_params['eb'] = fit_info['bulge']['ell'][0]
-        all_params['bpa'] = fit_info['bulge']['pa'][0]
-        all_params['bboxy'] = fit_info['bulge']['boxy'][0]
-
-        all_params['bulge_xctr_err'] = fit_info['bulge']['xctr'][1]
-        all_params['bulge_yctr_err'] = fit_info['bulge']['yctr'][1]
-        all_params['Ie_err'] = fit_info['bulge']['mag'][1]
-        all_params['re_pix_err'] = fit_info['bulge']['rad'][1]
-        all_params['n_err'] = fit_info['bulge']['n'][1]
-        all_params['eb_err'] = fit_info['bulge']['ell'][1]
-        all_params['bpa_err'] = fit_info['bulge']['pa'][1]
-        all_params['bboxy_err'] = fit_info['bulge']['boxy'][1]
-    
-    if 'disk' in fit_info:
-        all_params['disk_xctr'] = fit_info['disk']['xctr'][0]
-        all_params['disk_yctr'] = fit_info['disk']['yctr'][0]
-        all_params['Id'] = fit_info['disk']['mag'][0]
-        all_params['rd_pix'] = fit_info['disk']['rad'][0]
-        all_params['ed'] = fit_info['disk']['ell'][0]
-        all_params['dpa'] = fit_info['disk']['pa'][0]
-        all_params['dboxy'] = fit_info['disk']['boxy'][0]
-
-        all_params['disk_xctr_err'] = fit_info['disk']['xctr'][1]
-        all_params['disk_yctr_err'] = fit_info['disk']['yctr'][1]
-        all_params['Id_err'] = fit_info['disk']['mag'][1]
-        all_params['rd_pix_err'] = fit_info['disk']['rad'][1]
-        all_params['ed_err'] = fit_info['disk']['ell'][1]
-        all_params['dpa_err'] = fit_info['disk']['pa'][1]
-        all_params['dboxy_err'] = fit_info['disk']['boxy'][1]
-        
-    if 'point' in fit_info:
-        all_params['p_xctr'] = fit_info['point']['xctr'][0]
-        all_params['p_yctr'] = fit_info['point']['yctr'][0]
-        all_params['Ip'] = fit_info['point']['mag'][0]
-        
-        all_params['p_xctr_err'] = fit_info['point']['xctr'][1]
-        all_params['p_yctr_err'] = fit_info['point']['yctr'][1]
-        all_params['Ip_err'] = fit_info['point']['mag'][1]
-        
-    if 'bar' in fit_info:
-        all_params['bar_xctr'] = fit_info['bar']['xctr'][0]
-        all_params['bar_yctr'] = fit_info['bar']['yctr'][0]
-        all_params['Ibar'] = fit_info['bar']['mag'][0]
-        all_params['rbar_pix'] = fit_info['bar']['rad'][0]
-        all_params['n_bar'] = fit_info['bar']['n'][0]
-        all_params['ebar'] = fit_info['bar']['ell'][0]
-        all_params['barpa'] = fit_info['bar']['pa'][0]
-        all_params['barboxy'] = fit_info['bar']['boxy'][0]
-
-        all_params['bar_xctr_err'] = fit_info['bar']['xctr'][1]
-        all_params['bar_yctr_err'] = fit_info['bar']['yctr'][1]
-        all_params['Ibar_err'] = fit_info['bar']['mag'][1]
-        all_params['rbar_pix_err'] = fit_info['bar']['rad'][1]
-        all_params['nbar_err'] = fit_info['bar']['n'][1]
-        all_params['ebar_err'] = fit_info['bar']['ell'][1]
-        all_params['barpa_err'] = fit_info['bar']['pa'][1]
-        all_params['barboxy_err'] = fit_info['bar']['boxy'][1]
-
-    if 'sky' in fit_info:
-        all_params['GalSky'] = fit_info['sky']['mag'][0]
-        all_params['GalSky_err'] = fit_info['sky']['mag'][1]
-                                           
-    # Converting fitted params to physical params
-    if(z != 9999 and z > 0):
-        phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
-        all_params['dis_modu'] = phy_parms[2]
-        if 'bulge' in ComP:
-            if all_params['re_pix'] != 9999:
-                all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
-                all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
-            else:
-                all_params['re_kpc'] = 9999
-                all_params['re_kpc_err'] = 9999
-        if 'disk' in ComP:
-            if all_params['rd_pix'] != 9999:
-                all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
-                all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
-            else:
-                all_params['rd_kpc'] = 9999
-                all_params['rd_kpc_err'] = 9999
-        if 'bar' in ComP:
-            if all_params['rbar_pix'] != 9999:
-                all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
-                all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
-            else:
-                all_params['rbar_kpc'] = 9999
-                all_params['rbar_kpc_err'] = 9999
-        if 'point' in ComP:
-            all_params['Pfwhm_kpc'] = 0.5 * phy_parms[3]
-    # Finding derived parameters
-    if 'bulge' in ComP and 'disk' in ComP:
-        fb = 10**(-0.4 * (all_params['Ie'] - c.mag_zero))
-        fd = 10**(-0.4 * (all_params['Id'] - c.mag_zero))
-        if 'point' in ComP:
-            fp = 10**(-0.4 * (all_params['Ip'] - c.mag_zero))
-        else:
-            fp = 0.0
-        if 'bar' in ComP:
-            fbar = 10**(-0.4 * (all_params['Ibar'] - c.mag_zero)) 
-        else:
-            fbar = 0.0
-
+    if c.decompose:
+        initial_conf = basic_info['initial_conf']
+        restart_conf = basic_info['restart_conf']
+        print restart_conf 
+        # move the restart file to a reasonably named output file
+        new_outname = initial_conf.replace('in','out')
         try:
-            all_params['BD'] = fb / fd
-            all_params['BT'] = fb / (fb + fd + fp + fbar)
+            os.rename(restart_conf, new_outname)
         except:
-            all_params['BD'] = 9999
-            all_params['BT'] = 9999
-        
-    elif 'bulge' in ComP:
-        all_params['BT'] = 1.0
-    elif 'disk' in ComP:
-        all_params['BD'] = 0.0
-        all_params['BT'] = 0.0
-    # Start writing html file. Now the template keywords will get values
-    pngfile = 'P_' + c.fstring + '.png'
-    Neighbour_Sersic = ''
-    Object_Sersic = ''
-    Object_Sersic_err = ''
-    Object_Exp = ''
-    Object_Exp_err = ''
-    Point_Vals = ''
-    Point_Vals_err = ''
-    try:
-        for key in fit_info.keys():
-            if 'neighbor' in key:
-                Neighbour_Sersic = str(Neighbour_Sersic) + \
-                                   '<TR align="center" bgcolor=' + \
-                                   '"#99CCFF"><TD> neighbor sersic' + \
-                                   ' </TD> <TD> ' + \
-                                   str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
-                                   + str(fit_info[key]['yctr'][0]) + \
-                                   ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
-                                   ' </TD> <TD> ' + \
-                                   str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                                   ' ' + ' </TD> <TD> ' + \
-                                   str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
-                                   str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
-                                   str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
-                                   str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
-                Neighbour_Sersic = str(Neighbour_Sersic) + \
-                                   '<TR align="center" ' + \
-                                   'bgcolor="#CCFFFF"> <TD>' + ' ' + \
-                                   ' </TD> <TD> ' + \
-                                   str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
-                                   + str(fit_info[key]['yctr'][1]) + \
-                                   ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
-                                   ' </TD> <TD> ' + \
-                                   str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                   ' ' + ' </TD> <TD> ' + \
-                                   str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
-                                   str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
-                                   str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
-                                   str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
-            if 'bulge' in key:
-                Object_Sersic = '<TR align="center" ' +\
-                                'bgcolor="#99CCFF">' +\
-                                '<TD> sersic bulge</TD> <TD> ' +\
-                                str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
-                                + str(fit_info[key]['yctr'][0]) + \
-                                ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
-                                ' </TD> <TD> ' + \
-                                str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                                str(round(all_params['re_kpc'], 3))[:5] + ' </TD> <TD> ' + \
-                                str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
-                                str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
-                                str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
-                                str(0) + ' </TD> </TR>'
-                Object_Sersic_err = '<TR align="center" ' + \
-                                    'bgcolor="#CCFFFF">' + \
-                                    '<TD>' + ' ' + '</TD> <TD>' + \
-                                    str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
-                                    + str(fit_info[key]['yctr'][1]) + \
-                                    ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
-                                    ' </TD> <TD> ' + \
-                                    str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                    str(round(all_params['re_kpc_err'], 3))[:5] + ' </TD> <TD> ' + \
-                                    str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
-                                    str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
-                                    str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
-                                    str(0) + ' </TD> </TR>'
-            if 'disk' in key:
-                Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
-                             '<TD> disk </TD> <TD> ' + \
-                             str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
-                             + str(fit_info[key]['yctr'][0]) + \
-                             ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
-                             ' </TD> <TD> ' + \
-                             str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
-                             str(round(all_params['rd_kpc'], 3))[:5] +\
-                             ' </TD> <TD> </TD> <TD> ' +\
-                             str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
-                             str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
-                             str(0) + ' </TD> </TR>'
+            print "Failed to find restart file!! Galfit may have crashed!!"
+        basic_info['restart_conf'] = new_outname
 
-                Object_Exp_err = '<TR align="center" ' + \
-                                 'bgcolor="#CCFFFF">' + \
-                                 '<TD>' + ' ' + '</TD> <TD>' + \
-                                 str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
-                                 + str(fit_info[key]['yctr'][1]) + \
-                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+
+        all_params['chi2nu'] = basic_info['chi2nu']
+
+        # first check all err components and replace if nan or inf
+
+
+        if 'bulge' in fit_info:
+            all_params['bulge_xctr'] = fit_info['bulge']['xctr'][0]
+            all_params['bulge_yctr'] = fit_info['bulge']['yctr'][0]
+            all_params['Ie'] = fit_info['bulge']['mag'][0]
+            all_params['re_pix'] = fit_info['bulge']['rad'][0]
+            all_params['n'] = fit_info['bulge']['n'][0]
+            all_params['eb'] = fit_info['bulge']['ell'][0]
+            all_params['bpa'] = fit_info['bulge']['pa'][0]
+            all_params['bboxy'] = fit_info['bulge']['boxy'][0]
+
+            all_params['bulge_xctr_err'] = fit_info['bulge']['xctr'][1]
+            all_params['bulge_yctr_err'] = fit_info['bulge']['yctr'][1]
+            all_params['Ie_err'] = fit_info['bulge']['mag'][1]
+            all_params['re_pix_err'] = fit_info['bulge']['rad'][1]
+            all_params['n_err'] = fit_info['bulge']['n'][1]
+            all_params['eb_err'] = fit_info['bulge']['ell'][1]
+            all_params['bpa_err'] = fit_info['bulge']['pa'][1]
+            all_params['bboxy_err'] = fit_info['bulge']['boxy'][1]
+
+        if 'disk' in fit_info:
+            all_params['disk_xctr'] = fit_info['disk']['xctr'][0]
+            all_params['disk_yctr'] = fit_info['disk']['yctr'][0]
+            all_params['Id'] = fit_info['disk']['mag'][0]
+            all_params['rd_pix'] = fit_info['disk']['rad'][0]
+            all_params['ed'] = fit_info['disk']['ell'][0]
+            all_params['dpa'] = fit_info['disk']['pa'][0]
+            all_params['dboxy'] = fit_info['disk']['boxy'][0]
+
+            all_params['disk_xctr_err'] = fit_info['disk']['xctr'][1]
+            all_params['disk_yctr_err'] = fit_info['disk']['yctr'][1]
+            all_params['Id_err'] = fit_info['disk']['mag'][1]
+            all_params['rd_pix_err'] = fit_info['disk']['rad'][1]
+            all_params['ed_err'] = fit_info['disk']['ell'][1]
+            all_params['dpa_err'] = fit_info['disk']['pa'][1]
+            all_params['dboxy_err'] = fit_info['disk']['boxy'][1]
+
+        if 'point' in fit_info:
+            all_params['p_xctr'] = fit_info['point']['xctr'][0]
+            all_params['p_yctr'] = fit_info['point']['yctr'][0]
+            all_params['Ip'] = fit_info['point']['mag'][0]
+
+            all_params['p_xctr_err'] = fit_info['point']['xctr'][1]
+            all_params['p_yctr_err'] = fit_info['point']['yctr'][1]
+            all_params['Ip_err'] = fit_info['point']['mag'][1]
+
+        if 'bar' in fit_info:
+            all_params['bar_xctr'] = fit_info['bar']['xctr'][0]
+            all_params['bar_yctr'] = fit_info['bar']['yctr'][0]
+            all_params['Ibar'] = fit_info['bar']['mag'][0]
+            all_params['rbar_pix'] = fit_info['bar']['rad'][0]
+            all_params['n_bar'] = fit_info['bar']['n'][0]
+            all_params['ebar'] = fit_info['bar']['ell'][0]
+            all_params['barpa'] = fit_info['bar']['pa'][0]
+            all_params['barboxy'] = fit_info['bar']['boxy'][0]
+
+            all_params['bar_xctr_err'] = fit_info['bar']['xctr'][1]
+            all_params['bar_yctr_err'] = fit_info['bar']['yctr'][1]
+            all_params['Ibar_err'] = fit_info['bar']['mag'][1]
+            all_params['rbar_pix_err'] = fit_info['bar']['rad'][1]
+            all_params['nbar_err'] = fit_info['bar']['n'][1]
+            all_params['ebar_err'] = fit_info['bar']['ell'][1]
+            all_params['barpa_err'] = fit_info['bar']['pa'][1]
+            all_params['barboxy_err'] = fit_info['bar']['boxy'][1]
+
+        if 'sky' in fit_info:
+            all_params['GalSky'] = fit_info['sky']['mag'][0]
+            all_params['GalSky_err'] = fit_info['sky']['mag'][1]
+
+        # Converting fitted params to physical params
+        if(z != 9999 and z > 0):
+            phy_parms = cal(z, c.H0, c.WM, c.WV, c.pixelscale)
+            all_params['dis_modu'] = phy_parms[2]
+            if 'bulge' in ComP:
+                if all_params['re_pix'] != 9999:
+                    all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
+                    all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
+                else:
+                    all_params['re_kpc'] = 9999
+                    all_params['re_kpc_err'] = 9999
+            if 'disk' in ComP:
+                if all_params['rd_pix'] != 9999:
+                    all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
+                    all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
+                else:
+                    all_params['rd_kpc'] = 9999
+                    all_params['rd_kpc_err'] = 9999
+            if 'bar' in ComP:
+                if all_params['rbar_pix'] != 9999:
+                    all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
+                    all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
+                else:
+                    all_params['rbar_kpc'] = 9999
+                    all_params['rbar_kpc_err'] = 9999
+            if 'point' in ComP:
+                all_params['Pfwhm_kpc'] = 0.5 * phy_parms[3]
+        # Finding derived parameters
+        if 'bulge' in ComP and 'disk' in ComP:
+            fb = 10**(-0.4 * (all_params['Ie'] - c.mag_zero))
+            fd = 10**(-0.4 * (all_params['Id'] - c.mag_zero))
+            if 'point' in ComP:
+                fp = 10**(-0.4 * (all_params['Ip'] - c.mag_zero))
+            else:
+                fp = 0.0
+            if 'bar' in ComP:
+                fbar = 10**(-0.4 * (all_params['Ibar'] - c.mag_zero)) 
+            else:
+                fbar = 0.0
+
+            try:
+                all_params['BD'] = fb / fd
+                all_params['BT'] = fb / (fb + fd + fp + fbar)
+            except:
+                all_params['BD'] = 9999
+                all_params['BT'] = 9999
+
+        elif 'bulge' in ComP:
+            all_params['BT'] = 1.0
+        elif 'disk' in ComP:
+            all_params['BD'] = 0.0
+            all_params['BT'] = 0.0
+
+        # Start writing html file. Now the template keywords will get values
+        pngfile = 'P_' + c.fstring + '.png'
+        Neighbour_Sersic = ''
+        Object_Sersic = ''
+        Object_Sersic_err = ''
+        Object_Exp = ''
+        Object_Exp_err = ''
+        Point_Vals = ''
+        Point_Vals_err = ''
+        try:
+            for key in fit_info.keys():
+                if 'neighbor' in key:
+                    Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                       '<TR align="center" bgcolor=' + \
+                                       '"#99CCFF"><TD> neighbor sersic' + \
+                                       ' </TD> <TD> ' + \
+                                       str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                       + str(fit_info[key]['yctr'][0]) + \
+                                       ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
+                                       ' </TD> <TD> ' + \
+                                       str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                                       ' ' + ' </TD> <TD> ' + \
+                                       str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
+                                       str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                                       str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
+                                       str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
+                    Neighbour_Sersic = str(Neighbour_Sersic) + \
+                                       '<TR align="center" ' + \
+                                       'bgcolor="#CCFFFF"> <TD>' + ' ' + \
+                                       ' </TD> <TD> ' + \
+                                       str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                       + str(fit_info[key]['yctr'][1]) + \
+                                       ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                       ' </TD> <TD> ' + \
+                                       str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                       ' ' + ' </TD> <TD> ' + \
+                                       str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
+                                       str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                       str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                       str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
+                if 'bulge' in key:
+                    Object_Sersic = '<TR align="center" ' +\
+                                    'bgcolor="#99CCFF">' +\
+                                    '<TD> sersic bulge</TD> <TD> ' +\
+                                    str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                    + str(fit_info[key]['yctr'][0]) + \
+                                    ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
+                                    ' </TD> <TD> ' + \
+                                    str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                                    str(round(all_params['re_kpc'], 3))[:5] + ' </TD> <TD> ' + \
+                                    str(fit_info[key]['n'][0]) + ' </TD> <TD> ' +\
+                                    str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                                    str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
+                                    str(0) + ' </TD> </TR>'
+                    Object_Sersic_err = '<TR align="center" ' + \
+                                        'bgcolor="#CCFFFF">' + \
+                                        '<TD>' + ' ' + '</TD> <TD>' + \
+                                        str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                        + str(fit_info[key]['yctr'][1]) + \
+                                        ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                        ' </TD> <TD> ' + \
+                                        str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                        str(round(all_params['re_kpc_err'], 3))[:5] + ' </TD> <TD> ' + \
+                                        str(fit_info[key]['n'][1]) + ' </TD> <TD> ' +\
+                                        str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                        str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                        str(0) + ' </TD> </TR>'
+                if 'disk' in key:
+                    Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
+                                 '<TD> disk </TD> <TD> ' + \
+                                 str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                 + str(fit_info[key]['yctr'][0]) + \
+                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) + \
                                  ' </TD> <TD> ' + \
-                                 str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
-                                 str(round(all_params['rd_kpc_err'], 3))[:5] + \
+                                 str(fit_info[key]['rad'][0]) + ' </TD> <TD> ' + \
+                                 str(round(all_params['rd_kpc'], 3))[:5] +\
                                  ' </TD> <TD> </TD> <TD> ' +\
-                                 str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
-                                 str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                 str(fit_info[key]['ell'][0]) + ' </TD> <TD> ' +\
+                                 str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
                                  str(0) + ' </TD> </TR>'
 
+                    Object_Exp_err = '<TR align="center" ' + \
+                                     'bgcolor="#CCFFFF">' + \
+                                     '<TD>' + ' ' + '</TD> <TD>' + \
+                                     str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                     + str(fit_info[key]['yctr'][1]) + \
+                                     ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) + \
+                                     ' </TD> <TD> ' + \
+                                     str(fit_info[key]['rad'][1]) + ' </TD> <TD> ' + \
+                                     str(round(all_params['rd_kpc_err'], 3))[:5] + \
+                                     ' </TD> <TD> </TD> <TD> ' +\
+                                     str(fit_info[key]['ell'][1]) + ' </TD> <TD> ' +\
+                                     str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
+                                     str(0) + ' </TD> </TR>'
 
-            if 'point' in key:
-                Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
-                             '<TD> point </TD> <TD> ' + \
-                             str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
-                             + str(fit_info[key]['yctr'][0]) + \
-                             ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) +\
-                             ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
-                             str('9999') + ' </TD> <TD> ' + \
-                             ' ' + ' </TD> <TD> ' + str('9999') +  \
-                             ' </TD> <TD> ' + str('9999') + \
-                             ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
-                Point_Vals_err = '<TR align="center" ' + \
-                                 'bgcolor="#CCFFFF">' + \
-                                 '<TD>' + ' ' + '</TD> <TD>' + \
-                                 str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
-                                 + str(fit_info[key]['yctr'][1]) + \
-                             ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) +\
-                             ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
-                             str('9999') + ' </TD> <TD> ' + \
-                             ' ' + ' </TD> <TD> ' + str('9999') +  \
-                             ' </TD> <TD> ' + str('9999') + \
-                             ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
-    except Exception, inst:
-        print type(inst)     # the exception instance
-        print inst.args      # arguments stored in\
-                                             # .args
-        print inst           # __str__ allows args\
-                                             # to printed directly
-        print "something bad happened writing!!!!\n\n"
-        print traceback.print_exc()                   
-    if 'bulge' in ComP:
-        try:
-              pixelscale = c.pixelscale
-        except:
-              pixelscale = 1
-        try:
-            all_params['AvgIe'] = all_params['Ie'] + 2.5 * n.log10(2 * 3.14 * pixelscale * \
-                                  pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * n.sqrt(1 -  all_params['eb']**2.0))
-            AvgMagInsideReErr2 = (1.085 * n.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
-                                                 (( all_params['eb'] *  all_params['eb_err']) / \
-                                                  n.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
-                                                  (n.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
-                                                   all_params['re_pix'] *  all_params['re_pix'])
-            all_params['AvgIe_err'] = n.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
-        except OverflowError:
-            all_params['AvgIe'] = n.inf
-            all_params['AvgIe_err'] = n.inf
-        for key in ['AvgIe', 'AvgIe_err']:
-            if n.isnan(all_params[key]) or n.isinf(all_params[key]):
-                if n.isnan(all_params[key]):
-                    all_params[key] = -9999.99
-                else:
-                    all_params[key] = -6666.66
-                try:
-                    #set the AVGIe flag
-                    all_params['flag'] = SetFlag(all_params['flag'], GetFlag('AVGIE_FAILED'))
-                except badflag:
-                    # the flag is already set
-                    pass
-                
-    wC = str(C)[:5]
-    wA = str(A)[:5]
-    wS = str(S)[:5]
-    wG = str(G)[:5]
-    wM = str(M)[:5]
-    wBD = str( all_params['BD'])[:5]
-    wBT = str( all_params['BT'])[:5]
-    wAvgMagInsideRe = str( all_params['AvgIe'])[:5]
-    error_mesg1 = ''
-    error_mesg2 = ''
-    error_mesg3 = ''
-    error_mesg4 = ''
-    error_mesg5 = ''
-    error_mesg6 = ''
-    error_mesg7 = ''
-    if c.starthandle:
-        error_mesg6 = '<a href="R_' + c.fstring + \
-	              '_1.html"> Crashed </a>' 
 
-    # Now test for fitting problems and set flags for analysis
-    all_params['FitFlag'] = 0
-    HitLimit = 0
-
-    if not c.detail:
+                if 'point' in key:
+                    Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
+                                 '<TD> point </TD> <TD> ' + \
+                                 str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
+                                 + str(fit_info[key]['yctr'][0]) + \
+                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][0]) +\
+                                 ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
+                                 str('9999') + ' </TD> <TD> ' + \
+                                 ' ' + ' </TD> <TD> ' + str('9999') +  \
+                                 ' </TD> <TD> ' + str('9999') + \
+                                 ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
+                    Point_Vals_err = '<TR align="center" ' + \
+                                     'bgcolor="#CCFFFF">' + \
+                                     '<TD>' + ' ' + '</TD> <TD>' + \
+                                     str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
+                                     + str(fit_info[key]['yctr'][1]) + \
+                                 ' </TD> <TD> ' + str(fit_info[key]['mag'][1]) +\
+                                 ' </TD> <TD> ' + str('9999') +  ' </TD> <TD> ' + \
+                                 str('9999') + ' </TD> <TD> ' + \
+                                 ' ' + ' </TD> <TD> ' + str('9999') +  \
+                                 ' </TD> <TD> ' + str('9999') + \
+                                 ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
+        except Exception, inst:
+            print type(inst)     # the exception instance
+            print inst.args      # arguments stored in\
+                                                 # .args
+            print inst           # __str__ allows args\
+                                                 # to printed directly
+            print "something bad happened writing!!!!\n\n"
+            print traceback.print_exc()                   
         if 'bulge' in ComP:
-            if abs(all_params['Ie'] - c.UMag) < 0.2 or abs(all_params['Ie'] - c.LMag) < 0.2:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('IE_AT_LIMIT'))
-            if abs(all_params['re_pix'] - c.LRe) < 0.1 or abs(all_params['re_pix'] - c.URe) < 1.0:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RE_AT_LIMIT'))
-            if abs(all_params['n'] - c.LN) < 0.03 or abs(all_params['n'] - c.UN) < 0.5:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('N_AT_LIMIT'))
-            if abs(all_params['eb'] - 0.0) < 0.05 or abs(all_params['eb'] - 0.0) > 0.95:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('EB_AT_LIMIT'))
-        if 'disk' in ComP:
-            if abs(all_params['Id'] - c.UMag) < 0.2 or abs(all_params['Id'] - c.LMag) < 0.2:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ID_AT_LIMIT'))
-            if abs(all_params['rd_pix'] - c.LRd) < 0.1 or abs(all_params['rd_pix'] - c.URd) < 1.0:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RD_AT_LIMIT'))
-            if abs(all_params['ed'] - 0.0) < 0.05 or abs(all_params['ed'] - 0.0) > 0.95:
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ED_AT_LIMIT'))
+            try:
+                  pixelscale = c.pixelscale
+            except:
+                  pixelscale = 1
+            try:
+                all_params['AvgIe'] = all_params['Ie'] + 2.5 * n.log10(2 * 3.14 * pixelscale * \
+                                      pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * n.sqrt(1 -  all_params['eb']**2.0))
+                AvgMagInsideReErr2 = (1.085 * n.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
+                                                     (( all_params['eb'] *  all_params['eb_err']) / \
+                                                      n.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
+                                                      (n.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
+                                                       all_params['re_pix'] *  all_params['re_pix'])
+                all_params['AvgIe_err'] = n.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
+            except OverflowError:
+                all_params['AvgIe'] = n.inf
+                all_params['AvgIe_err'] = n.inf
+            for key in ['AvgIe', 'AvgIe_err']:
+                if n.isnan(all_params[key]) or n.isinf(all_params[key]):
+                    if n.isnan(all_params[key]):
+                        all_params[key] = -9999.99
+                    else:
+                        all_params[key] = -6666.66
+                    try:
+                        #set the AVGIe flag
+                        all_params['flag'] = SetFlag(all_params['flag'], GetFlag('AVGIE_FAILED'))
+                    except badflag:
+                        # the flag is already set
+                        pass
 
-    if not all_params['FitFlag']:
-        error_mesg4 = str(error_mesg4) + 'One of the parameters'
-        error_mesg5 = str(error_mesg5) + '          hits limit!'
-    
-    if all_params['Goodness'] < c.Goodness:
-        error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-        all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('SMALL_GOODNESS'))
-    if all_params['chi2nu'] > c.chi2sq:
-        error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-        if all_params['chi2nu'] != 9999:
-            all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
-    if abs(all_params['bulge_xctr'] - xcntr) > c.center_deviation or \
-           abs(all_params['bulge_yctr'] - ycntr) > c.center_deviation or \
-           abs(all_params['disk_xctr'] - xcntr) > c.center_deviation or \
-           abs(all_params['disk_yctr'] - ycntr) > c.center_deviation:
-        if all_params['bulge_xctr'] == -999 or all_params['bulge_yctr'] == -999 or \
-               all_params['disk_xctr'] == -999 or all_params['disk_yctr'] == -999:
-            pass
+        wC = str(C)[:5]
+        wA = str(A)[:5]
+        wS = str(S)[:5]
+        wG = str(G)[:5]
+        wM = str(M)[:5]
+        wBD = str( all_params['BD'])[:5]
+        wBT = str( all_params['BT'])[:5]
+        wAvgMagInsideRe = str( all_params['AvgIe'])[:5]
+        error_mesg1 = ''
+        error_mesg2 = ''
+        error_mesg3 = ''
+        error_mesg4 = ''
+        error_mesg5 = ''
+        error_mesg6 = ''
+        error_mesg7 = ''
+        if c.starthandle:
+            error_mesg6 = '<a href="R_' + c.fstring + \
+                          '_1.html"> Crashed </a>' 
+
+        # Now test for fitting problems and set flags for analysis
+        all_params['FitFlag'] = 0
+        HitLimit = 0
+
+        if not c.detail:
+            if 'bulge' in ComP:
+                if abs(all_params['Ie'] - c.UMag) < 0.2 or abs(all_params['Ie'] - c.LMag) < 0.2:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('IE_AT_LIMIT'))
+                if abs(all_params['re_pix'] - c.LRe) < 0.1 or abs(all_params['re_pix'] - c.URe) < 1.0:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RE_AT_LIMIT'))
+                if abs(all_params['n'] - c.LN) < 0.03 or abs(all_params['n'] - c.UN) < 0.5:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('N_AT_LIMIT'))
+                if abs(all_params['eb'] - 0.0) < 0.05 or abs(all_params['eb'] - 0.0) > 0.95:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('EB_AT_LIMIT'))
+            if 'disk' in ComP:
+                if abs(all_params['Id'] - c.UMag) < 0.2 or abs(all_params['Id'] - c.LMag) < 0.2:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ID_AT_LIMIT'))
+                if abs(all_params['rd_pix'] - c.LRd) < 0.1 or abs(all_params['rd_pix'] - c.URd) < 1.0:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('RD_AT_LIMIT'))
+                if abs(all_params['ed'] - 0.0) < 0.05 or abs(all_params['ed'] - 0.0) > 0.95:
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('ED_AT_LIMIT'))
+
+        if not all_params['FitFlag']:
+            error_mesg4 = str(error_mesg4) + 'One of the parameters'
+            error_mesg5 = str(error_mesg5) + '          hits limit!'
+
+        if all_params['Goodness'] < c.Goodness:
+            error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
+            all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('SMALL_GOODNESS'))
+        if all_params['chi2nu'] > c.chi2sq:
+            error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
+            if all_params['chi2nu'] != 9999:
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
+        if abs(all_params['bulge_xctr'] - xcntr) > c.center_deviation or \
+               abs(all_params['bulge_yctr'] - ycntr) > c.center_deviation or \
+               abs(all_params['disk_xctr'] - xcntr) > c.center_deviation or \
+               abs(all_params['disk_yctr'] - ycntr) > c.center_deviation:
+            if all_params['bulge_xctr'] == -999 or all_params['bulge_yctr'] == -999 or \
+                   all_params['disk_xctr'] == -999 or all_params['disk_yctr'] == -999:
+                pass
+            else:
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('FAKE_CNTR'))
+                error_mesg3 = str(error_mesg3) + 'Fake Center!'
+
+        if all_params['FitFlag'] > 0:
+            img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
+            good_fit = 1
         else:
-            all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('FAKE_CNTR'))
-            error_mesg3 = str(error_mesg3) + 'Fake Center!'
-        
-    if all_params['FitFlag'] > 0:
-        img_notify = str(c.PYMORPH_PATH) + '/html/goodfit.gif'
-        good_fit = 1
-    else:
-        img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
-        good_fit = 0
-    chi2nu = all_params['chi2nu']
-    Distance = all_params['distance']
-    
-    # This can be a waste of time if the list is wrong...
-    # Finding number of runs in the csv file 
-    all_params['run'] = 1
-    if exists('result.csv'):
-        for line_res in csv.reader(open('result.csv').readlines()[1:]):    
-            if(str(line_res[0]) == c.fstring):
-                all_params['run'] += 1
-    if c.GalSky != 9999:
-        all_params['GalSky'] = c.GalSky
+            img_notify = str(c.PYMORPH_PATH) + '/html/badfit.gif'
+            good_fit = 0
+        chi2nu = all_params['chi2nu']
+        Distance = all_params['distance']
+
+        # This can be a waste of time if the list is wrong...
+        # Finding number of runs in the csv file 
+        all_params['run'] = 1
+        if exists('result.csv'):
+            for line_res in csv.reader(open('result.csv').readlines()[1:]):    
+                if(str(line_res[0]) == c.fstring):
+                    all_params['run'] += 1
+        if c.GalSky != 9999:
+            all_params['GalSky'] = c.GalSky
     
     # Writing data base
     try:
@@ -545,27 +547,28 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in ParamNamesToWrite.keys()])
     f_res.close()
 
-    #writing html
-    outfile = open('R_' + c.fstring + '.html','w')
-    outfile.write(template %vars())
-    outfile.close()
+    if c.decompose:
+        #writing html
+        outfile = open('R_' + c.fstring + '.html','w')
+        outfile.write(template %vars())
+        outfile.close()
 
-    # Writing quick view html pymorph.html
-    outfile1 = open('pymorph.html', 'w')
-    outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
-                   ' Transitional//EN">')
-    outfile1.write('<HTML><HEAD> \n')
-    outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
-                    URL=pymorph.html"> \n'])
-    outfile1.write('</HEAD> \n')
-    outfile = 'R_' + c.fstring + '.html'
-    try:
-        for line in open(outfile, 'r'):
-            if(str(line) != '<html>'):
-                outfile1.writelines([str(line)])
-    except:
-        pass
-    outfile1.close()
+        # Writing quick view html pymorph.html
+        outfile1 = open('pymorph.html', 'w')
+        outfile1.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01' \
+                       ' Transitional//EN">')
+        outfile1.write('<HTML><HEAD> \n')
+        outfile1.writelines(['<META HTTP-EQUIV="Refresh" CONTENT="10; \
+                        URL=pymorph.html"> \n'])
+        outfile1.write('</HEAD> \n')
+        outfile = 'R_' + c.fstring + '.html'
+        try:
+            for line in open(outfile, 'r'):
+                if(str(line) != '<html>'):
+                    outfile1.writelines([str(line)])
+        except:
+            pass
+        outfile1.close()
 
 
 

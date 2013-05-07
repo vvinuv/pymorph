@@ -66,6 +66,12 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
             neighbor = SEx_obj(NXPTS, NYPTS, line_j)
             if target.mask_or_fit(neighbor,threshold,thresh_area,avoidme)==1:
                 # neighbor.set_axis_rat(1.0) #make masks circular
+
+                # recenter in chip coordinates
+                xn = xcntr - target.xcntr + neighbor.xcntr
+                yn = ycntr - target.ycntr + neighbor.ycntr
+                neighbor.set_center(xn, yn)
+                
                 R = neighbor.calc_rad(x,y)
                 if galflag ==1:
                     z[n.where(R<=mask_reg*neighbor.maj_axis)] = 1

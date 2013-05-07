@@ -103,10 +103,8 @@ class SEx_obj():
         -1 if the object is beyond the bounds of the image"""
         mask_it = -999
 
-        if(abs(neighbor.xcntr - self.xcntr) < self.NXPTS / 2.0 + 30.0 and \
-           abs(neighbor.ycntr - self.ycntr) < self.NYPTS / 2.0 + 30.0 and \
-           #abs(neighbor.xcntr - self.xcntr) > self.NXPTS / 2.0 + avoidme and \
-           #abs(neighbor.ycntr - self.ycntr) > self.NYPTS / 2.0 + avoidme and \
+        if(abs(neighbor.xcntr - self.xcntr) < self.NXPTS / 2.0 + avoidme and \
+           abs(neighbor.ycntr - self.ycntr) < self.NYPTS / 2.0 + avoidme and \
            np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
             (neighbor.ycntr - self.ycntr)**2.0) > 5.0):
             

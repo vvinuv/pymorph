@@ -22,11 +22,11 @@ import config as c
 import pymorphutils as ut
 from flagfunc import GetFlag, isset, SetFlag
 
-#from ellimaskfunc_easy import ElliMaskFunc
-from ellimaskfunc import ElliMaskFunc
+from ellimaskfunc_easy import ElliMaskFunc
+#from ellimaskfunc import ElliMaskFunc
 
-#from maskfunc_easy import MaskFunc
-from maskfunc import MaskFunc
+from maskfunc_easy import MaskFunc
+#from maskfunc import MaskFunc
 
 from configfunc import ConfigFunc
 from config_twostep import ConfigIter
@@ -426,6 +426,8 @@ def main():
             good_distance = []
             bad_distance = []
             good_object = ''
+
+            os.system('cp %s sex_%s.txt' %(sex_cata, c.fstring))
             for line_s in open(sex_cata, 'r'):
                 try:
                     values = line_s.split()
@@ -589,21 +591,22 @@ def main():
 
                     # This creates ellipse mask and used for 
                     # ellipse fitting and casgm
-                    ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                 SizeX, SizeY, good_object, 1)
+                    #ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                    #             SizeX, SizeY, good_object, 1)
                     # Fitting ellipse task or the manual 1d finder
                     if c.decompose:
-                        ut.HandleEllipseTask(cutimage, cut_xcntr, \
-                                       cut_ycntr, \
-                                       SizeX, SizeY, c.SexSky, 0)
-                        MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                                         SizeX, SizeY, good_object)
+                        #ut.HandleEllipseTask(cutimage, cut_xcntr, \
+                        #               cut_ycntr, \
+                        #               SizeX, SizeY, c.SexSky, 0)
+                        #MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                        #                 SizeX, SizeY, good_object)
                         maskimage = 'M_' + c.fstring  + '.fits'
                         config_file = 'G_' + c.fstring + '.in'
                         outimage = 'O_' + c.fstring + '.fits'
                         ConfigFunc(cutimage, whtimage,  cut_xcntr,\
                                    cut_ycntr, SizeX, SizeY, good_object, \
                                    psffile, 'SegCat.cat')
+                        #continue
                 else:
                     cut_xcntr, cut_ycntr = TX / 2.0, TY / 2.0
                     maskimage = mimg
@@ -646,10 +649,10 @@ def main():
                     if os.access(ff, os.F_OK):
                         os.remove(ff)
                 # Decomposition
+                if os.access('fit.log', os.F_OK):
+                    os.remove('fit.log')
                 if c.decompose:
                     try:
-                        if os.access('fit.log', os.F_OK):
-                            os.remove('fit.log')
                         try:
                             DetailFit = c.detail
                         except:
@@ -660,7 +663,7 @@ def main():
                                        SizeY, good_object, psffile, z)
                         elif c.galfit:
                             cmd = str(c.GALFIT_PATH) + ' ' + \
-                                      config_file
+                                     config_file
                             os.system(cmd)
                             f_fit = open('fit2.log','a')
                             if exists('fit.log'):
@@ -682,75 +685,79 @@ def main():
                         print "something bad happened!!!!\n\n"
                         print traceback.print_exc()
 
-                    try:
-                        if os.access('P_' + c.fstring + '.png', \
-                                     os.F_OK):	
-                            os.remove('P_' + c.fstring + '.png')
-                        GoodNess = PlotFunc(outimage, \
-                          maskimage, cut_xcntr, cut_ycntr, \
-                          c.SexSky, c.SkySig)
-                        Goodness = GoodNess.plot_profile
-                    except:
-                        ut.WriteError('Error in plotting \n')
-                        if maskimage == 'None':
-                            ut.WriteError('Could not find Mask image\n')
-                        c.run = 0	
-                        Goodness = -9999
-                        c.Flag = SetFlag(c.Flag,GetFlag('PLOT_FAIL'))
-                    try:
-                        WriteParams(ParamToWrite, cutimage, cut_xcntr, cut_ycntr, \
-                                     distance, alpha_j, \
-                                     delta_j, z, Goodness, \
-                                     C, C_err, A, A_err, S, S_err, \
-                                     G, M, c.EXPTIME)
-                    except Exception, inst:
-                        print type(inst)     # the exception instance
-                        print inst.args      # arguments stored in\
-                                             # .args
-                        print inst           # __str__ allows args\
-                                             # to printed directly
-                        print "something bad happened!!!!\n\n"
-                        print traceback.print_exc()
-
-                    #except:
-                    #    ut.WriteError('Error in writing html\n')
-                    #    c.run = 0
-
+                
                             
                     if(c.run == 1):
                         ut.WriteError('((((( Decomposition '\
                                           'Successful )))))\n')
 
-                    if isset(c.Flag, GetFlag("GALFIT_FAIL")): #or \
-                       #isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
-                       #isset(c.Flag, GetFlag("FAKE_CNTR")) or \
-                       #isset(c.Flag, GetFlag("BULGE_AT_LIMIT")) or \
-                       #isset(c.Flag, GetFlag("DISK_AT_LIMIT")):
-                        FailedValues = line_j.split()
-                        for FailedValue in FailedValues:
-                            f_failed.writelines([str(FailedValue), ' '])
-                        f_failed.writelines([str(c.Flag), '\n'])
-                    f_cat.writelines([str(gal_id), ' '])
-                    f_cat.write(good_object)
-                    #The following removes all the temporary files 
-                    #after every fit
-                    ToClean = 0
-                    if ToClean:
-                        ClaCli = 'E*fits E*txt G_* I*fits *.pl \
-                             *.con M_* \
-                             O*fits O*txt P*png R*html error.log  \
-                             galfit.*  \
-                             Tmp* SO* agm_r* \
-                             BMask.fits MaskedGalaxy.fits \
-                             MRotated.fits   \
-                             B.fits GalEllFit.fits AResidual.fits \
-                             ellip err BackMask.fits'
-                        vClaCli = ClaCli.split()
-                        for v1ClaCli in vClaCli:
-                            if os.access(v1ClaCli, os.F_OK):
-                                os.remove(v1ClaCli)
-                    for myfile in ['ellip','err','test.tab']:
-                        if os.access(myfile,os.F_OK):
+                try:
+                    Goodness = -9999
+                    if os.access('P_' + c.fstring + '.png', \
+                                 os.F_OK):	
+                        os.remove('P_' + c.fstring + '.png')
+                        GoodNess = PlotFunc(outimage, \
+                                 maskimage, cut_xcntr, cut_ycntr, \
+                                            c.SexSky, c.SkySig)
+                        Goodness = GoodNess.plot_profile
+                except:
+                    ut.WriteError('Error in plotting \n')
+                    if maskimage == 'None':
+                        ut.WriteError('Could not find Mask image\n')
+                    c.run = 0	
+                    c.Flag = SetFlag(c.Flag,GetFlag('PLOT_FAIL'))
+                
+                if isset(c.Flag, GetFlag("GALFIT_FAIL")): #or \
+                   #isset(c.Flag, GetFlag("LARGE_CHISQ")) or \
+                   #isset(c.Flag, GetFlag("FAKE_CNTR")) or \
+                   #isset(c.Flag, GetFlag("BULGE_AT_LIMIT")) or \
+                   #isset(c.Flag, GetFlag("DISK_AT_LIMIT")):
+                    FailedValues = line_j.split()
+                    for FailedValue in FailedValues:
+                        f_failed.writelines([str(FailedValue), ' '])
+                    f_failed.writelines([str(c.Flag), '\n'])
+                f_cat.writelines([str(gal_id), ' '])
+                f_cat.write(good_object)
+                #The following removes all the temporary files 
+                # after every fit
+                ToClean = 0
+
+
+                try:
+                    WriteParams(ParamToWrite, cutimage, cut_xcntr, cut_ycntr, \
+                                distance, alpha_j, \
+                                delta_j, z, Goodness, \
+                                C, C_err, A, A_err, S, S_err, \
+                                G, M, c.EXPTIME)
+                except Exception, inst:
+                    print type(inst)     # the exception instance
+                    print inst.args      # arguments stored in\
+                    # .args
+                    print inst           # __str__ allows args\
+                    # to printed directly
+                    print "something bad happened!!!!\n\n"
+                    print traceback.print_exc()
+
+                    #except:
+                    #    ut.WriteError('Error in writing html\n')
+                    #    c.run = 0
+
+                if ToClean:
+                    ClaCli = 'E*fits E*txt G_* I*fits *.pl \
+                         *.con M_* \
+                         O*fits O*txt P*png R*html error.log  \
+                         galfit.*  \
+                         Tmp* SO* agm_r* \
+                         BMask.fits MaskedGalaxy.fits \
+                         MRotated.fits   \
+                         B.fits GalEllFit.fits AResidual.fits \
+                         ellip err BackMask.fits'
+                    vClaCli = ClaCli.split()
+                    for v1ClaCli in vClaCli:
+                        if os.access(v1ClaCli, os.F_OK):
+                            os.remove(v1ClaCli)
+                for myfile in ['ellip','err','test.tab']:
+                    if os.access(myfile,os.F_OK):
                             os.remove(myfile)
             except Exception, inst:
                 print type(inst)     # the exception instance
@@ -1066,7 +1073,7 @@ def SExtractorConf():
         c.SEx_BACK_SIZE = float(SEx_BACK_SIZE)
         c.SEx_BACK_SIZE = int(c.SEx_BACK_SIZE)
     except:
-        c.SEx_BACK_SIZE = 64
+        c.SEx_BACK_SIZE = 256
     SEx_BACK_FILTERSIZE = raw_input('BACK_FILTERSIZE (3) >>> ')
     try:
         c.SEx_BACK_FILTERSIZE = float(SEx_BACK_FILTERSIZE)
@@ -1137,7 +1144,7 @@ if __name__ == '__main__':
     c.SEx_PHOT_FLUXFRAC = 0.5
     c.SEx_PIXEL_SCALE = c.pixelscale
     c.SEx_SEEING_FWHM = c.pixelscale * 3.37 
-    c.SEx_BACK_SIZE = 64
+    c.SEx_BACK_SIZE = 256
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_BACKPHOTO_THICK = 24
@@ -1248,7 +1255,7 @@ if __name__ == '__main__':
     parser.add_option("--urd", action="store", type="float",
                       dest="URd", default = 500.0, help="Upper Disk Radius")
     parser.add_option("--with-in", action="store", type="float",
-                      dest="avoidme", default = 150.0, help="avoid me!")
+                      dest="avoidme", default = 50.0, help="avoid me!")
     parser.add_option("--with-filter", action="store", type="string", 
                       dest="Filter", default = 'UNKNOWN', help="Filter used")
     parser.add_option("--with-db", action="store", type="string",

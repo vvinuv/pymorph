@@ -65,9 +65,21 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
             neighbor = SEx_obj(NXPTS, NYPTS, line_j)
             if target.mask_or_fit(neighbor,threshold,thresh_area,avoidme)==1:
                 #neighbor.set_axis_rat(1.0) #make masks circular
+
+                # recenter in chip coordinates
+                #print 'masking ', line_j
+                xn = xcntr - target.xcntr + neighbor.xcntr
+                yn = ycntr - target.ycntr + neighbor.ycntr
+                #print neighbor.xcntr, neighbor.ycntr
+                #print xn, yn
+                
+                neighbor.set_center(xn, yn)
+
                 R = neighbor.calc_rad(x,y)
                 z[n.where(R<=mask_reg*neighbor.maj_axis)] = 1
-            
+            #elif target.mask_or_fit(neighbor,threshold,thresh_area,avoidme)==0:
+                #print "source ", line_j, " should be fit"
+                
     if c.NoMask:
         z[n.where(z > 0)] = 0
     elif c.NormMask:
