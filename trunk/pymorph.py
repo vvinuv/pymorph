@@ -591,15 +591,15 @@ def main():
 
                     # This creates ellipse mask and used for 
                     # ellipse fitting and casgm
-                    #ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                    #             SizeX, SizeY, good_object, 1)
+                    ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                                 SizeX, SizeY, good_object, 1)
                     # Fitting ellipse task or the manual 1d finder
                     if c.decompose:
-                        #ut.HandleEllipseTask(cutimage, cut_xcntr, \
-                        #               cut_ycntr, \
-                        #               SizeX, SizeY, c.SexSky, 0)
-                        #MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
-                        #                 SizeX, SizeY, good_object)
+                        ut.HandleEllipseTask(cutimage, cut_xcntr, \
+                                       cut_ycntr, \
+                                       SizeX, SizeY, c.SexSky, 0)
+                        MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
+                                         SizeX, SizeY, good_object)
                         maskimage = 'M_' + c.fstring  + '.fits'
                         config_file = 'G_' + c.fstring + '.in'
                         outimage = 'O_' + c.fstring + '.fits'
@@ -1073,7 +1073,7 @@ def SExtractorConf():
         c.SEx_BACK_SIZE = float(SEx_BACK_SIZE)
         c.SEx_BACK_SIZE = int(c.SEx_BACK_SIZE)
     except:
-        c.SEx_BACK_SIZE = 256
+        c.SEx_BACK_SIZE = 64
     SEx_BACK_FILTERSIZE = raw_input('BACK_FILTERSIZE (3) >>> ')
     try:
         c.SEx_BACK_FILTERSIZE = float(SEx_BACK_FILTERSIZE)
@@ -1144,7 +1144,7 @@ if __name__ == '__main__':
     c.SEx_PHOT_FLUXFRAC = 0.5
     c.SEx_PIXEL_SCALE = c.pixelscale
     c.SEx_SEEING_FWHM = c.pixelscale * 3.37 
-    c.SEx_BACK_SIZE = 256
+    c.SEx_BACK_SIZE = 64
     c.SEx_BACK_FILTERSIZE = 3
     c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
     c.SEx_BACKPHOTO_THICK = 24
