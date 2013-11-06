@@ -1,3 +1,3 @@
 pymorph
 =======
-Testing
+Measurement pipeline for galaxies.
