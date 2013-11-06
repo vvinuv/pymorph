@@ -694,14 +694,14 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
               str(C)[:5], str(C_err)[:5], str(A)[:5], str(A_err)[:5], \
               str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5]
         
-        if(c.decompose == False):
-            f_res = open("result.csv", "ab")
-            writer = csv.writer(f_res)
-            GalId = c.fstring
-            writer.writerow([GalId, alpha_j, delta_j, redshift, c.SexMagAuto, \
-                             c.SexMagAutoErr, C, C_err, A, A_err, S, \
-                             S_err, G, M, c.Flag, c.SexHalfRad])
-            f_res.close()
+        #if(c.decompose == False):
+        #    f_res = open("result.csv", "ab")
+        #    writer = csv.writer(f_res)
+        #    GalId = c.fstring
+        #    writer.writerow([GalId, alpha_j, delta_j, redshift, c.SexMagAuto, \
+        #                     c.SexMagAutoErr, C, C_err, A, A_err, S, \
+        #                     S_err, G, M, c.Flag, c.SexHalfRad])
+        #    f_res.close()
         WriteError('(((((CASGM Successful)))))\n')
         return C, C_err, A, A_err, S, S_err, G, M
     except:
