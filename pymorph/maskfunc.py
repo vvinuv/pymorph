@@ -34,7 +34,7 @@ def gmask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
     
     mask_file = 'M_' + c.fstring + '.fits'
     tmp_mask = n.zeros((NXPTS, NYPTS))
-    f = pyfits.open(c.datadir + cutimage)
+    f = pyfits.open(os.path.join(c.datadir, cutimage))
     galaxy = f[0].data
     f.close()
     galaxy = n.swapaxes(galaxy, 0, 1)

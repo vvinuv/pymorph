@@ -75,7 +75,7 @@ def DMSToDeg(d, m, s):
 def PsfArr():
     """Return psf list if the given input is a file"""
     if c.psflist.startswith('@'):
-        psffi = open(c.datadir + c.psflist.split('@')[1], 'r')
+        psffi = open(os.path.join(c.datadir, c.psflist.split('@')[1]), 'r')
         c.psflist = []
         for pline in psffi:
             c.psflist.append(pline.split()[0])
@@ -163,7 +163,7 @@ def SelectPsf(alpha_j, delta_j):
     psffile = 'test.fits'
     r = Get_R()
     for element in c.psflist:
-        p = pyfits.open(c.datadir + element)
+        p = pyfits.open(os.path.join(c.datadir, element))
         header = p[0].header
         if (header.has_key('RA_TARG')):
             ra = header['RA_TARG']
@@ -423,13 +423,13 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu.header.update('NCOMBINE', c.NCOMBINE)
     else:
         print 'c.NCOMBINE have value -9999. Something wrong?'
-    hdu.writeto(c.datadir + cutimage)
+    hdu.writeto(os.path.join(c.datadir, cutimage))
     # FIX
     #Making weight image cut
     if c.weightexists:
         z2 = c.weightdata[ymin:ymax,xmin:xmax].copy()
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
-        hdu.writeto(c.datadir + whtimage)
+        hdu.writeto(os.path.join(c.datadir, whtimage))
     else:
         print 'Cannot creat weight image. If you supply weight image please ',\
               'check whether it exists or report a bug'
@@ -452,7 +452,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     else:
         ell_mask_file = 'EM_' + c.fstring + '.fits'
         ell_out = 'E_' + c.fstring + '.txt'
-        cutimage = c.datadir + cutimage
+        cutimage = os.path.join(c.datadir, cutimage)
     if exists(cutimage) and exists(ell_mask_file):
         f = pyfits.open(cutimage)
         galaxy = f[0].data
@@ -711,9 +711,9 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
 
 def returngimg():
     print "No gimg given."
-    if exists(c.datadir + 'I' + c.fstring + '.fits'):
+    if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
         gimg = 'I' + c.fstring + '.fits'
-    elif exists(c.datadir + str(gal_id) + '.fits'):
+    elif exists(os.path.join(c.datadir, str(gal_id) + '.fits')):
         gimg = str(gal_id) + '.fits'
     else:
         print "No possible gimg found"

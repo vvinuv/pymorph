@@ -50,7 +50,7 @@ def fit_elli(clus_id, line_s):
 def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     """The function responsible for fit ellipse"""
     EllGal = c.outdir +'GalEllFit.fits'
-    fEl = pyfits.open(c.datadir + cutimage)
+    fEl = pyfits.open(os.path.join(c.datadir, cutimage))
     GaLaXy = fEl[0].data
     fEl.close()
     GaLaXy = GaLaXy - sky
@@ -109,7 +109,7 @@ def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background
 def run_elli_full(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background):
     """The function responsible for fit ellipse"""
     EllGal = c.outdir +'GalEllFit.fits'
-    fEl = pyfits.open(c.datadir + cutimage)
+    fEl = pyfits.open(os.path.join(c.datadir, cutimage))
     GaLaXy = fEl[0].data
     fEl.close()
     GaLaXy = GaLaXy - sky
