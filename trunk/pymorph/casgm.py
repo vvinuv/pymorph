@@ -72,7 +72,9 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):
-        sky = header['sky']
+        #sky = header['sky']
+        print 'Header has a ky value key. If you want to use that uncomment '
+        print 'line number 75 in casgm.py'
     f.close()
     try:
         print "Initial background Center >>> (", back_ini_xcntr, \

@@ -4,7 +4,7 @@ import sys
 import pyfits
 import numpy as n
 import config as c
-import ndimage as im
+import scipy.ndimage as im
 from mask_or_fit import *
 
 class ElliMaskFunc:

@@ -1,7 +1,6 @@
 import os, sys, pyfits
 import numpy as np
 import config as c
-import ndimage as im
 
 class SEx_obj():
     def __init__(self, NXPTS, NYPTS, line_s = ''):

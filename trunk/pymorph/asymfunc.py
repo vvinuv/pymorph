@@ -67,11 +67,11 @@ def ASYM(cutimage, maskimage, ini_xcntr, ini_ycntr, pa, one_minus_eg_sq, r50, ba
     sh_sum = sh_sum.astype(np.float32)
     absres_sum = np.zeros(9)
     absres_sum = absres_sum.astype(np.float32)
-    f = pyfits.open(c.datadir + cutimage)
+    f = pyfits.open(os.path.join(c.datadir, cutimage))
     z = f[0].data
     z = z - background
     f.close()
-    fm = pyfits.open(c.outdir + maskimage)
+    fm = pyfits.open(os.path.join(c.outdir, maskimage))
     zm = fm[0].data
     fm.close()
     # Rotate the mask
