@@ -444,7 +444,8 @@ def WriteError(err):
 
 def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Find 1-d profile of image"""
-    print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
+    print 'Working on FitEllipseManual '
+    #print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
     if out:
         ell_mask_file = 'OEM_' + c.fstring + '.fits'
         ell_out = 'OE_' + c.fstring + '.txt'
@@ -479,7 +480,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         MaxRad = np.min([np.log10(8 * c.SexHalfRad), \
                  np.log10(np.min(galaxy.shape))])
         NoOfPoints = int(30 * 10**MaxRad / 50.)
-        print MaxRad, NoOfPoints
+        #print MaxRad, NoOfPoints
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
         for i in np.logspace(0, MaxRad, NoOfPoints, endpoint=True):
@@ -489,7 +490,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
                 R.append(i)
                 IntRE.append(np.sqrt(ma.sum(Isub)) / (1.0 * NonMaskNo))
                 IntR.append(np.mean(Isub))
-            print i, NonMaskNo
+            #print i, NonMaskNo
             # If you want to see the ellipse anulus, uncoment the following
             # START
             #if i > 10 and out:
@@ -515,7 +516,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
             p = [R[i], IntR[i], IntRE[i], mag[i], mag_l[i], mag_u[i]]
             writer.writerow(p)
         f.close()
-           
+        print 'Done' 
 def CleanEllipse(ell_out, after):
     """Cleaning temp files from Ellipse task. after=1 means cleaning after \
        the task. before = 0"""

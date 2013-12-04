@@ -20,7 +20,7 @@ def WriteDb(ParamValues, all_params):
                                 db = "%s" %dba) 
     except mysql.Error, e:
         print "Error %d: %s" % (e.args[0], e.args[1])
-        sys.exit (1)
+        #sys.exit (1)
     cursor = Conn.cursor()
 
     # add additional keys to params

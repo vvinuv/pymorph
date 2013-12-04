@@ -394,7 +394,7 @@ def main():
                                              # .args
                         print inst           # __str__ allows args\
                                              # to printed directly
-                        print "something bad happened!!!!\n\n"
+                        print "something bad happened (Sextractor)!!!!\n\n"
                         print traceback.print_exc()
                         
                         #print 'Problem running Sextractor (line no. 342)' 
@@ -684,7 +684,7 @@ def main():
                                              # .args
                         print inst           # __str__ allows args\
                                              # to printed directly
-                        print "something bad happened!!!!\n\n"
+                        print "something bad happened (GALFIT)!!!!\n\n"
                         print traceback.print_exc()
 
                 
@@ -737,7 +737,7 @@ def main():
                     # .args
                     print inst           # __str__ allows args\
                     # to printed directly
-                    print "something bad happened!!!!\n\n"
+                    print "something bad happened (Writing)!!!!\n\n"
                     print traceback.print_exc()
 
                     #except:
@@ -767,7 +767,7 @@ def main():
                                             # .args
                 print inst           # __str__ allows args\
                                              # to printed directly
-                print "something bad happened!!!!\n\n"
+                print "something bad happened (general sextractor)!!!!\n\n"
                 print traceback.print_exc()
 
                 #NOTE CHANGE THIS ADD ADDITIONAL IF len > 0 HERE
@@ -786,7 +786,7 @@ def main():
             # .args
             print inst           # __str__ allows args\
             # to printed directly
-            print "something bad happened!!!!\n\n"
+            print "something bad happened (general object search)!!!!\n\n"
             print traceback.print_exc()
     f_cat.close()
     f_failed.close()

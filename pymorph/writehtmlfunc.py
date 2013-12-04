@@ -413,7 +413,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                                  # .args
             print inst           # __str__ allows args\
                                                  # to printed directly
-            print "something bad happened writing!!!!\n\n"
+            print "something bad happened (writefunc writing)!!!!\n\n"
             print traceback.print_exc()                   
         if 'bulge' in ComP:
             try:
@@ -539,7 +539,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         WriteDb(ParamNamesToWrite, all_params)
     except:
         print 'No database can be created!'
-        traceback.print_exc()
+        #traceback.print_exc()
 
     # Writing csv file 
     f_res = open("result.csv", "ab")
