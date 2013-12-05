@@ -698,10 +698,10 @@ def main():
                     if os.access('P_' + c.fstring + '.png', \
                                  os.F_OK):	
                         os.remove('P_' + c.fstring + '.png')
-                        GoodNess = PlotFunc(outimage, \
-                                 maskimage, cut_xcntr, cut_ycntr, \
-                                            c.SexSky, c.SkySig)
-                        Goodness = GoodNess.plot_profile
+                    GoodNess = PlotFunc(outimage, \
+                               maskimage, cut_xcntr, cut_ycntr, \
+                               c.SexSky, c.SkySig)
+                    Goodness = GoodNess.plot_profile
                 except:
                     ut.WriteError('Error in plotting \n')
                     if maskimage == 'None':
