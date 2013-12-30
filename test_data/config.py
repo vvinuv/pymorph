@@ -12,10 +12,19 @@ sex_cata = 'sdss_sex.cat'           #The sextractor catalogue which has
 clus_cata = 'sdss_r.cat.field'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
+datadir = '/home/vinu/scripts/pymorph-github/test_data/'
+                       #the directory containing input images
+                                       #if commented out, then program uses
+                                       # current directory
 
 ###----Specify the output names of images and catalogues----###
 out_cata = 'sdss_r_out.cat'      #catalogue of galaxies in the field
 rootname = 'r'
+
+outdir = '/data2/home/ameert/sdss_sample/fits_out/dev/1/'  
+                    #the directory containing output data
+                                        #if commented out, then program uses
+                                        # current directory
 
 ###----Psf list----###
 psfselect = 0                         #0 => No psfselection
