@@ -9,7 +9,7 @@ whtfile = '00000002_r__r_W.fits'   #The weight image. If it contains the
 				      #is treated as MAP_RMS 
 sex_cata = 'sdss_sex.cat'           #The sextractor catalogue which has 
                                       #the format given in the file
-clus_cata = 'sdss_r.cat.field'         #catalogue of galaxies from
+clus_cata = 'sdss_r.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 datadir = '/home/vinu/scripts/pymorph-github/test_data/'
@@ -21,7 +21,7 @@ datadir = '/home/vinu/scripts/pymorph-github/test_data/'
 out_cata = 'sdss_r_out.cat'      #catalogue of galaxies in the field
 rootname = 'r'
 
-outdir = '/data2/home/ameert/sdss_sample/fits_out/dev/1/'  
+outdir = '/home/vinu/scripts/pymorph-github/test_data/'
                     #the directory containing output data
                                         #if commented out, then program uses
                                         # current directory
@@ -78,11 +78,11 @@ angle = 180.0
 
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
-galcut = False                        #True if we provide cutouts
+galcut = True                        #True if we provide cutouts
 decompose = True
 detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
-cas = False
+cas = True
 findandfit = 0
 maglim = [22, 15] #if findandfit= 1, then maglim = [faint_mag, bright_mag]
 stargal = 0.8 #Star-galaxy classification 
@@ -96,10 +96,10 @@ devauc = False # set to False to fit sersic bulge, set to true to fit devacouler
 fitting = [1, 1, 1]                    # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
-GALFIT_PATH ='/home/vinu/software/galfit/modified/galfit' 
+GALFIT_PATH ='/home/vinu/software/galfit/galfit'
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
-PYMORPH_PATH = '/home/vinu/vinucodes/serial_pipeline/trunk/pymorph'
-galfitv = '3.0.2'
+PYMORPH_PATH = '/home/vinu/scripts/pymorph-github/pymorph'
+galfitv = '2.0.2'
 
 ###----The following conditions are used to classify fit goo/bad----###
 chi2sq = 2.5                          #< chi2sq
