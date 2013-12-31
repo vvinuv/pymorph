@@ -314,25 +314,25 @@ def ReadGalfitConfig(cfile):
 
 def CheckHeader(header0):
     """Set the global keywords from the fits header"""
-    if header0.has_key('EXPTIME'):
+    if 'EXPTIME' in header0.keys(): # Old was 'if header0.has_key('EXPTIME'):
         c.EXPTIME = header0['EXPTIME']
     else:
         c.EXPTIME = 1.0
-    if header0.has_key('RDNOISE'):
+    if 'RDNOISE' in header0.keys():
         c.RDNOISE= header0['RDNOISE']
     else:
         c.RDNOISE = 0.0
-    if header0.has_key('GAIN'):
+    if 'GAIN' in header0.keys():
         c.GAIN = header0['GAIN']
         c.SEx_GAIN = header0['GAIN']
     else:
         c.GAIN = 1.0
         c.SEx_GAIN = 1.0
-    if header0.has_key('NCOMBINE'):
+    if 'NCOMBINE' in header0.keys():
         c.NCOMBINE= header0['NCOMBINE']
     else:
         c.NCOMBINE = 1
-    if header0.has_key('FILTER2') or header0.has_key('FILTER'):
+    if 'FILTER2' in header0.keys() or 'FILTER' in header0.keys():
         try:
             c.FILTER = header0['FILTER2']
         except:
