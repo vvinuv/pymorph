@@ -596,13 +596,13 @@ def main():
                     ElliMaskFunc(cutimage, cut_xcntr, cut_ycntr, \
                                  SizeX, SizeY, good_object, 1)
                     # Fitting ellipse task or the manual 1d finder
+                    maskimage = 'M_' + c.fstring  + '.fits'
                     if c.decompose:
                         ut.HandleEllipseTask(cutimage, cut_xcntr, \
                                        cut_ycntr, \
                                        SizeX, SizeY, c.SexSky, 0)
                         MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
                                          SizeX, SizeY, good_object)
-                        maskimage = 'M_' + c.fstring  + '.fits'
                         config_file = 'G_' + c.fstring + '.in'
                         outimage = 'O_' + c.fstring + '.fits'
                         ConfigFunc(cutimage, whtimage,  cut_xcntr,\
