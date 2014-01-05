@@ -79,7 +79,7 @@ angle = 180.0
 ###----Fitting modes----###
 repeat = False                        #Repeat the pipeline manually
 galcut = True                        #True if we provide cutouts
-decompose = True
+decompose = False
 detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
 cas = True

@@ -97,8 +97,8 @@ def main():
             print "Using large image. c.imagefile >>> ", imagefile
             TX = c.imagedata.shape[1]
             TY = c.imagedata.shape[0]
-            if exists(c.datadir + whtfile):
-                wht = pyfits.open(c.datadir + whtfile)
+            if exists(os.path.join(c.datadir, whtfile)):
+                wht = pyfits.open(os.path.join(c.datadir, whtfile))
                 if re.search("rms", whtfile.lower()):
                     c.weightdata = wht[0].data
                     print "whtfile >>> ", whtfile
@@ -143,7 +143,7 @@ def main():
 
     f_cat = open(out_cata, 'w')
     f_failed = open('restart.cat', 'w')
-    obj_file = open(c.datadir + clus_cata, 'r')  # The file contains the 
+    obj_file = open(os.path.join(c.datadir, clus_cata), 'r')  # The file contains the 
                                                  # objects of interest
     pnames = obj_file.readline().split() #The names of the parameters given 
                                          #in the first line in the clus_cata
@@ -220,9 +220,9 @@ def main():
                 gimg = pdb["gimg"]    #Galaxy cutout
             except:
                 print "No gimg given."
-                if exists(c.datadir + 'I' + c.fstring + '.fits'):
+                if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
                     gimg = 'I' + c.fstring + '.fits'
-                elif exists(c.datadir + str(gal_id) + '.fits'): 
+                elif exists(os.path.join(c.datadir, str(gal_id) + '.fits')): 
                     gimg = str(gal_id) + '.fits'
                 else:
                     print "No possible gimg found"
@@ -233,7 +233,7 @@ def main():
             except:
                 if c.galcut:
                     print "No wimg given"
-                    if exists(c.datadir + 'W' + c.fstring + '.fits'):
+                    if exists(os.path.join(c.datadir, 'W' + c.fstring + '.fits')):
                         wimg = 'W' + c.fstring + '.fits'
                     else:
                         print "No possible wimg found"
@@ -273,15 +273,15 @@ def main():
                 whtimage = 'W' + c.fstring + '.fits'
             if c.galcut == True:
                 print 'Image is >>> ', gimg
-                ggimg = pyfits.open(c.datadir + gimg)
+                ggimg = pyfits.open(os.path.join(c.datadir, gimg))
                 c.imagedata = ggimg[0].data
                 header0 = ggimg[0].header
                 ggimg.close()
                 ut.CheckHeader(header0) #Will set up global header parameters
                 TX = c.imagedata.shape[1]
                 TY = c.imagedata.shape[0]
-                if exists(c.datadir + whtimage):
-                    gwimg = pyfits.open(c.datadir + wimg)
+                if exists(os.path.join(c.datadir, whtimage)):
+                    gwimg = pyfits.open(os.path.join(c.datadir, wimg))
                     c.weightdata = gwimg[0].data
                     gwimg.close()
                     c.weightexists = 1
@@ -384,9 +384,11 @@ def main():
                     pass
                 else:
                     try:
-                        RunSex(c.datadir + gimg, c.datadir + wimg, 'None', \
+                        RunSex(os.path.join(c.datadir, gimg), \
+                               os.path.join(c.datadir, wimg), 'None', \
                                9999, 9999, 0)
-                        SexShallow(c.datadir + gimg, c.datadir + wimg, \
+                        SexShallow(os.path.join(c.datadir, gimg), \
+                                   os.path.join(c.datadir, wimg), \
                                    'None', 9999, 9999, 0)
                     except Exception, inst:
                         print type(inst)     # the exception instance
@@ -589,7 +591,7 @@ def main():
                     elif ExceedSize:
                         c.Flag = SetFlag(c.Flag,GetFlag('EXCEED_SIZE'))
                     # Runs sextractor to find the segmentation map
-                    RunSegSex(c.datadir + cutimage)
+                    RunSegSex(os.path.join(c.datadir, cutimage))
 
                     # This creates ellipse mask and used for 
                     # ellipse fitting and casgm
@@ -623,7 +625,7 @@ def main():
                 try:
                     SexySky, SkyYet, SkyMed, SkyMin, SkyQua, \
                     SkySig = \
-                    FindYetSky(c.datadir + cutimage, \
+                    FindYetSky(os.path.join(c.datadir, cutimage), \
                               cut_xcntr, cut_ycntr)
                     if SkyMin != 9999:
                         c.SkyMin = SkyYet * 1.0
@@ -1318,7 +1320,7 @@ if __name__ == '__main__':
     os.chdir(c.outdir)
     try:
         if(c.repeat == False and c.galcut == False):
-            img = pyfits.open(c.datadir + c.imagefile)
+            img = pyfits.open(os.path.join(c.datadir, c.imagefile))
             c.imagedata = img[0].data
             c.HeAdEr0 = img[0].header
             img.close()
@@ -1335,15 +1337,15 @@ if __name__ == '__main__':
               'recommended to make SExtractor catalogue by YOURSELF as '\
               'the pipeline keeps the sky value at the SExtractor value '\
               'during the decomposition.'
-        if exists(c.datadir + c.whtfile):
-            RunSex(c.datadir + c.imagefile, c.datadir + c.whtfile, 'None', 9999, 9999, 0)
-	    SexShallow(c.datadir + c.imagefile, c.datadir + c.whtfile, 'None', 9999, 9999, 0)
+        if exists(os.path.join(c.datadir, c.whtfile)):
+            RunSex(os.path.join(c.datadir, c.imagefile), os.path.join(c.datadir , c.whtfile), 'None', 9999, 9999, 0)
+	    SexShallow(os.path.join(c.datadir, c.imagefile), os.path.join(c.datadir, c.whtfile), 'None', 9999, 9999, 0)
         else:
-            RunSex(c.datadir + c.imagefile, 'None', 'None', 9999, 9999, 0)
-	    SexShallow(c.datadir + c.imagefile, 'None', 'None', 9999, 9999, 0)
+            RunSex(os.path.join(c.datadir, c.imagefile), 'None', 'None', 9999, 9999, 0)
+	    SexShallow(os.path.join(c.datadir, c.imagefile), 'None', 'None', 9999, 9999, 0)
     def runpsfselect():
         if(c.galcut):   #Given galaxy cutouts
-            obj_file = open(c.datadir + c.clus_cata,'r') 
+            obj_file = open(os.path.join(c.datadir, c.clus_cata),'r') 
             pnames = obj_file.readline().split() 
             c.ValueS = []
             for v in pnames:
@@ -1377,11 +1379,13 @@ if __name__ == '__main__':
                     try:
                         gimg = pdb["gimg"]    #Galaxy cutout
                     except:
-                        if exists(c.datadir + 'I' + str(c.rootname) + '_' \
-                                   + str(gal_id) + '.fits'):
+                        if exists(os.path.join(c.datadir, \
+                                   'I' + str(c.rootname) + '_' \
+                                   + str(gal_id) + '.fits')):
                             gimg = 'I' + str(c.rootname) + '_' \
                                     + str(gal_id) + '.fits'
-                        elif exists(c.datadir + str(gal_id) + '.fits'):
+                        elif exists(os.path.join(c.datadir, \
+                             str(gal_id) + '.fits')):
                             gimg = str(gal_id) + '.fits'
                         else:
                             print "No image found. Exiting"
@@ -1389,13 +1393,14 @@ if __name__ == '__main__':
                     try:
                         wimg = pdb["wimg"]   #Weight cut
                     except:
-                        if exists(c.datadir + 'W' + str(c.rootname) + '_' + \
-                                  str(gal_id) + '.fits'):
+                        if exists(os.path.join(c.datadir, \
+                                  'W' + str(c.rootname) + '_' + \
+                                  str(gal_id) + '.fits')):
                             wimg = 'W' + str(c.rootname) + '_' + \
                                    str(gal_id) + '.fits'
                         else:
                             wimg = 'None'
-                    GiMg = pyfits.open(c.datadir + gimg)
+                    GiMg = pyfits.open(os.path.join(c.datadir, gimg))
                     headerGiMg = GiMg[0].header
                     if (headerGiMg.has_key('GAIN')):
                         c.SEx_GAIN = headerGiMg['GAIN']
@@ -1405,9 +1410,9 @@ if __name__ == '__main__':
                     if exists(sex_cata): 
                         pass
                     else:
-                        RunSex(c.datadir + gimg,c.datadir + wimg, 'None', 9999, 9999, 0)
+                        RunSex(os.path.join(c.datadir, gimg), os.path.join(c.datadir, wimg), 'None', 9999, 9999, 0)
                     try:
-                        selectpsf(c.datadir + gimg,sex_cata)
+                        selectpsf(os.path.join(c.datadir, gimg), sex_cata)
                     except:
                         pass
                     if os.access(sex_cata, os.F_OK):
@@ -1423,7 +1428,7 @@ if __name__ == '__main__':
             else:
                 pass
         else:
-            selectpsf(c.datadir + c.imagefile,sex_cata)
+            selectpsf(os.path.join(c.datadir, c.imagefile), sex_cata)
 #The old function for psfselect = 2
 #    if c.psfselect == 2:
 #        c.center_deviated = 0
@@ -1446,7 +1451,7 @@ if __name__ == '__main__':
         c.center_deviated = 0
         c.starthandle = 0
         runpsfselect()
-        c.psflist = c.datadir + '@psflist.list'
+        c.psflist = os.path.join(c.datadir, '@psflist.list')
         FindAndFit()
         main()
         if c.crashhandler:
