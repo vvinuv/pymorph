@@ -74,17 +74,16 @@ def DMSToDeg(d, m, s):
 
 def PsfArr():
     """Return psf list if the given input is a file"""
-    if c.psflist.startswith('@'):
+    if type(c.psflist) is types.StringType:
         psffi = open(os.path.join(c.datadir, c.psflist.split('@')[1]), 'r')
         c.psflist = []
         for pline in psffi:
             c.psflist.append(pline.split()[0])
+    elif type(c.psflist) == types.ListType:
+        pass
     else:
-        if type(c.psflist) == types.ListType:
-            pass
-        else:
-            print "The psf list is not understood. Please use either \
-                   @filename or a list of psfs"
+        print "The psf list is not understood. Please use either \
+               @filename or a list of psfs"
 
 
 def UpdatePsfRaDec(element):
