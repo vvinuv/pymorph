@@ -1,6 +1,4 @@
-#!/home/vinu/software/Python2.7/bin/python
-
-#/data2/home/ameert/python/bin/python2.5
+#!/data2/home/ameert/python/bin/python2.5
 
 """PyMorph [Py MOrphological Parameters' Hunter], is a pipeline to find the Morphological parameters of galaxy. Authors: Vinu Vikram , Yogesh Wadadekar, Ajit K. Kembhavi. 2008 Feb, Alan Meert 2010"""
 
@@ -615,6 +613,7 @@ def main():
                     if exists(mimg):
                         pass
                     else:
+                        pass
                         MaskFunc(cutimage, cut_xcntr, cut_ycntr, \
                                  SizeX, SizeY, good_object)
                     config_file = cfile
