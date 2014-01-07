@@ -1,0 +1,29 @@
+#   1 NUMBER          Running object number
+#   2 X_IMAGE         Object position along x                         [pixel]
+#   3 Y_IMAGE         Object position along y                         [pixel]
+#   4 ALPHA_SKY       Right ascension of barycenter (native)          [deg]
+#   5 DELTA_SKY       Declination of barycenter (native)              [deg]
+#   6 FLUX_ISO        Isophotal flux                                  [count]
+#   7 FLUXERR_ISO     RMS error for isophotal flux                    [count]
+#   8 MAG_ISO         Isophotal magnitude                             [mag]
+#   9 MAGERR_ISO      RMS error for isophotal magnitude               [mag]
+#  10 FLUX_RADIUS     Fraction-of-light radii                         [pixel]
+#  11 BACKGROUND      Background at centroid position                 [count]
+#  12 THETA_IMAGE     Position angle (CCW/x)                          [deg]
+#  13 ELONGATION      A_IMAGE/B_IMAGE
+#  14 ISO0            Isophotal area at level 0                       [pixel**2]
+#  15 A_IMAGE         Profile RMS along major axis                    [pixel]
+#  16 FLAGS           Extraction flags
+#  17 CLASS_STAR      S/G classifier output
+#  18 MAG_AUTO        Kron-like elliptical aperture magnitude         [mag]
+#  19 MAGERR_AUTO     RMS error for AUTO magnitude                    [mag]
+#  20 VECTOR_ASSOC    ASSOCiated parameter vector
+         1    104.418    104.803   0.0000000  +0.0000000     451.0835     21.75566  18.6204   0.0524      5.469     2.850201  45.5    1.262     1208     7.752   3  0.03  18.6857   0.0541            5
+         2    181.884     43.127   0.0000000  +0.0000000     75.77383     8.953625  20.5572   0.1283      2.488     2.851579   9.9    1.115      200     3.068   2  0.04  20.6525   0.1341            9
+         3    127.201     15.386   0.0000000  +0.0000000     314.5699     17.92182  19.0117   0.0619      1.776     2.850103  10.7    1.068      305     2.614  18  1.00  19.0720   0.0634            1
+         4    173.898    149.987   0.0000000  +0.0000000      18.7902     4.473896  22.0712   0.2586      1.831     2.852704  20.8    1.201       73     2.211   2  0.41  22.1212   0.2699            3
+         5     96.734     73.459   0.0000000  +0.0000000     170.0025     13.20819  19.6799   0.0844      1.837     2.833254  59.1    1.122      228     2.705   3  0.99  19.7413   0.0866            7
+         6     16.214    108.196   0.0000000  +0.0000000     23.24511     5.006679  21.8402   0.2339      1.936     2.848299 -56.6    1.217       70     2.309   2  0.19  22.1088   0.2691            6
+         7     31.601     71.526   0.0000000  +0.0000000     116.6089       10.914  20.0892   0.1016      1.774     2.848824 -65.1    1.056      139     2.090   2  0.99  20.1206   0.1031            8
+         8    142.292    119.573   0.0000000  +0.0000000     80.32161     9.367215  20.4939   0.1267      4.113     2.851025 -89.4    1.600      292     5.785   3  0.03  20.7689   0.1479            4
+         9     43.460    191.482   0.0000000  +0.0000000     21.37512      4.80809  21.9312   0.2443      1.988     2.847349  75.1    1.686       85     3.019  18  0.19  22.1083   0.2720            2

@@ -1,0 +1,57 @@
+#+++++++++++++++++++++++++++++++
+# POSTAGE STAMP TEST FOR PYMORPH
+#-------------------------------
+
+This directory contains a simple 
+test of postage stamp fitting in 
+PyMorph. 
+
+The expected results and
+all output files are stored in this
+directory for the tester to review
+and compare.
+
+The test results will appear in the
+"results" directory.
+
+The input data is supplied in the 
+"data" directory.
+
+The test consists of 8 galaxies that
+can be fit by PyMorph using a single
+Sersic model.
+
+All configuration files are set...
+but the user must adjust the paths
+in the files as necessary to correctly
+point to the galfit, SExtractor 
+installations. 
+
+#+++++++++++++++++++++++++++++++++
+# INSTRUCTIONS TO USER
+#---------------------------------
+
+1) Enter the results directory 
+   and open config.py  
+
+2) adjust the paths for "datadir",
+   "outdir", "GALFIT_PATH", "SEX_PATH",
+   and "PYMORPH_PATH" to point to the 
+   data directory used for this test, 
+   the results director used for this
+   test, the galfit installation, the
+   SExtractor installation, and the 
+   PyMorph installation, respectively
+
+3) Save and close the file. 
+
+4) Run PyMorph in the "results" directory
+
+5) cd up one directory and run the 
+   "cmp_results.py" script. This will 
+   produce a plot comparing several
+   values to the original fitted values.
+
+6) When you are done, run "clean_dir.py" 
+   to clean test files from the "results"
+   directory. 
