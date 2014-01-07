@@ -74,17 +74,16 @@ def DMSToDeg(d, m, s):
 
 def PsfArr():
     """Return psf list if the given input is a file"""
-    if c.psflist.startswith('@'):
-        psffi = open(c.datadir + c.psflist.split('@')[1], 'r')
+    if type(c.psflist) is types.StringType:
+        psffi = open(os.path.join(c.datadir, c.psflist.split('@')[1]), 'r')
         c.psflist = []
         for pline in psffi:
             c.psflist.append(pline.split()[0])
+    elif type(c.psflist) == types.ListType:
+        pass
     else:
-        if type(c.psflist) == types.ListType:
-            pass
-        else:
-            print "The psf list is not understood. Please use either \
-                   @filename or a list of psfs"
+        print "The psf list is not understood. Please use either \
+               @filename or a list of psfs"
 
 
 def UpdatePsfRaDec(element):
@@ -163,7 +162,7 @@ def SelectPsf(alpha_j, delta_j):
     psffile = 'test.fits'
     r = Get_R()
     for element in c.psflist:
-        p = pyfits.open(c.datadir + element)
+        p = pyfits.open(os.path.join(c.datadir, element))
         header = p[0].header
         if (header.has_key('RA_TARG')):
             ra = header['RA_TARG']
@@ -314,25 +313,25 @@ def ReadGalfitConfig(cfile):
 
 def CheckHeader(header0):
     """Set the global keywords from the fits header"""
-    if header0.has_key('EXPTIME'):
+    if 'EXPTIME' in header0.keys(): # Old was 'if header0.has_key('EXPTIME'):
         c.EXPTIME = header0['EXPTIME']
     else:
         c.EXPTIME = 1.0
-    if header0.has_key('RDNOISE'):
+    if 'RDNOISE' in header0.keys():
         c.RDNOISE= header0['RDNOISE']
     else:
         c.RDNOISE = 0.0
-    if header0.has_key('GAIN'):
+    if 'GAIN' in header0.keys():
         c.GAIN = header0['GAIN']
         c.SEx_GAIN = header0['GAIN']
     else:
         c.GAIN = 1.0
         c.SEx_GAIN = 1.0
-    if header0.has_key('NCOMBINE'):
+    if 'NCOMBINE' in header0.keys():
         c.NCOMBINE= header0['NCOMBINE']
     else:
         c.NCOMBINE = 1
-    if header0.has_key('FILTER2') or header0.has_key('FILTER'):
+    if 'FILTER2' in header0.keys() or 'FILTER' in header0.keys():
         try:
             c.FILTER = header0['FILTER2']
         except:
@@ -423,13 +422,13 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu.header.update('NCOMBINE', c.NCOMBINE)
     else:
         print 'c.NCOMBINE have value -9999. Something wrong?'
-    hdu.writeto(c.datadir + cutimage)
+    hdu.writeto(os.path.join(c.datadir, cutimage))
     # FIX
     #Making weight image cut
     if c.weightexists:
         z2 = c.weightdata[ymin:ymax,xmin:xmax].copy()
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
-        hdu.writeto(c.datadir + whtimage)
+        hdu.writeto(os.path.join(c.datadir, whtimage))
     else:
         print 'Cannot creat weight image. If you supply weight image please ',\
               'check whether it exists or report a bug'
@@ -444,7 +443,8 @@ def WriteError(err):
 
 def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Find 1-d profile of image"""
-    print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
+    print 'Working on FitEllipseManual '
+    #print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
     if out:
         ell_mask_file = 'OEM_' + c.fstring + '.fits'
         ell_out = 'OE_' + c.fstring + '.txt'
@@ -452,7 +452,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     else:
         ell_mask_file = 'EM_' + c.fstring + '.fits'
         ell_out = 'E_' + c.fstring + '.txt'
-        cutimage = c.datadir + cutimage
+        cutimage = os.path.join(c.datadir, cutimage)
     if exists(cutimage) and exists(ell_mask_file):
         f = pyfits.open(cutimage)
         galaxy = f[0].data
@@ -479,7 +479,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         MaxRad = np.min([np.log10(8 * c.SexHalfRad), \
                  np.log10(np.min(galaxy.shape))])
         NoOfPoints = int(30 * 10**MaxRad / 50.)
-        print MaxRad, NoOfPoints
+        #print MaxRad, NoOfPoints
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
         for i in np.logspace(0, MaxRad, NoOfPoints, endpoint=True):
@@ -489,7 +489,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
                 R.append(i)
                 IntRE.append(np.sqrt(ma.sum(Isub)) / (1.0 * NonMaskNo))
                 IntR.append(np.mean(Isub))
-            print i, NonMaskNo
+            #print i, NonMaskNo
             # If you want to see the ellipse anulus, uncoment the following
             # START
             #if i > 10 and out:
@@ -515,7 +515,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
             p = [R[i], IntR[i], IntRE[i], mag[i], mag_l[i], mag_u[i]]
             writer.writerow(p)
         f.close()
-           
+        print 'Done' 
 def CleanEllipse(ell_out, after):
     """Cleaning temp files from Ellipse task. after=1 means cleaning after \
        the task. before = 0"""
@@ -711,9 +711,9 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
 
 def returngimg():
     print "No gimg given."
-    if exists(c.datadir + 'I' + c.fstring + '.fits'):
+    if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
         gimg = 'I' + c.fstring + '.fits'
-    elif exists(c.datadir + str(gal_id) + '.fits'):
+    elif exists(os.path.join(c.datadir, str(gal_id) + '.fits')):
         gimg = str(gal_id) + '.fits'
     else:
         print "No possible gimg found"

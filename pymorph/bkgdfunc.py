@@ -22,7 +22,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
     ycntr = ycntr-1
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
-    f = pyfits.open(c.datadir +cutimage)
+    f = pyfits.open(os.path.join(c.datadir, cutimage))
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):

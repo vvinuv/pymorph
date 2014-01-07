@@ -76,7 +76,7 @@ class ConfigIter:
 def confiter(cutimage, whtimage, xcntr, ycntr,
              NXPTS, NYPTS, line_s, psffile, z):
     # Run SExtractor 
-    RunSex(c.datadir+cutimage, c.datadir+whtimage,
+    RunSex(os.path.join(c.datadir, cutimage), os.path.join(c.datadir, whtimage),
            'TEMP.SEX.cat', 9999, 9999, 0)
     # define improtant variables in the namespace
     imagefile = c.imagefile
@@ -322,13 +322,13 @@ def confiter(cutimage, whtimage, xcntr, ycntr,
         f_constrain.close()
         f=open(config_file,'w')
         f.write('# IMAGE PARAMETERS\n')
-        f.writelines(['A) ', c.datadir+str(cutimage), '	# Input data image',\
+        f.writelines(['A) ', os.path.join(c.datadir, cutimage), '	# Input data image',\
                       ' (FITS file)\n'])
         f.writelines(['B) ', str(outfile), '		# Name for',\
                       ' the output image\n'])
-        f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
+        f.writelines(['C) ', os.path.join(c.datadir, whtimage), '		# Noise image name', \
                       ' (made from data if blank or "none")\n'])
-        f.writelines(['D) ', c.datadir+str(psffile), '			# Input PSF', \
+        f.writelines(['D) ', os.path.join(c.datadir, psffile), '			# Input PSF', \
                       ' image for convolution (FITS file)\n'])
         f.writelines(['E) 1			# PSF oversampling factor '\
                       'relative to data\n'])

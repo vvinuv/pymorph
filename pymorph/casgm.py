@@ -41,7 +41,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     else:
 	dectThre = 12.0
     while FoundNewCntr == 0:
-	RunSex(c.datadir + cutimage, 'None', 'CaSsEx.cat', dectThre, \
+	RunSex(os.path.join(c.datadir, cutimage), 'None', 'CaSsEx.cat', dectThre, \
                dectThre, 1)
         for line in open('CaSsEx.cat', 'r'):
   	    try:
@@ -68,7 +68,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     angle = c.angle
     back_extraction_radius = c.back_extraction_radius
     # open cutimage
-    f = pyfits.open(c.datadir + cutimage)
+    f = pyfits.open(os.path.join(c.datadir, cutimage))
     z = f[0].data
     header = f[0].header
     if (header.has_key('sky')):

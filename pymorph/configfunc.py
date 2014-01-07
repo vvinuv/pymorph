@@ -65,13 +65,13 @@ class ConfigFunc:
 
         #Write configuration file
         confiles.f_G.write('# IMAGE PARAMETERS\n')
-        confiles.f_G.writelines(['A) ', c.datadir + str(self.cutimage), '	# Input data image',\
+        confiles.f_G.writelines(['A) ', os.path.join(c.datadir, self.cutimage), '	# Input data image',\
                       ' (FITS file)\n'])
         confiles.f_G.writelines(['B) ', str(outfile), '		# Name for',\
                       ' the output image\n'])
-        confiles.f_G.writelines(['C) ', c.datadir + str(self.whtimage), '		# Noise image name', \
+        confiles.f_G.writelines(['C) ', os.path.join(c.datadir, self.whtimage), '		# Noise image name', \
                       ' (made from data if blank or "none")\n'])
-        confiles.f_G.writelines(['D) ', c.datadir + str(self.psffile), '			# Input PSF', \
+        confiles.f_G.writelines(['D) ', os.path.join(c.datadir, self.psffile), '			# Input PSF', \
                       ' image for convolution (FITS file)\n'])
         confiles.f_G.writelines(['E) 1			# PSF oversampling factor relative',
                       ' to data\n'])
