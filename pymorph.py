@@ -430,7 +430,9 @@ def main():
             good_object = ''
 
             os.system('cp %s sex_%s.txt' %(sex_cata, c.fstring))
+            center_distance = 999.0 #the distance from the center to the best target
             for line_s in open(sex_cata, 'r'):
+                
                 try:
                     values = line_s.split()
                     alpha_s = float(values[3])
@@ -446,9 +448,14 @@ def main():
                        abs(delta_s - delta_j) < SeaDeg or \
                        abs(xcntr - ximg) < SeaPix and \
                        abs(ycntr - yimg) < SeaPix):
+                        curr_distance = np.sqrt(np.min([(xcntr - ximg)**2+(ycntr - yimg)**2,(alpha_j - alpha_s)**2+(delta_s - delta_j)**2]))
+                        print "Candidate distance: %.3f" %curr_distance    
                         c.SexTargets +=1
-                        if c.SexTargets == 1:
+                        if curr_distance < center_distance:
+                            center_distance = curr_distance
+                            print "New Preferred target!!"
                             good_object = line_s
+                        print "Target distance: %.3f" %center_distance
                 except:
                     if values[0].strip().isdigit():
                         print 'Something happend in the pipeline. ' + \

@@ -7,3 +7,6 @@ gal_id gimg wimg star z
 00000023_r_stamp 00000023_r_stamp.fits 00000023_r_stamp_W.fits 00000023_r_psf.fits 0.113898
 00000024_r_stamp 00000024_r_stamp.fits 00000024_r_stamp_W.fits 00000024_r_psf.fits 0.113055
 00000027_r_stamp 00000027_r_stamp.fits 00000027_r_stamp_W.fits 00000027_r_psf.fits 0.054307
+00000058_r_stamp 00000058_r_stamp.fits 00000058_r_stamp_W.fits 00000058_r_psf.fits 0.109299
+00000066_r_stamp 00000066_r_stamp.fits 00000066_r_stamp_W.fits 00000066_r_psf.fits 0.096405
+
