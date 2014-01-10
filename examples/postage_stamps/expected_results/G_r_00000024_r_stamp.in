@@ -1,0 +1,38 @@
+# IMAGE PARAMETERS
+A) /data2/home/ameert/pymorph/examples/postage_stamps/data/00000024_r_stamp.fits	# Input data image (FITS file)
+B) O_r_00000024_r_stamp.fits		# Name for the output image
+C) /data2/home/ameert/pymorph/examples/postage_stamps/data/00000024_r_stamp_W.fits		# Noise image name (made from data if blank or "none")
+D) /data2/home/ameert/pymorph/examples/postage_stamps/data/00000024_r_psf.fits			# Input PSF image for convolution (FITS file)
+E) 1			# PSF oversampling factor relative to data
+F) M_r_00000024_r_stamp.fits		# Bad pixel mask(FITS image or ASCII coord list)
+G) r_00000024_r_stamp.con       # File with parameter constraints (ASCII file)
+H) 1 193 1 194		# Image region to fit (xmin xmax ymin ymax)
+I) 100 100		# Size of convolution box (x y)
+J) 25.256		# Magnitude photometric zeropoint
+O) regular			# Display type (regular, curses, both)
+P) 0			# Create output image only? (1=yes; 0=optimize)
+S) 0			# Modify/create objects interactively?
+
+
+# Sersic function
+
+ 0) sersic		# Object type
+ 1) 97.514 98.26 1 1   # position x, y [pixel]
+ 3) 18.7243 1		# total magnitude
+ 4) 4.579 1		# R_e [Pixels]
+ 5) 4.0 1		#Sersic exponent (deVauc=4, expdisk=1)
+ 8) 0.977517106549 1		# axis ratio (b/a)
+ 9) -6.1 1		# position angle (PA)[Degrees: Up=0, Left=90]
+10) 0.0 0            # diskiness (< 0) or boxiness (> 0)
+ Z) 0 			# output image (see above)
+
+
+# sky
+
+ 0) sky
+ 1) 2.838402 1	# sky background [ADU counts
+ 2) 0.000      0       # dsky/dx (sky gradient in x)
+ 3) 0.000      0       # dsky/dy (sky gradient in y)
+ Z) 0                  # output image
+
+
