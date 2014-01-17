@@ -15,6 +15,266 @@ from flagfunc import GetFlag, isset, SetFlag
 #from outmaskfunc_easy import OutMaskFunc
 from outmaskfunc import OutMaskFunc
 
+def GetSizeInfo():
+    ReSize = c.size[0]
+    VarSize = c.size[1]
+    Square = c.size[3]
+    FracRad = c.size[2]
+    if VarSize == 0:
+        FixSize = c.size[4]
+    else:
+        FixSize = 120
+    return ReSize, VarSize, Square, FracRad, FixSize
+
+def GetWhtImage():
+    print "Using large image. c.imagefile >>> ", imagefile
+    TY, TX = c.imagedata.shape
+    if exists(os.path.join(c.datadir, c.whtfile)):
+        print "Weight file >>> ", c.whtfile
+        wht = pyfits.open(os.path.join(c.datadir, c.whtfile))
+        if re.search("rms", c.whtfile.lower()):
+            c.weightdata = wht[0].data
+            c.weightexists = 1
+        elif re.search("weight", c.whtfile.lower()):
+            c.weightdata = 1 / np.sqrt(wht[0].data)
+            c.weightexists = 1
+        else:
+            print 'Weight file is not understood. Please include ' + \
+                  'the word weight/rms to the weight file name. ' + \
+                  'If it is weight the rms will be found by 1/sqrt(w)'
+        wht.close()
+    else:
+       print 'No weight image found\n'
+       c.weightexists = 0
+    if c.weightexist:
+        WY, WX = c.weightdata.shape
+        if WY != TY or WX != TX:
+            raise ValueError('Dimensions of image and weight images \
+                              does not match')
+           
+def GetModel():
+    try:
+        ComP = c.components
+    except:
+        print "c.components undefined. Asuming bulge+disk model"
+        ComP = ['bulge', 'disk']
+    if len(ComP) == 0:
+        print "No model specified. Asuming bulge+disk model"
+        ComP = ['bulge', 'disk']
+    return ComP
+
+def GetInputParams(pnames, line):
+    pdb = {} 
+    values = line.split()
+    for pname, value in zip(pnames, values):
+        pdb[pname] = value
+     
+    if "gal_id" in pnames:
+        gal_id = pdb["gal_id"]
+    else:
+        print "no gal_id using gimg"
+        if "gimg" in pnames:
+            gal_id = pdb["gimg"].split('.')[0] #gal_id will be 
+                                               #filename without .fits
+        else:
+            raise ValueError("No image or gal_id found in the input\
+                              catalogue. Exiting")
+    c.fstring = '%s_%s'%(c.rootname, gal_id)
+    if 'ra1' in pnames:
+        alpha1 = float(pdb["ra1"])
+    else:
+        print "No ra1 (hour) is given"
+        alpha1 = -9999
+    if 'ra2' in pnames:
+        alpha2 = float(pdb["ra2"])
+    else:
+        print "No ra2 (minuite) is given. Asuming ra is in deg"
+        alpha2 = 0
+    if 'ra3' in pnames:
+        alpha3 = float(pdb["ra3"])
+    else:
+        print "No ra3 (second) is given"
+        alpha3 = 0
+    if 'dec1' in pnames:
+        delta1 = float(pdb["dec1"])
+    else:
+        print "No dec1 (deg) is given"
+        delta1 = -9999
+    if 'dec2' in pnames:
+        delta2 = float(pdb["dec2"])
+    else:
+        print "No dec2 (min) is given"
+        delta2 = 0
+    if 'dec3' in pnames:
+        delta3 = float(pdb["dec3"])
+    else:
+        print "No dec3 (sec) is given"
+        delta3 = 0
+    if 'ra1' in pnames or 'dec1' in pnames:
+        RaDecInfo = 1 #Understood position is given
+    else:
+        RaDecInfo = 0 #Understood position is given
+    if 'z' in pnames:
+        z = float(pdb["z"])
+    else:
+        print "No z is given"
+        z = 9999
+    if 'bxcntr' in pnames:
+        bxcntr = float(pdb["bxcntr"])
+    else:
+        bxcntr = 9999
+    if 'bycntr' in pnames:
+        bycntr = float(pdb["bycntr"])
+    else:
+        bycntr = 9999
+    if 'mzero' in pnames:
+        c.mag_zero = float(pdb["mzero"])
+    else:
+        c.mag_zero = c.mag_zero
+    if 'star' in pnames:
+        UserGivenPsf = pdb["star"]
+        print 'Psf is assigned individually to galaxies'
+    else:
+        UserGivenPsf = 'None'
+    if 'sky' in pnames:
+        UserGivenSky = pdf['sky']
+        print 'Sky is assigned individually to galaxies'
+    else:
+        UserGivenSky = -9999
+
+    if 'gimg' in pnames:
+        gimg = pdb["gimg"]    #Galaxy cutout
+    else:
+        gimg = None
+    if 'wimg' in pnames:
+        wimg = pdb["wimg"]   #Weight cut
+    else:
+        wimg = None
+
+    if 'ximg' in pnames:
+        ximg = float(pdb["ximg"])
+        if ReSize and c.galcut and c.repeat:
+            ximg = TX / 2.0
+    else:
+        print 'No ximg is given. Trying to find from the cutout if '\
+              'no ra dec in the image header'
+        if(c.galcut == True and RaDecInfo == 0):
+            ximg = TX / 2.0
+        else:
+            ximg = -9999
+    if 'yimg' in pnames:
+        yimg = float(pdb["yimg"])
+        if ReSize and c.galcut and c.repeat:
+            yimg = TY / 2.0
+    else:
+        print 'No yimg is given. Trying to find from the cutout if '\
+              'no ra dec in the image header'
+        if(c.galcut == True and RaDecInfo == 0):
+            yimg = TY / 2.0
+        else:
+            yimg = -9999
+
+    return alpha1, alpha2, alpha3, delta1, delta2, delta3, z, bxcntr, bycntr, UserGivenPsf, UserGivenSky, gimg, wimg, ximg, yimg, RaDecInfo
+
+
+def DecisionMaker(gimg, wimg): 
+    if c.repeat:
+        cfile = 'G_%s.in'%c.fstring
+        gimg, oimg, wimg, pfile, mimg, confile = ReadGalfitConfig(cfile)
+        cutimage = gimg
+    else:
+	cfile = 'G_%s.in'%c.fstring
+	confile = '%s.con'%c.fstring
+	mimg = 'M_%s.fits'%c.fstring
+	oimg = 'O_%s.fits'%c.fstring
+        pfile = None
+        if c.galcut:
+            if gimg is not None:
+		if not exist(gimg) and not noerror:
+		    raise ValueError('c.galcut=True, but no cutout image is found')
+		elif not exist(gimg) and noerror:
+		    print 'Not found %s. Skipping this galaxy'%gimg
+		else exist(gimg):
+		    if ReSize:
+			cutimage = 'I%s.fits'%c.fstring
+			whtimage = 'W%s.fits'%c.fstring
+		    else:
+			cutimage = gimg
+			whtimage = wimg
+            else:
+		if not exist(gimg) and not noerror:
+		    raise ValueError('c.galcut=True, but no cutout image is found')
+		elif not exist(gimg) and noerror:
+		    print 'Not found %s. Skipping this galaxy'%gimg
+        else:
+	    cutimage = 'I%s.fits'%c.fstring
+	    whtimage = 'W%s.fits'%c.fstring
+    return  gimg, oimg, wimg, cfile, pfile, mimg, confile
+
+def SetSkies(id, deep_sky):
+    # The shallow sky from the shallow run. If no shallow
+    # sky it uses the deep sky
+    ShallowSky = 9999
+    if exists('%s.Shallow'%c.sex_cata):
+	f_sex_shallow = open('%s.Shallow'%c.sex_cata, 'r')
+	for line_shallow in f_sex_shallow:
+	    v_shallow = line_shallow.split()
+	    try:
+		if str(v_shallow[19]) == str(id):
+		    ShallowSky = float(v_shallow[10])
+	    except:
+		pass
+	f_sex_shallow.close()
+    if ShallowSky == 9999:
+	c.SexSky = float(deep_sky)
+	c.GalSky = 9999
+    else:
+	c.SexSky = ShallowSky
+	c.GalSky = 9999
+
+def SetCrashHandler():
+    if c.crashhandler and c.starthandle:
+    print "CrashHandler!!!"
+    CrashHandlerToRemove(gal_id)
+    try:
+	CrashFlag = float(pdb["flag"])
+	CrashFlag = int(CrashFlag)
+    except:
+	CrashFlag = 0
+    try:
+	CrashFitFlag = float(pdb["FitFlag"])
+	CrashFitFlag = int(CrashFitFlag)
+    except:
+	CrashFitFlag = 0
+
+    if isset(CrashFlag, GetFlag("GALFIT_FAIL")) or \
+       isset(CrashFitFlag, Get_FitFlag("IE_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("RE_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("N_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("EB_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("ID_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("RD_AT_LIMIT")) or \
+       isset(CrashFitFlag, Get_FitFlag("ED_AT_LIMIT")):
+	if isset(CrashFlag, GetFlag("FIT_SKY")):
+	    c.fitting[2] = 0
+	else:
+	    c.fitting[2] = 1
+	if isset(CrashFlag, GetFlag("FIT_BULGE_CNTR")) and\
+	   isset(CrashFlag, GetFlag("FIT_DISK_CNTR")):
+	    pass
+	else:
+	    c.fitting[0] = 1
+	    c.fitting[1] = 1
+    if isset(CrashFitFlag, Get_FitFlag("LARGE_CHISQ")):
+	if isset(CrashFlag, GetFlag("FIT_BULGE_CNTR")) and\
+	   isset(CrashFlag, GetFlag("FIT_DISK_CNTR")):
+	    pass
+	else:
+	    c.fitting[0] = 1
+	    c.fitting[1] = 1
+    if isset(CrashFitFlag, Get_FitFlag("FAKE_CNTR")):
+	c.center_deviated = 1
+
 def Gamma(z):
     """This is the Lanczos approximation for Gamma function"""
     lanczosG = 7
@@ -309,6 +569,12 @@ def ReadGalfitConfig(cfile):
                 cofile = valuec[1]
         except:
             pass
+    gimg = os.path.split(gimg)[1]
+    wimg = os.path.split(wimg)[1]
+    oimg = os.path.split(oimg)[1]
+    mimg = os.path.split(mimg)[1]
+    pfile = os.path.split(pfile)[1]
+    cofile = os.path.split(cofile)[1]
     return gimg, oimg, wimg, pfile, mimg, cofile 
 
 def CheckHeader(header0):
@@ -623,7 +889,7 @@ def Distance(psffile, ra, dec):
     
 def HandlePsf(cfile, UserGivenPsf, ra, dec):
     """Determine the psf used for fitting""" 
-    if c.repeat == False:
+    if not c.repeat:
         if UserGivenPsf != 'None':
             psffile = UserGivenPsf
             UpdatePsfRaDec(psffile)
