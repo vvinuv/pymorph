@@ -8,13 +8,13 @@ sex_cata = 'sdss_sex.cat'           #The sextractor catalogue which has
                                       #the format given in the file
 clus_cata = 'sdss_r_1.cat'         #catalogue of galaxies from
 
-datadir = '~/pymorph/examples/postage_stamps/data/' #the directory containing input images
+datadir = '/data2/home/ameert/pymorph/examples/postage_stamps/data/' #the directory containing input images
 
 ###----Specify the output names of images and catalogues----###
 out_cata = 'sdss_r_out.cat'      #catalogue of galaxies in the field
 rootname = 'r'
 
-outdir = '~/pymorph/examples/postage_stamps/results/'  #the directory containing output data
+outdir = '/data2/home/ameert/pymorph/examples/postage_stamps/results/'  #the directory containing output data
 
 ###----Psf list----###
 psfselect = 0                         #0 => No psfselection
@@ -85,9 +85,9 @@ UN = 8.0
 fitting = [1, 1, 1]  # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
-GALFIT_PATH ='~/galfit/galfit'
-SEX_PATH = '~/sextractor-2.5.0/sex/bin/sex'
-PYMORPH_PATH = '~/pymorph/pymorph/'
+GALFIT_PATH ='/data2/home/ameert/galfit/galfit'
+SEX_PATH = '/data2/home/ameert/sextractor-2.5.0/sex/bin/sex'
+PYMORPH_PATH = '/data2/home/ameert/pymorph/pymorph/'
 galfitv = '2.0'
 
 ###----The following conditions are used to classify fit goo/bad----###
