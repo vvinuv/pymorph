@@ -467,7 +467,6 @@ def main():
                 print "NO TARGET FOUND!!!!"
                 good_object = ' 9999  9999 9999  9999 9999  9999 9999  9999 9999  9999 9999  0 9999  9999 9999  9999 9999 9999 9999\n'
                 c.Flag = SetFlag(c.Flag,GetFlag('NO_TARGET'))  
-                continue    
 
             # now fit best object            
             try:
