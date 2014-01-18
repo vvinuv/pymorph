@@ -44,11 +44,8 @@ from writehtmlfunc import WriteParams
 def main():
     sex_cata = c.sex_cata
 
+    #Size parameters
     ReSize, VarSize, Square, FracRad, FixSize = ut.GetSizeInfo()
-
-    for xf in ['TmpElliMask.fits', 'TmpElliMask1.fits']:
-        if os.path.exists(xf):
-            os.system('rm -f TmpElliMask.fits TmpElliMask1.fits')
 
     #Initialize index.html
     if exists('index.html'):
@@ -59,13 +56,24 @@ def main():
         indexfile.writelines(['</BODY></HTML>'])
         indexfile.close()
 
+    # Opens files to write output
+    f_cat = open(c.out_cata, 'w')
+    f_failed = open('restart.cat', 'w')
+
+    # Remove some intermediate files
+    for xf in ['TmpElliMask.fits', 'TmpElliMask1.fits']:
+        if os.path.exists(xf):
+            os.system('rm -f %s'%xf)
+
     #Reading image and weigh files
     if(c.repeat == False and c.galcut == False):
         TY, TX = c.imagedata.shape
         ut.GetWhtImage()
 
     #Initializing psf array. ie. creating c.psflist from file 
-    ut.PsfArr()
+    ut.PsfArr() #Now c.psflist has a list
+
+    # Updating PSF header
     if c.decompose:
         for psfelement in c.psflist:
             ut.UpdatePsfRaDec(psfelement)
@@ -73,7 +81,7 @@ def main():
     # Model for fitting
     ComP = ut.GetModel()
 
-    # Writing csv header and findeing the output parameters
+    # Writing csv header and finding the output parameters
     ParamToWrite = ut.PyMorphOutputParams(c.dbparams, c.decompose)    
     if exists('result.csv'):
         pass
@@ -86,10 +94,9 @@ def main():
         writer.writerow(csvlist)
         f_res.close()
 
-    f_cat = open(out_cata, 'w')
-    f_failed = open('restart.cat', 'w')
-    obj_file = open(os.path.join(c.datadir, clus_cata), 'r')  # The file contains the 
-                                                 # objects of interest
+
+    # The file contains the objects of interest 
+    obj_file = open(os.path.join(c.datadir, clus_cata), 'r')  
     pnames = obj_file.readline().split() #The names of the parameters given 
                                          #in the first line in the clus_cata
 
@@ -98,16 +105,53 @@ def main():
         f_failed.writelines([str(FailedParam), ' '])
     f_failed.writelines(['flag \n'])
 
-    pdb = {}                        #The parameter dictionary
-    c.psfcounter = 0                  #For getting psf in the case of unknown ra
+    #The parameter dictionary
+    pdb = {} 
+
+    #For getting psf in the case of unknown ra
+    c.psfcounter = 0 
+
     for line_j in obj_file:
         # declare the flag
         c.Flag = 0
        
-        alpha1, alpha2, alpha3, delta1, delta2, delta3, z, bxcntr, bycntr, UserGivenPsf, UserGivenSky, gimg, wimg, ximg, yimg, RaDecInfo = ut. GetInputParams(pnames, line_j)
-
+        # Assign parameter values
+        alpha1, alpha2, alpha3, delta1, delta2, delta3, z, bxcntr, bycntr,\
+        UserGivenPsf, UserGivenSky, gimg, wimg, ximg, yimg, RaDecInfo = \
+        ut. GetInputParams(pnames, line_j)
+ 
+        # Find what is input images
         gimg, outimage, wimg, config_file, c.pfile, maskimage, confile = \
                                   DecisionMaker(gimg, wimg, ximg, yimg)
+
+	# Crashhandling starts
+	SetCrashHandler()
+
+        # Set coordinates               
+	if(alpha1 == -9999 or delta1 == -9999):
+	    alpha_j = -9999
+	    delta_j = -9999
+	else:
+	    alpha_j = ut.HMSToDeg(alpha1, alpha2, alpha3)
+	    delta_j = ut.DMSToDeg(delta1, delta2, delta3)
+	# Determine Search Radius 
+	try:
+	    SearchRad = c.searchrad
+	except:
+	    if RaDecInfo:
+		SearchRad = '1arc'
+		print 'No search radius found. Setting to 1 arc sec'
+	    else:
+		SearchRad = '10pix'
+		print 'No search radius found. Setting to 10 pix'
+	if SearchRad.endswith('arc'):
+	    SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
+	    SeaPix = 10.0
+	elif SearchRad.endswith('pix'):
+	    SeaPix = float(SearchRad[:-3])
+	    SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
+
+
 	if c.galcut == True:
 	    print 'Image is >>> ', gimg
 	    ggimg = pyfits.open(os.path.join(c.datadir, gimg))
@@ -148,90 +192,42 @@ def main():
 		    print "something bad happened (Sextractor galcut)!!!!\n\n"
 		    print traceback.print_exc()
  
-	# Crashhandling starts
-	SetCrashHandler()
+	# Getting the nearest object from the sextractor catalog
+        good_object = ut.FindSexObj(sex_cata, RaDecInfo, SeaDeg, SeaPix,
+                                    alpha_j, delta_j, ximg, yimg)
 
-                       
-	if(alpha1 == -9999 or delta1 == -9999):
-	    alpha_j = -9999
-	    delta_j = -9999
-	else:
-	    alpha_j = ut.HMSToDeg(alpha1, alpha2, alpha3)
-	    delta_j = ut.DMSToDeg(delta1, delta2, delta3)
-	# Determine Search Radius 
-	try:
-	    SearchRad = c.searchrad
-	except:
-	    if RaDecInfo:
-		SearchRad = '1arc'
-		print 'No search radius found. Setting to 1 arc sec'
-	    else:
-		SearchRad = '10pix'
-		print 'No search radius found. Setting to 10 pix'
-	if SearchRad.endswith('arc'):
-	    SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
-	    SeaPix = 10.0
-	elif SearchRad.endswith('pix'):
-	    SeaPix = float(SearchRad[:-3])
-	    SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
-
-	# first count the number of "potential" targets in the search radius
-	c.SexTargets = 0
-	good_objects = []
-	bad_objects = []
-	good_distance = []
-	bad_distance = []
-	good_object = ''
-
-	os.system('cp %s sex_%s.txt' %(sex_cata, c.fstring))
-	for line_s in open(sex_cata, 'r'):
-	    try:
-		values = line_s.split()
-		alpha_s = float(values[3])
-		delta_s = float(values[4])
-		if RaDecInfo == 0:
-		    alpha_s = 9999
-		    delta_s = 9999
-		sex_id = values[0]
-		xcntr  = float(values[1])
-		ycntr  = float(values[2])
-		
-		if(abs(alpha_j - alpha_s) < SeaDeg and \
-		   abs(delta_s - delta_j) < SeaDeg or \
-		   abs(xcntr - ximg) < SeaPix and \
-		   abs(ycntr - yimg) < SeaPix):
-		    c.SexTargets +=1
-		    if c.SexTargets == 1:
-			good_object = line_s
-	    except:
-		if values[0].strip().isdigit():
-		    print 'Something happend in the pipeline. ' + \
-			  'Check error.log'
-		else:
-		    pass
 	if len(good_object) <1:
 	    # No suitable target found
 	    print "NO TARGET FOUND!!!!"
 	    good_object = ' 9999  9999 9999  9999 9999  9999 9999  9999 9999  9999 9999  0 9999  9999 9999  9999 9999 9999 9999\n'
 	    c.Flag = SetFlag(c.Flag,GetFlag('NO_TARGET'))  
-	    continue    
 
 	# now fit best object            
 	try:
+            # Since we found the object making some initial setup
+            c.run = 1 #run =1 if pipeline runs sucessfuly
+	    ut.WriteError('\n\n###########   ' + str(gal_id) + \
+			      '   ###########\n')
+            # Adding initial setup to the flag
+	    if c.repeat:
+		c.Flag = SetFlag(c.Flag,GetFlag('REPEAT'))
+	    if c.fitting[0] and 'bulge' in ComP:
+		c.Flag = SetFlag(c.Flag,GetFlag('FIT_BULGE_CNTR'))
+	    if c.fitting[1] and 'disk' in ComP:
+		c.Flag = SetFlag(c.Flag,GetFlag('FIT_DISK_CNTR'))
+	    if c.fitting[2]:
+		c.Flag = SetFlag(c.Flag,GetFlag('FIT_SKY'))
+	    
+            # Getting sextractor parameters
 	    values = good_object.split()
+	    print "SExtractor ID >>> ", values[0]
 	    alpha_s = float(values[3])
 	    delta_s = float(values[4])
-	    if RaDecInfo == 0:
-		alpha_s = 9999
-		delta_s = 9999
-	    if(alpha_j == -9999 or delta_j == -9999):
-		if RaDecInfo: 
-		    alpha_j = alpha_s
-		    delta_j = delta_s
 	    sex_id = values[0]
 	    xcntr  = float(values[1])
 	    ycntr  = float(values[2])
-	    print "SExtractor ID >>> ", values[0]
+
+            # Bunch of sextractor global parameters 
 	    c.SexMagAuto = float(values[17])
 	    c.SexMagAutoErr = float(values[18])
 	    c.SexHalfRad = float(values[9]) #Sex halfrad 
@@ -242,6 +238,8 @@ def main():
 	    if c.eg <= 0.05:
 		c.eg = 0.07
 	    c.major_axis = float(values[14])
+          
+            # Some fit limits
 	    if c.UMag > -9999.0:
 		c.UMag = c.SexMagAuto - 7.0
 	    if c.LMag < 9999.0:
@@ -257,25 +255,13 @@ def main():
             # Set sky values (c.SexSky & c.GalSky)
             ut.SetSkies(values[0], values[10])
 
-
-	    ut.WriteError('\n\n###########   ' + str(gal_id) + \
-			      '   ###########\n')
-	    c.run = 1 #run =1 if pipeline runs sucessfuly
-	    # Adding initial setup to the flag
-	    if c.repeat:
-		c.Flag = SetFlag(c.Flag,GetFlag('REPEAT'))
-	    if c.fitting[0] and 'bulge' in ComP:
-		c.Flag = SetFlag(c.Flag,GetFlag('FIT_BULGE_CNTR'))
-	    if c.fitting[1] and 'disk' in ComP:
-		c.Flag = SetFlag(c.Flag,GetFlag('FIT_DISK_CNTR'))
-	    if c.fitting[2]:
-		c.Flag = SetFlag(c.Flag,GetFlag('FIT_SKY'))
 	    
 	    # Calculating the cutout size (half size).
 	    # SizeX, SizeY return from MakeCutOut are full sizes
 	    SizeX, SizeY = ut.FindCutSize(ReSize, VarSize, \
 			   Square, FracRad, c.size[4], TX/2, TY/2) 
 	    print 'Calculated half sizes ', SizeX, SizeY
+
 	    # Finding psf and the distance between psf and image
 	    if c.decompose:
 		psffile, distance = ut.HandlePsf(cfile, \
@@ -283,6 +269,7 @@ def main():
 		print 'psffile, distance > ', psffile, distance
 	    else:
 		psffile, distance = 'None', 9999
+
 	    # For the new run
 	    if not c.repeat:
 		if c.galcut:
@@ -327,6 +314,7 @@ def main():
 		    pass
 		elif ExceedSize:
 		    c.Flag = SetFlag(c.Flag,GetFlag('EXCEED_SIZE'))
+
 		# Runs sextractor to find the segmentation map
 		RunSegSex(os.path.join(c.datadir, cutimage))
 
@@ -355,6 +343,7 @@ def main():
 			     SizeX, SizeY, good_object)
 		config_file = cfile
 		outimage = str(oimg)
+
 	    # Estimates sky parameters
 	    try:
 		SexySky, SkyYet, SkyMed, SkyMin, SkyQua, \
@@ -371,6 +360,7 @@ def main():
 		print 'SkyMin SexSky > ', c.SkyMin, c.SexSky
 	    except:
 		ut.WriteError('Sky estimation failed\n')
+
 	    # Estimate CASGM  
 	    if(c.cas):
 		C, C_err, A, A_err, S, S_err, G, M = \

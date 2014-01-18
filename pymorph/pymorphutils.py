@@ -15,6 +15,15 @@ from flagfunc import GetFlag, isset, SetFlag
 #from outmaskfunc_easy import OutMaskFunc
 from outmaskfunc import OutMaskFunc
 
+
+def PymorphError(inst, msg):
+    '''Some way to handle error'''
+    print msg
+    if c.noerror:
+        pass
+    else:
+        raise inst
+
 def GetSizeInfo():
     ReSize = c.size[0]
     VarSize = c.size[1]
@@ -275,6 +284,51 @@ def SetCrashHandler():
     if isset(CrashFitFlag, Get_FitFlag("FAKE_CNTR")):
 	c.center_deviated = 1
 
+
+def FindSexObj(sex_cata, RaDecInfo, SeaDeg, SeaPix, alpha_j, delta_j, ximg, yimg):
+    # first count the number of "potential" targets in the search radius
+    c.SexTargets = 0
+    good_object = ''
+
+    os.system('cp %s sex_%s.txt' %(sex_cata, c.fstring))
+    new_distance = 999.0 #the distance from the center to the best target
+    for line_s in open(sex_cata, 'r'):
+        try:
+            values = line_s.split()
+            sex_id = values[0]
+            alpha_s = float(values[3])
+            delta_s = float(values[4])
+            xcntr  = float(values[1])
+            ycntr  = float(values[2])
+
+            if RaDecInfo:
+                curr_distance = np.sqrt((alpha_j - alpha_s)**2+(delta_s - delta_j)**2)
+                if curr_distance < SeaDeg:
+                    print "Candidate distance: %.3f" %curr_distance
+                    c.SexTargets +=1
+                    if curr_distance < new_distance:
+                        new_distance = curr_distance
+                        print "New Preferred target!!"
+                        good_object = line_s
+     
+            else:
+                curr_distance = np.sqrt((xcntr - ximg)**2+(ycntr - yimg)**2)
+
+                if curr_distance < SeaPix:
+                    print "Candidate distance: %.3f" %curr_distance    
+                    c.SexTargets +=1
+                    if curr_distance < new_distance:
+                        new_distance = curr_distance
+                        print "New Preferred target!!"
+                        good_object = line_s
+        except Exception as inst:
+            if values[0].strip().isdigit():
+                PymorphError(inst, 'Something happend in the pipeline. Check error.log')
+            else:
+                pass
+    print "Target distance: %.3f" %new_distance
+    return good_object
+
 def Gamma(z):
     """This is the Lanczos approximation for Gamma function"""
     lanczosG = 7
@@ -339,7 +393,7 @@ def PsfArr():
         c.psflist = []
         for pline in psffi:
             c.psflist.append(pline.split()[0])
-    elif type(c.psflist) == types.ListType:
+    elif type(c.psflist) is types.ListType:
         pass
     else:
         print "The psf list is not understood. Please use either \
@@ -362,8 +416,8 @@ def UpdatePsfRaDec(element):
         header.update('RA_TARG', ra, "RA")
         header.update('DEC_TARG', dec, "DEC")
         pyfits.update(element, data, header)
-    except:
-        pass
+    except Exception as inst:
+        PymorphError(inst, 'Check PSF name is not in the format')
 
 
 def FailedGalfit(WhichGalaxy):
