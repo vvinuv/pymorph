@@ -516,317 +516,6 @@ def main():
             print traceback.print_exc()
     f_cat.close()
     f_failed.close()
-def selectpsf(ImG, CaT):
-    c.psff = []
-    im1 = pyfits.open(ImG)
-    image = im1[0].data
-    im1.close()
-    AreaOfObj = c.AreaOfObj
-    def FindPsf(AreaOfObj, CaT):
-        for line in open(CaT,'r'):
-            values = line.split()
-            try:
-                BaKgR  = float(values[10])
-                if float(values[16]) >= c.StarGalProb and \
-		   float(values[13]) > AreaOfObj \
-                   and float(values[14]) < 50.0:
-                    xcntr = float(values[1]) - 1
-                    ycntr = float(values[2]) - 1
-                    #size of the psf is 8 times the sigma assuming the star has 
-                    #Gaussian profile
-                    PsfSize = np.floor(float(values[14])) * c.starsize 
-                    x1 = int(xcntr) + (PsfSize/2)
-                    x2 = int(xcntr) - (PsfSize/2)
-                    y1 = int(ycntr) + (PsfSize/2)
-                    y2 = int(ycntr) - (PsfSize/2)
-                    ra1 = int(float(values[3]) / 15.0)
-                    ra2 = int((float(values[3]) / 15.0 - int(float(values[3])\
-                          / 15.0))*60.0)
-                    ra3 = (((float(values[3]) / 15.0 - int(float(values[3]) / \
-                          15.0))*60.0) - ra2) * 60.0
-                    dec1 = int(float(values[4]))
-                    dec2 = abs(int((float(values[4]) - dec1) * 60.0))
-                    dec3 = (abs(((float(values[4]) - dec1) * 60.0)) - dec2) \
-                           * 60.0
-                    if ra1 < 10:
-                        ra11 = '0' + str(ra1)
-                    else:
-                        ra11 = str(ra1)
-                    if ra2 < 10:
-                        ra22 = '0' + str(ra2)
-                    else:
-                        ra22 = str(ra2)
-                    if ra3 < 10:
-                        ra33 = '0' + (str(np.round(ra3, 1))[:3]).split('.')[0]\
-                                      + \
-                                     (str(np.round(ra3, 1))[:3]).split('.')[1] 
-                    else:
-                        ra33 = (str(np.round(ra3, 1))[:4]).split('.')[0] + \
-                               (str(np.round(ra3, 1))[:4]).split('.')[1]
-                    if abs(dec1) < 10:
-                        if dec1 < 0.0:
-                            dec11 = '-0' + str(abs(dec1))
-                        else:
-                            dec11 = '+0' + str(abs(dec1))
-                    else:
-                        if dec1 < 0.0:
-                            dec11 = str(dec1)
-                        else:
-                            dec11 = '+' + str(dec1)
-                    if dec2 < 10:
-                        dec22 = '0' + str(dec2)
-                    else:
-                        dec22 = str(dec2)
-                    if dec3 < 10:
-                        dec33 = '0' + (str(np.round(dec3, 1))[:3]).split('.')[0]\
-                                 + (str(np.round(dec3, 1))[:3]).split('.')[1]
-                    else:
-                        dec33 = (str(np.round(dec3, 1))[:4]).split('.')[0] +\
-                                (str(np.round(dec3, 1))[:4]).split('.')[1]
-                    psffile = 'psf_' + str(ra11) + str(ra22) + str(ra33) + str(dec11) +str(dec22) + str(dec33) + '.fits'
-                    if psffile in c.psff:
-                        pass
-                    else:
-                        c.psff.append(psffile)
-                        psf = image[y2:y1, x2:x1]
-                        psf = psf - BaKgR
-                        if os.access(psffile, os.F_OK):
-                            os.remove(psffile)
-                        hdu = pyfits.PrimaryHDU(psf.astype(np.float32))
-                        hdu.header.update('XCNTR', int(xcntr))
-                        hdu.header.update('YCNTR', int(ycntr))
-                        hdu.writeto(psffile)
-            except:
-                pass
-    while len(c.psff) < 5 and AreaOfObj > 10:
-        FindPsf(AreaOfObj, CaT)
-        AreaOfObj -= 5
-    if len(c.psff) == 0:
-        manualpsf = raw_input("Unfortunately, NO psf is found. Please enter "\
-                              "the psf name >>> ")
-        c.psff.append(manualpsf)
-    if c.Interactive:
-        PsfList = []
-        TmPLST = []
-        for element in c.psff:
-            TmPLST.append(element)
-        print 'Checking Started. You can just visually check the psf. You can'\
-               ' do the thorough checking later'
-        for element in c.psff:
-            os.system('xpaset -p ds9 frame clear')
-            if exists(element):
-                os.system('cat ' + str(element) + ' | xpaset ds9 fits')
-                os.system('xpaset -p ds9 scale mode zscale')
-                os.system('xpaset -p ds9 zoom to fit')
-            else:
-                print 'The psf you have given does NOT exists!!!'
-                pass
-            write = raw_input("Do you need this psf? ('y' if yes, 'c'"\
-                              " to cancel psf checking) " )
-            if write == 'y':
-                PsfList.append(element)
-                TmPLST.remove(element)
-#                c.psff.remove(element)
-            elif write == 'c':
-                for element1 in TmPLST:
-                    try:
-                        os.remove(element1)
-                    except:
-                        pass
-                break
-            else:
-                try:
-                    os.remove(element)
-                except:
-                    pass
-        print '\nFinal Checking Started. If you are using psfselect = 2, be '\
-              'carefull!!! This is your last chance for selecting psf. '\
-              'Select ONLY GOOD psf. Press "y" to accept the previous psf. '\
-             'ENTER to go to the next one. This will continue until you press '\
-             '"1" when it asked Finished? ALL THE BEST! \n'
-        UrPsfChk = raw_input("Do you want to use your own psf? Enter 'y' or " \
-                             "'n' >>> ")
-        if UrPsfChk == 'y':
-            UrPsf = raw_input("Enter your psf >>> ")
-            fff = open('psflist.list', 'ab')
-            fff.writelines([str(UrPsf), '\n'])
-            fff.close()
-            if(c.galcut):
-                c.ValueS.append(UrPsf)
-                fwithpsf = open('CatWithPsf.cat', 'ab')
-                for v in c.ValueS:
-                    fwithpsf.writelines([str(v), ' '])
-                fwithpsf.writelines(['\n'])
-                fwithpsf.close()
-            finish = 1
-            for element in PsfList:
-                if os.access(element, os.F_OK):
-                    os.remove(element)
-        else:
-            finish = 0
-            TmpPsfList = []
-        UpdateCounter = 1
-        while finish == 0:
-            for element in PsfList:
-                if exists(element):
-                    os.system('xpaset -p ds9 frame clear')
-                    os.system('cat ' + str(element) + ' | xpaset ds9 fits')
-                    os.system('xpaset -p ds9 scale mode zscale')
-                    os.system('xpaset -p ds9 zoom to fit')
-                else:
-                    print 'The psf you have given is NOT exists!!!'
-                    pass
-                write = raw_input("Do you REALLY need this psf? ('y' or," \
-                                  "'n' or press any key to continue) ") 
-                if write == 'y':
-                    TmpPsfList.append(element)
-                    fff = open('psflist.list', 'ab')
-                    fff.writelines([str(element), '\n'])
-                    if(c.galcut):
-                        if UpdateCounter:
-                            c.ValueS.append(element)
-                            fwithpsf = open('CatWithPsf.cat', 'ab')
-                            for v in c.ValueS:
-                                fwithpsf.writelines([str(v), ' '])
-                            fwithpsf.writelines(['\n'])
-                            fwithpsf.close()
-                            UpdateCounter = 0
-                    fff.close()
-                if write == 'n':
-                    TmpPsfList.append(element)
-                    try:
-                        os.remove(element)
-                    except:
-                        pass
-                else:
-                    pass
-            for element in TmpPsfList:
-                try:
-                    PsfList.remove(element)
-                except:
-                    pass
-            TmpPsfList = []
-            fi = raw_input("Finished? ('1' to finish, any other key to continue) ") 
-            if fi == '0' or fi == '1':
-                finish = int(fi)
-                if finish == 1:
-                    for element in PsfList:
-                        try:
-                            os.remove(element)
-                        except:
-                            pass
-            else:
-                finish = 0
-    else:
-        for element in c.psff:
-            fff = open('psflist.list', 'ab')
-            fff.writelines([str(element), '\n'])
-        fff.close()
-def SExtractorConf():
-    SEx_DETECT_MINAREA = raw_input("DETECT_MINAREA (6) >>> ")
-    try:
-        c.SEx_DETECT_MINAREA = float(SEx_DETECT_MINAREA)
-        c.SEx_DETECT_MINAREA = int(c.SEx_DETECT_MINAREA)
-    except:
-        c.SEx_DETECT_MINAREA = 6
-    SEx_DETECT_THRESH = raw_input('DETECT_THRESH (1.5) >>> ')
-    try:
-        c.SEx_DETECT_THRESH = float(SEx_DETECT_THRESH)
-    except:
-        c.SEx_DETECT_THRESH = 1.5
-    SEx_ANALYSIS_THRESH = raw_input('ANALYSIS_THRESH (1.5) >>> ')
-    try:
-        c.SEx_ANALYSIS_THRESH = float(SEx_ANALYSIS_THRESH)
-    except:
-        c.SEx_ANALYSIS_THRESH = 1.5
-    SEx_FILTER = raw_input('FILTER (Y/N) >>> ')
-    while SEx_FILTER != 'Y' and SEx_FILTER != 'N' and SEx_FILTER != '':
-        SEx_FILTER = raw_input('FILTER (Y/N) >>> ')
-    if len(SEx_FILTER) == 0:
-        c.SEx_FILTER = 'Y'
-    else:
-        c.SEx_FILTER = SEx_FILTER
-    print 'Available options for convolve filter are gauss_1.5_3x3.conv(1) '\
-          'gauss_2.0_3x3.conv(2) gauss_2.0_5x5.conv(3) gauss_2.5_5x5.conv(4) '\
-          'gauss_3.0_5x5.conv(5) gauss_3.0_7x7.conv(6) gauss_4.0_7x7.conv(7) '\
-          'gauss_5.0_9x9.conv(8) default(0)'
-    SEx_FILTER_NAME  = raw_input('FILTER_NAME (default.conv) >>> ')
-    if len(SEx_FILTER_NAME) == 0 or SEx_FILTER_NAME == '0':
-        c.SEx_FILTER_NAME = 'default.conv'
-    elif SEx_FILTER_NAME == '1':
-        c.SEx_FILTER_NAME = 'gauss_1.5_3x3.conv'
-    elif SEx_FILTER_NAME == '2':
-        c.SEx_FILTER_NAME = 'gauss_2.0_3x3.conv'
-    elif SEx_FILTER_NAME == '3':
-        c.SEx_FILTER_NAME = 'gauss_2.0_5x5.conv'
-    elif SEx_FILTER_NAME == '4':
-        c.SEx_FILTER_NAME = 'gauss_2.5_5x5.conv'
-    elif SEx_FILTER_NAME == '5':
-        c.SEx_FILTER_NAME = 'gauss_3.0_5x5.conv'
-    elif SEx_FILTER_NAME == '6':
-        c.SEx_FILTER_NAME = 'gauss_3.0_7x7.conv'
-    elif SEx_FILTER_NAME == '7':
-        c.SEx_FILTER_NAME = 'gauss_4.0_7x7.conv'
-    elif SEx_FILTER_NAME == '8':
-        c.SEx_FILTER_NAME = 'gauss_5.0_9x9.conv'
-    SEx_DEBLEND_NTHRESH = raw_input('DEBLEND_NTHRESH (32) >>> ')
-    try:
-        c.SEx_DEBLEND_NTHRESH = float(SEx_DEBLEND_NTHRESH)
-        c.SEx_DEBLEND_NTHRESH = int(c.SEx_DEBLEND_NTHRESH)
-    except:
-        c.SEx_DEBLEND_NTHRESH = 32
-    SEx_DEBLEND_MINCONT = raw_input('DEBLEND_MINCONT (0.005) >>> ')
-    try:
-        c.SEx_DEBLEND_MINCONT = float(SEx_DEBLEND_MINCONT)
-    except:
-        c.SEx_DEBLEND_MINCONT = 0.005
-    SEx_PHOT_FLUXFRAC = raw_input('PHOT_FLUXFRAC (0.5) >>> ')
-    try:
-        c.SEx_PHOT_FLUXFRAC = float(SEx_PHOT_FLUXFRAC)
-    except:
-        c.SEx_PHOT_FLUXFRAC = 0.5
-    SEx_pix_scale_disp = 'PIXEL_SCALE (' + str(c.SEx_PIXEL_SCALE) + ') >>> '
-    SEx_PIXEL_SCALE = raw_input(SEx_pix_scale_disp)
-    try:
-        c.SEx_PIXEL_SCALE = float(SEx_PIXEL_SCALE)
-    except:
-        c.SEx_PIXEL_SCALE = c.pixelscale
-    SEx_SEEING_FWHM = raw_input('SEEING_FWHM (0.11) >>> ')
-    try:
-        c.SEx_SEEING_FWHM = float(SEx_SEEING_FWHM )
-    except:
-        c.SEx_SEEING_FWHM = c.pixelscale * 3.37
-    SEx_BACK_SIZE = raw_input('BACK_SIZE (64) >>> ')
-    try:
-        c.SEx_BACK_SIZE = float(SEx_BACK_SIZE)
-        c.SEx_BACK_SIZE = int(c.SEx_BACK_SIZE)
-    except:
-        c.SEx_BACK_SIZE = 64
-    SEx_BACK_FILTERSIZE = raw_input('BACK_FILTERSIZE (3) >>> ')
-    try:
-        c.SEx_BACK_FILTERSIZE = float(SEx_BACK_FILTERSIZE)
-        c.SEx_BACK_FILTERSIZE = int(c.SEx_BACK_FILTERSIZE)
-    except:
-        c.SEx_BACK_FILTERSIZE = 3
-    SEx_BACKPHOTO_TYPE = raw_input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
-    while SEx_BACKPHOTO_TYPE != 'G' and SEx_BACKPHOTO_TYPE != 'L' \
-          and SEx_BACKPHOTO_TYPE != '':
-        SEx_BACKPHOTO_TYPE = raw_input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
-    if len(SEx_BACKPHOTO_TYPE) == 0:
-        c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
-    elif SEx_BACKPHOTO_TYPE == 'G':
-        c.SEx_BACKPHOTO_TYPE = 'GLOBAL'
-    elif SEx_BACKPHOTO_TYPE == 'L':
-        c.SEx_BACKPHOTO_TYPE = 'LOCAL'
-    if c.SEx_BACKPHOTO_TYPE == 'LOCAL':
-        SEx_BACKPHOTO_THICK = raw_input('BACKPHOTO_THICK (24) >>> ')
-    try:
-        c.SEx_BACKPHOTO_THICK = float(SEx_BACKPHOTO_THICK)
-	c.SEx_BACKPHOTO_THICK = int(c.SEx_BACKPHOTO_THICK)
-    except:
-        c.SEx_BACKPHOTO_THICK = 24
-    SEx_WEIGHT_TYPE = raw_input('WEIGHT_TYPE (MAP_RMS) >>> ')
-    c.SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
 
 def run_SExtractorConf(option, opt, value, parser):
     try:
@@ -878,69 +567,6 @@ if __name__ == '__main__':
     c.SEx_BACKPHOTO_THICK = 24
     c.SEx_WEIGHT_TYPE = 'DECIDE'
     sex_cata = c.sex_cata
-
-    def FindAndFit():
-        if c.findandfit == 1:
-            if c.psfselect > 2:
-                #magmin = raw_input("Enter Minimum Magnitude >>> ")
-                magmin = raw_input("What is faintest magnitude galaxy that you want to fit? >>> ")     #modified by abhishek
-                try:
-                    magmin = float(magmin) * 1.0
-                except:
-                    magmin = 9999
-                #magmax = raw_input("Enter Maximum Magnitude >>> ")
-                magmax = raw_input("What is brightest magnitude galaxy that you want to fit? >>> ")    #modified by abhishek
-                try:
-                    magmax = float(magmax) * 1.0
-                except:
-                    magmax = -9999
-                stargal = raw_input("Enter star-galaxy classification "\
-                                    "(1 for star and 0 is galaxy (0.8 is "\
-                                    " a good number) >>> ")
-                redshift = raw_input("Enter redshift, if you know >>> ")
-                try:
-                    redshift = float(redshift)*1.0
-                except:
-                    redshift = 9999
-            elif c.psfselect <= 2:   
-                try: 
-                    magmin = c.maglim[0]
-                    magmax = c.maglim[1] 
-                    stargal = c.stargal
-                    redshift = 9999
-                except:
-                    magmin = 9999
-                    magmax = -9999
-                    stargal = 0.8
-                    redshift = 9999                  
-            NewClusCata = open(c.clus_cata,'w')
-            if redshift == 9999:
-                NewClusCata.writelines(['gal_id ra1 dec1 mag\n'])
-            else:
-                NewClusCata.writelines(['gal_id ra1 dec1 mag z\n'])
-            for lineSex in open(sex_cata, 'r'):
-                ValueSex = lineSex.split()
-                try:
-                    if float(ValueSex[17]) > magmax and \
-                       float(ValueSex[17]) < magmin and \
-                       float(ValueSex[16]) < float(stargal):
-                        if redshift == 9999:
-                            NewClusCata.writelines([str(ValueSex[0]), ' ', \
-                                       str(float(ValueSex[3]) / 15.0), ' ', \
-                                       str(float(ValueSex[4])), ' ',\
-                                       str(ValueSex[17]), '\n'])
-                        else:
-                            NewClusCata.writelines([str(ValueSex[0]), ' ', \
-                                str(float(ValueSex[3]) / 15.0), ' ', \
-                                str(float(ValueSex[4])), \
-                                ' ', str(redshift), ' ', \
-                                str(ValueSex[17]), '\n'])
-                except:
-                    pass
-            NewClusCata.close()
-            c.searchrad = '0.05arc'
-        else:
-            pass
 
     # Note I set defaults here and call them in creating the options. This is so 
     # I can use them in determining whether to retain the default or not.
@@ -1027,23 +653,19 @@ if __name__ == '__main__':
     for key, value in options.__dict__.items():
         if  parser.defaults[key] ==  value:
             if not hasattr(c, key):
-                setattr(c,key, value)
+                setattr(c, key, value)
         else:
-            setattr(c,key, value)
-
-    if c.Filter == 'UNKNOWN':
-        pass
-    else:
-        c.FILTER = c.Filter
-
+            setattr(c, key, value)
 
     # now change dir to the 
     thisdir = os.getcwd()
-    print "thisdir is ", thisdir
-    print "outdir is ", c.outdir
+    print "This dir is > ", thisdir
+    print "Output dir is > ", c.outdir
     os.chdir(c.outdir)
+
+    # Read images 
     try:
-        if(c.repeat == False and c.galcut == False):
+        if not c.repeat and not c.galcut:
             img = pyfits.open(os.path.join(c.datadir, c.imagefile))
             c.imagedata = img[0].data
             c.HeAdEr0 = img[0].header
@@ -1053,123 +675,29 @@ if __name__ == '__main__':
         print imagefile, "I/O error(%s): %s" % (errno, strerror)
         os._exit(0)
 
+    # Generate sextractor catalogs if not exists
     if exists(sex_cata):
         pass
-    elif(c.galcut == False):
+    elif not c.galcut:
         print 'The SExtractor catalogue for your frame is NOT found. ' \
               'One is being made using the default values. It is always '\
               'recommended to make SExtractor catalogue by YOURSELF as '\
               'the pipeline keeps the sky value at the SExtractor value '\
               'during the decomposition.'
         if exists(os.path.join(c.datadir, c.whtfile)):
-            RunSex(os.path.join(c.datadir, c.imagefile), os.path.join(c.datadir , c.whtfile), 'None', 9999, 9999, 0)
-	    SexShallow(os.path.join(c.datadir, c.imagefile), os.path.join(c.datadir, c.whtfile), 'None', 9999, 9999, 0)
+            RunSex(os.path.join(c.datadir, c.imagefile), 
+                   os.path.join(c.datadir , c.whtfile), 
+                   'None', 9999, 9999, 0)
+	    SexShallow(os.path.join(c.datadir, c.imagefile), 
+                       os.path.join(c.datadir, c.whtfile), 
+                       'None', 9999, 9999, 0)
         else:
-            RunSex(os.path.join(c.datadir, c.imagefile), 'None', 'None', 9999, 9999, 0)
-	    SexShallow(os.path.join(c.datadir, c.imagefile), 'None', 'None', 9999, 9999, 0)
-    def runpsfselect():
-        if(c.galcut):   #Given galaxy cutouts
-            obj_file = open(os.path.join(c.datadir, c.clus_cata),'r') 
-            pnames = obj_file.readline().split() 
-            c.ValueS = []
-            for v in pnames:
-                c.ValueS.append(v)
-            c.ValueS.append('star')
-            fwithpsf = open('CatWithPsf.cat', 'ab')
-            for v in c.ValueS:
-                fwithpsf.writelines([str(v), ' '])
-            fwithpsf.writelines(['\n'])
-            fwithpsf.close()
-            pdb = {}                        #The parameter dictionary
-            for line_j in obj_file:
-                try:
-                    values = line_j.split()
-                    c.ValueS = []
-                    for v in values:
-                        c.ValueS.append(v)
-                    k = 0
-                    for pname in pnames:
-                        pdb[pname] = values[k]
-                        k += 1
-                    try:
-                        gal_id = pdb["gal_id"]
-                    except:
-                        try:
-                            gal_id = pdb["gimg"][:-5]
-                        except:
-                            print "No image or gal_id found in the object" \
-                                  "catalogue. Exiting"
-                            os._exit(0)
-                    try:
-                        gimg = pdb["gimg"]    #Galaxy cutout
-                    except:
-                        if exists(os.path.join(c.datadir, \
-                                   'I' + str(c.rootname) + '_' \
-                                   + str(gal_id) + '.fits')):
-                            gimg = 'I' + str(c.rootname) + '_' \
-                                    + str(gal_id) + '.fits'
-                        elif exists(os.path.join(c.datadir, \
-                             str(gal_id) + '.fits')):
-                            gimg = str(gal_id) + '.fits'
-                        else:
-                            print "No image found. Exiting"
-                            os._exit(0)
-                    try:
-                        wimg = pdb["wimg"]   #Weight cut
-                    except:
-                        if exists(os.path.join(c.datadir, \
-                                  'W' + str(c.rootname) + '_' + \
-                                  str(gal_id) + '.fits')):
-                            wimg = 'W' + str(c.rootname) + '_' + \
-                                   str(gal_id) + '.fits'
-                        else:
-                            wimg = 'None'
-                    GiMg = pyfits.open(os.path.join(c.datadir, gimg))
-                    headerGiMg = GiMg[0].header
-                    if (headerGiMg.has_key('GAIN')):
-                        c.SEx_GAIN = headerGiMg['GAIN']
-                    else:
-                        c.SEx_GAIN = 1
-                    GiMg.close()
-                    if exists(sex_cata): 
-                        pass
-                    else:
-                        RunSex(os.path.join(c.datadir, gimg), os.path.join(c.datadir, wimg), 'None', 9999, 9999, 0)
-                    try:
-                        selectpsf(os.path.join(c.datadir, gimg), sex_cata)
-                    except:
-                        pass
-                    if os.access(sex_cata, os.F_OK):
-                        os.remove(sex_cata)
-                except:
-                    pass
-            obj_file.close()  
-            AskForUpdate = raw_input("Do you want to update the clus_cata? " \
-                            "('y' for yes) ")
-            if AskForUpdate == 'y':
-                cmd = 'mv CatWithPsf.cat ' +str(c.clus_cata)
-                os.system(cmd)
-            else:
-                pass
-        else:
-            selectpsf(os.path.join(c.datadir, c.imagefile), sex_cata)
-#The old function for psfselect = 2
-#    if c.psfselect == 2:
-#        c.center_deviated = 0
-#        c.starthandle = 0
-#        os.system('ds9 &')
-#        time.sleep(2)
-#        runpsfselect()
-#        os.system('xpaset -p ds9 quit')
-#        c.psflist = '@psflist.list'
-#        FindAndFit()
-#        main()
-#        if c.crashhandler:
-#            c.starthandle = 1
-#            os.system('mv restart.cat CRASH.CAT')
-#            c.clus_cata = 'CRASH.CAT' 
-#            main()
-#New function for psfselect=2 non-interactive for webservice
+            RunSex(os.path.join(c.datadir, c.imagefile), 
+                   'None', 'None', 9999, 9999, 0)
+	    SexShallow(os.path.join(c.datadir, c.imagefile), 
+                       'None', 'None', 9999, 9999, 0)
+
+    #New function for psfselect=2 non-interactive for webservice
     if c.psfselect == 2:
         c.Interactive = 0
         c.center_deviated = 0
@@ -1184,7 +712,7 @@ if __name__ == '__main__':
             c.clus_cata = 'CRASH.CAT' 
             main()
 
-#The old function for psfselect=1
+    #The old function for psfselect=1
     elif c.psfselect == 1:
         c.Interactive = 1
         os.system('ds9 &')
