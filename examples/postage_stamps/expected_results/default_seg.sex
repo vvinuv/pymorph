@@ -7,7 +7,7 @@
 CATALOG_NAME     SegCat.cat       # name of the output catalog
 CATALOG_TYPE     ASCII_HEAD     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
-PARAMETERS_NAME  /data2/home/ameert/new_pymorph/serial_pipeline/trunk/pymorph//SEx/default.param  # name of the file containing catalog contents
+PARAMETERS_NAME  /data2/home/ameert/pymorph/pymorph//SEx/default.param  # name of the file containing catalog contents
  
 #------------------------------- Extraction ----------------------------------
  
@@ -17,7 +17,7 @@ DETECT_THRESH    1.0            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
 ANALYSIS_THRESH  1.0            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
  
 FILTER           Y              # apply filter for detection (Y or N)?
-FILTER_NAME      /data2/home/ameert/new_pymorph/serial_pipeline/trunk/pymorph//SEx/default.conv   # name of the file containing the filter
+FILTER_NAME      /data2/home/ameert/pymorph/pymorph//SEx/default.conv   # name of the file containing the filter
  
 DEBLEND_NTHRESH  32             # Number of deblending sub-thresholds
 DEBLEND_MINCONT  0.005          # Minimum contrast parameter for deblending
@@ -38,13 +38,13 @@ PHOT_FLUXFRAC    0.5            # flux fraction[s] used for FLUX_RADIUS
 SATUR_LEVEL      100000.0        # level (in ADUs) at which arises saturation
 MAG_ZEROPOINT    25.256            # magnitude zero-point
 MAG_GAMMA        4.0            # gamma of emulsion (for photographic scans)
-GAIN             4.6            # detector gain in e-/ADU
+GAIN             4.72            # detector gain in e-/ADU
 PIXEL_SCALE      0.396            # size of pixel in arcsec (0=use FITS WCS info)
  
 #------------------------- Star/Galaxy Separation ----------------------------
  
 SEEING_FWHM      0.11            # stellar FWHM in arcsec
-STARNNW_NAME     /data2/home/ameert/new_pymorph/serial_pipeline/trunk/pymorph//SEx/default.nnw    # Neural-Network_Weight table filename
+STARNNW_NAME     /data2/home/ameert/pymorph/pymorph//SEx/default.nnw    # Neural-Network_Weight table filename
  
 #------------------------------ Background -----------------------------------
  

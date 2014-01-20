@@ -87,7 +87,7 @@ fitting = [1, 1, 1]  # = 0, Fix params at SExtractor value
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH ='/data2/home/ameert/galfit/galfit'
 SEX_PATH = '/data2/home/ameert/sextractor-2.5.0/sex/bin/sex'
-PYMORPH_PATH = '/data2/home/ameert/new_pymorph/serial_pipeline/trunk/pymorph/'
+PYMORPH_PATH = '/data2/home/ameert/pymorph/pymorph/'
 galfitv = '2.0'
 
 ###----The following conditions are used to classify fit goo/bad----###
@@ -97,9 +97,9 @@ center_deviation = 3.0                #< abs(center - fitted center)
 center_constrain = 2.0                #Keep center within +/- center_constrain
 
 ###----Database Informations----###
-host = 'shredder'
-database = 'pymorph'
+host = 'localhost'
+database = 'catalog'
 table = 'postage_stamps'
 usr = 'pymorph'
-pword = 'pymorph9455'
+pword = ''
 dbparams = ['Morphology:ser', 'ObsID:1:int']
