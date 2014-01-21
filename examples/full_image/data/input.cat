@@ -1,0 +1,2 @@
+gal_id ra1 ra2 ra3 dec1 dec2 dec3 gimg ximg yimg psf wimg z
+237 14 47 26.004  +8 28 24.92 tot.fits 276 1420 psf_1447282+0829523.fits tot_rms.fits 0.37546

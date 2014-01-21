@@ -36,8 +36,12 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     y = y.astype(n.float32)
 
     target = SEx_obj(NXPTS, NYPTS, line_s)
+
+    # recenter in chip coordinates
+    target.set_center(xcntr, ycntr)
+
     R =target.calc_rad(x,y)
-    
+
     mask_file = 'EM_' + c.fstring + '.fits'
 
     tmp_mask = n.zeros((NXPTS, NYPTS))

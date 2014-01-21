@@ -1,0 +1,62 @@
+
+#  Chi^2/nu = 2.581,  Chi^2 = 27882.605,  Ndof = 10803
+
+================================================================================
+# IMAGE and GALFIT CONTROL PARAMETERS
+A) /home/ameert/git_projects/pymorph/examples/full_image/data/Itest_237.fits      # Input data image (FITS file)
+B) O_test_237.fits      # Output data image block
+C) /home/ameert/git_projects/pymorph/examples/full_image/data/Wtest_237.fits      # Sigma image name (made from data if blank or "none") 
+D) /home/ameert/git_projects/pymorph/examples/full_image/data/psf_1447282+0829523.fits #        # Input PSF image and (optional) diffusion kernel
+E) 1                   # PSF oversampling factor relative to data 
+F) M_test_237.fits      # Bad pixel mask (FITS image or ASCII coord list)
+G) test_237.con        # File with parameter constraints (ASCII file) 
+H) 1    104  1    104  # Image region to fit (xmin xmax ymin ymax)
+I) 100    100          # Size of the convolution box (x y)
+J) 22.500              # Magnitude photometric zeropoint 
+K) 0.000  0.000        # Plate scale (dx dy) 
+O) regular             # Display type (regular, curses, both)
+P) 0                   # Create ouput only? (1=yes; 0=optimize) 
+S) 0                   # Modify/create objects interactively?
+
+# INITIAL FITTING PARAMETERS
+#
+#   For object type, the allowed functions are: 
+#       nuker, sersic, expdisk, devauc, king, psf, gaussian, and moffat.
+
+# Objtype:      Fit?         Parameters 
+
+# Object number: 1
+ 0)     sersic         #    Object type
+ 1) 52.9976 51.8257 1 1  #   position x, y
+ 3) 20.5751    1       #  total magnitude 
+ 4) 268.0000    1       #      R_e
+ 5) 7.4807     1       #  exponent (de Vaucouleurs = 4) 
+ 6) 0.0000     0       #     ----- 
+ 7) 0.0000     0       #     ----- 
+ 8) 0.4211     1       #  axis ratio (b/a)  
+ 9) -30.0709    1       #  position angle (PA) 
+10) 0.0000     0       #  diskiness(-)/boxiness(+)
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+# Object number: 2
+ 0)    expdisk         #    Object type
+ 1) 51.8587 52.8485 1 1  #   position x, y
+ 3) 22.2360    1       #  total magnitude 
+ 4) 3.0173     1       #      Rs 
+ 5) 0.0000     0       #     ----- 
+ 6) 0.0000     0       #     ----- 
+ 7) 0.0000     0       #     ----- 
+ 8) 0.4333     1       #  axis ratio (b/a)  
+ 9) -6.5233    1       #  position angle (PA) 
+10) 0.0000     0       #  diskiness(-)/boxiness(+)
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+# Object number: 3
+ 0)        sky         #    Object type
+ 1) 0.6473     0       #  sky background at center of fitting region  
+ 2) 0.0000     0       #  dsky/dx (sky gradient in x) 
+ 3) 0.0000     0       #  dsky/dy (sky gradient in y) 
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+================================================================================
+
