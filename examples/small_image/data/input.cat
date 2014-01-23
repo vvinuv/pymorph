@@ -1,0 +1,2 @@
+gal_id gimg ra1 ra2 ra3 dec1 dec2 dec3 ximg yimg wimg star z
+bcg1 withsky.fits 14 47 26.004  +8 28 24.92 63 63 rms.fits psf_1447219+0828392.fits 0.37546

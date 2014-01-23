@@ -706,6 +706,6 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                 pass
             
     else:
-        print "File does not exist!!!!"
+        print "'%s' File in %s does not exist!!!!" %(filename, os.getcwd())
     
     return     basic_info, fit_info, isnan
