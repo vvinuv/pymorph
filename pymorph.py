@@ -65,11 +65,6 @@ def main():
         if os.path.exists(xf):
             os.system('rm -f %s'%xf)
 
-    #Reading image and weigh files
-    if(c.repeat == False and c.galcut == False):
-        TY, TX = c.imagedata.shape
-        ut.GetWhtImage()
-
     #Initializing psf array. ie. creating c.psflist from file 
     ut.PsfArr() #Now c.psflist has a list
 
@@ -101,8 +96,8 @@ def main():
                                          #in the first line in the clus_cata
 
     # writing a input catalogue (restart.cat) for failed objects
-    for FailedParam in pnames:
-        f_failed.writelines([str(FailedParam), ' '])
+    for p in pnames:
+        f_failed.writelines(['%s '%p])
     f_failed.writelines(['flag \n'])
 
     #The parameter dictionary
@@ -135,63 +130,17 @@ def main():
 	    alpha_j = ut.HMSToDeg(alpha1, alpha2, alpha3)
 	    delta_j = ut.DMSToDeg(delta1, delta2, delta3)
 	# Determine Search Radius 
-	try:
-	    SearchRad = c.searchrad
-	except:
-	    if RaDecInfo:
-		SearchRad = '1arc'
-		print 'No search radius found. Setting to 1 arc sec'
-	    else:
-		SearchRad = '10pix'
-		print 'No search radius found. Setting to 10 pix'
-	if SearchRad.endswith('arc'):
-	    SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
-	    SeaPix = 10.0
-	elif SearchRad.endswith('pix'):
-	    SeaPix = float(SearchRad[:-3])
-	    SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
+        SeaDeg, SeaPix = ut.GetSearchRad(RaDecInfo)
+
+        # Get data
+        ut.GetImageData()
+
+        #Reading weigh files
+        if(c.repeat == False and c.galcut == False):
+            TY, TX = c.imagedata.shape
+            ut.GetWhtImage()
 
 
-	if c.galcut == True:
-	    print 'Image is >>> ', gimg
-	    ggimg = pyfits.open(os.path.join(c.datadir, gimg))
-	    c.imagedata = ggimg[0].data
-	    header0 = ggimg[0].header
-	    ggimg.close()
-	    ut.CheckHeader(header0) #Will set up global header parameters
-	    TX = c.imagedata.shape[1]
-	    TY = c.imagedata.shape[0]
-	    if exists(os.path.join(c.datadir, whtimage)):
-		gwimg = pyfits.open(os.path.join(c.datadir, wimg))
-		c.weightdata = gwimg[0].data
-		gwimg.close()
-		c.weightexists = 1
-	    else:
-		whtimage = 'None'
-	    print 'Using cutouts'
-
-            #The sextractor runs on the cutout before resizing to estimate 
-            #shallow sky
-	    if exists(sex_cata): #If the user provides sextractor catalogue
-				 #then it will not run SExtractor else do!
-		pass
-	    else:
-		try:
-		    RunSex(os.path.join(c.datadir, gimg), \
-			   os.path.join(c.datadir, wimg), 'None', \
-			   9999, 9999, 0)
-		    SexShallow(os.path.join(c.datadir, gimg), \
-			       os.path.join(c.datadir, wimg), \
-			       'None', 9999, 9999, 0)
-		except Exception, inst:
-		    print type(inst)     # the exception instance
-		    print inst.args      # arguments stored in\
-					 # .args
-		    print inst           # __str__ allows args\
-					 # to printed directly
-		    print "something bad happened (Sextractor galcut)!!!!\n\n"
-		    print traceback.print_exc()
- 
 	# Getting the nearest object from the sextractor catalog
         good_object = ut.FindSexObj(sex_cata, RaDecInfo, SeaDeg, SeaPix,
                                     alpha_j, delta_j, ximg, yimg)

@@ -284,6 +284,60 @@ def SetCrashHandler():
     if isset(CrashFitFlag, Get_FitFlag("FAKE_CNTR")):
 	c.center_deviated = 1
 
+def GetSearchRad(RaDecInfo):
+    try:
+        SearchRad = c.searchrad
+    except:
+        if RaDecInfo:
+            SearchRad = '1arc'
+            print 'No search radius found. Setting to 1 arc sec'
+        else:
+            SearchRad = '10pix'
+            print 'No search radius found. Setting to 10 pix'
+    if SearchRad.endswith('arc'):
+        SeaDeg = float(SearchRad[:-3]) / (60.0 * 60.0)
+        SeaPix = 10.0
+    elif SearchRad.endswith('pix'):
+        SeaPix = float(SearchRad[:-3])
+        SeaDeg = c.pixelscale * SeaPix  / (60.0 * 60.0)
+    return SeaDeg, SeaPix
+
+def GetImageData():
+    # Read images 
+    try:
+        if not c.repeat and not c.galcut:
+            img = pyfits.open(os.path.join(c.datadir, c.imagefile))
+            c.imagedata = img[0].data
+            c.HeAdEr0 = img[0].header
+            img.close()
+            ut.CheckHeader(c.HeAdEr0)
+    except IOError, (errno, strerror):
+        print imagefile, "I/O error(%s): %s" % (errno, strerror)
+        os._exit(0)
+
+    # Generate sextractor catalogs if not exists
+    if exists(sex_cata):
+        pass
+    elif not c.galcut:
+        print 'The SExtractor catalogue for your frame is NOT found. ' \
+              'One is being made using the default values. It is always '\
+              'recommended to make SExtractor catalogue by YOURSELF as '\
+              'the pipeline keeps the sky value at the SExtractor value '\
+              'during the decomposition.'
+        if exists(os.path.join(c.datadir, c.whtfile)):
+            RunSex(os.path.join(c.datadir, c.imagefile),
+                   os.path.join(c.datadir , c.whtfile),
+                   'None', 9999, 9999, 0)
+            SexShallow(os.path.join(c.datadir, c.imagefile),
+                       os.path.join(c.datadir, c.whtfile),
+                       'None', 9999, 9999, 0)
+        else:
+            RunSex(os.path.join(c.datadir, c.imagefile),
+                   'None', 'None', 9999, 9999, 0)
+            SexShallow(os.path.join(c.datadir, c.imagefile),
+                       'None', 'None', 9999, 9999, 0)
+
+
 
 def FindSexObj(sex_cata, RaDecInfo, SeaDeg, SeaPix, alpha_j, delta_j, ximg, yimg):
     # first count the number of "potential" targets in the search radius
