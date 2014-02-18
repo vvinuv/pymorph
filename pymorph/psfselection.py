@@ -207,3 +207,156 @@ def selectpsf(ImG, CaT):
             fff.writelines([str(element), '\n'])
         fff.close()
 
+
+def runpsfselect():
+    if(c.galcut):   #Given galaxy cutouts
+        obj_file = open(os.path.join(c.datadir, c.clus_cata),'r')
+        pnames = obj_file.readline().split()
+        c.ValueS = []
+        for v in pnames:
+            c.ValueS.append(v)
+        c.ValueS.append('star')
+        fwithpsf = open('CatWithPsf.cat', 'ab')
+        for v in c.ValueS:
+            fwithpsf.writelines([str(v), ' '])
+        fwithpsf.writelines(['\n'])
+        fwithpsf.close()
+        pdb = {}                        #The parameter dictionary
+        for line_j in obj_file:
+            try:
+                values = line_j.split()
+                c.ValueS = []
+                for v in values:
+                    c.ValueS.append(v)
+                k = 0
+                for pname in pnames:
+                    pdb[pname] = values[k]
+                    k += 1
+                try:
+                    gal_id = pdb["gal_id"]
+                except:
+                    try:
+                        gal_id = pdb["gimg"][:-5]
+                    except:
+                        print "No image or gal_id found in the object" \
+                              "catalogue. Exiting"
+                        os._exit(0)
+                try:
+                    gimg = pdb["gimg"]    #Galaxy cutout
+                except:
+                    if exists(os.path.join(c.datadir, \
+                               'I' + str(c.rootname) + '_' \
+                               + str(gal_id) + '.fits')):
+                        gimg = 'I' + str(c.rootname) + '_' \
+                                + str(gal_id) + '.fits'
+                    elif exists(os.path.join(c.datadir, \
+                         str(gal_id) + '.fits')):
+                        gimg = str(gal_id) + '.fits'
+                    else:
+                        print "No image found. Exiting"
+                        os._exit(0)
+                try:
+                    wimg = pdb["wimg"]   #Weight cut
+                except:
+                    if exists(os.path.join(c.datadir, \
+                              'W' + str(c.rootname) + '_' + \
+                              str(gal_id) + '.fits')):
+                        wimg = 'W' + str(c.rootname) + '_' + \
+                               str(gal_id) + '.fits'
+                    else:
+                        wimg = 'None'
+                GiMg = pyfits.open(os.path.join(c.datadir, gimg))
+                headerGiMg = GiMg[0].header
+                if (headerGiMg.has_key('GAIN')):
+                    c.SEx_GAIN = headerGiMg['GAIN']
+                else:
+                    c.SEx_GAIN = 1
+                GiMg.close()
+                if exists(sex_cata):
+                    pass
+                else:
+                    RunSex(os.path.join(c.datadir, gimg), os.path.join(c.datadir, wimg), 'None', 9999, 9999, 0)
+                try:
+                    selectpsf(os.path.join(c.datadir, gimg), sex_cata)
+                except:
+                    pass
+                if os.access(sex_cata, os.F_OK):
+                    os.remove(sex_cata)
+            except:
+                pass
+        obj_file.close()
+        AskForUpdate = raw_input("Do you want to update the clus_cata? " \
+                        "('y' for yes) ")
+        if AskForUpdate == 'y':
+            cmd = 'mv CatWithPsf.cat ' +str(c.clus_cata)
+            os.system(cmd)
+        else:
+            pass
+    else:
+        selectpsf(os.path.join(c.datadir, c.imagefile), sex_cata)
+
+
+def FindAndFit():
+    if c.findandfit == 1:
+        if c.psfselect > 2:
+            #magmin = raw_input("Enter Minimum Magnitude >>> ")
+            magmin = raw_input("What is faintest magnitude galaxy that you want to fit? >>> ")     #modified by abhishek
+            try:
+                magmin = float(magmin) * 1.0
+            except:
+                magmin = 9999
+            #magmax = raw_input("Enter Maximum Magnitude >>> ")
+            magmax = raw_input("What is brightest magnitude galaxy that you want to fit? >>> ")    #modified by abhishek
+            try:
+                magmax = float(magmax) * 1.0
+            except:
+                magmax = -9999
+            stargal = raw_input("Enter star-galaxy classification "\
+                                "(1 for star and 0 is galaxy (0.8 is "\
+                                " a good number) >>> ")
+            redshift = raw_input("Enter redshift, if you know >>> ")
+            try:
+                redshift = float(redshift)*1.0
+            except:
+                redshift = 9999
+        elif c.psfselect <= 2:
+            try:
+                magmin = c.maglim[0]
+                magmax = c.maglim[1]
+                stargal = c.stargal
+                redshift = 9999
+            except:
+                magmin = 9999
+                magmax = -9999
+                stargal = 0.8
+                redshift = 9999
+        NewClusCata = open(c.clus_cata,'w')
+        if redshift == 9999:
+            NewClusCata.writelines(['gal_id ra1 dec1 mag\n'])
+        else:
+            NewClusCata.writelines(['gal_id ra1 dec1 mag z\n'])
+        for lineSex in open(sex_cata, 'r'):
+            ValueSex = lineSex.split()
+            try:
+                if float(ValueSex[17]) > magmax and \
+                   float(ValueSex[17]) < magmin and \
+                   float(ValueSex[16]) < float(stargal):
+                    if redshift == 9999:
+                        NewClusCata.writelines([str(ValueSex[0]), ' ', \
+                                   str(float(ValueSex[3]) / 15.0), ' ', \
+                                   str(float(ValueSex[4])), ' ',\
+                                   str(ValueSex[17]), '\n'])
+                    else:
+                        NewClusCata.writelines([str(ValueSex[0]), ' ', \
+                            str(float(ValueSex[3]) / 15.0), ' ', \
+                            str(float(ValueSex[4])), \
+                            ' ', str(redshift), ' ', \
+                            str(ValueSex[17]), '\n'])
+            except:
+                pass
+        NewClusCata.close()
+        c.searchrad = '0.05arc'
+    else:
+        pass
+
+
