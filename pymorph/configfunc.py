@@ -108,7 +108,7 @@ class ConfigFunc:
                 c.Flag = SetFlag(c.Flag, GetFlag('FIT_POINT'))
             elif Co == 'bar':
                 confiles.write_bar(target)
-                c.Flag = SetFlag(c.Flag, GetFlag('FIT_BULGE'))
+                c.Flag = SetFlag(c.Flag, GetFlag('FIT_BAR'))
 
         confiles.write_sky(target)
         
@@ -380,21 +380,21 @@ class con_G_writer():
             self.f_constrain.write(str(self.obj_counter) + '      pa       -360.0 to 360.0\n')
 
         barmag = target.mag + 2.5 * np.log10(3.0)
-        f.write('# Sersic function for bar\n\n')
-        f.writelines([' 0) sersic		# Object type\n'])
-        f.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
+        self.f_G.write('# Sersic function for bar\n\n')
+        self.f_G.writelines([' 0) sersic		# Object type\n'])
+        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
                       str(c.fitting[3]), ' ', str(c.fitting[3]), '   #',\
                       ' position x, y [pixel]\n'])
-        f.writelines([' 3) ', str(barmag), ' 1		# total magnitude\n'])
-        f.writelines([' 4) ', str(target.radius), ' 1		# R_e [Pixels]\n'])
-        f.writelines([' 5) 0.5 1		#Sersic exponent',\
+        self.f_G.writelines([' 3) ', str(barmag), ' 1		# total magnitude\n'])
+        self.f_G.writelines([' 4) ', str(target.radius), ' 1		# R_e [Pixels]\n'])
+        self.f_G.writelines([' 5) 0.5 1		#Sersic exponent',\
                       ' (deVauc=4, expdisk=1)\n'])
-        f.writelines([' 8) ', str('0.3'), ' 1	# axis ratio (b/a)\n'])
-        f.writelines([' 9) ', str(target.pos_ang_galfit), ' 1		# position angle (PA)',\
+        self.f_G.writelines([' 8) ', str('0.3'), ' 1	# axis ratio (b/a)\n'])
+        self.f_G.writelines([' 9) ', str(target.pos_ang_galfit), ' 1		# position angle (PA)',\
                           '[Degrees: Up=0, Left=90]\n'])
-        f.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
+        self.f_G.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
                       'boxiness (> 0)\n'])
-        f.writelines([' Z) 0 			# output image',\
+        self.f_G.writelines([' Z) 0 			# output image',\
                       ' (see above)\n\n\n']) 
 
         return
