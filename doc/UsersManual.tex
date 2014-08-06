@@ -4,10 +4,13 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{xcolor}
+
 \textwidth 15cm
 \textheight 23cm
 %\oddsidemargin -0.0in
 \oddsidemargin -6 true pt 
+\newcommand{\red}[1]{{\color{red}[#1]}}
 
 \begin{document}
 \begin{titlepage}
@@ -39,20 +42,48 @@ Pune, India
 \end{titlepage}
 \tableofcontents
 \clearpage
-\section{PyMorph}
+\section{PyMorph and Usage}
 {\bf PyMorph} is a software pipeline which computes non-parametric and parametric morphological parameters of galaxies. PyMorph uses GALFIT (Peng et. al. 2002) for bulge disk decomposition of galaxy and SExtractor (Bertin et. al. 1996) for determining the initial values. PyMorph uses its own module to calculate Concentration index, Asymmetry, Clumpness, Gini Coefficient, second order moment of the brightest 20\% pixels of galaxies(CASGM). In this section we will explain PyMorph in detail.
 \subsection{Dependencies}
 \begin{enumerate}
- \item Python 2.4 or greater
- \item Stsci$\_$python (This package includes numpy, pyfits, pyraf)
+ \item Python 2.7 or greater NOT python 3.0 or greater
+ \item numpy
+ \item matplotlib
+ \item pyfits
  \item GALFIT
  \item SExtractor
- \item matplotlib
  \item xpa (optional, if you want to select PSF)
+ \item MySQLdb (optional) if you need to use mysql database
 \end{enumerate}
 
+\subsection{Install PyMorph}
+\begin{itemize}
+\item Get a copy from https://github.com/vvinuv/pymorph
+\item Edit .cshrc file and give
+\begin{footnotesize}
+\begin{verbatim}
+setenv PYTHONPATH /path/to/pymorph/pymorph
+alias pymorph '/path/to/pymorph/pymorph.py'
+\end{verbatim}
+\end{footnotesize}
+\end{itemize}
+
+\subsection{Test PyMorph installation}
+\begin{itemize}
+\item cd test\_data
+\item pymorph
+\end{itemize}
+
+\subsection{Run PyMorph}
+\begin{itemize}
+\item cp config.py.example /your/data/area/where/you/want/to/run/pymorph
+\item cd /your/data/area/where/you/want/to/run/pymorph
+\item Edit config.py according to Section \ref{inputp} 
+\item pymorph [options]
+\end{itemize}
+
 \subsection{Working modes}
-The pipeline works in different modes. A short description of the available modes are the following
+The pipeline works in different modes. A short description of the available modes are the following and most of the time user may require only Normal and PSF selection modes.
 \begin{enumerate}
  \item Normal Mode : In normal mode, user will be able give two kind of inputs
 \begin{itemize}
@@ -62,43 +93,49 @@ a. A large field(s) of galaxies. eg. HST-ACS/WFPC2, SDSS, 2MASS fields
 b. Galaxy(ies) in cutout image(s)
 \end{itemize}
 
-\item Repeat Mode : The parameter estimation process can be failed due to several reasons. If the user feels that the fitting can be improved by adjusting the initial values or using an efficient mask, this mode can be used. Here the pipeline will run again on the failed galaxies using the user specified parameters and images. %with the experience gained from past.
-\item Find and Fit : Generate parameters of objects which satisfy the magnitude range specified by the user.
+\item Repeat Mode \red{No may not need this}: The parameter estimation process can be failed due to several reasons. If the user feels that the fitting can be improved by adjusting the initial values or using an efficient mask, this mode can be used. Here the pipeline will run again on the failed galaxies using the user specified parameters and images. %with the experience gained from past.
+\item Find and Fit \red{You may not need this}: Generate parameters of objects which satisfy the magnitude range specified by the user.
 
 \item PSF Selection : To select the PSFs from image
 
 \end{enumerate}
-\subsection{Pre-Pipeline Procedure}
+
+\subsection{Basic pre-pipeline steps}
 \begin{enumerate}
- \item 
-Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this catalogue MUST follow a particular order and that can be found in the Appendix. This is recommended, as the PyMorph may keep the sky value at the SExtractor value during the 2D decomposition. So running SExtractor needs care. If PyMorph does not find any SExtractor catalogue it will create one using the default parameters.
+ \item
+Create a catalogue of galaxies for which the user wants to generate the morphological parameters. The possible columns in the catalogue can be seen the Section \ref{cluscat}. Name of this catalog should be given in config.py (see next section). \red{Ignore this: If the FindAndFit mode is enabled, then the program will not search for this catalogue.}
 \item
-Create a catalogue of galaxies for which the user wants to generate the morphological parameters. The possible columns in the catalogue can be seen the Section \ref{cluscat}. If the FindAndFit mode is enabled, then the program will not search for this catalogue.
-\item
-Create PSF files% either using PyMorph or by some other means.
+Create PSF files. A file contains the list of PSF should be given in config.py (see next section) % either using PyMorph or by some other means.
 \item
 Edit the config.py which is the configuration file for the pipeline. The parameters in the configuration file are described in the Section \ref{inputp}.
+ \item 
+\red{Ignore this:} Run SExtractor on the frame and the resulting file contains the information of all the object in the frame. The output parameters of this catalogue MUST follow a particular order and that can be found in the Appendix. This is recommended, as the PyMorph may keep the sky value at the SExtractor value during the 2D decomposition. So running SExtractor needs care. If PyMorph does not find any SExtractor catalogue it will create one using the default parameters.
 \end{enumerate}
 
 \subsection{Input parameters}
 \label{inputp}
+Change the values of parameters shown in red. You can play with other parameters later.
 \begin{itemize}
-\item \textbf{imagefile:} The large image frame.% This image will be used only if the user are decomposing galaxies in a large frame.
+\item \textbf{\red{imagefile:}} As described earlier, if the user is giving a large image frame (Normal mode a.) which include several galaxies to be fitted, then the name of the image should be given here. % This image will be used only if the user are decomposing galaxies in a large frame.
 
-\item \textbf{whtfile:} The corresponding rms/weight map of the large frame. If the name contains the string \textit{wht}/\textit{rms} then the program treats it as weight/rms image. If this file is not found the program will skip this step. 
+\item \textbf{\red{whtfile:}} The corresponding rms/weight map of the large frame. If the name contains the string \textit{wht}/\textit{rms} then the program treats it as weight/rms image. If this file is not found the program will skip this step. 
 
-\item \textbf{sex\_cata:} The SExtractor catalogue of all the objects in the frame. If the user provide one SExtractor catalogue, PyMorph uses it. Otherwise it generate using the default SExtractor parameters in the pipeline. One can use the command line option \textit{--edit-conf} to change these parameters according to their images.
+\item \textbf{\red{sex\_cata:}} The SExtractor catalogue of all the objects in the frame (which includes both objects to be fitted and other objects). If the user provide one SExtractor catalogue, PyMorph uses it. Otherwise it generate using the default SExtractor parameters in the pipeline. One can use the command line option \textit{--edit-conf} to change these parameters according to their images.
 
-\item \textbf{clus\_cata:} The list of all the objects of interest. The possible columns in this file are given in the Section: \ref{cluscat} and each column must have the title. The program needs at least \textit{gal\_id} or \textit{gimg} to run.
+\item \textbf{\red{clus\_cata:}} The list of all the objects of interest, i.e. objects the user need to fit. The possible columns in this file are given in the Section: \ref{cluscat} and each column has a name (see Section: \ref{cluscat}). %The program needs at least \textit{gal\_id} or \textit{gimg} to run.
+
+\item \textbf{\red{datadir:}} The directory where you keep the input images
 
 \item \textbf{out\_cata:} The name of the output catalogue. Program will make a catalogue of all the galaxies for which the morphological parameters are generated.
 
 \item \textbf{rootname:} Root name. You can give just a blank '' to avoid this. If the program finds \textit{rootname}, it will be appended to all the intermediate files and the name of the galaxy in the result file.
 
-\item \textbf{psfselect:} Since selecting GOOD PSFs from large frames and make a list of them is time consuming, we have added a small utility which will help the user to find the PSF with out spending much time. This can be achieved by using the psfselect parameter. This parameter can take either 0, 1 or 2. The meaning of these are following
+\item \textbf{\red{outdir:}} The directory contains all the output 
+
+\item \textbf{\red{psfselect:}} Since selecting GOOD PSFs (i.e. a list of good stellar images) from large frames and make a list of them is time consuming, we have added a small utility which will help the user to find the PSF with out spending much time. This can be achieved by using the psfselect parameter. This parameter can take either 0, 1 or 2. The meaning of these are following
 \begin{itemize}
 \item 0 $=>$ The pipeline will continue with the user given PSFs.
-\item 1 $=>$ The pipeline will run only for finding PSFs.
+\item 1 $=>$ The pipeline will run only for finding PSFs. This requires xpa and ds9 to be installed. The user will be prompted to accept or reject each stellar image in the frame. Finally, there will be several psf*fits files and psflist.list in the directory. psf*fits are the images of stellar images you selected and psflist.list is the list of psf*fits. While fitting pymorph select the nearest PSF to each object.
 \item 2 $=>$ Find PSFs and run pipeline.
 \item[] It is recommended to use \textit{psfselect} = 1 and select PSFs first. After having
  good PSFs, run pipeline with \textit{psfselect} = 0.
@@ -152,12 +189,12 @@ size = [resize, varsize, fracrad, square, fixsize]
 
 \item The following parameters decide the working mode of PyMorph
 \begin{itemize}
-\item[] \textbf{repeat:} If it is True, repeat the pipeline manually.
-\item[] \textbf{galcut:} True, if the input is cutout of galaxies.
+\item[] \textbf{repeat:} \red{May not need this. Keep it False} If it is True, repeat the pipeline manually.
+\item[] \textbf{\red{galcut:}} True, if the input is cutout of galaxies.
 \item[] \textbf{decompose:} True, if the user wants to extract the structural parameters.
 \item[] \textbf{cas:} True, if user wants to find the CASGM parameters.
-\item[] \textbf{findandfit:} True, to run PyMorph for galaxies within some magnitude range.
-\item[] \textbf{crashhandler:} If it is True, then the PyMorph will handle the possible crashes during the pipeline process and try to fix those  errors in the next run. %The details can be found in the Section \ref{crash}
+\item[] \textbf{findandfit:} \red{Keept it False} True, to run PyMorph for galaxies within some magnitude range.
+\item[] \textbf{crashhandler:} \red{Keep it False} If it is True, then the PyMorph will handle the possible crashes during the pipeline process and try to fix those  errors in the next run. %The details can be found in the Section \ref{crash}
 \end{itemize}
 
 \item \textbf{components:} The user can decide the components for fitting. By default PyMorph assumes a disk and a bulge to model the light distribution of the galaxy. The available components are bulge, disk and point.
@@ -179,97 +216,134 @@ size = [resize, varsize, fracrad, square, fixsize]
 \item \textbf{center\_deviation:} Using this parameter, the user can specify the amount of deviation allowed for the center. If the fitted center deviates from the initial center more than this amount, that will be considered as a crash and refit the galaxy, provided the \textit{crashhandler} is True.
 % \end{itemize}
 
+\item \textbf{\red{GALFIT\_PATH:}} Path to galfit
+\item \textbf{\red{SEX\_PATH:}} Path to sextractor
+\item \textbf{\red{PYMORPH\_PATH:}} Path to pymorph
+\item \textbf{\red{galfitv:}} Version of galafit 2 or 3
+
+
 \end{itemize}
 \subsection{config.py}
 Here is the configuration file for PyMorph.
 \begin{footnotesize}
 \begin{verbatim}
-"""Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar Ajit Kembhavi"""
+"""Configure file for PyMorph. Authors: Vinu Vikram, Yogesh Wadadekar and Ajit Kembhavi (IUCAA) 2008, Alan Meert (UPenn)"""
 ###----Specify the input images and Catalogues----###
 imagefile = 'j8f643-1-1_drz_sci.fits'
-whtfile = 'j8f643-1-1_drz_rms.fits'  #The weight image. 
-sex_cata = 'j8f643_sex.cat'          #The sextractor catalogue which has 
-                                     #the format given in the file
-clus_cata = 'cl1216-1201.cat'        #catalogue of galaxies from
-                                     #online catalogue service
-                                     #(name ra1 ra2 ra2 dec1 dec2 dec3)
+whtfile = 'j8f643-1-1_drz_rms.fits' #The weight image. If it contains the
+                                      #string 'rms', this will treated as
+#RMS_MAP and if it contains weight, then
+                                      #that will be treated as WEIGHT_MAP.
+#If nothing found, then by default it
+#is treated as MAP_RMS
+sex_cata = 'j8f643_sex.cat' #The sextractor catalogue which has
+                                      #the format given in the file
+clus_cata = 'cl1216-1201.cat' #catalogue of galaxies from
+                                      #online catalogu service
+                                      #(name ra1 ra2 ra2 dec1 dec2 dec3)
+
+datadir = '/data2/home/ameert/sdss_sample/fit_data/'
+#the directory containing input images
+                                       #if commented out, then program uses
+                                       # current directory
 
 ###----Specify the output names of images and catalogues----###
-out_cata = 'cl1216-1201_out.cat'     #catalogue of galaxies in the field
+out_cata = 'cl1216-1201_out.cat' #catalogue of galaxies in the field
 rootname = 'j8f643'
 
+outdir = '/data2/home/ameert/sdss_sample/fits_out/dev/1/'
+#the directory containing output data
+                                        #if commented out, then program uses
+                                        # current directory
+
 ###----Psf list----###
-psfselect = 0                        #0 => No psfselection
-                                     #1 => Only Select psf 
-                                     #2 => Select psf and run pipeline
-                                     #Recommended: Run with '1' and then run
-                                     #pipeline
-starsize = 20                        #psf image size will be startsize times 
-                                     #the SMA given by SExtractor
-#psflist = ['psf_1216382-1200443.fits', 'psf_1216408-1200251.fits']
+psfselect = 0 #0 => No psfselection
+                                      #1 => Only Select psf
+                                      #2 => Select psf and run pipeline
+                                      #Recommended: Run with '1' and then run
+                                      #pipeline
+starsize = 20 #psf image size will be startsize times
+                                      #the SMA given by SExtractor
+#psflist = ['psf_1216382-1200443.fits', 'psf_1216408-1200251.fits', 'psf_1216424-1202057.fits','psf_1216487-1201246.fits','psf_1216504-1202104.fits']
 psflist = '@psflist.list'
-                                     #List of psf contains their 
-                                     #position information in the 
-                                     #header (RA_TARG, DEC_TARG). 
-                                     #Make psf with the names as here 
-                                     #and use psf_header_update.py. 
-                                     #It will update the header information.
-mag_zero = 25.256                    #magnitude zero point
+                                      #List of psf containg their
+                                      #position information in the
+                                      #header (RA_TARG, DEC_TARG).
+                                      #Make psf with the names as here
+                                      #and use psf_header_update.py.
+                                      #It will update the header information.
+mag_zero = 25.256 #magnitude zero point
 
 ###----Conditions for Masking----###
 manual_mask = 0
 mask_reg = 2.0
 thresh_area = 0.2
-threshold = 3.0                      #Masking will be done for neighbours 
-                                     #whose semimajor*threshold overlaps with 
-                                     #threshold * semi-major axis of 
-                                     #the object and area of the neighbour 
-                                     #less than thresh_area * object area in
-                                     #sq.pixel. 
-                                     #The masking will be for a circular 
-                                     #region of radius mask_reg*semi-major 
-                                     #axis of the nighbour with respect to 
-                                     #the center of the neightbour.
+threshold = 3.0 #Masking will be done for neighbours
+                                      #whose semimajor*threshold overlaps with
+                                      #threshold * semi-major axis of
+                                      #the object and area of the neighbour
+                                      #less than thresh_area * object area in
+                                      #sq.pixel.
+                                      #The masking will be for a circular
+                                      #region of radius mask_reg*semi-major
+                                      #axis of the nighbour with respect to
+                                      #the center of the neightbour.
+
 ###---Size of the cut out and search conditions---###
 ###---size = [resize?, varsize?, fracrad, square?, fixsize]---###
-size = [0, 1, 6, 1, 120]             #size of the stamp image
-searchrad = '0.3arc'                 #The search radius  
+size = [0, 1, 6, 1, 120] #size of the stamp image
+searchrad = '0.3arc' #The search radius
 
 ###----Parameters for calculating the physical parameters of galaxy----###
-pixelscale = 0.045                   #Pixel scale (arcsec/pixel)
-H0 = 71                              #Hubble parameter
-WM = 0.27                            #Omega matter
-WV = 0.73                            #Omega Lambda
+pixelscale = 0.045 #Pixel scale (arcsec/pixel)
+H0 = 71 #Hubble parameter
+WM = 0.27 #Omega matter
+WV = 0.73 #Omega Lambda
 
 ###----Parameters to be set for calculating the CASGM----###
 back_extraction_radius = 15.0
-#back_ini_xcntr = 32.0 
+#back_ini_xcntr = 32.0
 #back_ini_ycntr = 22.0
 angle = 180.0
 
 ###----Fitting modes----###
-repeat = False                       #Repeat the pipeline manually
-galcut = False                       #True if we provide cutouts
+repeat = False #Repeat the pipeline manually
+galcut = False #True if we provide cutouts
 decompose = True
+detail = False #Detailed fitting
 galfit = True #Always keep this True as it is not functional yet!
 cas = True
 findandfit = 0
+maglim = [22, 15] #if findandfit= 1, then maglim = [faint_mag, bright_mag]
+stargal = 0.8 #Star-galaxy classification
 crashhandler = 1
 
 ###---Galfit Controls---###
-components = ['bulge', 'disk']       #The components to be fitted to the objec
+components = ['bulge', 'disk'] #The components to be fitted to the object
+devauc = False # set to False to fit sersic bulge, set to true to fit devacouler's bulge (n = 4)
+
 ###---fixing = [bulge_center, disk_center, sky]
-fitting = [1, 1, 0]                  # = 0, Fix params at SExtractor value
+fitting = [1, 1, 0] # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
-GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 
+GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit'
 SEX_PATH = '/home/vinu/software/sextractor-2.5.0/sex/bin/sex'
 PYMORPH_PATH = '/home/vinu/serial_pipeline/trunk/pymorph'
+galfitv = '3.0.2'
 
 ###----The following conditions are used to classify fit goo/bad----###
-chi2sq = 1.9                         #< chi2sq
-Goodness = 0.60                      #> Goodness
-center_deviation = 3.0               #< abs(center - fitted center)
+chi2sq = 1.9 #< chi2sq
+Goodness = 0.60 #> Goodness
+center_deviation = 3.0 #< abs(center - fitted center)
+center_constrain = 2.0 #Keep center within +/- center_constrain
+
+###----Database Informations----###
+host = 'localhost'
+database = 'Cluster'
+table = 'cluster'
+usr = 'vinu'
+pword = 'cluster'
+dbparams = ['Cluster:cl1216-1201', 'ObsID:1:int']
 \end{verbatim}
 \end{footnotesize}
 \subsection{Possible columns in clus\_cata}
@@ -360,13 +434,13 @@ The architecture of the PyMorph is shown in the Figures \ref{fig:arch1}, \ref{fi
  \label{fig:arch1}
 \end{figure}
 
- \begin{figure}%[tbh!]
- \centering
- \includegraphics[scale=0.5]{pipeline-full.png}
+% \begin{figure}%[tbh!]
+% \centering
+% \includegraphics[scale=0.5]{pipeline-full.png}
  % pipeline-arch1.png: 641x234 pixel, 72dpi, 22.61x8.26 cm, bb=0 0 641 234
- \caption{The PyMorph Architecture}
- \label{fig:arch2}
-\end{figure}
+% \caption{The PyMorph Architecture}
+% \label{fig:arch2}
+%\end{figure}
 
 % \begin{figure}[tbh!]
 %  \centering
@@ -463,21 +537,21 @@ After setting the initial value we create a contrain file, which restrict the fr
 The position angle and axis ratio are set from the values of the THETA\_IMAGE and ELONGATION parameters.
 
 The estimation of CASGM parameters are explained in the Section \ref{casgm}. Finally the pipeline creates diagnostic plots (Figures 3, 4) and results in different formats which includes html, csv, mysql database and fits cutouts.
-\begin{figure}
- \centering
- \includegraphics[scale=0.5]{P_Ij8f648_EDCSNJ1216446-1201089.png}
+%\begin{figure}
+% \centering
+% \includegraphics[scale=0.5]{P_Ij8f648_EDCSNJ1216446-1201089.png}
  % P_Ij8f648_EDCSNJ1216446-1201089.png: 666x402 pixel, 72dpi, 23.49x14.18 cm, bb=0 0 666 402
- \label{fig:output}
-\caption{Output image from PyMorph}
-\end{figure}
+% \label{fig:output}
+%\caption{Output image from PyMorph}
+%\end{figure}
 
-\begin{figure}
- \centering
- \includegraphics[scale=0.3]{pymorph-html.jpg}
+%\begin{figure}
+% \centering
+% \includegraphics[scale=0.3]{pymorph-html.jpg}
  % P_Ij8f648_EDCSNJ1216446-1201089.png: 666x402 pixel, 72dpi, 23.49x14.18 cm, bb=0 0 666 402
- \label{fig:html}
-\caption{HTML output from PyMorph}
-\end{figure}
+% \label{fig:html}
+%\caption{HTML output from PyMorph}
+%\end{figure}
 \subsubsection{Normal Mode with cutouts}
  In this mode the pipeline follows the same route as explained in the previous section. In this case if the program doesn't find the RA, DEC information or the centroid of the object, it extract the morphological parameters of the object in the center of the image. 
 \subsubsection{Repeat Mode}
@@ -677,13 +751,13 @@ where $f_{tot}$ is the total flux of the segmentation map. The normalization by 
 
 \section{Parallel PyMorph}
 We have parallelized the pipeline based on Single Program, Multiple Data technique. The algorithm used here is shown in the Figure \ref{fig:para}. In this implementation we will have a master processor and $N_P$ slaves. The master will do the pre-processing and post-processing. In the pre-processing part the master processor will create stamp image of the galaxy and pass it to the slave. This process continues until the number of jobs ($N_J$) less than $N_P$. The slave runs PyMorph in the GALCUT mode and send the result to the master. As soon as the master get the result from the $N^{th}$ slave it creates cutout of another galaxy and send to the same processor. Finally, the master generate a final result file which is the only post-processing part. We have tested the parallel PyMorph and found that if we increase the number of slaves 10 fold, then the time requires to generate the parameters decreases $\sim$ 6 fold.
-\begin{figure}
- \centering
- \includegraphics[scale=0.6]{parallel-dia.png}
+%\begin{figure}
+% \centering
+% \includegraphics[scale=0.6]{parallel-dia.png}
  % parallel-dia.png: 630x400 pixel, 72dpi, 22.23x14.11 cm, bb=0 0 630 400
- \label{fig:para}
-\caption{The schematic diagram of Parallel PyMorph. $N_P$ is the number of slaves and $N_J$ is the number of jobs}
-\end{figure}
+% \label{fig:para}
+%\caption{The schematic diagram of Parallel PyMorph. $N_P$ is the number of slaves and $N_J$ is the number of jobs}
+%\end{figure}
 
 % \section{Methods}
 % \subsection{Masking}
@@ -872,19 +946,4 @@ Flag & Explanation \\
 \end{tabular}
 \end{center}
 
-\subsection{How to run PyMorph?}
-\begin{itemize}
-\item tar xzvf PyMorph.tar.gz
-\item cp config.py /your/data/area/where/you/want/to/run/pymorph
-\item Edit .cshrc file and give
-\begin{footnotesize}
-\begin{verbatim}
-setenv PYTHONPATH /path/to/PyMorph/pymorph
-alias pymorph '/path/to/PyMorph/pymorph.py'
-\end{verbatim}
-\end{footnotesize}
-\item cd /your/data/area/where/you/want/to/run/pymorph
-\item Edit config.py and add path to your GALFIT and SExtractor binaries.
-\item pymorph [options]
-\end{itemize}
 \end{document}
