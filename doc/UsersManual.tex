@@ -93,10 +93,12 @@ a. A large field(s) of galaxies. eg. HST-ACS/WFPC2, SDSS, 2MASS fields
 b. Galaxy(ies) in cutout image(s)
 \end{itemize}
 
+\item PSF Selection : To select the PSFs from image. 
+
 \item Repeat Mode \red{No may not need this}: The parameter estimation process can be failed due to several reasons. If the user feels that the fitting can be improved by adjusting the initial values or using an efficient mask, this mode can be used. Here the pipeline will run again on the failed galaxies using the user specified parameters and images. %with the experience gained from past.
+
 \item Find and Fit \red{You may not need this}: Generate parameters of objects which satisfy the magnitude range specified by the user.
 
-\item PSF Selection : To select the PSFs from image
 
 \end{enumerate}
 
@@ -145,7 +147,7 @@ Change the values of parameters shown in red. You can play with other parameters
 % \begin{itemize}
 % \item[] The size of the psf image in terms of the semi-major axis of the image. The size of the image will be\textit{ starsize * semi-major axis}
 % \end{itemize}
-\item \textbf{psflist:} List of PSFs. You can give it either as a list like \textbf{['psf1.fits, 'psf2.fits', etc]} or point to a file which contains the names of PSFs as \textbf{'@psflist.txt}'. The pipeline will select the nearest PSF to the object of interest either using the header information or using the information from its name. In the latter case, the PSF's name should have the form \textbf{ psf\_radec.fits}.
+\item \textbf{\red{psflist:}} List of PSFs. You can give it either as a list like \textbf{['psf1.fits, 'psf2.fits', etc]} or point to a file which contains the names of PSFs as \textbf{'@psflist.txt}'. The pipeline will select the nearest PSF to the object of interest either using the header information or using the information from its name. In the latter case, the PSF's name should have the form \textbf{ psf\_radec.fits}.
 \begin{verbatim}Eg. If the PSF's position is (12:16:43.5, -12:03:12.0) then the 
 name should be psf_1216435-1203120.fits.
 \end{verbatim}
