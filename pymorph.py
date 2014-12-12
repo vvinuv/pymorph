@@ -40,30 +40,28 @@ from writehtmlfunc import WriteParams
 #from configbulgedisk import *
 
 
+def InitializeOutputParams():
+    c.OutputParams = {}
+    c.FailedGalaxies = {}
 
 def main():
+    InitializeOutputParams()
     sex_cata = c.sex_cata
+
+    # The file contains the objects of interest 
+    obj_file = open(os.path.join(c.datadir, clus_cata), 'r')  
+    pnames = obj_file.readline().split() #The names of the parameters given 
+                                         #in the first line in the clus_cata
+
 
     #Size parameters
     ReSize, VarSize, Square, FracRad, FixSize = ut.GetSizeInfo()
 
-    #Initialize index.html
-    if exists('index.html'):
-        pass
-    else:
-        indexfile = open('index.html', 'w')
-        indexfile.writelines(['<HTML>\n<BODY>\n'])
-        indexfile.writelines(['</BODY></HTML>'])
-        indexfile.close()
+    # Model for fitting
+    ComP = ut.GetModel()
 
-    # Opens files to write output
-    f_cat = open(c.out_cata, 'w')
-    f_failed = open('restart.cat', 'w')
-
-    # Remove some intermediate files
-    for xf in ['TmpElliMask.fits', 'TmpElliMask1.fits']:
-        if os.path.exists(xf):
-            os.system('rm -f %s'%xf)
+    # List of the output parameters
+    ParamToWrite = ut.PyMorphOutputParams(c.dbparams, c.decompose)    
 
     #Initializing psf array. ie. creating c.psflist from file 
     ut.PsfArr() #Now c.psflist has a list
@@ -73,32 +71,10 @@ def main():
         for psfelement in c.psflist:
             ut.UpdatePsfRaDec(psfelement)
 
-    # Model for fitting
-    ComP = ut.GetModel()
-
-    # Writing csv header and finding the output parameters
-    ParamToWrite = ut.PyMorphOutputParams(c.dbparams, c.decompose)    
-    if exists('result.csv'):
-        pass
-    else:
-        f_res = open("result.csv", "ab")
-        csvlist = ['%s_%d'%(ParamToWrite[par_key][0], par_key)
-                   for par_key in ParamToWrite.keys()]
-        print csvlist
-        writer = csv.writer(f_res)
-        writer.writerow(csvlist)
-        f_res.close()
-
-
-    # The file contains the objects of interest 
-    obj_file = open(os.path.join(c.datadir, clus_cata), 'r')  
-    pnames = obj_file.readline().split() #The names of the parameters given 
-                                         #in the first line in the clus_cata
-
-    # writing a input catalogue (restart.cat) for failed objects
-    for p in pnames:
-        f_failed.writelines(['%s '%p])
-    f_failed.writelines(['flag \n'])
+    if c.WriteHtmlFile:
+        ou.InitializeHtmlIndexFile()
+    ou.InitializeResultCSV(ParamToWrite)
+    ou.InitializeFailedList(pnames)
 
     #The parameter dictionary
     pdb = {} 
@@ -113,14 +89,14 @@ def main():
         # Assign parameter values
         alpha1, alpha2, alpha3, delta1, delta2, delta3, z, bxcntr, bycntr,\
         UserGivenPsf, UserGivenSky, gimg, wimg, ximg, yimg, RaDecInfo = \
-        ut. GetInputParams(pnames, line_j)
+        ut.GetInputParams(pnames, line_j)
  
         # Find what is input images
         gimg, outimage, wimg, config_file, c.pfile, maskimage, confile = \
                                   DecisionMaker(gimg, wimg, ximg, yimg)
 
 	# Crashhandling starts
-	SetCrashHandler()
+	# ut.SetCrashHandler()
 
         # Set coordinates               
 	if(alpha1 == -9999 or delta1 == -9999):
