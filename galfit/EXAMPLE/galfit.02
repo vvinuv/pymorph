@@ -1,0 +1,62 @@
+
+#  Chi^2/nu = 1.024,  Chi^2 = 3432.420,  Ndof = 3351
+
+================================================================================
+# IMAGE and GALFIT CONTROL PARAMETERS
+A) 00000002_r_stamp.fits      # Input data image (FITS file)
+B) O_00000002_r_stamp.fits      # Output data image block
+C) 00000002_r__r_W.fits      # Sigma image name (made from data if blank or "none") 
+D) 00000002_r_psf.fits #        # Input PSF image and (optional) diffusion kernel
+E) 1                   # PSF oversampling factor relative to data 
+F) M_00000002_r_stamp.fits      # Bad pixel mask (FITS image or ASCII coord list)
+G) 00000002_r_stamp.con      # File with parameter constraints (ASCII file) 
+H) 1    58   1    58   # Image region to fit (xmin xmax ymin ymax)
+I) 58     58           # Size of the convolution box (x y)
+J) 25.256              # Magnitude photometric zeropoint 
+K) 0.000  0.000        # Plate scale (dx dy) 
+O) regular             # Display type (regular, curses, both)
+P) 0                   # Create ouput only? (1=yes; 0=optimize) 
+S) 0                   # Modify/create objects interactively?
+
+# INITIAL FITTING PARAMETERS
+#
+#   For object type, the allowed functions are: 
+#       nuker, sersic, expdisk, devauc, king, psf, gaussian, and moffat.
+
+# Objtype:      Fit?         Parameters 
+
+# Object number: 1
+ 0)     sersic         #    Object type
+ 1) 30.0650 30.1242 1 1  #   position x, y
+ 3) 18.6845    1       #  total magnitude 
+ 4) 2.4086     1       #      R_e
+ 5) 4.0000     0       #  exponent (de Vaucouleurs = 4) 
+ 6) -1.9991    0       #     ----- 
+ 7) -0.0000    0       #     ----- 
+ 8) 0.6010     1       #  axis ratio (b/a)  
+ 9) 83.2332    1       #  position angle (PA) 
+10) 0.0000     0       #  diskiness(-)/boxiness(+)
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+# Object number: 2
+ 0)    expdisk         #    Object type
+ 1) 30.7362 30.6187 1 1  #   position x, y
+ 3) 19.9247    1       #  total magnitude 
+ 4) 9.0276     1       #      Rs 
+ 5) 0.0000     0       #     ----- 
+ 6) 0.0000     0       #     ----- 
+ 7) 0.0000     0       #     ----- 
+ 8) 0.5656     1       #  axis ratio (b/a)  
+ 9) 44.3805    1       #  position angle (PA) 
+10) 0.0000     0       #  diskiness(-)/boxiness(+)
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+# Object number: 3
+ 0)        sky         #    Object type
+ 1) 2.5828     1       #  sky background at center of fitting region  
+ 2) 0.0000     0       #  dsky/dx (sky gradient in x) 
+ 3) 0.0000     0       #  dsky/dy (sky gradient in y) 
+ Z) 0                  #  Output option (0 = residual, 1 = Don't subtract) 
+
+================================================================================
+

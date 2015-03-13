@@ -1,0 +1,26 @@
+This is TeX, Version 3.14159 (Web2C 7.3.1) (format=latex 2002.8.29)  23 APR 2003 14:50
+**galfit
+(galfit
+LaTeX2e <2000/06/01>
+Babel <v3.7h> and hyphenation patterns for american, french, german, ngerman, i
+talian, nohyphenation, loaded.
+! Text line contains an invalid character.
+l.1 ^^?
+       ELF^^A^^A^^A^^@^^@^^@^^@^^@^^@^^@^^@^^@^^B^^@^^C^^@^^A^^@^^@^^@4^^b3^...
+
+? 
+! Emergency stop.
+l.1 ^^?
+       ELF^^A^^A^^A^^@^^@^^@^^@^^@^^@^^@^^@^^@^^B^^@^^C^^@^^A^^@^^@^^@4^^b3^...
+End of file on the terminal!
+
+ 
+Here is how much of TeX's memory you used:
+ 2 strings out of 20887
+ 16 string characters out of 196241
+ 44118 words of memory out of 350001
+ 3028 multiletter control sequences out of 10000+15000
+ 3640 words of font info for 14 fonts, out of 400000 for 1000
+ 14 hyphenation exceptions out of 10000
+ 5i,0n,1p,143b,7s stack positions out of 3000i,100n,1500p,50000b,4000s
+No pages of output.

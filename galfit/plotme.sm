@@ -1,0 +1,91 @@
+fig1	erase
+        aspect 1
+        define q 0.7
+        define PA 30
+        define r0 (2.0/$q)
+        define x0 0.7
+        define y0 0.4
+        define degstep 5
+        define astep 1.10
+
+        define PI 3.141592653529
+
+        # this is what GALFIT does to the input PA
+        define PA ($PA / 180. * $PI)
+
+	limits -2. 3.5 -2.5 3.
+	expand 1.5
+        lweight 5
+	box
+	lweight 1.0
+
+        define cosPA (cos($PA))
+        define sinPA (sin($PA))
+
+#  Create spokes, evenly spaced in phi angles
+
+        define angstep ($degstep/180 * $PI * $q)
+        define epsilon ($angstep)
+
+        do phi = 0., 2 * $PI, $angstep {
+            relocate $x0 $y0
+
+#  phi can be thought of as radial spokes of even anglar spacing with a
+#  circular outer rim.  Equally spaced phi angles when projected onto
+#  the cartesian grid with axis ratio `q' becomes more squished (i.e.
+#  densely sampled) along the semi-major axis.
+
+            define cosphi (cos ($phi))
+            define sinphi (sin ($phi))
+
+            define x ($r0* (-$cosphi * $sinPA - $q * $sinphi * $cosPA) + $x0)
+            define y ($r0* ($cosphi * $cosPA - $q * $sinphi * $sinPA) + $y0)
+
+# 	    echo $phi $xtheta $PA $theta $quad
+
+#  Finally, theta is in image cartesian coordinates, which is useful.  xr and
+#  yr are the actual pixel coordinates in an image.
+
+            draw $x $y 
+        }
+
+# create ellipses
+
+        define n 0
+        define r ($r0/ $astep ** $n)
+	while {$r > 1.e-10} {
+	    set phi = 0.0, 2*$PI+$epsilon, 0.06
+       	    set x = $r * cos (phi)
+	    set y = $r * sin(phi) * $q
+            set xr = -x * $sinPA - y * $cosPA + $x0
+            set yr = x * $cosPA - y * $sinPA + $y0
+            connect xr yr
+	    define n ($n + 1)
+            define r ($r0/ $astep ** $n)
+	}
+
+        echo r = $r,  n = $n
+
+
+#  Draw coordinate grid from here on
+
+	lweight 5
+        relocate -10.5 -10.5
+        define nextx -9.5
+	do x = -10.5, 10.5, 1 {
+	    draw $x 10.5
+            define nextx ($x+1)
+            relocate $nextx -10.5
+	}
+
+        relocate -10.5 -10.5
+        define nexty -9.5
+	do y = -10.5, 10.5, 1 {
+	    draw 10.5 $y
+            define nexty ($y+1)
+            relocate -10.5 $nexty
+	}
+
+        xlabel X (pixels)
+        ylabel Y (pixels)
+	lweight 1

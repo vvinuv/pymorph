@@ -1,0 +1,60 @@
+
+  DISCLAIMERS, USER AGREEMENT AND COPYRIGHTS
+
+    * The reason for this formality is that I have (as most of us have) legal
+      bindings to our institutions (for me it's the University of Arizona)
+      more than anything else. So here goes....
+
+    * This code -- with the exception of the Numerical Recipes (R) subroutines
+      (Press et el. 1997) and the FFT subroutines (fftsg2d.c and fftsg.c),
+      which are written by Takuya Ooura -- are copyrighted by Chien Yi Peng.
+      Users are free to modify, distribute, use the code, and publish results
+      from it without my consent or knowledge, by adhering to the following
+      guidelines.
+
+    * There may be other software by the same name (in the past or the
+      future). The agreements below obviously apply only to the software
+      specifically published in Peng, Ho, Impey, & Rix 2002, AJ, 124: 266, and
+      described above, which is provided to the public at large free of
+      charge, and without further obligation.
+
+    * Users of this code use it at own risk and should understand this is work
+      in progress. There will likely be future updates. I very much welcome
+      suggestions on how to improve GALFIT and fix bugs.
+
+    * Users are encouraged, but not required, to e-mail me
+      (cyp@as.arizona.edu) to be put on the user list. The e-mail addresses I
+      receive will solely be used to contact users when there are important
+      updates. I will not redistribute e-mail addresses in any way or use them
+      for any other purpose.
+
+    * Users who remotely think there's a bug in GALFIT are urged to contact me
+      (cyp@as.arizona.edu). I promise I won't bite.
+
+    * Users are encouraged to check back regularly to download the newest
+      version of this code.
+
+    * I issue the source code to users because I don't mind users freely
+      modifying GALFIT for *personal use* for purposes I have not thought
+      about.  However, code modifiers may not change the program name (except
+      the version number to distinguish it as a modified version), and must
+      document *the changes* explicitly in all forms of publications using
+      this software.
+
+    * Users who modify GALFIT are encouraged to contact me to incorporate
+      his/her changes into newer versions for public distribution. But I
+      reserve the discretion for making additions.
+
+    * I understand sometimes people (such as co-workers) act as a
+      re-distributor of GALFIT, which is just fine. However, for maintaining
+      some kind of version control and code uniformity, once a user
+      **modifies** GALFIT for personal use, he/she may not redistribute the
+      changes for public use (for free or for cost), in any way, shape, or
+      form, or under a different software title, without prior explicit
+      written consent by me. If there's an important or useful change to the
+      program I would like to know about it. There is one exception, ...
+
+    * Issuing a personally modified GALFIT code to a coworker on the same
+      project is perfectly o.k.. However, the code must remain inside that
+      collaboration, and may not be redistributed publicly.
+

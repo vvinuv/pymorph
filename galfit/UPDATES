@@ -1,0 +1,416 @@
+
+/*****************\
+*  GALFIT UPDATES *
+\*****************/
+
+v. 1.1:
+   - added option to read in dust map.
+
+v. 1.1a:
+   - padsz in "fftsize" doesn't get set to 0
+
+v. 1.2: 
+   - Changed slightly the way Monte-Carlo sampling is done.  The old
+     way by not sampling inside the "donut", the image was not being
+     sampled uniformly.  Now it samples more uniformly, but at a slight
+     cost in efficiency.
+
+   - The intrinsic profile of the input compact source/PSFs is now
+     convolved with the *observed* PSF.  i.e., to fit a true point source,
+     the user should enter it as nearly a delta-function by making the
+     FWHM small, e.g. less than 0.5 pixels.  Made changes to Moffat and
+     Gaussian functions.
+   - Interchanged the order of Gaussian and Moffat in the input file.
+
+v. 1.2c:
+   - Make sure that the padsize in "fftsize" doesn't get set to the
+     wrong value after each iteration.  Padsize is now named "psfsz."
+
+   - Convolution is done more correctly now.  The convolution box is
+     expanded without the user's knowledge to try and include half the size
+     of the PSF on each side before convolving.  This way, the region the
+     user specified won't be corrupted.
+
+   - Image block output problem now fixed.
+
+v. 1.2d:
+   - Incomplete -- in the process of trying to implement oversampling
+     the PSF by a factor of N and convolving the oversamp factor.
+
+   - Restructured 1.2c... no new features added.  Changed source code
+     around a bit, fixed a few bugs, in particular in "convregion" where
+     the convolution region size was too small.
+
+v. 1.2e: 
+   - Chi^2 is calculated more correctly now.
+
+   - Major restructuring of the code which includes:
+   -    getting  rid of Monte-Carlo sampling
+   -    convolution is now done by copying the entire convolution region into
+	a separate array, padding on all sides by 1/2 of the PSF.
+
+   - giving up on trying to implement PSF oversampling for now -- it gets
+     quite messy.  Will implement in version 2.0.
+
+v. 1.2f:
+   - Adds multi-object fitting capability - finally!
+   - New input parameters and file format (see EXAMPLE.INPUT)
+
+v. 1.2g:
+   - Now the scale length refers to the scale length along the semi-major
+     axis.
+
+v. 1.2h:
+   - When the program finishes running, the program beeps at you to let you
+     know it's done.
+
+   - The *final* parameters of the fit will be automatically dumped into a
+     file called "galfit.NN", where NN is an integer that will be incremented
+     automatically.  One can directly feed it back into GALFIT or modify it
+     first.
+
+v. 1.2i:
+   - Now elliptical Gaussian and Moffat functions are allowed.
+   
+v. 1.2j:
+   - If the input PSF is not provided, then no convolution is done during
+     the fit.
+
+   - Added ta[8] to the ta[3] equations in Gaussian and Moffat to make the
+     flux come out right for elliptical models.
+
+v. 1.2k:
+   - Corrected 'mrqmin' when parameter values go negative.
+   - Ellipticity is constrained to be <= 1 and PA and Rs, Re, Rb are correct.
+   - PA is now between -90 and 90 degrees.
+
+v. 1.2l:
+   - Can now fit boxy or disky profiles in parameter 10.  A negative value
+     creates a disky profile, and a positive value a boxy one.
+
+v. 1.2m:
+   - Constraints are placed in its own subroutine file, and now catches
+     bad initial guesses much better, producing better overall convergence.
+
+   - The convergence criteria in LevMar, i.e. the conditions that determine
+     when the program reaches convergence has been tweaked.
+
+   - Sersic magnitude is wrong when the sersic exponent n > 5.  Now
+     corrected.  Retroactively updated to version 1.2k
+
+   - The menus are now prettier and easier to understand.
+   - The output fit.log now shows what the input parameter file used and
+     the restart file.
+
+v. 1.2n:
+   - Now can check for keyboard polling.  If the user hits a 'q' or 'Q'
+     while the program is fitting, the program will quit out early
+     regardless of the state of the convergence.  The results will be
+     saved.
+
+v. 1.3a:
+   - Like version 1.2n, except the "initcurses" function won't be called until
+     after quitting out of the menu, rather than at the start of the
+     program.  This is necessary because "initcurses" clears the screen
+     and anything scrolling off it can't be seen.  The menu is usually
+     too long to fit in one screen.
+
+   - Fixed a bug where if you enter anything other than 0, 1, or -1 for
+     ia[], the program may crash upon output.
+
+   - It no longer takes so darned long to just generate an output image
+     once the fitting completes or when no parameters are being fit.
+
+v. 1.3b:
+   - Fixed the pesky curses behavior where the text that scrolls off the
+     window disappears.  Now we have 3 display options, "regular", "curses",
+     and specifying a port.  The "regular" option works in all text windows,
+     but does not allow premature quitting by hitting the "q" key.  The
+     "curses" option allows premature quitting in the main window, but
+     has the annoying behavior that text scrolling off the window
+     disappears.  The port option, where you specify "/dev/pts/#" allows
+     you to have the best of both worlds.  You, however have to open
+     an xterm, figure out what that port is by doing "tty", and then
+     enter the port into option "o".  Then put that xterm to sleep 
+     forever by typing "sleep 365d", otherwise hitting "q" in that window
+     won't register.
+
+v. 1.3c:
+   - Fixed several bugs.  The first had to do with the sampling size of the
+     functions.  I've made them all adaptive, linearly, depending on the scale
+     lengths.  
+
+   - The derivatives of moffat and gaussian fluxes with respect to
+     FWHM, ellipticity, diskiness, and Magnitude need an extra term to
+     compensate for the fact they're all are related to one another.  For
+     instance, the derivative of flux with respect to FWHM has both df/dFWHM
+     as well as df/dA * dA/dFWHM term because when FWHM increases the flux at
+     the core decreases **at a constant magnitude**, which is one of the
+     independent variables, hence what LevMar is interested in.  For Nuker,
+     because break magnitude and other parameters are independent, no such
+     precaution is needed.
+
+     *Need to go back to fix Sersic, Moffat, and exponential derivatives for
+     magnitude, power, ellipticity, and diskiness!! * 
+
+   - The galfit interaction window is now automatically created.  No
+     need to futzz around with specifying port # and putting it to sleep.
+
+v. 1.3d:
+   - The major derivative problems mentioned above are now fixed.
+
+   - Went back and corrected the "theta" variable in Nuker, exponential,
+     moffat, gaussian, (but not Sersic) functions to make sure they're
+     correct.  Also updated v. 1.3c... and maybe others as well.
+
+   - Constrained position to not vary by more than 25 pixels at a time.
+   - Made small changes to the initcurses.c to make the interaction window
+     smaller.
+
+v. 1.3e:
+   - Made small changes to search_min and LevMar to detect "curses" mode
+     and prevent it from crashing the program.  
+
+   - Made changes to Sersic so it can now fit the ellipticity,
+     diskiness, and scalelength parameters more accurately.  But need
+     to fix the powerlaw parameter.
+
+v. 1.3f:  
+   - Fixed the Sersic powerlaw parameter!  Update the sersic.c in v.  1.3e
+     retroactively.
+   - You can now enter the initial parameter file name on the command line,
+     e.g.:   galfit hin1
+
+
+v. 1.4a:  
+   - More options in the galfit interaction window.
+   - The original "outmodel.c" was redundant with "mkmodel", so got
+     rid of "outmodel.c".  Then, I renamed "output_all.c" to "outmodel.c".
+
+v. 1.4b:
+   - Shows both chi2nu and chi2 statistics in the output file.
+
+v. 1.4c:
+   - If the input image name isn't found, create a model image of input
+     parameters.
+
+   - Chi^2 and Chi^2/nu now have reasonable values even when just
+     creating an image without fitting parameters.
+
+   - Fixed the bug that requires you to use square convolution regions.
+     Convolution region can now be a rectangle.
+
+   - If the fitting region falls outside of image, it is vignetted to fit.
+   - Now warns the user about convolution box being too large or too small.
+
+v. 1.4d:
+   - Made covar and alpha matrices double precision.
+
+   - Reorganized LevMar.c and search_min.c to be more modular so that LevMar
+     can be used more independently from one another.  Also, LevMar can be
+     called repeatedly as a black box.
+
+   - Found two bugs in the Nuker code which causes the coordinates and gamma
+     not to converge quickly.  Fixed v. 1.4c retroactively.
+
+   - As a result of changes to the coordinate transform equation in
+     nuker.c, the PA input into egrid2d also has to be changed.
+     
+   - Add error calculation by taking into account correlations.
+
+   - Add an option to create image only without fitting.
+
+   - Once GALFIT converges, it allows you to step out in parameter space
+     and explore the chi^2 neighborhood by holding each parameter fixed while
+     optimizing over the rest.  This is another way to obtain uncertainties.
+     This is currently not completely implemented yet.
+
+   - New way to calculate a noise image.  The uncertainty at each pixel is
+     found by taking the mean of data in a 5x5 moving boxcar, and then adding
+     that uncertainty in quadruture with the readnoise.
+
+v. 1.4e:
+
+   - New cfitsio downloaded.  Should solve some compatibility problems with
+     some Solaris operating systems.
+
+   - Now has a toggle switch that doesn't require the user to hit "q" to
+     start fitting if one has already prepared an input file.
+
+   - Removed cross coupling in the calculation of the derivatives between the 
+     intensity and r_e, r_s, n, and c, parameters.  This change affects the
+     gaussian, exponential, sersic, and moffat functions, but not Nuker.
+     This makes it a lot better at getting out of local minima.
+
+v. 1.4f:
+   - Modified noise image generation slightly.
+
+v. 1.4g:
+   - Modified sub-sampling for expdisk, gaussian, sersic, moffat.  The 
+     central pixel wasn't done perfectly right.
+
+v. 1.4h:
+   - Image block numbering has been changed.  Image [1] is now the
+     original data, [2] is the model, and [3] is the residuals.
+
+   - Fit parameters are placed into the image header.
+
+v. 1.4i:
+   - The model created for the convolution region can be off by a pixel
+     depending on whether the input PSF has even or odd number of pixels.
+     It's now fixed.
+
+v. 1.5a:
+   - The derivative images are now fine sampled near r=0 just like the fluxes.
+     It looks like this may solve some of the problems with convergence
+     when the scale length is too small.
+     
+   - Found a bug in the Gaussian FWHM derivative that makes it converge poorly.
+
+   - Found a bug in the PA derivative that makes it converge poorly.
+
+   - The centroids listed in the image heaer [2] were not relative to
+     the original image position.  This is now fixed.
+
+   - Made a minor correction to the Sersic coefficient mu for when the
+     index n > 5.
+
+v. 1.6a
+   - Allow parameter coupling/constraints (see EXAMPLE.CONSTRAINTS).
+     Note that currently there's no check to make sure the same component
+     and parameters are multiply coupled, or ``train'' coupled.
+
+   - New convergence criteria are used.  Now keeps a history of the past 10
+     delta chi^2s to see if the average change is > 1.  If not, start the
+     counter to quit.
+
+   - Fixed a bug that causes galfit to crash when the image fitting region
+     is larger than the actual image.
+
+v. 1.6b 
+
+   - Added cross coupling of parameters in the derivative terms for
+     exponential, gaussian and moffat functions.  Cross coupling was
+     already done for all Sersic parameters except q.  Now that's
+     added too.
+
+   - Better parameter monitoring (par_monitor.c) to make sure that 
+     parameters don't peg their maximum/minum values, causing the 
+     minimization to fail.
+
+v. 1.6c
+
+   - Better treatment of the PSF.  When the centroid of an object is not
+     exactly centered on a pixel, the *PSF* is spline interpolated and shifted
+     by deviation from the exact center.  The shifted PSF is used to convolve
+     with the model images.  So, objects within the convolution box are always
+     generated *at the center* of a pixel.
+
+v. 1.7a
+
+   - A much faster FFT algorithm written by Takuya Ooura in place of the
+     Numerical Recipes version:
+       http://momonga.t.u-tokyo.ac.jp/~ooura/
+
+   - In fake noise, when the average sky value is 0, return 0 for the
+     variance instead of a large number.
+
+   - In sersic, exponential, moffat, gaussian, and nuker, limit semi-major
+     axis length to be > 0.01 pixel.
+
+   - Fixed a bug in the diskyness/boxyness parameter.  Thanks to John
+     Blakeslee for noticing the bug!
+
+   - Now Gaussian smooths the entire image before obtaining the sigma
+     at each pixel.  This doesn't affect people who use their own noise
+     image.
+
+v. 1.7b
+
+   - Constraints are done in a slightly better way, and less sensitive
+     to the sequence of the constraints.
+
+v. 1.7c
+
+   - Greatly steamlined and simplified the convolution algorithm so it's more
+     easy to read and use.  This will be crucial when I add new features to
+     Galfit such as a new way to shift the PSF (using a sinc + Kaiser window,
+     plus a cubic spline interpolation).  Also, oversampling the PSF will be
+     a lot easier to implement with the new convolution subroutine.
+
+   - Now the PSF shifting is done by combining a sinc interpolation (with a
+     Kaiser tapered window) for the inner region with spline interpolation of
+     the outer regions.  This can dramatically improve the PSF subtraction by
+     a factor of 5 to 10 compared to spline interpolation alone.  And, it's
+     also a little bit faster too.
+
+v. 1.8a
+
+   - Now all the objects being fitted are convolved, and the convolution
+     region(s) follows the objects around.  Got rid of the "convolution
+     region" parameter.
+
+   - Got rid of the 1-D (linearized) version of the 2-D model and 
+     derivative image.
+
+   - Tweaked the sigma image algorithm in the low total noise regime.
+
+   - Thanks to Peter Erwin, now galfit compiles under MacOS X.  Peter
+     fixed a bug in a "fscanf" call in "read_input.c" that was causing
+     problems in MacOS X which causes galfit to hang when trying to
+     read in a template file.
+
+v. 1.8b
+
+   - Galfit can now fit sky tilt in x and y.
+
+   - revision 1 corrects the the center position of the sky shown in
+     fit.log and the image block[2].
+
+   - Make sure that galfit doesn't crash when it encounters a problem
+     with the constraints file.  This is an issue because the old
+     galfit input parameter file doesn't work with the new version,
+     and the swicheroo between E) and F) causes galfit to die.
+
+v. 1.9a
+
+   - Instead of using 2-D spline interpolation to shift the PSF,
+     now use bi-cubic interpolation instead.  Much faster.
+
+   - The bi-cubic interpolant coefficient is now computed only once and
+     stored.
+
+   - Allows one to fit a pure PSF.
+
+   - Changed two line in CFITSIO/fitscore.c, subroutine "ffpsvc"  from
+
+        FSTRNCMP(&card[8],      "= ", 2) != 0  ) /* no '= ' in cols 9-10 */
+
+        valpos = 10;  /* starting position of the value field */
+
+     to
+        FSTRNCMP(&card[8],      "=", 1) != 0  ) /* no '= ' in cols 9-10 */
+ 
+        valpos = 9;  /* starting position of the value field */
+
+   - Fixed an edge effect when shifting the PSF that can cause a problem
+     with convolution.
+
+   - Fixed a convolution bug that can sometimes cause the program to
+     seg. fault.
+
+v. 1.10a
+
+   - Added the King profile.
+
+v. 2.0
+
+   - Now allows the PSF to be oversampled compared to the science image.
+
+   - With WFPC2, STIS, and ACS, one might want to apply a diffusion kernel
+     if the PSF is derived from TinyTim.  This can also now be done.
+
+v. 2.03b
+
+   - Compiled with -O3 optimization, which increases the execution
+     speed by almost a third.
