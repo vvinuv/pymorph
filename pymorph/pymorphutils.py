@@ -533,7 +533,6 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Running the ellipse task. SizeX, SizeY are the total size"""
     manual_profile = 0
     try:
-        import unknown
         from pyraf import iraf
         from fitellifunc import run_elli
         use_pyraf = 1
