@@ -533,6 +533,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Running the ellipse task. SizeX, SizeY are the total size"""
     manual_profile = 0
     try:
+        raise ImportError() #Temporarily kill this loop as the new flagging does not work with pyraf-functions, yet
         from pyraf import iraf
         from fitellifunc import run_elli
         use_pyraf = 1
