@@ -571,7 +571,10 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         except:
             manual_profile = 1
             WriteError('Error in ellipse task. Trying manual profile finder\n')
-            c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
+            try:
+                c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
+            except badflag:
+                pass
     if use_pyraf == 0 or manual_profile:
         FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
 
