@@ -25,7 +25,7 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
     f = pyfits.open(os.path.join(c.datadir, cutimage))
     z = f[0].data
     header = f[0].header
-    if (header.has_key('sky')):
+    if ('sky' in header):
         sky = header['sky']
     f.close()
     z = n.swapaxes(z, 0, 1)

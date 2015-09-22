@@ -164,15 +164,15 @@ def SelectPsf(alpha_j, delta_j):
     for element in c.psflist:
         p = pyfits.open(os.path.join(c.datadir, element))
         header = p[0].header
-        if (header.has_key('RA_TARG')):
+        if ('RA_TARG' in header):
             ra = header['RA_TARG']
-        elif (header.has_key('RA')):
+        elif ('RA' in header):
             ra = header['RA']
         else:
             ra = 9999
-        if (header.has_key('DEC_TARG')):
+        if ('DEC_TARG' in header):
             dec= header['DEC_TARG']
-        elif (header.has_key('DEC')):
+        elif ('DEC' in header):
             dec= header['DEC']
         else:
             dec= 9999
@@ -608,9 +608,9 @@ def Distance(psffile, ra, dec):
     try:
         p = pyfits.open(psffile)
         header = p[0].header
-        if(header.has_key('RA_TARG')):
+        if('RA_TARG' in header):
             ra_p = header['RA_TARG']
-        if (header.has_key('DEC_TARG')):
+        if ('DEC_TARG' in header):
             dec_p = header['DEC_TARG']
         p.close()
         distance = 3600.0 * np.sqrt((dec - dec_p)**2.0 + \

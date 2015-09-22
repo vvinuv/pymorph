@@ -71,7 +71,7 @@ def casgm(cutimage, maskimage, xcntr, ycntr, back_ini_xcntr, back_ini_ycntr, eg,
     f = pyfits.open(os.path.join(c.datadir, cutimage))
     z = f[0].data
     header = f[0].header
-    if (header.has_key('sky')):
+    if ('sky' in header):
         #sky = header['sky']
         print 'Header has a ky value key. If you want to use that uncomment '
         print 'line number 75 in casgm.py'
