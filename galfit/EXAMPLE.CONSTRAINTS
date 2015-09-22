@@ -1,0 +1,25 @@
+# Component/    parameter   constraint	Comment
+# operation	(see below)   range
+
+    3              n        0.7 to 5    # Constrains the sersic index n to
+					# within values from 0.7 to 5.
+
+    2	  	   x	     -1  0.5	# Constrains x-position of component
+					# 2 to within +0.5 and -1 of the
+					# >>INPUT<< value.
+
+    3-7		   mag	     -0.5 3	# The magnitude of component 7 is
+				 	# constrained to be WITHIN a range
+					# -0.5 mag brighter than component 3,
+					# to 3 magnitudes fainter.
+
+    3/5		   re	       1  3	# Couples components 3 and 5 Re or Rs
+				        # ratio to be greater than 1, but less
+					# than 3. 
+
+
+# Note on parameter column:
+#   The parameter name options are x, y, mag, re (or rs -- it doesn't matter),
+#   n, alpha, beta, gamma, pa, q, and c.  Or alternatively, one can specify
+#   the parameter number instead, corresponding to the same numbers in the
+#   galfit input file.

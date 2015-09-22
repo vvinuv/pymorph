@@ -533,7 +533,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Running the ellipse task. SizeX, SizeY are the total size"""
     manual_profile = 0
     try:
-        import unknown
+        raise ImportError() #Temporarily kill this loop as the new flagging does not work with pyraf-functions, yet
         from pyraf import iraf
         from fitellifunc import run_elli
         use_pyraf = 1
@@ -571,7 +571,10 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         except:
             manual_profile = 1
             WriteError('Error in ellipse task. Trying manual profile finder\n')
-            c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
+            try:
+                c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
+            except badflag:
+                pass
     if use_pyraf == 0 or manual_profile:
         FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
 

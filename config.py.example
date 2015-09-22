@@ -90,11 +90,11 @@ stargal = 0.8 #Star-galaxy classification
 crashhandler = 1
 
 ###---Galfit Controls---###
-components = ['bulge', 'disk']        #The components to be fitted to the object
+components = ['bulge', 'disk', 'bar', 'point']        #The components to be fitted to the object
 devauc = False # set to False to fit sersic bulge, set to true to fit devacouler's bulge (n = 4)
 
-###---fixing = [bulge_center, disk_center, sky]
-fitting = [1, 1, 0]                    # = 0, Fix params at SExtractor value
+###---fixing = [bulge_center, disk_center, sky, bar_center, point_center]
+fitting = [1, 1, 0, 1,0 ]            # = 0, Fix params at SExtractor value
 
 ###----Set the SExtractor and GALFIT path here----###
 GALFIT_PATH = '/home/vinu/software/galfit/modified/galfit' 

@@ -318,8 +318,9 @@ class con_G_writer():
         pmag = target.mag + 2.5 * np.log10(6.0)
         self.f_G.writelines(['#point source\n\n'])
         self.f_G.writelines([' 0) psf              # Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' 1 1  #',\
-                             ' position x, y [pixel]\n'])
+        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
+                               str(c.fitting[4]), ' ', str(c.fitting[4]), '    #',\
+                      ' position x, y [pixel]\n'])
         self.f_G.writelines([' 3) ', str(pmag), ' 1             # total magnitude\n'])
         self.f_G.writelines([' Z) 0                    # output image '\
                              '(see above)\n\n\n'])

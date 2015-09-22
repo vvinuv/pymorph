@@ -1,0 +1,261 @@
+\documentclass[preprint]{aastex}
+\usepackage{emulateapj5}
+\usepackage{amsmath}
+\usepackage{apjfonts}
+\usepackage{natbib}
+
+\def\galfitcl{{\it galfit.cl}}
+\def\galfitpl{{\it galfit.pl}}
+
+\begin{document}
+
+\slugcomment{For the GALFIT Fitting Script}
+
+\title{GALFIT FITTING SCRIPT USER GUIDE}
+
+\author {Chien Y. Peng\altaffilmark{1}}
+\altaffiltext{1}{Steward Observatory, University of Arizona, 933 N. Cherry
+Av., Tucson, AZ 85721;  cyp@as.arizona.edu.}
+
+\begin {abstract}
+
+This document is intended to explain how the two scripts \galfitcl\  and
+\galfitpl, when used in conjunction with GALFIT, can be used to automate
+galaxy fitting.  The IRAF script \galfitcl\  is a master wrapping script
+that runs the Perl script, \galfitpl, which finally runs the C-program,
+GALFIT.  How the scripts determine the initial parameters for GALFIT is based
+on a SExtractor catalog.  Under normal operation, one should not have to touch
+\galfitpl\  itself, and never has to run GALFIT manually.  One only has to
+modify the parameters through IRAF then let \galfitcl\  do its job.
+
+Having said that, this document, as well as the scripts, are still highly
+experimental, and will be for the foreseeable future.  So they are not as
+fine-tuned or user friendly compared to the main GALFIT program itself.  I
+also don't know if there's a time when the script can be fully generalized and
+user friendly.  So the usefulness of the scripts will rely in no small part on
+user experience, and his/her willingness to ``hack'' into various parts of
+\galfitcl\ and \galfitpl\ to suit his/her needs.  However, hopefully one has
+to only tweak what's already provided.  Therefore, part of the reason for this
+document is to point out where I think improvements can be made, and provide
+some kind of guide to novice programmers or non-programmers who wish to modify
+the scripts.
+
+\end {abstract}
+
+\section {INTRODUCTION}
+
+GALFIT (the C-program) doesn't have an in-built way to fit galaxies in batch
+mode autonomously.  It is not easy to write a program to consider all possible
+complications in batch fitting.  Complications start almost from the very
+beginning.  For example, how does one decide on the galaxies to fit, and how
+does one obtain the initial parameters for GALFIT?  How should one deal with
+neighboring galaxies:  does one fit them together using multiple components,
+or does one mask out all galaxies except the principle galaxy from the fit?  A
+program must also decide on an image size, which is complicated by neighbors
+and surface brightness considerations.  Is one interested in bulge-to-disk
+decomposition, or something more simple/complicated?  One code, GIM2D, has
+tried to do many of this, by allowing the user plenty of parameters to adjust
+depending on the data set.  Because of the generality, it is understandable
+the learning curve can be a bit steep.  I take a different approach, which is
+to provide core minimization algorithm (GALFIT), which the users might more
+fully understand.  Then, it's up to the users to customize a wrapping script
+around GALFIT for their own needs, as they find best.
+
+A second reason why there has not been a standard batch fitting GALFIT code is
+a justified concern about making a gradient-based algorithm fully automated.
+Currently there is not any literature (that I know about) which shows how
+robust a gradient algorithm is when used in a fully automated way.  If GALFIT
+were to not converge on a global minimum $\chi^2$, it needs a human to guide
+it along, which is not feasible when fitting a large sample of galaxies.  In
+general, gradient-based algorithms are less robust in highly complex
+situations when compared to another class of algorithms called the ``simulated
+annealing'' or ``metropolis''.  Despite this fact, it is not obvious which
+algorithm is the better choice because there are inherent subtleties in both
+which one should be aware.  For a gradient algorithm, it is sometimes
+important to start the parameters off in the right ``ball park,'' which may
+sometimes be hard to determine in an automated way.  And, how sensitive are
+the solutions to initial parameters?  On the other hand, in simulated
+annealing, one has to consider how fast to decrease the annealing
+``temperature''.  Cool too quickly, the solution may converge on a local
+minimum; too slowly, and the solution bounces around the parameter space.
+Hence, simulated annealing is very inefficient compared to a gradient
+algorithm, even when fitting a single galaxy component.  It is also subtle how
+this parameter depends on the image noise properties, complexities of the
+galaxy environment, and the number of components being fitted.  So far there
+hasn't been any direct comparison between simulated annealing and gradient
+method when it comes to galaxy fitting.
+
+To fit galaxies in batch mode in a fully automated way, we put GALFIT inside a
+wrapping script that does all the bookkeeping before and after running GALFIT.
+The users can then tailor and fine-tune the scripts for his/her own needs
+without having to modify the central, minimization, engine.  The two scripts
+\galfitcl\ (IRAF) and \galfitpl\ (Perl) found in the GALFIT package are the
+first attempts at automating GALFIT for batch fitting.  We use two scripts to
+takes advantage of the fact IRAF can easily deal with image headers and is
+good for manipulating images, while Perl, which is superior at manipulating
+strings and text files, does all the hard work.
+
+During operations, one only runs the \galfitcl\ script.  One shouldn't have to
+tweak the scripts \galfitpl\ or GALFIT itself.  The only reason why anyone
+would want to play with \galfitpl\ is if one would like to play around with
+the AI, or if one believes that the galaxy fitting boxes are too small, etc..
+
+
+\section {THE IRAF SCRIPT {\it galfit.cl}}
+
+\galfitcl\  is the top-level wrapping script, which is run in IRAF.  To
+run it, it has to be declared first as an IRAF task.  For example, I do:
+
+\footnotesize
+\begin{verbatim}
+cl> task galfit = "/home/cyp/iraf/scripts/galfit.cl"
+\end{verbatim}
+\normalsize
+
+\noindent It then runs just like any other IRAF task, {\it epar, lpar} and
+all.  (Note:  the default place is to put \galfitpl\  and \galfitcl\  in
+the same directory.)
+
+\galfitcl\ handles input parameters such as image name, SExtrator catalog,
+output file names, and other parameters that one can not infer from the
+SExtractor catalog.  This script is the only one the user has to interact with
+in practice.  One of its important task of \galfitcl is to be a master
+bookkeeper:  It divides up a big image into sub-tiles (to be discussed soon),
+and keeps track of which galaxy belongs in which sub-tile.  After all the
+objects are fitted, it figure out how to convert coordinates local to the
+sub-tiles into the global coordinate.  \galfitcl\ also runs the Perl script
+\galfitpl.
+
+If one does an {\it lpar} or {\it epar} on "galfit" in IRAF, one would see
+something akin to Figure 1.  The meaning of the parameters are the following:
+
+\begin {itemize}
+
+\item image -- the input data image
+
+\item sigimg -- the sigma image, i.e. the variance at each pixel which is used
+to calculate the $\chi^2$ statistics and the parameter uncertainties.
+
+\item sexcat -- the SExtractor catalogue name, which provides initial
+parameters for fitting for all galaxies.  The output columns from SExtractor
+are shown in Fig. 2.  Please see the SExtractor manual on how to use that
+software.
+
+\item startnum and stopnum -- lets you choose which objects you want to
+fit, in case you don't want to go through the whole catalogue.
+
+\item psfloc -- the directory where all the PSFs are stored.  The PSF have
+have names: psf{\it string}-{\it xxxx}-{\it yyyy}.fits where {\it xxxx} and
+{\it yyyy} are the pixel coordinates of the PSF.  For example, the PSF can be
+named "psfz-925-218.fits".  This is useful if the PSF is field dependent, and
+one would like to use a PSF nearest to a galaxy.
+
+\item constraint -- the parameter constraint file used in GALFIT.
+
+\item fitfunc -- single S\'ersic or B/D decomposition.
+
+\item region -- the image region region to fit.  This is useful if one
+wants to to fit a subsection of the image.
+
+\item boundary -- the region to fit if one wants to fit an image subsection.
+otherwise it is ignored.
+
+\item skyval -- the difference in the sky value of the data from the
+SExtractor measured sky value.  This is sometimes needed because SExtractor
+gets run on an image with sky subtracted out.  But, because GALFIT needs the
+real sky to calculate $\chi^2$ when the sigma image is not provided, sometimes
+people would add the sky value back into their data, and not the SExtractor
+catalog.  So then, the actual starting parameter for the sky value when GALFIT
+starts fitting should be: {\it sky = skyval + SExtractor sky}, where {\it
+skyval} is the value provided here, and {\it SExtractor sky} is that found in
+the catalogue.
+
+\item mrange -- objects within the magnitude range are fitted as the primary
+object.
+
+\item stargal -- objects that are classfied as star/galaxy within these
+numbers, based on the SExtractor classifier index, are fitted.
+
+\item fwhmpsf -- the FWHM of the PSF, for rejecting cosmic rays.
+
+\item magzpt -- the photometric zeropoint for GALFIT.
+
+\item plate -- the plate scale for GALFIT.  (Not sure why this is needed.)
+
+\item exist -- delete the existing sub-tile images and restart from scratch?
+
+\item nofat -- delete all the working files, including the sub-tiles, after
+fitting?
+
+\item nsplit -- the number of subtiles to break the original image into.  If
+the fitting image is too large, one can have the script break it up into
+subtiles so GALFIT doesn't have to read in a huge image each time for each
+galaxy.  This can save a whole lot of time and memory, as GALFIT stores the
+whole image in memory as it works on it.  This script keeps track of all the
+accounting needed to convert the coordinates back to the original data image,
+so one doesn't have to worry about converting all the coordinates back
+manually.  The final coordinates relative to the master tile are stored in
+the image [2] of the galfit output block.
+
+\end {itemize}
+
+This should be enough to get the user off and running, once the user has the
+SExtractor output file for the "sexcat" parameter.  Figure 2 shows what
+columns are needed to be in the SExtractor catalog.  For discussions on how to
+output those parameters, and what they mean, please see the SExtractor manual.
+Not all the parameters shown in Figure 2 are actually useful for our purposes.
+They are used as part of the GEMS survey, so unless one is willing to modify
+the scripts of \galfitcl\ and \galfitpl, one is stuck with it for now.
+
+\newpage
+\footnotesize
+
+\begin {verbatim}
+        image = "s1z09.fits"    Input image to be fitted
+       sigimg = ""              Sigma image to use
+       sexcat = "s1z09.wht.cat" Sextractor catalog name
+     startnum = 20              Start from which object number in the catalog?
+      stopnum = 999             Stop at which number in the catalog?
+      (psfloc = "/home/cyp/gems/47tuc/psfs-0.05/zpsfs") PSF location (directory)
+  (constraint = "constraints.use") Parameter constraint file
+     (fitfunc = "BD")           Single sersic or B/D decomposition?
+      (region = "A")            (A) Whole image catalog or, (B) region of image
+    (boundary = "")             Boundary of region if (B) (xmin xmax ymin ymax)
+      (skyval = 14.5)           Sky background to add back to Sextractor value
+      (mrange = "0 24")         Acceptable magnitude range
+     (stargal = "0. 0.7")       Range of good galaxies: 0.0 (gal) to 1.0 (star)
+     (fwhmpsf = "0.06")         FWHM of the PSF for cosmic ray rejection
+      (magzpt = "25.978")       Photometric zeropoint
+       (plate = "0.05")         Image plate scale
+       (exist = no)             Rid all existing temp-*.fits images before run?
+       (nofat = no)             Rid all temp images, galfit input, after run?
+      (nsplit = 10.)            Split image into how many parts along one axis?
+
+\end {verbatim}
+\figcaption[]{Example of parameters for galfit.cl IRAF task.}
+
+
+\begin {verbatim}
+#   1 NUMBER          Running object number
+#   2 FLUX_BEST       Best of FLUX_AUTO and FLUX_ISOCOR               [count]
+#   3 FLUXERR_BEST    RMS error for BEST flux                         [count]
+#   4 MAG_BEST        Best of MAG_AUTO and MAG_ISOCOR                 [mag]
+#   5 MAGERR_BEST     RMS error for MAG_BEST                          [mag]
+#   6 KRON_RADIUS     Kron apertures in units of A or B
+#   7 BACKGROUND      Background at centroid position                 [count]
+#   8 ISOAREA_IMAGE   Isophotal area above Analysis threshold         [pixel**2]
+#   9 X_IMAGE         Object position along x                         [pixel]
+#  10 Y_IMAGE         Object position along y                         [pixel]
+#  11 ALPHA_J2000     Right ascension of barycenter (J2000)           [deg]
+#  12 DELTA_J2000     Declination of barycenter (J2000)               [deg]
+#  13 THETA_IMAGE     Position angle (CCW/x)                          [deg]
+#  14 ELLIPTICITY     1 - B_IMAGE/A_IMAGE
+#  15 FWHM_IMAGE      FWHM assuming a gaussian core                   [pixel]
+#  16 FLAGS           Extraction flags
+#  17 CLASS_STAR      S/G classifier output
+\end {verbatim}
+\figcaption[] {Output columns in the SExtractor catalog.}
+
+\newpage
+
+\end {document}
