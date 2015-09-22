@@ -1408,7 +1408,7 @@ if __name__ == '__main__':
                             wimg = 'None'
                     GiMg = pyfits.open(os.path.join(c.datadir, gimg))
                     headerGiMg = GiMg[0].header
-                    if (headerGiMg.has_key('GAIN')):
+                    if ('GAIN' in headerGiMg):
                         c.SEx_GAIN = headerGiMg['GAIN']
                     else:
                         c.SEx_GAIN = 1
