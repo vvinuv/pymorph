@@ -16,7 +16,7 @@ class ConfigFunc:
        The initial value for Sersic index 'n' is 4.The configuration file has 
        the name G_string(galid).in. The output image has the name 
        O_string(galid).fits"""
-    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata):
+    def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, sex_cata, skyval):
         self.cutimage = cutimage
         self.line_s  = line_s
 	self.whtimage = whtimage
@@ -25,10 +25,11 @@ class ConfigFunc:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
-        self.conff    = self.write_conff(line_s, sex_cata, xcntr, ycntr)
+        self.skyval
+        self.conff    = self.write_conff(line_s, sex_cata, xcntr, ycntr, skyval)
         return
 
-    def write_conff(self, line_s, sex_cata, xcntr, ycntr):
+    def write_conff(self, line_s, sex_cata, xcntr, ycntr, skyval):
         imagefile = c.imagefile
         threshold = c.threshold
         thresh_area = c.thresh_area
@@ -110,7 +111,7 @@ class ConfigFunc:
                 confiles.write_bar(target)
                 c.Flag = SetFlag(c.Flag, GetFlag('FIT_BAR'))
 
-        confiles.write_sky(target)
+        confiles.write_sky(target, skyval)
         
         if c.center_deviated:
             c.center_deviated = 0
@@ -400,19 +401,13 @@ class con_G_writer():
 
         return
     
-    def write_sky(self, target):
+    def write_sky(self, target, skyval):
         self.obj_counter+=1
             
         self.f_G.writelines(['# sky\n\n']) 
-        self.f_G.writelines([' 0) sky\n'])#str(2.22604*(1.0+0.01)), ' ', str(0.0)
-    #    self.f_G.writelines([' 1) ', str(2.41154*(1.0+0.01)),' ', str(c.fitting[2]), \
-    #                  '	# sky background [ADU counts\n'])
-        self.f_G.writelines([' 1) ', str(c.SexSky),' ', str(c.fitting[2]), \
+        self.f_G.writelines([' 0) sky\n'])
+        self.f_G.writelines([' 1) ', str(skyval),' ', str(c.fitting[2]), \
                       '	# sky background [ADU counts\n'])
-    #    self.f_G.writelines([' 1) ', str(0.0), ' ', str(c.fitting[2]), \
-    #                  '	# sky background [ADU counts\n'])
-    #    self.f_G.writelines([' 1) ', str(c.SkyMin), '      ', str(c.fitting[2]), \
-    #                  '	# sky background [ADU counts\n'])
         self.f_G.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
                       ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
                       ' Z) 0                  # output image\n\n\n'])

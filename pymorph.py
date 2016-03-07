@@ -327,10 +327,10 @@ def main():
             except:
                 UserGivenPsf = 'None'
             try:
-                UserGivenSky = pdf['sky']
+                UserGivenSky = float(pdb['sky'])
                 print 'Sky is assigned individually to galaxies'
             except:
-                UserGivenSky = -9999
+                UserGivenSky = np.nan
 
             # Crashhandling starts
             if c.crashhandler and c.starthandle:
@@ -503,8 +503,11 @@ def main():
                     c.URd = c.SexHalfRad * 50.0
                 # END
                 # The shallow sky from the shallow run. If no shallow
-                # sky it uses the deep sky
+                # sky it uses the deep sky.
+                c.SexSky = 9999
+                c.GalSky = 9999
                 ShallowSky = 9999
+                skyval = 9999
                 if exists(str(c.sex_cata) + '.Shallow'):
                     f_sex_shallow = open(str(c.sex_cata) + \
                                     '.Shallow', 'r')
@@ -522,6 +525,11 @@ def main():
                 else:
                     c.SexSky = ShallowSky
                     c.GalSky = 9999
+                if not np.isnan(UserGivenSky):
+                    skyval = UserGivenSky #using the sky supplied by the user
+                else:
+                    skyval = c.SexSky #use the sky value from sextractor
+                    
                 if(alpha_j == -9999 or delta_j == -9999):
                     if RaDecInfo: 
                         alpha_j = alpha_s
@@ -614,7 +622,7 @@ def main():
                         outimage = 'O_' + c.fstring + '.fits'
                         ConfigFunc(cutimage, whtimage,  cut_xcntr,\
                                    cut_ycntr, SizeX, SizeY, good_object, \
-                                   psffile, 'SegCat.cat')
+                                   psffile, 'SegCat.cat', skyval)
                         #continue
                 else:
                     cut_xcntr, cut_ycntr = TX / 2.0, TY / 2.0
