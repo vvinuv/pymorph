@@ -25,7 +25,7 @@ class ConfigFunc:
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
-        self.skyval
+        self.skyval = skyval
         self.conff    = self.write_conff(line_s, sex_cata, xcntr, ycntr, skyval)
         return
 
