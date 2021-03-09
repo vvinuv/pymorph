@@ -1,19 +1,18 @@
 import numpy as np
 import numpy.ma as ma
-import pyfits
+import fitsio
 import types
 import os
 from os.path import exists
-import config as c
 import csv
 
 #from ellimaskfunc_easy import ElliMaskFunc
-from ellimaskfunc import ElliMaskFunc
-from bkgdfunc import BkgdFunc
-from casgm import casgm
+#from ellimaskfunc import ElliMaskFunc
+#from bkgdfunc import BkgdFunc
+#from casgm import casgm
 from flagfunc import GetFlag, isset, SetFlag
 #from outmaskfunc_easy import OutMaskFunc
-from outmaskfunc import OutMaskFunc
+#from outmaskfunc import OutMaskFunc
 
 def Gamma(z):
     """This is the Lanczos approximation for Gamma function"""
@@ -72,41 +71,7 @@ def DMSToDeg(d, m, s):
         dec = (d + (m + s / 60.0) / 60.0)
     return dec
 
-def PsfArr():
-    """Return psf list if the given input is a file"""
-    if type(c.psflist) is types.StringType:
-        psffi = open(os.path.join(c.datadir, c.psflist.split('@')[1]), 'r')
-        c.psflist = []
-        for pline in psffi:
-            c.psflist.append(pline.split()[0])
-    elif type(c.psflist) == types.ListType:
-        pass
-    else:
-        print "The psf list is not understood. Please use either \
-               @filename or a list of psfs"
-
-
-def UpdatePsfRaDec(element):
-    """The function which will update the psf header if the psf files
-       are in the specified format"""
-    try:
-        ra1 = float(str(element)[4:6])
-        ra2 = float(str(element)[6:8])
-        ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
-        dec1 = float(str(element)[11:-10])
-        dec2 = float(str(element)[-10:-8])
-        dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
-        ra = HMSToDeg(ra1, ra2, ra3)
-        dec = DMSToDeg(dec1, dec2, dec3)
-        data, header = pyfits.getdata(element, header=True)
-        header.update('RA_TARG', ra, "RA")
-        header.update('DEC_TARG', dec, "DEC")
-        pyfits.update(element, data, header)
-    except:
-        pass
-
-
-def FailedGalfit(WhichGalaxy):
+def FailedGalfit(WhichGalaxy, components):
     """This function creates fake fit.log if galfit fails"""
     f_fail = open("fit.log", "w")
     f_fail.writelines(['-----------------------------------------------'\
@@ -115,17 +80,17 @@ def FailedGalfit(WhichGalaxy):
     f_fail.writelines(['Init. par. file : Failed! :(', '\n'])
     f_fail.writelines(['Restart file    : Failed! :(', '\n'])
     f_fail.writelines(['Output image    : Failed! :(', '\n\n'])
-    if 'bulge' in c.components:
+    if 'bulge' in components:
         f_fail.writelines([' sersic   : (9999, 9999)   9999   9999   9999'\
                            '    9999   9999   9999', '\n'])
         f_fail.writelines(['              (9999, 9999)   9999    9999'\
                            '    9999    9999   9999   9999', '\n'])
-    if 'disk' in c.components:
+    if 'disk' in components:
         f_fail.writelines([' expdisk   : (9999, 9999)   9999   9999'\
                            '    9999   9999   9999', '\n'])
         f_fail.writelines(['              (9999, 9999)   9999    9999'\
                            '    9999   9999   9999', '\n'])
-    if 'point' in c.components:
+    if 'point' in components:
         f_fail.writelines([' gaussian   : (9999, 9999)   9999   9999'\
                            '    9999   9999   9999', '\n'])
         f_fail.writelines(['              (9999, 9999)   9999    9999'\
@@ -153,47 +118,6 @@ def pa(x):
     return pos_ang
 
 
-def SelectPsf(alpha_j, delta_j):                                   
-    """This function will select the nearest psf from the psflist.
-       The distance is calculated by using the following equation
-       d = Sqrt((dec_a - dec_b) ^ 2 + ((ra_a - ra_b) * sin(0.5) * 
-       (dec_a - dec_b)) ^ 2.0 )"""
-    PsfDistanceDict = {}
-    psffile = 'test.fits'
-    r = Get_R()
-    for element in c.psflist:
-        p = pyfits.open(os.path.join(c.datadir, element))
-        header = p[0].header
-        if ('RA_TARG' in header):
-            ra = header['RA_TARG']
-        elif ('RA' in header):
-            ra = header['RA']
-        else:
-            ra = 9999
-        if ('DEC_TARG' in header):
-            dec= header['DEC_TARG']
-        elif ('DEC' in header):
-            dec= header['DEC']
-        else:
-            dec= 9999
-        p.close()
-#       d = sqrt((ra - alpha_j) ** 2.0 + (dec - delta_j) ** 2.0)
-#       d = np.arccos(np.cos((90.0 - delta_j) * r) * np.cos((90.0 - dec) *\
-#           r) + np.sin((90.0 - delta_j) * r) *  np.sin((90.0 - dec) * r) * \
-#           np.cos((alpha_j - ra) * r))
-#       d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j-ra)*np.sin((0.5) *\
-#           (delta_j+dec)))**2.0)
-        d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
-            np.cos(delta_j * r))**2.0)
-        PsfDistanceDict[element] = d
-    ItemS = PsfDistanceDict.items()
-    ItemS = [(v, k) for (k, v) in ItemS]
-    ItemS.sort()
-    ItemS = [(k, v) for (v, k) in ItemS]
-    psffile = ItemS[c.WhichPsf][0]
-    distance = ItemS[c.WhichPsf][1]
-    return psffile, distance 
-
 def PyMorphFiles(gal_id):
     """Returns all the temporary files produced by pymorph"""
     files = ['I' + c.fstring + '.fits', 'I' + c.fstring + '.con', \
@@ -204,90 +128,111 @@ def PyMorphFiles(gal_id):
              'SO_I' + c.fstring + '.fits', 'R_I' + c.fstring + '.html']
     return files
 
-def CrashHandlerToRemove(gal_id):
+def CrashHandlerToRemove(gal_id, fstring, outdir):
     """Removing all the temp files"""
-    f_R_crash =  'R_I' + c.fstring + '_1.html'
+
+    f_R_crash =  'R_I{}_1.html'.format(fstring)
+    P_cra = 'P_I{}.png'.format(fstring)
+    P_new = 'P_I{}_1.png'.format(fstring)
+
     f_R_cra = open(f_R_crash, 'w')
-    P_cra = 'P_I' + c.fstring + '.png'
-    P_new = 'P_I' + c.fstring + '_1.png'
-    for line_crash in open('R_I' + c.fstring + '.html', 'r'):
+    for line_crash in open('R_I{}.html'.format(fstring), 'r'):
         line_crash2wri = line_crash.replace(P_cra, P_new)
         f_R_cra.write(line_crash2wri)
     f_R_cra.close()
+
     os.rename(P_cra, P_new)
+
     for f in PyMorphFiles(gal_id):
         if os.path.exists(f):
-            os.remove(c.outdir + f)
-    for f in glob.glob(c.outdir + 'Tmp*'):
+            os.remove(outdir + f)
+
+    for f in glob.glob(outdir + 'Tmp*'):
         if os.path.exists(f):
-            os.remove(c.outdir + f)
+            os.remove(outdir + f)
 
 def PyMorphOutputParams(dbparams, decompose = 0):
     """Returns the output parameters from pymorph in two shapes. One shape is for writing and the other is for passing to writehtml"""
-    params = {1:['Name','varchar(500)'],2:['ra_gal','float'],3:['dec_gal','float'],
-              4:['z','float'], 5:[ 'MorphType','int'],6:[ 'mag_auto','float'],
-              7:['magerr_auto','float'],8:['SexHalfRad','float'],
-              9:[ 'num_targets','float'],10:[ 'C','float'],
-              11:['C_err','float'], 12:[ 'A','float'],13:[ 'A_err','float'],
-              14:['S','float'], 15:[ 'S_err','float'],16:[ 'G','float'],
-              17:[ 'M','float'], 18:['magzp', 'float']}
+
+    params = {1: ['Name','varchar(500)'], 2: ['ra_gal','float'],
+              3: ['dec_gal','float'], 4: ['z','float'],
+              5: [ 'MorphType','int'], 6: [ 'mag_auto','float'],
+              7: ['magerr_auto','float'], 8: ['SexHalfRad','float'],
+              9: [ 'num_targets','float'],10: [ 'C','float'],
+              11: ['C_err','float'], 12: [ 'A','float'],
+              13: [ 'A_err','float'], 14: ['S','float'],
+              15: [ 'S_err','float'], 16: [ 'G','float'],
+              17: [ 'M','float'], 18: ['magzp', 'float']}
     
     if decompose:
-        extra_params = [['bulge_xctr','float'],['bulge_xctr_err','float'],
-                         ['bulge_yctr','float'],['bulge_yctr_err','float'],
-                         [ 'Ie','float'],['Ie_err','float'],
-                         [ 'AvgIe','float'],[ 'AvgIe_err','float'],['re_pix','float'],
-                         [ 're_pix_err','float'],['re_kpc','float'],
-                         [ 're_kpc_err','float' ],['n','float'],['n_err','float'],
-                         ['eb','float'],[ 'eb_err','float'],['bpa','float'],
-                         ['bpa_err','float'], [ 'bboxy','float'],[ 'bboxy_err','float'],
-                         ['disk_xctr','float'],['disk_xctr_err','float'],
-                         ['disk_yctr','float'],['disk_yctr_err','float'],
-                         ['Id','float'],[ 'Id_err','float'],
-                         [ 'rd_pix','float'],['rd_pix_err','float'],[ 'rd_kpc','float'],
-                         ['rd_kpc_err','float'],[ 'ed','float'],[ 'ed_err','float'],
-                         ['dpa','float'],[ 'dpa_err','float'],['dboxy','float'],
-                         [ 'dboxy_err','float'],['BD','float'],[ 'BT','float'],
-                         ['p_xctr','float'],['p_xctr_err','float'],
-                         ['p_yctr','float'],['p_yctr_err','float'],
-                         [ 'Ip','float'],['Ip_err','float'],[ 'Pfwhm','float'],
-                         [ 'Pfwhm_kpc','float'],['bar_xctr','float'],
-                         ['bar_xctr_err','float'],['bar_yctr','float'],
-                         ['bar_yctr_err','float'],['Ibar','float'],
-                         [ 'Ibar_err','float'],['rbar_pix','float'],
-                         [ 'rbar_pix_err','float'],['rbar_kpc','float'],
-                         [ 'rbar_kpc_err','float'],['n_bar','float'],
-                         [ 'n_bar_err','float'],['ebar','float'],['ebar_err','float'],
-                         [ 'barpa','float'],[ 'barpa_err','float'],[ 'barboxy','float'],
-                         [ 'barboxy_err','float'],[ 'chi2nu','float'],['Goodness','float'],
-                         [ 'run','int'],['SexSky','float'],[ 'YetSky','float'],
-                         ['GalSky','float'],['GalSky_err','float'],['dis_modu','float'],
-                         ['distance','float'],[ 'fit','int'],['FitFlag','bigint']]
+        extra_params = [['bulge_xctr','float'], ['bulge_xctr_err','float'],
+                        ['bulge_yctr','float'], ['bulge_yctr_err','float'],
+                        [ 'Ie','float'], ['Ie_err','float'],
+                        [ 'AvgIe','float'], [ 'AvgIe_err','float'],
+                        ['re_pix','float'], [ 're_pix_err','float'],
+                        ['re_kpc','float'], [ 're_kpc_err','float' ],
+                        ['n','float'], ['n_err','float'],
+                        ['eb','float'], [ 'eb_err','float'],
+                        ['bpa','float'], ['bpa_err','float'],
+                        [ 'bboxy','float'], [ 'bboxy_err','float'],
+                        ['disk_xctr','float'], ['disk_xctr_err','float'],
+                        ['disk_yctr','float'], ['disk_yctr_err','float'],
+                        ['Id','float'], [ 'Id_err','float'],
+                        [ 'rd_pix','float'], ['rd_pix_err','float'],
+                        [ 'rd_kpc','float'], ['rd_kpc_err','float'],
+                        [ 'ed','float'], [ 'ed_err','float'],
+                        ['dpa','float'], [ 'dpa_err','float'],
+                        ['dboxy','float'], [ 'dboxy_err','float'],
+                        ['BD','float'], [ 'BT','float'],
+                        ['p_xctr','float'], ['p_xctr_err','float'],
+                        ['p_yctr','float'], ['p_yctr_err','float'],
+                        [ 'Ip','float'], ['Ip_err','float'],
+                        [ 'Pfwhm','float'], [ 'Pfwhm_kpc','float'],
+                        ['bar_xctr','float'], ['bar_xctr_err','float'],
+                        ['bar_yctr','float'], ['bar_yctr_err','float'],
+                        ['Ibar','float'], [ 'Ibar_err','float'],
+                        ['rbar_pix','float'], [ 'rbar_pix_err','float'],
+                        ['rbar_kpc','float'], [ 'rbar_kpc_err','float'],
+                        ['n_bar','float'], [ 'n_bar_err','float'],
+                        ['ebar','float'], ['ebar_err','float'],
+                        [ 'barpa','float'], [ 'barpa_err','float'],
+                        [ 'barboxy','float'], [ 'barboxy_err','float'],
+                        [ 'chi2nu','float'], ['Goodness','float'],
+                        [ 'run','int'], ['SexSky','float'],
+                        [ 'YetSky','float'], ['GalSky','float'],
+                        ['GalSky_err','float'], ['dis_modu','float'],
+                        ['distance','float'], [ 'fit','int'],
+                        ['FitFlag','bigint']]
     else:
         extra_params = []
 
-    extra_params +=[['flag','bigint'],['Manual_flag','bigint'],['Comments','varchar(1000)'], ['Date', 'varchar(50)'], 
-                    ['Version','float'],['Filter','varchar(500)'],['Total_Run','int'], ['rootname', 'varchar(500)']]
+    extra_params += [['flag','bigint'], ['Manual_flag','bigint'],
+                    ['Comments','varchar(1000)'], ['Date', 'varchar(50)'],
+                    ['Version','float'], ['Filter','varchar(500)'],
+                    ['Version','float'],['Filter','varchar(500)'],
+                    ['Total_Run','int'], ['rootname', 'varchar(500)']]
 
     # add additional keys to params
     fill_key = max(params.keys()) 
     for add_param in extra_params:
-        fill_key +=1
+        fill_key += 1
         params[fill_key] = add_param
 
     fill_key = max(params.keys()) 
+    dbparams = dbparams.split(',')
     for dbparam in dbparams:
-        fill_key +=1
+        fill_key += 1
         DBparam = dbparam.split(':')
         try:
-            params[fill_key] = [DBparam[0],DBparam[2]]
+            params[fill_key] = [DBparam[0], DBparam[2]]
         except:
-            params[fill_key] = [DBparam[0],'varchar(500)']
+            params[fill_key] = [DBparam[0], 'varchar(500)']
         
     return params
 
 def ReadGalfitConfig(cfile):
     """Return gimg, oimg, wimg, pfile, mimg, confile from galfit config file"""
+
     for line_c in open(cfile, 'r'): #Reading config file if it exists
         try:
             valuec = line_c.split()
@@ -309,69 +254,46 @@ def ReadGalfitConfig(cfile):
                 cofile = valuec[1]
         except:
             pass
-    return gimg, oimg, wimg, pfile, mimg, cofile 
+    return (gimg, oimg, wimg, pfile, mimg, cofile) 
 
 def CheckHeader(header0):
     """Set the global keywords from the fits header"""
+
     if 'EXPTIME' in header0.keys(): # Old was 'if header0.has_key('EXPTIME'):
-        c.EXPTIME = header0['EXPTIME']
+        EXPTIME = header0['EXPTIME']
     else:
-        c.EXPTIME = 1.0
+        EXPTIME = 1.0
     if 'RDNOISE' in header0.keys():
-        c.RDNOISE= header0['RDNOISE']
+        RDNOISE= header0['RDNOISE']
     else:
-        c.RDNOISE = 0.0
+        RDNOISE = 0.0
     if 'GAIN' in header0.keys():
-        c.GAIN = header0['GAIN']
-        c.SEx_GAIN = header0['GAIN']
+        GAIN = header0['GAIN']
+        SEx_GAIN = header0['GAIN']
     else:
-        c.GAIN = 1.0
-        c.SEx_GAIN = 1.0
+        GAIN = 1.0
+        SEx_GAIN = 1.0
     if 'NCOMBINE' in header0.keys():
-        c.NCOMBINE= header0['NCOMBINE']
+        NCOMBINE= header0['NCOMBINE']
     else:
-        c.NCOMBINE = 1
+        NCOMBINE = 1
     if 'FILTER2' in header0.keys() or 'FILTER' in header0.keys():
         try:
-            c.FILTER = header0['FILTER2']
+            FILTER = header0['FILTER2']
         except:
-            c.FILTER = header0['FILTER']
+            FILTER = header0['FILTER']
 
-def FindCutSize(ReSize, VarSize, Square, FracRad, FixSize, SizeXX, SizeYY):
-    """Return the size of the cutout. SizeXX, SizeYY are the size of 
-      cutout if c.galcut is True"""
-    ArcR = c.pos_ang * Get_R() #pa in radian
-    SizeX = c.SexHalfRad * FracRad * np.abs(np.cos(ArcR)) + \
-            c.axis_rat * c.SexHalfRad * FracRad * np.abs(np.sin(ArcR))
-    SizeY = c.SexHalfRad * FracRad * np.abs(np.sin(ArcR)) + \
-            c.axis_rat * c.SexHalfRad * FracRad * np.abs(np.cos(ArcR))
-    SizeX = int(SizeX)
-    SizeY = int(SizeY)
-    if Square:
-        SizeX = max(SizeX, SizeY)
-        SizeY = max(SizeX, SizeY)
-    if c.galcut:
-        if ReSize:
-            if VarSize:
-                pass
-            else:
-                SizeX = FixSize
-                SizeY = FixSize
-        else:
-            # FIX
-            SizeX = SizeXX
-            SizeY = SizeYY
-            # END
-    else:
-        if VarSize:
-            pass
-        else:
-            SizeX = FixSize
-            SizeY = FixSize
-    return SizeX, SizeY
+    return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE
 
-def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, whtimage, ReSize):
-    """Make cutout image. The xcntr, ycntr are like iraf.  SizeX, SizeY are half size"""
+
+def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, 
+               cutimage, whtimage, ReSize):
+    """
+    
+    Make cutout image. The xcntr, ycntr are like iraf.  
+    SizeX, SizeY are half size
+
+    """
     ExceedSize = 0
     #All are floor to make the size even number
     xmin = np.floor(xcntr - SizeX)
@@ -396,6 +318,7 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
     if ymax > TY - 1:
         ymax = TY
         ExceedSize = 1
+
     # FIX check c.imagedata or c.ggimage
     CutImDa = c.imagedata[ymin:ymax, xmin:xmax].copy()
     # END
@@ -405,23 +328,23 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu.header.update('RA_TARG', alpha_j)
         hdu.header.update('DEC_TARG', delta_j)
     except:
-        print 'Problem updating the Ra and Dec in cutout image'
+        print('Problem updating the Ra and Dec in cutout image')
     if c.EXPTIME != -9999:
         hdu.header.update('EXPTIME', c.EXPTIME)
     else:
-        print 'c.EXPTIME have value -9999. Something wrong?'
+        print('c.EXPTIME have value -9999. Something wrong?')
     if c.RDNOISE != -9999:
         hdu.header.update('RDNOISE', c.RDNOISE)
     else:
-        print 'c.RDNOISE have value -9999. Something wrong?'
+        print('c.RDNOISE have value -9999. Something wrong?')
     if c.GAIN != -9999:
         hdu.header.update('GAIN', c.GAIN)
     else:
-        print 'c.GAIN have value -9999. Something wrong?'
+        print('c.GAIN have value -9999. Something wrong?')
     if c.NCOMBINE != -9999:
         hdu.header.update('NCOMBINE', c.NCOMBINE)
     else:
-        print 'c.NCOMBINE have value -9999. Something wrong?'
+        print('c.NCOMBINE have value -9999. Something wrong?')
     hdu.writeto(os.path.join(c.datadir, cutimage))
     # FIX
     #Making weight image cut
@@ -430,10 +353,10 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
         hdu.writeto(os.path.join(c.datadir, whtimage))
     else:
-        print 'Cannot creat weight image. If you supply weight image please ',\
-              'check whether it exists or report a bug'
+        print('Cannot creat weight image. If you supply weight image please ',\
+              'check whether it exists or report a bug')
     #END
-    return cut_xcntr, cut_ycntr, SizeX, SizeY, ExceedSize 
+    return (cut_xcntr, cut_ycntr, SizeX, SizeY, ExceedSize) 
 
 def WriteError(err):
     """Write error.log file"""
@@ -441,10 +364,124 @@ def WriteError(err):
     f_err.write(err) 
     f_err.close()
 
+
+def FindEllipse(gimg, xcntr, ycntr, SexHalfRad, 
+               SexPosAng, axis_rat, sky, fstring, output=False):
+    """
+    Find 1-d profile of image
+    """
+
+    ang_arc = np.pi / 180.0 
+
+    print('Working on FitEllipse ')
+
+    #print(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
+    if output:
+        ell_mask_file = 'OEM_{}.fits'.format(fstring)
+        ell_out = 'OE_' + fstring + '.txt'
+    else:
+        ell_mask_file = 'EM_{}.fits'.format(fstring)
+        ell_out = 'E_' + fstring + '.txt'
+        #cutimage = os.path.join(datadir, cutimage)
+
+    if os.path.exists(gimg) and os.path.exists(ell_mask_file):
+        f = fitsio.FITS(gimg)
+        galaxy = f[0].read()
+        f.close()
+
+        galaxy = galaxy - sky
+
+        f = fitsio.FITS(ell_mask_file)
+        mask = f[0].read()
+        f.close()
+
+        SizeX, SizeY = galaxy.shape
+
+        x, y = np.meshgrid(np.arange(SizeX) * 1.0, np.arange(SizeY) * 1.0)
+
+        # r is the radius parameter
+        co = np.cos(SexPosAng * ang_arc)
+        si = np.sin(SexPosAng * ang_arc)
+
+        xsq = ((x - xcntr)* co + (y - ycntr) * si)**2.0
+        ysq = ((xcntr - x) * si + (y - ycntr) * co)**2.0
+
+        one_minus_eb_sq = (1.0 - axis_rat)**2.0
+        r = np.sqrt(xsq + ysq / one_minus_eb_sq).T
+
+        maskedgalaxy = ma.masked_array(galaxy, mask)
+
+        R = []
+        intensity = []
+        intensity_err = []
+        MaxRad = np.min([np.log10(8 * SexHalfRad), \
+                 np.log10(np.min(galaxy.shape))])
+        NoOfPoints = int(30 * 10**MaxRad / 50.)
+
+        #print(MaxRad, NoOfPoints
+        # FIX The EXPTIME factor in the error and intensity. Otherwise the 
+        # S/N will be different
+        print(galaxy.shape, r.shape)
+        for i in np.logspace(0, MaxRad, NoOfPoints):
+            gsub = maskedgalaxy[np.where(np.abs(r - i) <= 1.0)]
+            NonMaskNo = gsub.compressed().shape[0]
+            if NonMaskNo > 0 and gsub.sum() > 0.0:
+                R.append(i)
+                intensity_err.append(np.sqrt(gsub.sum()) / (1.0 * NonMaskNo))
+                intensity.append(gsub.mean())
+            #print(i, NonMaskNo
+            # If you want to see the ellipse anulus, uncoment the following
+            # START
+            #if i > 10 and out:
+            # mafilled = maskedgalaxy.copy()
+            # mafilled = ma.filled(mafilled, 0)
+            # mafilled[np.where(np.abs(r - i) <= 1.0)] = 10000
+            # hdu = pyfits.PrimaryHDU(mafilled)
+            # if exists('try.fits'):
+            #  os.remove('try.fits')
+            # hdu.writeto('try.fits')
+            # raw_input()
+            # STOP
+
+        intensity = np.array(intensity)
+        intensity_err = np.array(intensity_err)
+        # END
+
+        mag = -2.5 * np.log10(intensity)
+        mag_l = np.abs(-2.5 * (np.log10(intensity) - np.log10(intensity - intensity_err))) 
+        mag_u = np.abs(-2.5 * (np.log10(intensity + intensity_err) - np.log10(intensity)))
+
+        f = open(ell_out, 'w')
+        writer = csv.writer(f, delimiter=' ')
+        writer.writerow(['sma', 'intensity', 'intensity_err', 'mag', 'magl', 'magu'])
+        for i in range(intensity.shape[0]):
+            p = [R[i], intensity[i], intensity_err[i], mag[i], mag_l[i], mag_u[i]]
+            writer.writerow(p)
+        f.close()
+        print('Done' )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Find 1-d profile of image"""
-    print 'Working on FitEllipseManual '
-    #print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
+    print('Working on FitEllipseManual ')
+    #print(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
     if out:
         ell_mask_file = 'OEM_' + c.fstring + '.fits'
         ell_out = 'OE_' + c.fstring + '.txt'
@@ -479,7 +516,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         MaxRad = np.min([np.log10(8 * c.SexHalfRad), \
                  np.log10(np.min(galaxy.shape))])
         NoOfPoints = int(30 * 10**MaxRad / 50.)
-        #print MaxRad, NoOfPoints
+        #print(MaxRad, NoOfPoints
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
         for i in np.logspace(0, MaxRad, NoOfPoints, endpoint=True):
@@ -489,7 +526,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
                 R.append(i)
                 IntRE.append(np.sqrt(ma.sum(Isub)) / (1.0 * NonMaskNo))
                 IntR.append(np.mean(Isub))
-            #print i, NonMaskNo
+            #print(i, NonMaskNo
             # If you want to see the ellipse anulus, uncoment the following
             # START
             #if i > 10 and out:
@@ -515,7 +552,8 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
             p = [R[i], IntR[i], IntRE[i], mag[i], mag_l[i], mag_u[i]]
             writer.writerow(p)
         f.close()
-        print 'Done' 
+        print('Done' )
+
 def CleanEllipse(ell_out, after):
     """Cleaning temp files from Ellipse task. after=1 means cleaning after \
        the task. before = 0"""
@@ -539,7 +577,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         use_pyraf = 1
     except ImportError:
         use_pyraf = 0
-        print 'No pyraf installed!'
+        print('No pyraf installed!')
         WriteError('Cannot find pyraf installation! Trying manual 1d ' + \
                    'profile finder\n')
     if use_pyraf:
@@ -578,32 +616,54 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     if use_pyraf == 0 or manual_profile:
         FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
 
-def HandleGalfitOutput(cutimage, outimage, xcntr, ycntr,  SizeX, SizeY, line_s):
-    """Handling the output images of galfit inclding ellipse fit"""
-    if exists(outimage):
-        if(c.repeat == False):
-            OutMaskFunc(outimage, xcntr, ycntr,  SizeX, SizeY, line_s)
-        outmodel = 'S' + outimage
+
+
+def OImgFindEllipse(cutimage, outimage, xcntr, ycntr, fstring, repeat, flag): 
+                    #components, sky, repeat, flag, run, out):
+
+    """
+
+    Handling the output images of galfit inclding ellipse fit
+
+    """
+
+    if os.path.exists(outimage):
+        if(repeat == False):
+            mask_file = 'OEM_{}.fits'.format(fstring)
+            emask_file = 'EM_{}.fits'.format(outimage[2:-5])
+            os.system('cp {} {}'.format(emask_file, mask_file))
+
+        outmodel = 'S{}'.format(outimage)
         if os.access(outmodel, os.F_OK):
             os.remove(outmodel)
+
         # FIX. Add the header also in the file
-        f = pyfits.open(outimage)
-        z  = f[2].data
-        f.close()
-        hdu = pyfits.PrimaryHDU(z)
-        hdu.writeto(outmodel)
+        fits = fitsio.FITS(outimage, 'r')
+        fout  = fits[2].read()
+        fits.close()
+
+        fits = fitsio.FITS(outmodel, 'rw')
+        fits.write(fout)
+        fits.close()
         # END
         # FIX . Now sky = c.SexSky is passing to the ellipse task. This \
         # means that 
-        # we are comparing images with same sky. may be fixed later
-        HandleEllipseTask(outmodel, xcntr, ycntr, SizeX, SizeY, c.SexSky, 1)
-        # END 
+        # we are comparing images with same sky. may be fixed later   
+        #FitEllipse(outmodel, xcntr, ycntr, sky, fstring, out)
+
+        if 0:
+            FindEllipse(gimg, xcntr, ycntr, SexHalfRad,
+                      SexPosAng, axis_rat, skyval,
+                      self.fstring, output=True)
+        run = 1
     else:
         WriteError('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
-        c.Flag = SetFlag(c.Flag, GetFlag('GALFIT_FAIL'))
-        FailedGalfit(cutimage)
-        c.run = 0
+        flag = SetFlag(flag, GetFlag('GALFIT_FAIL'))
+        FailedGalfit(cutimage, components)
+        run = 0
+
+    return flag, run
 
 def Distance(psffile, ra, dec):
     """Find the distance between psf and object in arcsec. Ra and dec is the \
@@ -621,7 +681,7 @@ def Distance(psffile, ra, dec):
     except:
         distance = 9999
     if distance == 9999:
-        print 'Distance between psf and image is 9999'
+        print('Distance between psf and image is 9999')
     return distance
     
 def HandlePsf(cfile, UserGivenPsf, ra, dec):
@@ -662,7 +722,7 @@ def HandleCASGMBack(cutimage, cut_xcntr, cut_ycntr, SizeX, SizeY, \
             bxcntr = Bkgd_Params.bkgd[0]
             bycntr = Bkgd_Params.bkgd[1]
 #            c.skysig = Bkgd_Params.bkgd[2]
-#            print 'Sky Sigma >>> ', c.skysig
+#            print('Sky Sigma >>> ', c.skysig
             return bxcntr, bycntr         
         except:
             WriteError('Could not find blank sky region for casgm\n')
@@ -693,9 +753,9 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         S_err = caSgm[5]
         G = caSgm[6]
         M = caSgm[7]
-        print 'C, C_err, A, A_err, S, S_err, G, M >>> ', \
+        print('C, C_err, A, A_err, S, S_err, G, M >>> ', \
               str(C)[:5], str(C_err)[:5], str(A)[:5], str(A_err)[:5], \
-              str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5]
+              str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5])
         
         #if(c.decompose == False):
         #    f_res = open("result.csv", "ab")
@@ -713,13 +773,13 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
 
 def returngimg():
-    print "No gimg given."
+    print("No gimg given.")
     if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
         gimg = 'I' + c.fstring + '.fits'
     elif exists(os.path.join(c.datadir, str(gal_id) + '.fits')):
         gimg = str(gal_id) + '.fits'
     else:
-        print "No possible gimg found"
+        print("No possible gimg found")
         gimg = 'None'
     return gimg
 

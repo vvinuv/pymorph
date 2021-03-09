@@ -1,94 +1,150 @@
 import os
-import config as c
-import re
 
-class RunSex:
-    """The class for running SExtractor, if the pipeline doesn't find any
-       SExtractor catalogue. It uses the default.* files for doing that. """
-    def __init__(self, cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
-        self.cutimage = cutimage
-        self.whtimage = whtimage
-	self.sex_cata = sex_cata
-	self.detect_thr = detect_thr
-	self.ana_thr = ana_thr
-        self.sex    = sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas)
-        # print self.whtimage
+#class SexParams_back:
 
-def sex(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
-    if sex_cata == 'None':
-        sex_cata = c.sex_cata
-    mag_zero = c.mag_zero #magnitude zero point
-    SEx_DETECT_MINAREA = c.SEx_DETECT_MINAREA
-    if detect_thr == 9999:
-        SEx_DETECT_THRESH = c.SEx_DETECT_THRESH
-    else:
-	SEx_DETECT_THRESH = detect_thr
-    if ana_thr == 9999:
-        SEx_ANALYSIS_THRESH = c.SEx_ANALYSIS_THRESH 
-    else:
-	SEx_ANALYSIS_THRESH = ana_thr
-    SEx_FILTER = c.SEx_FILTER
-    SEx_FILTER_NAME = c.SEx_FILTER_NAME 
-    SEx_DEBLEND_NTHRESH = c.SEx_DEBLEND_NTHRESH
-    SEx_DEBLEND_MINCONT = c.SEx_DEBLEND_MINCONT
-    SEx_PHOT_FLUXFRAC = c.SEx_PHOT_FLUXFRAC 
-    if cas:
-        SEx_GAIN = 1
-    else:
-	SEx_GAIN = c.SEx_GAIN
-    SEx_PIXEL_SCALE = c.SEx_PIXEL_SCALE
-    SEx_SEEING_FWHM = c.SEx_SEEING_FWHM 
-    SEx_BACK_SIZE = c.SEx_BACK_SIZE 
-    SEx_BACK_FILTERSIZE = c.SEx_BACK_FILTERSIZE 
-    SEx_BACKPHOTO_TYPE = c.SEx_BACKPHOTO_TYPE 
-    SEx_BACKPHOTO_THICK = c.SEx_BACKPHOTO_THICK 
-    SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
-    pymorph_path = c.PYMORPH_PATH
-    if 'None' in whtimage.split('/')[-1]:
-        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow.sex','r')
-    else:
-        if SEx_WEIGHT_TYPE == 'DECIDE':
-            if re.search("rms", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
-            elif re.search("weight", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
-            else:
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
-        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default.sex','r')
+    #    """
+    #
+    #    The class for running SExtractor. It runs 
+    #    
+    #    1. if the pipeline doesn't find any SExtractor catalogue. It uses 
+    #    the default.* files for doing that. 
+    #
+    #    2. Needs to find segmentation map
+    #
+    #    3. Need to find a shallow run
+    #
+    #    """
+    #
+    #    def __init__(self, sex_params, mag_zero):
+    #
+    #        self.SEx_DETECT_MINAREA = sex_params[0]
+    #        self.SEx_DETECT_THRESH = sex_params[1]
+    #        self.SEx_ANALYSIS_THRESH = sex_params[2]
+    #        self.SEx_FILTER = sex_params[3]
+    #        self.SEx_FILTER_NAME = sex_params[4]
+    #        self.SEx_DEBLEND_NTHRESH = sex_params[5]
+    #        self.SEx_DEBLEND_MINCONT = sex_params[6]
+    #        self.SEx_PHOT_FLUXFRAC = sex_params[7]
+    #        self.SEx_BACK_SIZE = sex_params[8]
+    #        self.SEx_BACK_FILTERSIZE = sex_params[9]
+    #        self.SEx_BACKPHOTO_TYPE = sex_params[10]
+    #        self.SEx_BACKPHOTO_THICK = sex_params[11]
+    #        self.SEx_WEIGHT_TYPE = sex_params[12]
+    #        self.SEx_PIXEL_SCALE = sex_params[13]
+    #        self.SEx_SEEING_FWHM = sex_params[14]
+    #        self.mag_zero = mag_zero
+    #    
+    #
+    #    def RunSex(self, SP, gimg, wimg, scat, SEx_GAIN, sconfig='default',
+    #               SEx_DETECT_MINAREA = SP.SEx_DETECT_MINAREA, 
+    #               SEx_DETECT_THRESH = SP.SEx_DETECT_THRESH,
+    #               SEx_ANALYSIS_THRESH = SP.SEx_ANALYSIS_THRESH, 
+    #               SEx_FILTER = SP.SEx_FILTER,
+    #               SEx_FILTER_NAME = SP.SEx_FILTER_NAME,
+    #               SEx_DEBLEND_NTHRESH = SP.SEx_DEBLEND_NTHRESH,
+    #               SEx_DEBLEND_MINCONT = SP.SEx_DEBLEND_MINCONT,
+    #               SEx_PHOT_FLUXFRAC = SP.SEx_PHOT_FLUXFRAC,
+    #               SEx_BACK_SIZE = SP.SEx_BACK_SIZE,
+    #               SEx_BACK_FILTERSIZE = SP.SEx_BACK_FILTERSIZE,
+    #               SEx_BACKPHOTO_TYPE = SP.SEx_BACKPHOTO_TYPE,
+    #               SEx_BACKPHOTO_THICK = SP.SEx_BACKPHOTO_THICK,
+    #               SEx_WEIGHT_TYPE = SP.SEx_WEIGHT_TYPE,
+    #               SEx_PIXEL_SCALE = SP.SEx_PIXEL_SCALE,
+    #               SEx_SEEING_FWHM = SP.SEx_SEEING_FWHM,
+    #               mag_zero = SP.mag_zero
+    #              ):
+    #
+    #        PYMORPH_PATH = os.path.dirname(__file__)
+    #
+    #        if sconfig == 'default':
+    #            if wimg is None:
+    #                fsex = 'default_wow.sex'
+    #            else:
+    #                fsex = 'default.sex'
+    #            print('SExtractor Detecting Objects (Deep)')
+    #        elif sconfig == 'seg':
+    #            if wimg is None:
+    #                fsex = 'default_seg_wow.sex'
+    #            else:
+    #                fsex = 'default_seg.sex'
+    #            print('SExtractor Detecting segmentation')
+    #        elif sconfig == 'shallow':
+    #            if wimg is None:
+    #                fsex = 'default_wow_shallow.sex'
+    #            else:
+    #                fsex = 'default_shallow.sex'
+    #            print('SExtractor Detecting Objects (Shallow)')
+    #
+    #        sconfig = os.path.join(PYMORPH_PATH, 'SEx', fsex)
+    #
+    #        print(vars())
+    #        f_tpl = open(sconfig, 'r')
+    #        template = f_tpl.read()
+    #        f_tpl.close()
+    #
+    #        f_sex = open(fsex, 'w')
+    #        f_sex.write(template %vars())
+    #        f_sex.close()
+    #
+    #        cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
+    #        os.system(cmd)
+    #
+
+def RunSex(sex_params, SEX_PATH, gimg, wimg, sex_cata, 
+           SEx_GAIN, sconfig='default'):
+    
+    SEx_DETECT_MINAREA = sex_params[0]
+    SEx_DETECT_THRESH = sex_params[1]
+    SEx_ANALYSIS_THRESH = sex_params[2]
+    SEx_FILTER = sex_params[3]
+    SEx_FILTER_NAME = sex_params[4]
+    SEx_DEBLEND_NTHRESH = sex_params[5]
+    SEx_DEBLEND_MINCONT = sex_params[6]
+    SEx_PHOT_FLUXFRAC = sex_params[7]
+    SEx_BACK_SIZE = sex_params[8]
+    SEx_BACK_FILTERSIZE = sex_params[9]
+    SEx_BACKPHOTO_TYPE = sex_params[10]
+    SEx_BACKPHOTO_THICK = sex_params[11]
+    SEx_WEIGHT_TYPE = sex_params[12]
+    SEx_PIXEL_SCALE = sex_params[13]
+    SEx_SEEING_FWHM = sex_params[14]
+    mag_zero = sex_params[15]
+
+    PYMORPH_PATH = os.path.dirname(__file__)
+
+
+    if sconfig == 'default':
+        if wimg is None:
+            fsex = 'default_wow.sex'
+        else:
+            fsex = 'default.sex'
+        print('SExtractor Detecting Objects (Deep)')
+    elif sconfig == 'seg':
+        if wimg is None:
+            fsex = 'default_seg_wow.sex'
+        else:
+            fsex = 'default_seg.sex'
+        print('SExtractor Detecting segmentation')
+    elif sconfig == 'shallow':
+        if wimg is None:
+            fsex = 'default_wow_shallow.sex'
+        else:
+            fsex = 'default_shallow.sex'
+        print('SExtractor Detecting Objects (Shallow)')
+
+    sconfig = os.path.join(PYMORPH_PATH, 'SEx', fsex)
+
+    #print(vars())
+    f_tpl = open(sconfig, 'r')
     template = f_tpl.read()
     f_tpl.close()
-    sex_conf = str(sex_cata) + '.sex'
-    f_sex = open(sex_conf, 'w')
-    f_sex.write(template %vars())
-    f_sex.close()
-    print 'SExtractor Detecting Objects (Deep)....'
-    cmd = str(c.SEX_PATH) + ' ' +str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
-    os.system(cmd)    
 
-def SexShallow(cutimage, whtimage, sex_cata, detect_thr, ana_thr, cas):
-    if sex_cata == 'None':
-        sex_cata = c.sex_cata + '.Shallow'
-    DeepCata = c.sex_cata
-    mag_zero = c.mag_zero #magnitude zero point
-    SEx_WEIGHT_TYPE = c.SEx_WEIGHT_TYPE
-    pymorph_path = c.PYMORPH_PATH
-    if 'None' in whtimage.split('/')[-1]:
-        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_wow_shallow.sex','r')
-    else:
-        if SEx_WEIGHT_TYPE == 'DECIDE':
-            if re.search("rms", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
-            elif re.search("weight", whtimage.lower()):
-                SEx_WEIGHT_TYPE = 'MAP_WEIGHT'
-            else:
-                SEx_WEIGHT_TYPE = 'MAP_RMS'
-        f_tpl = open(str(c.PYMORPH_PATH) + '/SEx/default_shallow.sex','r')
-    template = f_tpl.read()
-    f_tpl.close()
-    sex_conf = str(sex_cata) + '.sex'
-    f_sex = open(sex_conf, 'w')
+    f_sex = open(fsex, 'w')
     f_sex.write(template %vars())
     f_sex.close()
-    print 'SExtractor Detecting Objects (Shallow)....'
-    cmd = str(c.SEX_PATH) + ' ' +str(cutimage) + ' -c ' + str(sex_conf) + ' > /dev/null'
-    os.system(cmd)    
+
+    cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
+    os.system(cmd)
+
+
+

@@ -4,6 +4,7 @@ import config as c
 import pyfits
 import numpy as n
 
+
 class FitElliFunc:
     """The class which will run ellipse task automatically. This will not
        keep any parameter fixed during the fit. The output of the ellipse

@@ -1,8 +1,9 @@
-import pyfits
 import numpy as np
 from numpy import fft
+
 def Convolve(image, kernal, zeropad=True):
     """ Convolution using numpy fft2. zeropad=True always in this function"""
+
     kernal = np.asarray(kernal)
     kernal = kernal.astype(np.float32) 
     kernal = kernal / kernal.sum() # Normalizing the kernal
@@ -19,9 +20,9 @@ def Convolve(image, kernal, zeropad=True):
     # convolved image
     ConvIm = fft.ifft2(FouTra).real
     # Removing the zero padded region
-    ymin = np.floor(es0)
-    ymax = np.floor(s0 - es0)
-    xmin = np.floor(es1)
-    xmax = np.floor(s1 - es1)
+    ymin = int(np.floor(es0))
+    ymax = int(np.floor(s0 - es0))
+    xmin = int(np.floor(es1))
+    xmax = int(np.floor(s1 - es1))
     ConvIm = ConvIm[ymin:ymax, xmin:xmax]
     return ConvIm

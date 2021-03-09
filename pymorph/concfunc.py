@@ -3,7 +3,8 @@ import pyfits
 import os
 import numpy.ma as ma
 import pylab
-class concentration:
+
+class Concentration:
     """The class for finding concentration parameter. The algorithm used
        here is as follows
        1. It calculates the average light at different radii. i.e., 
@@ -37,6 +38,8 @@ class concentration:
         self.eg             = eg
         self.oversamp       = 10.
         self.sky     = sky
+
+    def concentration(self):
         xmin = np.floor(self.xcntr - 10)
         ymin = np.floor(self.ycntr - 10)
         xmax = np.floor(self.xcntr + 10)
@@ -155,4 +158,5 @@ class concentration:
                    (self.r80e / self.r80)**2.)
         self.error_con = 5 * 0.434 * rat2080e / rat2080
         # print self.concen, self.error_con
+        
 
