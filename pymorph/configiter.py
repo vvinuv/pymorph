@@ -19,14 +19,14 @@ class ConfigIter:
     def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         self.cutimage = cutimage
         self.line_s  = line_s
-	self.whtimage = whtimage
+        self.whtimage = whtimage
         self.xcntr = xcntr
         self.ycntr = ycntr
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
         self.confiter    = confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
-		
+
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
@@ -47,9 +47,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
     constrain_file = c.fstring + '.con'
     try:
-	c.center_constrain = c.center_constrain
+    	c.center_constrain = c.center_constrain
     except:
-	c.center_constrain = 2.0
+	    c.center_constrain = 2.0
     def SersicMainConstrain(constrain_file, cO):
         f_constrain = open(constrain_file, 'ab')
         f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \

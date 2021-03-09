@@ -66,15 +66,15 @@ def bkgd(cutimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky):
                         tx = x - bxcntr
                         ty = y - bycntr
                         R = n.sqrt(tx**2.0 + ty**2.0)
-			ValueOfRegion = n.abs(z[n.where(R <= back_extraction_radius)] - sky_iter)
-			SizeOfRegion = ValueOfRegion.size
+                        ValueOfRegion = n.abs(z[n.where(R <= back_extraction_radius)] - sky_iter)
+                        SizeOfRegion = ValueOfRegion.size
                         SizeOfIgnRegion = ValueOfRegion[n.where(ValueOfRegion > skysig_iter)].size
-			BackMask = n.where(abs(z - sky_iter) < skysig * 3.0, 0, z) 
+                        BackMask = n.where(abs(z - sky_iter) < skysig * 3.0, 0, z) 
                         BackMask = n.where(abs(BackMask) > 0, 1, BackMask) 
                         bmax = n.abs(z[n.where(R <= back_extraction_radius)] \
                                - sky_iter).max() # substracting the average sky value from the image and find the maximum value in the region 
-#			if FLAG_BACK1 == 0:
-# 			    print SizeOfRegion , SizeOfIgnRegion, bxcntr, bycntr
+#			            if FLAG_BACK1 == 0:
+# 			                print SizeOfRegion , SizeOfIgnRegion, bxcntr, bycntr
                         if(SizeOfIgnRegion < 0.2 * SizeOfRegion and FLAG_BACK == 0):
 #If the maximum value is within some n*sky sigma then that is considered as the background
                             FLAG_BACK = 1

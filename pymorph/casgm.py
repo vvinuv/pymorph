@@ -48,8 +48,8 @@ class CasGm:
                     values = line.split()
                     if abs(float(values[1]) - xcntr) < 4.001 and \
                            abs(float(values[2]) - ycntr) < 4.001:
-                            xcntr = float(values[1]) - 1.0
-                            ycntr = float(values[2]) - 1.0
+                        xcntr = float(values[1]) - 1.0
+                        ycntr = float(values[2]) - 1.0
                     FoundNewCntr = 1
                 except:
                     pass
@@ -58,15 +58,15 @@ class CasGm:
                 if os.access(myfile, os.F_OK):
                     os.remove(myfile)
 
-        if dectThre < 2.0:
-            dectThre -= 0.5
-        else:
-            dectThre -= 2.0
+            if dectThre < 2.0:
+                dectThre -= 0.5
+            else:
+                dectThre -= 2.0
 
-        if dectThre == 0:
-            xcntr = xcntr
-            ycntr = ycntr
-            FoundNewCntr = 1
+            if dectThre == 0:
+                xcntr = xcntr
+                ycntr = ycntr
+                FoundNewCntr = 1
         # END
 
         angle = c.angle
@@ -82,8 +82,7 @@ class CasGm:
         f.close()
 
         try:
-            print("Initial background Center >>> ({}, {})".format(
-                self.back_ini_xcntr, self.back_ini_ycntr)
+            print("Initial background Center >>> ({}, {})".format( self.back_ini_xcntr, self.back_ini_ycntr))
             casgmrun = 1
         except:
             casgmrun = 0
@@ -101,16 +100,16 @@ class CasGm:
         #   CONCENTRATION      #
         ########################
         if(casgmrun):
-        try:
-            ApErTuRe = c.aperture
-        except:
-            print 'aperture keyword is not found in config.py. Setting '\
-                  'circular'
-            ApErTuRe = 1
-        if ApErTuRe:
+            try:
+                ApErTuRe = c.aperture
+            except:
+                print('aperture keyword is not found in config.py. Setting '\
+                      'circular')
+                ApErTuRe = 1
+            if ApErTuRe:
                 con = concentration(z, mask, xcntr, ycntr, 0.0, 0.0, sky)
-        else:
-            con = concentration(z, mask, xcntr, ycntr, pa - 90.0, eg, sky)
+            else:
+                con = concentration(z, mask, xcntr, ycntr, pa - 90.0, eg, sky)
             extraction_radius = con.TotRad
             r20 = con.r20
             r50 = con.r50

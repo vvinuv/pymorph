@@ -108,8 +108,8 @@ class Asymmetry:
                 ty = (cut_xcntr - x) * si + (y - cut_ycntr) * co
                 R = np.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
                 # print xcntr[iter] , ycntr[iter]
-            rz = rotate(CutImDa, 180.0, cut_xcntr, cut_ycntr)
-            res = CutImDa - rz
+                rz = rotate(CutImDa, 180.0, cut_xcntr, cut_ycntr)
+                res = CutImDa - rz
                 masksub = mask[ymin:ymax, xmin:xmax].copy()
 
                 # If want to check the rotated image and cutout image
@@ -124,13 +124,13 @@ class Asymmetry:
                 # raw_input()
                 # END
 
-            sh_sum[iter] = ma.masked_array(CutImDa, masksub) \
-                               [np.where(R <= extraction_radius)].sum()
-            rot_sum[iter] = ma.masked_array(rz, masksub) \
+                sh_sum[iter] = ma.masked_array(CutImDa, masksub) \
+                                   [np.where(R <= extraction_radius)].sum()
+                rot_sum[iter] = ma.masked_array(rz, masksub) \
                                 [np.where(R <= extraction_radius)].sum()
                 abs_zsum[iter] = abs(ma.masked_array(CutImDa, masksub) \
                                  [np.where(R <= extraction_radius)]).sum()
-            absres_sum[iter] = abs(ma.masked_array(res, masksub) \
+                absres_sum[iter] = abs(ma.masked_array(res, masksub) \
                                    [np.where(R <= extraction_radius)]).sum()
                 if(flag_image):
                     Aabs[iter] = absres_sum[iter] / (abs_zsum[iter])

@@ -12,15 +12,12 @@ import numpy as np
 import re
 import configparser
 
-#import config as c
 import pymorphutils as ut
 from flagfunc import GetFlag, isset, SetFlag
 
 from ellimaskfunc_easy import ElliMaskFunc
-#from ellimaskfunc import ElliMaskFunc
 
 from maskfunc_easy import MaskFunc
-#from maskfunc import MaskFunc
 
 from configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
@@ -1721,8 +1718,7 @@ class PyMorph:
 
 
 
-
-
-p = PyMorph()
-p.pymorph()
-#p.main()
+if __name__ == '__main__':
+    p = PyMorph()
+    p.pymorph()
+    #p.main()
