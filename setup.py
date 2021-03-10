@@ -27,9 +27,7 @@ extras_reqs = dict(zip(extras_reqs, extras_reqs))
 with open("__version__") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
-with open('README.md') as f:
-    long_description = f.read()
-
+long_description = 'This pipeline was written as a part of some projects on galaxy morphology by Vinu Vikraman and Alan Meert. Yogesh Wadadekar, Ajit Kembhavi, G V Vijayagovidan and Mariangela Bernardi were working on those projects. It REQUIRES SExtractor and GALFIT.'
 
 setup(
     name='pymorph',
