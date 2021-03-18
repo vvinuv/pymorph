@@ -1,3 +1,4 @@
+import os
 import fitsio
 import numpy as np
 import pymconvolve 
@@ -11,22 +12,24 @@ class ElliMaskFunc:
 
     """
 
-    def __init__(self, xcntr_o, ycntr_o, galflag, 
+    def __init__(self, mimg, xcntr_o, ycntr_o, galflag, 
                  center_limit=5., seg_limit=1e-5):
 
+        self.mimg = mimg
         self.xcntr_o = xcntr_o
         self.ycntr_o = ycntr_o
         self.galflag = galflag
+        self.verbose = False
 
-    def emask(self, seg_file, seg_cata, fstring, 
+    def emask(self, check_fits, seg_cat, fstring, 
               center_limit=5, seg_limit=1e-5):
 
         #from astropy.io import fits
-        mask_file = 'EM_{}.fits'.format(fstring)
-        
-        print('seg file', seg_file)
+       
+        if self.verbose:
+            print('ellimaskfunc, seg check_fits', check_fits)
 
-        fits = fitsio.FITS(seg_file, 'r')
+        fits = fitsio.FITS(check_fits, 'r')
         seg = fits[0].read()
         fits.close()
         #print(type(seg))
@@ -34,11 +37,11 @@ class ElliMaskFunc:
         #fseg = fits.open(seg_file)
         #seg = fseg[0].data
         #fseg.close()
-        print(seg)
+        #print(seg)
 
 
-        print(np.unique(seg))
-        for line_j in open(seg_cata, 'r'):
+        #print(np.unique(seg))
+        for line_j in open(seg_cat, 'r'):
             values = line_j.split()
             id_n = float(values[0])
             xcntr_n  = float(values[1]) #x center of the neighbour
@@ -54,15 +57,15 @@ class ElliMaskFunc:
         seg = pymconvolve.Convolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
 
-        print(mask.shape, type(mask), mask_file)
+        #print(mask.shape, type(mask), self.mimg)
         if self.galflag:
-            fits = fitsio.FITS(mask_file, 'rw')
+            fits = fitsio.FITS(self.mimg, 'rw')
             fits.write(mask)
         else:
-            fits = fitsio.FITS(mask_file, 'rw')
+            fits = fitsio.FITS(self.mimg, 'rw')
             fits.write(mask, clobber=True)
 
-        #fits.writeto(mask_file, mask, overwrite=True)
+        #fits.writeto(mimg, mask, overwrite=True)
 
         
 
