@@ -4,7 +4,7 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     %(sex_cata)s       # name of the output catalog
+CATALOG_NAME     %(sex_cat)s       # name of the output catalog
 CATALOG_TYPE     ASCII     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
 PARAMETERS_NAME  %(PYMORPH_PATH)s/SEx/default.param  # name of the file containing catalog contents
@@ -72,4 +72,4 @@ CHECKIMAGE_TYPE  APERTURES           # can be NONE, BACKGROUND, BACKGROUND_RMS,
                                 # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
                                 # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
                                 # or APERTURES
-CHECKIMAGE_NAME  check.fits     # Filename for the check-image
+CHECKIMAGE_NAME  %(check_fits)s     # Filename for the check-image
