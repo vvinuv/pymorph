@@ -40,7 +40,8 @@ class CasGm:
         else:
             dectThre = 12.0
         while FoundNewCntr == 0:
-            RunSex(os.path.join(c.datadir, self.cutimage), 'None', 
+            RunSex(sex_params, SEX_PATH, 
+                   os.path.join(c.datadir, self.cutimage), 'None', 
                    'CaSsEx.cat', dectThre, dectThre, 1)
 
             for line in open('CaSsEx.cat', 'r'):
