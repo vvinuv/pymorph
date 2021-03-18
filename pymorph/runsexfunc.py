@@ -1,4 +1,5 @@
 import os
+import time
 
 #class SexParams_back:
 
@@ -90,9 +91,10 @@ import os
     #        os.system(cmd)
     #
 
-def RunSex(sex_params, SEX_PATH, gimg, wimg, sex_cata, 
-           SEx_GAIN, sconfig='default'):
+def RunSex(sex_params, SEX_PATH, gimg, wimg, sex_cat, 
+           SEx_GAIN, check_fits='check.fits', sconfig='default'):
     
+
     SEx_DETECT_MINAREA = sex_params[0]
     SEx_DETECT_THRESH = sex_params[1]
     SEx_ANALYSIS_THRESH = sex_params[2]
@@ -144,7 +146,15 @@ def RunSex(sex_params, SEX_PATH, gimg, wimg, sex_cata,
     f_sex.close()
 
     cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
+    print(cmd)
     os.system(cmd)
 
-
+    check_fits_not_exists = True
+    sleep = 0
+    ti = time.time()
+    while (check_fits_not_exists) & (sleep < 10):
+        if os.path.exists(check_fits):
+            check_fits_not_exists = False
+        time.sleep(1)
+        sleep = time.time() - ti 
 

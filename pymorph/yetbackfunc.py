@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import pymconvolve
 import numpy.ma as ma
@@ -41,23 +42,27 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
     return np.median(ma.masked_array(z, zmm).compressed())
 
 
-def FindYetSky(sex_params, SEX_PATH, gimg, wimg, seg_file, 
-               X0, Y0, scat, SEx_GAIN,
-               center_err=5., median_std=1.3, sconfig='seg'):
+def FindYetSky(fstring, sex_params, SEX_PATH, gimg, wimg, scat, 
+               X0, Y0, check_fits, SEx_GAIN,
+               center_err=5., median_std=1.3, sconfig='seg', verbose=False):
 
     #from astropy.io import fits
 
-    print(scat)
-    RunSex(sex_params, SEX_PATH, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
+    
+    if verbose:
+        print(scat)
+    RunSex(sex_params, SEX_PATH, gimg, wimg, scat, SEx_GAIN, 
+           check_fits=check_fits, sconfig='seg')
 
     f = fitsio.FITS(gimg)
     z = f[0].read()
     f.close()
+    
+    if verbose:
+        print(z.shape)
+        print(gimg)
 
-    print(z.shape)
-    print(gimg)
-
-    fseg = fitsio.FITS(seg_file)
+    fseg = fitsio.FITS(check_fits)
     zm = fseg[0].read()
     fseg.close()
 
@@ -65,19 +70,21 @@ def FindYetSky(sex_params, SEX_PATH, gimg, wimg, seg_file,
     #z = f[0].data
     #f.close()
 
-    #fseg = fits.open(seg_file)
+    #fseg = fits.open(check_fits)
     #zm = fseg[0].data
     #fseg.close()
 
-    print(zm.shape)
+    if verbose:
+        print(zm.shape)
 
     SexSky, SkyYet = 9999, 9999
     SkyMed, SkyMin = 9999, 9999
     SkyQua, SkySig = 9999, 9999
 
     for l_s in open(scat):
-        v_s = l_s.split()
-        obj = GetSExObj(NXPTS=None, NYPTS=None, line_s=l_s)
+        v_s = [float(l) for l in l_s.split()]
+        obj = GetSExObj(NXPTS=None, NYPTS=None, values=v_s)
+        #sys.exit()
         SexId = obj.sex_num
         xcntr = obj.xcntr
         ycntr = obj.ycntr
