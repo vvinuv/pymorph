@@ -365,48 +365,78 @@ def WriteError(err):
     f_err.close()
 
 
-def FindEllipse(gimg, xcntr, ycntr, SexHalfRad, 
-               SexPosAng, axis_rat, sky, fstring, output=False):
-    """
-    Find 1-d profile of image
-    """
+class FindEllipse(object):
 
-    ang_arc = np.pi / 180.0 
+    def __init__(self, xcntr, ycntr, SexHalfRad, SexPosAng, axis_rat, 
+                sky, fstring):
+        
+        self.xcntr = xcntr
+        self.ycntr = ycntr
+        self.SexHalfRad = SexHalfRad
+        self.SexPosAng = SexPosAng
+        self.axis_rat = axis_rat
+        self.sky = sky
+        self.fstring = fstring
 
-    print('Working on FitEllipse ')
+    def profile(self, img, output=False, emimg=None):
 
-    #print(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
-    if output:
-        ell_mask_file = 'OEM_{}.fits'.format(fstring)
-        ell_out = 'OE_' + fstring + '.txt'
-    else:
-        ell_mask_file = 'EM_{}.fits'.format(fstring)
-        ell_out = 'E_' + fstring + '.txt'
-        #cutimage = os.path.join(datadir, cutimage)
+        """
+        Find 1-d profile of image
+        """
 
-    if os.path.exists(gimg) and os.path.exists(ell_mask_file):
-        f = fitsio.FITS(gimg)
+        ang_arc = np.pi / 180.0 
+
+        print('Working on elliptical profile ')
+
+        #print(cutimage, self.xcntr, self.ycntr, SizeX, SizeY, sky, out
+        if output:
+            fits = fitsio.FITS(img, 'r')
+            fout  = fits[2].read()
+            fits.close()
+
+            fits = fitsio.FITS(img, 'rw')
+            fits.write(fout)
+            fits.close()
+
+            if emimg is None:
+                mask = nd.zeros_like(img)
+            else:
+                ell_out = 'OE_' + self.fstring + '.txt'
+        else:
+            ell_mask_file = 'EM_{}.fits'.format(self.fstring)
+            #cutimage = os.path.join(datadir, cutimage)
+            ell_out = 'E_' + self.fstring + '.txt'
+
+
+        if os.path.exists(emimg):
+            f = fitsio.FITS(emimg)
+            mask = f[0].read()
+            f.close()
+        else:
+            mask = nd.zeros_like(img)
+
+
+        f = fitsio.FITS(img)
         galaxy = f[0].read()
         f.close()
 
-        galaxy = galaxy - sky
+        galaxy = galaxy - self.sky
 
-        f = fitsio.FITS(ell_mask_file)
-        mask = f[0].read()
-        f.close()
+       
+        #print('galaxy.shape, mask.shape', galaxy.shape, mask.shape)
 
         SizeX, SizeY = galaxy.shape
 
         x, y = np.meshgrid(np.arange(SizeX) * 1.0, np.arange(SizeY) * 1.0)
 
         # r is the radius parameter
-        co = np.cos(SexPosAng * ang_arc)
-        si = np.sin(SexPosAng * ang_arc)
+        co = np.cos(self.SexPosAng * ang_arc)
+        si = np.sin(self.SexPosAng * ang_arc)
 
-        xsq = ((x - xcntr)* co + (y - ycntr) * si)**2.0
-        ysq = ((xcntr - x) * si + (y - ycntr) * co)**2.0
+        xsq = ((x - self.xcntr)* co + (y - self.ycntr) * si)**2.0
+        ysq = ((self.xcntr - x) * si + (y - self.ycntr) * co)**2.0
 
-        one_minus_eb_sq = (1.0 - axis_rat)**2.0
+        one_minus_eb_sq = (1.0 - self.axis_rat)**2.0
         r = np.sqrt(xsq + ysq / one_minus_eb_sq).T
 
         maskedgalaxy = ma.masked_array(galaxy, mask)
@@ -414,14 +444,13 @@ def FindEllipse(gimg, xcntr, ycntr, SexHalfRad,
         R = []
         intensity = []
         intensity_err = []
-        MaxRad = np.min([np.log10(8 * SexHalfRad), \
+        MaxRad = np.min([np.log10(8 * self.SexHalfRad), \
                  np.log10(np.min(galaxy.shape))])
         NoOfPoints = int(30 * 10**MaxRad / 50.)
 
         #print(MaxRad, NoOfPoints
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
-        print(galaxy.shape, r.shape)
         for i in np.logspace(0, MaxRad, NoOfPoints):
             gsub = maskedgalaxy[np.where(np.abs(r - i) <= 1.0)]
             NonMaskNo = gsub.compressed().shape[0]
@@ -459,11 +488,6 @@ def FindEllipse(gimg, xcntr, ycntr, SexHalfRad,
             writer.writerow(p)
         f.close()
         print('Done' )
-
-
-
-
-
 
 
 
@@ -618,7 +642,8 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
 
 
 
-def OImgFindEllipse(cutimage, outimage, xcntr, ycntr, fstring, repeat, flag): 
+def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
+                    SexPosAng, axis_rat, sky, fstring, output=False):
                     #components, sky, repeat, flag, run, out):
 
     """
@@ -627,18 +652,18 @@ def OImgFindEllipse(cutimage, outimage, xcntr, ycntr, fstring, repeat, flag):
 
     """
 
-    if os.path.exists(outimage):
+    if os.path.exists(oimg):
         if(repeat == False):
-            mask_file = 'OEM_{}.fits'.format(fstring)
-            emask_file = 'EM_{}.fits'.format(outimage[2:-5])
-            os.system('cp {} {}'.format(emask_file, mask_file))
+            omimg = 'OEM_{}.fits'.format(fstring)
+            emimg = 'EM_{}.fits'.format(fstring)
+            os.system('cp {} {}'.format(emimg, omimg))
 
-        outmodel = 'S{}'.format(outimage)
+        outmodel = 'S{}'.format(oimg)
         if os.access(outmodel, os.F_OK):
             os.remove(outmodel)
 
         # FIX. Add the header also in the file
-        fits = fitsio.FITS(outimage, 'r')
+        fits = fitsio.FITS(oimg, 'r')
         fout  = fits[2].read()
         fits.close()
 
@@ -652,9 +677,9 @@ def OImgFindEllipse(cutimage, outimage, xcntr, ycntr, fstring, repeat, flag):
         #FitEllipse(outmodel, xcntr, ycntr, sky, fstring, out)
 
         if 0:
-            FindEllipse(gimg, xcntr, ycntr, SexHalfRad,
-                      SexPosAng, axis_rat, skyval,
-                      self.fstring, output=True)
+            FindEllipse(outmodel, xcntr, ycntr, SexHalfRad,
+                        SexPosAng, axis_rat, skyval,
+                        fstring, output=True)
         run = 1
     else:
         WriteError('The output image is not found ' + \

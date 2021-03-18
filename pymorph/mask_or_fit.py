@@ -2,20 +2,21 @@ import numpy as np
 
 class GetSExObj():
 
-    def __init__(self, NXPTS=None, NYPTS=None, line_s=None):
+    def __init__(self, NXPTS=None, NYPTS=None, values=None):
 
-        if NXPTS is None and NYPTS is None and line_s is None:
+        #print('mask_or_fit', len(values), type(values))
+        if NXPTS is None and NYPTS is None and values is None:
             print('No SExtractor lines (GetSExObject)')
 
         if NXPTS is not None and NYPTS is not None:
             self.set_IM_dim(NXPTS, NYPTS)
 
-        if line_s is None:
+        if values is None:
             values = [-999]
 
-        values = line_s.split()
         if len(values) == 19:
-            values = [float(a) for a in values]
+            pass
+        #values = [float(a) for a in values]
         else:
             print(values)
             print("Non-standard SEx Cat line!!\nAll values set to -999!!")
@@ -117,13 +118,25 @@ class GetSExObj():
         """
 
         mask_it = -999
+        #print(0, neighbor.xcntr, self.xcntr)
+        #print(0, neighbor.ycntr, self.ycntr)
+        #print(0, self.NXPTS/2., self.NYPTS/2., avoidme)
+        #print(0, threshold, neighbor.maj_axis, self.maj_axis)
+        #print(0, neighbor.area, thresh_area, self.area)
 
+        #print(1, abs(neighbor.xcntr - self.xcntr), '<', self.NXPTS / 2.0 + avoidme)
+        #print(1, abs(neighbor.ycntr - self.ycntr), '<',  self.NYPTS / 2.0 + avoidme)
+        #print(1, np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + 
+        #             (neighbor.ycntr - self.ycntr)**2.0), '>', 5.0)
         if(abs(neighbor.xcntr - self.xcntr) < self.NXPTS / 2.0 + avoidme and \
            abs(neighbor.ycntr - self.ycntr) < self.NYPTS / 2.0 + avoidme and \
            np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
            (neighbor.ycntr - self.ycntr)**2.0) > 5.0):
             
         
+               #print(2, abs(neighbor.xcntr - self.xcntr), '>', threshold * (neighbor.maj_axis + self.maj_axis))
+            #print(2, abs(neighbor.ycntr - self.ycntr), '>', threshold * (neighbor.maj_axis + self.maj_axis))
+            #print(2, neighbor.area, '<', thresh_area * self.area)
             if(abs(neighbor.xcntr - self.xcntr) > threshold * (neighbor.maj_axis + \
                                                                self.maj_axis) or \
                abs(neighbor.ycntr - self.ycntr) > threshold * (neighbor.maj_axis + \
@@ -137,5 +150,5 @@ class GetSExObj():
 
         else:
             mask_it = -1 # It is an object beyond the bounds that should be ignored
-
+        #print('mask_it', mask_it)
         return mask_it
