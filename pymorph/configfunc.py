@@ -50,7 +50,9 @@ class GalfitConfigFunc:
                     LRd=0., URd=500.,
                     bdbox=False, bbox=False, dbox=False, devauc=False):
 
-        target = mf.GetSExObj(self.NXPTS, self.NYPTS, self.line_s)
+        print('Len good_object', len(self.line_s))
+        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+                              values=self.line_s)
         target_imcenter =[target.xcntr, target.ycntr]
         target.set_center(self.xcntr, self.ycntr)
         
@@ -129,7 +131,9 @@ class GalfitConfigFunc:
 
         isneighbour = 0
         for line_j in open(self.sex_cata,'r'):
-            neighbor = mf.GetSExObj(self.NXPTS, self.NYPTS, line_j)
+            line_values = [float(i) for i in line_j.split()]
+            neighbor = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+                                    values=line_values)
             if target.get_mask(neighbor, threshold, thresh_area,
                                   avoidme) == 0:
                 isneighbour = 1

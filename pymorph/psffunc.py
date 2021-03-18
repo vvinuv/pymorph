@@ -4,6 +4,7 @@ import numpy as np
 import fitsio
 import pymorphutils as ut
 
+verbose = False
 
 def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
 
@@ -24,19 +25,25 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
         p = fitsio.FITS(os.path.join(datadir, element))
         header = p[0].read_header()
         p.close()
-
+        #print(header)
         if 'RA_TARG' in header:
             ra = header['RA_TARG']
-        elif ('RA' in header):
+        elif 'RA' in header:
             ra = header['RA']
+        elif 'CRVAL1' in header:
+            ra = header['CRVAL1']
         else:
             ra = 9999
         if 'DEC_TARG' in header:
             dec= header['DEC_TARG']
         elif ('DEC' in header):
             dec= header['DEC']
+        elif 'CRVAL2' in header:
+            dec = header['CRVAL2']
         else:
             dec= 9999
+        #print(ra, dec)
+        #print(alpha_j, delta_j)
 #       d = sqrt((ra - alpha_j) ** 2.0 + (dec - delta_j) ** 2.0)
 #       d = np.arccos(np.cos((90.0 - delta_j) * r) * np.cos((90.0 - dec) *\
 #           r) + np.sin((90.0 - delta_j) * r) *  np.sin((90.0 - dec) * r) * \
@@ -45,22 +52,26 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
 #           (delta_j+dec)))**2.0)
         d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
             np.cos(delta_j * r))**2.0)
-
+        if verbose:
+            print('d', d)
         psf_distance_dict[element] = d
 
     items = sorted(psf_distance_dict.items(), key=lambda x: x[1])
-
+    if verbose:
+        print(items)
     psffile = items[which_psf][0]
     distance = items[which_psf][1]
-
+    if verbose:
+        print(psffile, distance)
     return psffile, distance
 
 
 def PSFArr(datadir, psflist):
     """Return psf list if the given input is a file"""
-    print(psflist)
+    print('P1', psflist)
     if psflist.startswith('@'):
         #if isinstance(psflist, str):
+        print('P2', psflist.split('@')[1])
         psffile = open(os.path.join(datadir, psflist.split('@')[1]), 'r')
         psflist = []
         for pline in psffile:
@@ -70,6 +81,7 @@ def PSFArr(datadir, psflist):
     else:
         print("The psf list is not understood. Please use either \
              @filename or a list of psfs")
+    print('P3', psflist)
     return psflist
 
 
@@ -77,6 +89,7 @@ def PSFArr(datadir, psflist):
 def UpdatePsfRaDec(datadir, element):
     """The function which will update the psf header if the psf files
        are in the specified format"""
+    print('U1', os.path.join(datadir, element))
     if 1:
         ra1 = float(str(element)[4:6])
         ra2 = float(str(element)[6:8])
