@@ -24,7 +24,7 @@ from configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
 from yetbackfunc import FindYetSky
 from plotfunc import PlotFunc
-from runsexfunc import RunSex
+from runsexfunc import PySex
 from writehtmlfunc import WriteHtmlFunc
 import psffunc as pf  
 import mask_or_fit as mf
@@ -486,7 +486,9 @@ class Pipeline(object):
         print('F1')
         #The sextractor runs on the cutout before resizing to estimate 
         #shallow sky
-        
+       
+        PS = PySex(c.SEX_PATH)
+
         shallow_cat = os.path.join(self.DATADIR,
                                   '{}.Shallow'.format(self.sex_cat))
         if self.galcut == True:   
@@ -496,8 +498,7 @@ class Pipeline(object):
                 self.sex_cat = os.path.join(self.DATADIR, 
                                             'sex_{}.cat'.format(self.fstring))
                 check_fits = 'check{}.fits'.format(self.fstring),
-                rs.RunSex(self.sex_params, 
-                          self.PYMORPH_PATH, 
+                PS.RunSex(self.sex_params, 
                           os.path.join(self.DATADIR, gimg),
                           os.path.join(self.DATADIR, wimg),
                           self.sex_cat, self.SEx_GAIN, 
@@ -508,8 +509,7 @@ class Pipeline(object):
                 shallow_cat = os.path.join(self.DATADIR, 
                                       '{}.Shallow'.format(self.fstring))
                 check_shallow_fits = 'check{}_shallow.fits'.format(self.fstring)
-                rs.RunSex(self.sex_params,
-                          self.PYMORPH_PATH,
+                PS.RunSex(self.sex_params,
                           os.path.join(self.DATADIR, gimg),
                           os.path.join(self.DATADIR, wimg),
                           shallow_cat, self.SEx_GAIN,
@@ -657,57 +657,13 @@ class Pipeline(object):
         center_distance = 9999 #the distance from the center to the best target
 
         print('F4', gimg)
-        for line_s in open(self.sex_cat, 'r'):
-            if 1:
-                values = line_s.split()
-                alpha_s = float(values[3])
-                delta_s = float(values[4])
-                if position == 0:
-                    alpha_s = 9999
-                    delta_s = 9999
-                sex_id = values[0]
-                xcntr  = float(values[1])
-                ycntr  = float(values[2])
-                
-                if (abs(alpha_j - alpha_s) < SeaDeg and \
-                   abs(delta_s - delta_j) < SeaDeg) or \
-                   (abs(xcntr - ximg) < SeaPix and \
-                   abs(ycntr - yimg) < SeaPix):
+        if alpha_j == 9999:
+            PS.get_sexobj(self.sex_cat, xpix, ypix, dmin)
+        else:
+            PS.get_sexobj(self.sex_cat, alpha_j, delta_j, dmin)
 
-                    if 1:#self.verbose:
-                        print(xcntr, ximg, ycntr, yimg)   
-
-                    curr_distance = np.sqrt(np.min([(xcntr - ximg)**2 + \
-                            (ycntr - yimg)**2, (alpha_j - alpha_s)**2 + \
-                            (delta_s - delta_j)**2]))
-                    print("Candidate distance: {:3f}".format(curr_distance)) 
-
-                    SexTargets +=1
-
-                    if curr_distance < center_distance:
-                        center_distance = curr_distance
-                        print("New Preferred target!!")
-                        good_object = []
-                        for line in line_s.split():
-                            good_object.append(float(line))
-                        #print(good_object)
-
-                    print("Target distance: {:.3f}".format(center_distance))
-            #except:
-            #    if values[0].strip().isdigit():
-            #        print('Something happend in the pipeline. ' + \
-                    #              'Check error.log')
-                #else:
-                #    pass
-        if len(good_object) == 0:
-            # No suitable target found
-            print("No Target Found!!!!")
-            good_object = [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 
-                           9999, 9999, 9999, 0, 9999, 9999, 9999, 9999, 
-                           9999, 9999, 9999]
             self.flag = SetFlag(self.flag, GetFlag('NO_TARGET'))  
 
-        print(len(good_object))
         #sys.exit()
         print('F5')
         if 1:#self.verbose:
@@ -715,26 +671,20 @@ class Pipeline(object):
         # now fit best object            
         #XXX
         if 1:#try:
-            target = mf.GetSExObj(values=good_object)
-
-            sex_id = target.sex_num
+            sex_id = PS.sex_num
             print("SExtractor ID >>> {}".format(sex_id))
-
-            if position == 0:
-                alpha_s = 9999
-                delta_s = 9999
-            print(alpha_s, delta_s, xcntr, ycntr) 
-            SexHalfRad = target.radius #Sex halfrad 
-            SexPosAng = target.pos_ang
-            pos_ang = target.pos_ang
-            axis_rat = target.bbya #axis ration b/a
-            eg = target.eg
+            print(PS.alpha_s, PS.delta_s, PS.xcntr, PS.ycntr) 
+            SexHalfRad = PS.radius #Sex halfrad 
+            SexPosAng = PS.pos_ang
+            pos_ang = PS.pos_ang
+            axis_rat = PS.bbya #axis ration b/a
+            eg = PS.eg
             if eg <= 0.05:
                 eg = 0.07
-            major_axis = target.maj_axis
+            major_axis = PS.maj_axis
 
-            SexMagAuto = target.mag
-            SexMagAutoErr = target.mag_err
+            SexMagAuto = PS.mag
+            SexMagAutoErr = PS.mag_err
             UMag = -1e5
             LMag = -1e5
             URe = 1e0
@@ -752,17 +702,9 @@ class Pipeline(object):
             # END
             # The shallow sky from the shallow run. If no shallow
             # sky it uses the deep sky.
-            if os.path.exists(shallow_cat):
-                f_sex_shallow = open(shallow_cat, 'r')
-                for line_shallow in f_sex_shallow:
-                    v_shallow = line_shallow.split()
-                    try:
-                        if v_shallow[19] == values[0]:
-                            SexSky = float(v_shallow[10])
-                    except:
-                        pass
-                f_sex_shallow.close()
-            else:
+            try:
+                SexSky = PS.get_sexvalue(sex_id, shallow_cat, param='sky')
+            except:
                 SexSky = float(values[10])
 
             if not np.isnan(UserGivenSky):
@@ -944,9 +886,9 @@ class Pipeline(object):
                 if os.path.exists(seg_cat):
                     os.remove(seg_cat)
 
-                RunSex(self.sex_params, self.SEX_PATH, gimg,
-                       wimg, seg_cat, self.SEx_GAIN, check_fits=check_seg_fits,
-                       sconfig='seg')
+                PS.RunSex(self.sex_params, gimg, wimg, seg_cat,
+                          self.SEx_GAIN, check_fits=check_seg_fits,
+                          sconfig='seg')
 
                 emimg = os.path.join(self.OUTDIR, 'EM_{}.fits'.format(self.fstring))
                 mimg = os.path.join(self.OUTDIR, 'M_{}.fits'.format(self.fstring))
