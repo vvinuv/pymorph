@@ -91,70 +91,100 @@ import time
     #        os.system(cmd)
     #
 
-def RunSex(sex_params, SEX_PATH, gimg, wimg, sex_cat, 
-           SEx_GAIN, check_fits='check.fits', sconfig='default'):
-    
 
-    SEx_DETECT_MINAREA = sex_params[0]
-    SEx_DETECT_THRESH = sex_params[1]
-    SEx_ANALYSIS_THRESH = sex_params[2]
-    SEx_FILTER = sex_params[3]
-    SEx_FILTER_NAME = sex_params[4]
-    SEx_DEBLEND_NTHRESH = sex_params[5]
-    SEx_DEBLEND_MINCONT = sex_params[6]
-    SEx_PHOT_FLUXFRAC = sex_params[7]
-    SEx_BACK_SIZE = sex_params[8]
-    SEx_BACK_FILTERSIZE = sex_params[9]
-    SEx_BACKPHOTO_TYPE = sex_params[10]
-    SEx_BACKPHOTO_THICK = sex_params[11]
-    SEx_WEIGHT_TYPE = sex_params[12]
-    SEx_PIXEL_SCALE = sex_params[13]
-    SEx_SEEING_FWHM = sex_params[14]
-    mag_zero = sex_params[15]
+class PySex(object):
+    def __init__(self, SEX_PATH):
+        self.SEX_PATH = SEX_PATH
 
-    PYMORPH_PATH = os.path.dirname(__file__)
+    def RunSex(self, sex_params, SEX_PATH, gimg, wimg, sex_cat, 
+               SEx_GAIN, check_fits='check.fits', sconfig='default'):
+        
+
+        SEx_DETECT_MINAREA = sex_params[0]
+        SEx_DETECT_THRESH = sex_params[1]
+        SEx_ANALYSIS_THRESH = sex_params[2]
+        SEx_FILTER = sex_params[3]
+        SEx_FILTER_NAME = sex_params[4]
+        SEx_DEBLEND_NTHRESH = sex_params[5]
+        SEx_DEBLEND_MINCONT = sex_params[6]
+        SEx_PHOT_FLUXFRAC = sex_params[7]
+        SEx_BACK_SIZE = sex_params[8]
+        SEx_BACK_FILTERSIZE = sex_params[9]
+        SEx_BACKPHOTO_TYPE = sex_params[10]
+        SEx_BACKPHOTO_THICK = sex_params[11]
+        SEx_WEIGHT_TYPE = sex_params[12]
+        SEx_PIXEL_SCALE = sex_params[13]
+        SEx_SEEING_FWHM = sex_params[14]
+        mag_zero = sex_params[15]
+
+        PYMORPH_PATH = os.path.dirname(__file__)
 
 
-    if sconfig == 'default':
-        if wimg is None:
-            fsex = 'default_wow.sex'
+        if sconfig == 'default':
+            if wimg is None:
+                fsex = 'default_wow.sex'
+            else:
+                fsex = 'default.sex'
+            print('SExtractor Detecting Objects (Deep)')
+        elif sconfig == 'seg':
+            if wimg is None:
+                fsex = 'default_seg_wow.sex'
+            else:
+                fsex = 'default_seg.sex'
+            print('SExtractor Detecting segmentation')
+        elif sconfig == 'shallow':
+            if wimg is None:
+                fsex = 'default_wow_shallow.sex'
+            else:
+                fsex = 'default_shallow.sex'
+            print('SExtractor Detecting Objects (Shallow)')
+
+        sconfig = os.path.join(PYMORPH_PATH, 'SEx', fsex)
+
+        #print(vars())
+        f_tpl = open(sconfig, 'r')
+        template = f_tpl.read()
+        f_tpl.close()
+
+        f_sex = open(fsex, 'w')
+        f_sex.write(template %vars())
+        f_sex.close()
+
+        cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
+        print(cmd)
+        os.system(cmd)
+
+        check_fits_not_exists = True
+        sleep = 0
+        ti = time.time()
+        while (check_fits_not_exists) & (sleep < 10):
+            if os.path.exists(check_fits):
+                check_fits_not_exists = False
+            time.sleep(1)
+            sleep = time.time() - ti 
+
+    def get_sexobj(self):
+        with open(filename) as f:
+            sex_params = f.readlines()
+        sex_params = [x.strip().split() for x in sex_params] 
+        sex_params = np.array(sex_params).astype(float)
+        xpix = sex_params[:, 1]
+        ypix = sex_params[:, 2]
+        xarc = sex_params[:, 3]
+        yarc = sex_params[:, 4]
+            
+        if alpha_j == 9999:
+            distance = np.sqrt((ximg - xpix)**2 + (yimg - ypix)**2) 
+            SexTargets = distance[distance <= dmin].shape[0]
         else:
-            fsex = 'default.sex'
-        print('SExtractor Detecting Objects (Deep)')
-    elif sconfig == 'seg':
-        if wimg is None:
-            fsex = 'default_seg_wow.sex'
-        else:
-            fsex = 'default_seg.sex'
-        print('SExtractor Detecting segmentation')
-    elif sconfig == 'shallow':
-        if wimg is None:
-            fsex = 'default_wow_shallow.sex'
-        else:
-            fsex = 'default_shallow.sex'
-        print('SExtractor Detecting Objects (Shallow)')
+            distance = np.sqrt((alpha_j - xarc)**2 + (delta_j - yarc)**2)
+            SexTargets = distance[distance <= dmin].shape[0]
 
-    sconfig = os.path.join(PYMORPH_PATH, 'SEx', fsex)
+        self.target = mf.GetSExObj(values=sex_params[np.argmin(distance)])
 
-    #print(vars())
-    f_tpl = open(sconfig, 'r')
-    template = f_tpl.read()
-    f_tpl.close()
 
-    f_sex = open(fsex, 'w')
-    f_sex.write(template %vars())
-    f_sex.close()
 
-    cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
-    print(cmd)
-    os.system(cmd)
 
-    check_fits_not_exists = True
-    sleep = 0
-    ti = time.time()
-    while (check_fits_not_exists) & (sleep < 10):
-        if os.path.exists(check_fits):
-            check_fits_not_exists = False
-        time.sleep(1)
-        sleep = time.time() - ti 
+
+
 
