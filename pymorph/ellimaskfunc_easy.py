@@ -1,7 +1,7 @@
-import os
 import fitsio
 import numpy as np
 import pymconvolve 
+#from astropy.io import fits
 
 class ElliMaskFunc:
 
@@ -12,36 +12,90 @@ class ElliMaskFunc:
 
     """
 
-    def __init__(self, mimg, xcntr_o, ycntr_o, galflag, 
+    def __init__(self, xcntr_o, ycntr_o, 
                  center_limit=5., seg_limit=1e-5):
 
-        self.mimg = mimg
         self.xcntr_o = xcntr_o
         self.ycntr_o = ycntr_o
-        self.galflag = galflag
-        self.verbose = False
 
-    def emask(self, check_fits, seg_cat, fstring, 
+    def emask(self, seg_file, seg_cata, fstring, 
               center_limit=5, seg_limit=1e-5):
 
         #from astropy.io import fits
-       
-        if self.verbose:
-            print('ellimaskfunc, seg check_fits', check_fits)
-
-        fits = fitsio.FITS(check_fits, 'r')
-        seg = fits[0].read()
-        fits.close()
+        mask_file = 'EM_{}.fits'.format(fstring)
+        
+        #print('seg file', seg_file)
+        #print('seg_cata', seg_cata)
+        
+        f = fitsio.FITS(seg_file, 'r')
+        seg = f[0].read()
+        f.close()
+               
         #print(type(seg))
         
         #fseg = fits.open(seg_file)
-        #seg = fseg[0].data
+        #seg = fseg[1].data
         #fseg.close()
-        #print(seg)
+        #print('seg', seg)
 
+        
+        #print('seg_cata', seg_cata)
+        print(np.unique(seg))
+        
+        values = np.genfromtxt(seg_cata)
+        #print(values)
+        if values.ndim > 1:
+            id_n = values[:, 0].astype(int)
+            xcntr_n = values[:, 1]
+            ycntr_n = values[:, 2]
+        else:
+            id_n = values[0].astype(int)
+            xcntr_n = values[1]
+            ycntr_n = values[2]
+            
+        dist_neigh_obj = np.sqrt((xcntr_n - self.xcntr_o)**2. + (ycntr_n - self.ycntr_o)**2)
+        #print(dist_neigh_obj)
+        if values.ndim > 1:
+            id_n = id_n[np.argmin(dist_neigh_obj)]
+            
+        #print('id_n', id_n)
+        seg[np.where(seg == id_n)] = 0
 
-        #print(np.unique(seg))
-        for line_j in open(seg_cat, 'r'):
+        boxcar = np.reshape(np.ones(3 * 3), (3, 3))
+        seg = pymconvolve.Convolve(seg, boxcar)
+        mask = np.where(seg > seg_limit, 1., 0.)
+
+        #print(mask.shape, type(mask), mask_file)
+
+        
+        f = fitsio.FITS(mask_file, 'rw')
+        f.write(mask, overwrite=True)
+        
+    def emask_tmp(self, seg_file, seg_cata, fstring, 
+              center_limit=5, seg_limit=1e-5):
+
+        #from astropy.io import fits
+        mask_file = 'EM_{}.fits'.format(fstring)
+        
+        print('seg file', seg_file)
+        print('seg_cata', seg_cata)
+        
+        f = fitsio.FITS(seg_file, 'r')
+        seg = f[0].read()
+        f.close()
+               
+        #print(type(seg))
+        
+        #fseg = fits.open(seg_file)
+        #seg = fseg[1].data
+        #fseg.close()
+        #print('seg', seg)
+
+        
+        print('seg_cata', seg_cata)
+        print(np.unique(seg))
+        for line_j in open(seg_cata, 'r'):
+            print(line_j)
             values = line_j.split()
             id_n = float(values[0])
             xcntr_n  = float(values[1]) #x center of the neighbour
@@ -51,21 +105,21 @@ class ElliMaskFunc:
                np.abs(ycntr_n - self.ycntr_o) < center_limit and \
                self.galflag == 1:
                 seg[np.where(seg == id_n)] = 0
+                print("Mask")
                 break
 
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
         seg = pymconvolve.Convolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
 
-        #print(mask.shape, type(mask), self.mimg)
+        print(mask.shape, type(mask), mask_file)
+        f = fitsio.FITS(mask_file, 'rw')
         if self.galflag:
-            fits = fitsio.FITS(self.mimg, 'rw')
-            fits.write(mask)
+            f.write(mask)
         else:
-            fits = fitsio.FITS(self.mimg, 'rw')
-            fits.write(mask, clobber=True)
+            f.write(mask, clobber=True)
 
-        #fits.writeto(mimg, mask, overwrite=True)
+        #f.writeto(mask_file, mask, overwrite=True)
 
         
 

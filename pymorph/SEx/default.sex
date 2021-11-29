@@ -4,7 +4,7 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     %(sex_cat)s       # name of the output catalog
+CATALOG_NAME     %(sex_cata)s       # name of the output catalog
 CATALOG_TYPE     ASCII     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
 PARAMETERS_NAME  %(PYMORPH_PATH)s/SEx/default.param  # name of the file containing catalog contents

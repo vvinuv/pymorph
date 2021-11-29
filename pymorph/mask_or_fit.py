@@ -4,106 +4,140 @@ class GetSExObj():
 
     def __init__(self, NXPTS=None, NYPTS=None, values=None):
 
-        #print('mask_or_fit', len(values), type(values))
-        if NXPTS is None and NYPTS is None and values is None:
+        
+        self.values = values
+        #self.values = np.fromstring(values, sep=' ')
+        if NXPTS is None and self.values is None:
             print('No SExtractor lines (GetSExObject)')
 
-        if NXPTS is not None and NYPTS is not None:
-            self.set_IM_dim(NXPTS, NYPTS)
+        if NXPTS is not None:
+            self.NXPTS = NXPTS
+            self.NYPTS = NYPTS
+            self.IM_dim()
 
         if values is None:
-            values = [-999]
-
-        if len(values) == 19:
-            pass
-        #values = [float(a) for a in values]
-        else:
-            print(values)
-            print("Non-standard SEx Cat line!!\nAll values set to -999!!")
-            values = 20*[-999.0]
+            self.values = [-999]
         
-        self.set_sex_num(int(values[0]))
-        self.set_center(values[1], values[2])
-        self.set_center_world(values[3], values[4])
-        self.set_mag(values[7]) 
-        self.set_mag_err(values[8]) 
-        self.set_radius(values[9]) 
-        self.set_sky(values[10]) 
-        self.set_pos_ang(values[11]) 
-        self.set_bbya(values[12])
-        self.set_axis_rat(1.0/values[12]) 
-        self.set_area(values[13]) 
-        self.set_maj_axis(values[14])
-        self.set_star_prob(values[16])
+        print(self.values.shape)
+        ##values = line_s.split()
+        if len(self.values) != 19:
+            ##values = [float(a) for a in values]
+            print(self.values)
+            print("Non-standard SEx Cat line!!\nAll values set to -999!!")
+            self.values = 20*[-999.0]
+        #It will be nice it we can have @property decorator        
+#         self.sex_num(int(values[0]))
+        #self.sex_center#values[1], values[2])
+        #self.center_world#values[3], values[4])
+        self.set_center(self.values[1], self.values[2])
+#         self.mag(values[7]) 
+#         self.mag_err(values[8]) 
+#         self.radius(values[9]) 
+#         self.sky(values[10]) 
+#        self.pos_ang() 
+#         self.bbya(values[12])
+        self.axis_rat() 
+#         self.area(values[13]) 
+#         self.maj_axis(values[14])
+#         self.star_prob(values[16])
 
-    def set_IM_dim(self, NXPTS, NYPTS):
+    #@property
+    def IM_dim(self):
         """Stores the image dimensions"""
-        self.NXPTS = NXPTS
-        self.NYPTS = NYPTS
+        return self.NXPTS, self.NXPTS
 
-    def set_sex_num(self, obj_num):
+    @property
+    def sex_num(self):
         """Stores the object number"""
-        self.sex_num = obj_num
+        return int(self.values[0])
     
+    @property
+    def sex_center(self):#, xcntr, ycntr):
+        """set the object center in pixels"""  
+        self.xcntr = self.values[1]
+        self.ycntr = self.values[2]
+        return self.xcntr, self.ycntr
+
+
+    @property
+    def center_world(self):#, ra_cntr, dec_cntr):
+        """set the object center in world coordinate"""      
+        self.ra_cntr = self.values[3]
+        self.dec_cntr = self.values[4]
+        return self.ra_cntr, self.dec_cntr
+        
     def set_center(self, xcntr, ycntr):
-        """set the object center in pixels"""
-        self.xcntr   = xcntr 
+        """set the object center in pixels"""   
+        self.xcntr   = xcntr
         self.ycntr   = ycntr
 
+
     def set_center_world(self, ra_cntr, dec_cntr):
-        """set the object center in world coordinate"""
+        """set the object center in world coordinate"""  
         self.ra_cntr   = ra_cntr
         self.dec_cntr   = dec_cntr
-
-    def set_mag(self, mag):
-        """set the object magnitude"""
-        self.mag = mag
     
-    def set_mag_err(self, mag_err):
+    @property
+    def mag(self):#, mag):
         """set the object magnitude"""
-        self.mag_err = mag_err
+        return self.values[7]
+    
+    @property
+    def mag_err(self):#, mag_err):
+        """set the object magnitude"""
+        return self.values[8]
 
-    def set_radius(self, rad):
+    @property
+    def radius(self):#, rad):
         """set the object radius in pixels"""
-        self.radius = rad
+        return self.values[9]
 
-    def set_sky(self, sky):
+    @property
+    def sky(self):#, sky):
         """set the object sky"""
-        self.sky = sky
+        return self.values[10]
     
-    def set_pos_ang(self, pos_ang):
+    @property
+    def pos_ang_galfit(self):
+        return self.values[11] - 90.0
+        
+    @property
+    def pos_ang(self):
         """set the pos ang"""
-        self.pos_ang = pos_ang
-        self.pos_ang_galfit = pos_ang -90.0
-        self.si = np.sin(self.pos_ang * np.pi / 180.0)
-        self.co = np.cos(self.pos_ang * np.pi / 180.0)
-
-    def set_bbya(self, bbya):
+        self.si = np.sin(self.values[11] * np.pi / 180.0)
+        self.co = np.cos(self.values[11] * np.pi / 180.0)
+        return self.values[11]
+        
+    @property
+    def bbya(self):#, bbya):
         '''Set minor/major ratio'''
-        self.bbya = bbya
+        return 1 / self.values[12]
 
-    def set_axis_rat(self, b_by_a):
-        """set the object center axis ratio (b/a)"""
-        self.axis_rat = b_by_a
+    def axis_rat(self):#, b_by_a):
+        """set the object center axis ratio (b/a)"""        
+        self.axis_rat = self.bbya
         self.eg = 1.0 - self.axis_rat
-        self.one_minus_eg_sq    = (1.0-self.eg)**2.0
+        self.one_minus_eg_sq = (1.0 - self.eg)**2.0
 
-    def set_area(self, area):
+    @property
+    def area(self):#, area):
         """set the object area"""
-        self.area = area
+        return self.values[13]
 
-    def set_maj_axis(self, maj_axis):
+    @property
+    def maj_axis(self):#, maj_axis):
         """set the object major axis"""
-        self.maj_axis = maj_axis
+        return self.values[14]
 
-    def set_star_prob(self, star_prob):
+    @property
+    def star_prob(self):#, star_prob):
         """set the object major axis"""
-        self.star_prob = star_prob
+        return self.values[16]
 
     def calc_rad(self, xloc, yloc):
         """calculate the radius of the given pixels"""
-        tx =(xloc-self.xcntr+1.0)*self.co + (yloc-self.ycntr+1.0)*self.si
-        ty = (self.xcntr-1.0-xloc)*self.si + (yloc-self.ycntr+1.0)*self.co
+        tx = (xloc - self.xcntr + 1.0) * self.co + (yloc - self.ycntr + 1.0) * self.si
+        ty = (self.xcntr - 1.0 - xloc) * self.si + (yloc - self.ycntr + 1.0) * self.co
         R = np.sqrt(tx**2.0 + ty**2.0 / self.one_minus_eg_sq)
         return R
 
@@ -118,25 +152,13 @@ class GetSExObj():
         """
 
         mask_it = -999
-        #print(0, neighbor.xcntr, self.xcntr)
-        #print(0, neighbor.ycntr, self.ycntr)
-        #print(0, self.NXPTS/2., self.NYPTS/2., avoidme)
-        #print(0, threshold, neighbor.maj_axis, self.maj_axis)
-        #print(0, neighbor.area, thresh_area, self.area)
 
-        #print(1, abs(neighbor.xcntr - self.xcntr), '<', self.NXPTS / 2.0 + avoidme)
-        #print(1, abs(neighbor.ycntr - self.ycntr), '<',  self.NYPTS / 2.0 + avoidme)
-        #print(1, np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + 
-        #             (neighbor.ycntr - self.ycntr)**2.0), '>', 5.0)
         if(abs(neighbor.xcntr - self.xcntr) < self.NXPTS / 2.0 + avoidme and \
            abs(neighbor.ycntr - self.ycntr) < self.NYPTS / 2.0 + avoidme and \
            np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
            (neighbor.ycntr - self.ycntr)**2.0) > 5.0):
             
         
-               #print(2, abs(neighbor.xcntr - self.xcntr), '>', threshold * (neighbor.maj_axis + self.maj_axis))
-            #print(2, abs(neighbor.ycntr - self.ycntr), '>', threshold * (neighbor.maj_axis + self.maj_axis))
-            #print(2, neighbor.area, '<', thresh_area * self.area)
             if(abs(neighbor.xcntr - self.xcntr) > threshold * (neighbor.maj_axis + \
                                                                self.maj_axis) or \
                abs(neighbor.ycntr - self.ycntr) > threshold * (neighbor.maj_axis + \
@@ -150,5 +172,5 @@ class GetSExObj():
 
         else:
             mask_it = -1 # It is an object beyond the bounds that should be ignored
-        #print('mask_it', mask_it)
+
         return mask_it

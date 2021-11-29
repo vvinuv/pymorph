@@ -91,15 +91,15 @@ import time
     #        os.system(cmd)
     #
 
-
 class PySex(object):
     def __init__(self, SEX_PATH):
         self.SEX_PATH = SEX_PATH
 
-    def RunSex(self, sex_params, SEX_PATH, gimg, wimg, sex_cat, 
-               SEx_GAIN, check_fits='check.fits', sconfig='default'):
-        
 
+
+    def RunSex(self, sex_params, gimg, wimg, sex_cata, 
+               SEx_GAIN, check_fits=None, sconfig='default'):
+        
         SEx_DETECT_MINAREA = sex_params[0]
         SEx_DETECT_THRESH = sex_params[1]
         SEx_ANALYSIS_THRESH = sex_params[2]
@@ -119,6 +119,7 @@ class PySex(object):
 
         PYMORPH_PATH = os.path.dirname(__file__)
 
+        print('Sex 1')
 
         if sconfig == 'default':
             if wimg is None:
@@ -149,41 +150,37 @@ class PySex(object):
         f_sex = open(fsex, 'w')
         f_sex.write(template %vars())
         f_sex.close()
+     
+        print('Sex 2')
 
-        cmd = '{} {} -c {} > /dev/null'.format(SEX_PATH, gimg, fsex)
+        cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, gimg, fsex)
         print(cmd)
         os.system(cmd)
+        print('Sex 2')
 
-        check_fits_not_exists = True
+        check_fits_not_exists = False
         sleep = 0
         ti = time.time()
+        print('check_fits', check_fits)
         while (check_fits_not_exists) & (sleep < 10):
             if os.path.exists(check_fits):
                 check_fits_not_exists = False
             time.sleep(1)
-            sleep = time.time() - ti 
+            sleep = time.time() - ti
 
-    def get_sexobj(self):
-        with open(filename) as f:
+
+
+    def get_sexvalue(self, target_id, sex_cata, param='sky'):
+
+        with open(sex_cata) as f:
             sex_params = f.readlines()
-        sex_params = [x.strip().split() for x in sex_params] 
+        sex_params = [x.strip().split() for x in sex_params]
         sex_params = np.array(sex_params).astype(float)
-        xpix = sex_params[:, 1]
-        ypix = sex_params[:, 2]
-        xarc = sex_params[:, 3]
-        yarc = sex_params[:, 4]
-            
-        if alpha_j == 9999:
-            distance = np.sqrt((ximg - xpix)**2 + (yimg - ypix)**2) 
-            SexTargets = distance[distance <= dmin].shape[0]
-        else:
-            distance = np.sqrt((alpha_j - xarc)**2 + (delta_j - yarc)**2)
-            SexTargets = distance[distance <= dmin].shape[0]
 
-        self.target = mf.GetSExObj(values=sex_params[np.argmin(distance)])
-
-
-
+        sex_params = sex_params[sex_params[:, 19] == target_id]
+        if param == 'sky':
+            sky = sex_params[10]
+        return sky
 
 
 

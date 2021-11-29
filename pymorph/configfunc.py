@@ -22,9 +22,10 @@ class GalfitConfigFunc:
 
     def __init__(self, datadir, cutimage, whtimage,  
                  xcntr, ycntr, NXPTS, NYPTS, 
-                 components, fitting, psffile, line_s, sex_cata, skyval, 
-                 mag_zero, flag):
+                 components, fitting, psffile, good_object, 
+                 sex_cata, skyval, mag_zero, flag):
 
+        print(good_object.shape)
         self.datadir = datadir
         self.cutimage = cutimage
         self.whtimage = whtimage
@@ -35,7 +36,8 @@ class GalfitConfigFunc:
         self.components = components
         self.fitting = fitting
         self.psffile = psffile
-        self.line_s  = line_s
+        self.good_object  = good_object
+        print(self.good_object.shape)
         self.sex_cata = sex_cata
         self.skyval = skyval
         self.mag_zero = mag_zero
@@ -50,11 +52,12 @@ class GalfitConfigFunc:
                     LRd=0., URd=500.,
                     bdbox=False, bbox=False, dbox=False, devauc=False):
 
-        print('Len good_object', len(self.line_s))
-        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
-                              values=self.line_s)
+        print(self.good_object.shape)
+        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, values=self.good_object)
+        print(self.good_object.shape)
         target_imcenter =[target.xcntr, target.ycntr]
         target.set_center(self.xcntr, self.ycntr)
+        target.pos_ang
         
         config_file = 'G_{}.in'.format(fstring) #Name of the GALFIT configuration file
         constrain_file = '{}.con'.format(fstring)
@@ -109,7 +112,7 @@ class GalfitConfigFunc:
         gconfig.f_G.writelines(['S) 0			# Modify/create',\
                      ' objects interactively?\n\n\n'])
 
-
+        print('self.components', self.components)
         for comp in self.components:
             if comp == 'bulge':
                 gconfig.write_bulge(target)
@@ -131,9 +134,9 @@ class GalfitConfigFunc:
 
         isneighbour = 0
         for line_j in open(self.sex_cata,'r'):
-            line_values = [float(i) for i in line_j.split()]
+            values = np.fromstring(line_j, sep=' ')
             neighbor = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
-                                    values=line_values)
+                    values=values)
             if target.get_mask(neighbor, threshold, thresh_area,
                                   avoidme) == 0:
                 isneighbour = 1

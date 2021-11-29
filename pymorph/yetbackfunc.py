@@ -1,11 +1,10 @@
 import os
-import sys
 import numpy as np
 import pymconvolve
 import numpy.ma as ma
 import fitsio
 from mask_or_fit import GetSExObj
-from runsexfunc import RunSex
+from runsexfunc import PySex
 
 def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
 
@@ -42,27 +41,25 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
     return np.median(ma.masked_array(z, zmm).compressed())
 
 
-def FindYetSky(fstring, sex_params, SEX_PATH, gimg, wimg, scat, 
-               X0, Y0, check_fits, SEx_GAIN,
-               center_err=5., median_std=1.3, sconfig='seg', verbose=False):
+def FindYetSky(sex_params, SEX_PATH, gimg, wimg, seg_file, 
+               X0, Y0, scat, SEx_GAIN,
+               center_err=5., median_std=1.3, sconfig='seg'):
 
     #from astropy.io import fits
 
-    
-    if verbose:
-        print(scat)
-    RunSex(sex_params, SEX_PATH, gimg, wimg, scat, SEx_GAIN, 
-           check_fits=check_fits, sconfig='seg')
+    ##XXX
+    print('scat', scat)
+    PS = PySex(SEX_PATH)
+    PS.RunSex(sex_params, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
 
     f = fitsio.FITS(gimg)
     z = f[0].read()
     f.close()
-    
-    if verbose:
-        print(z.shape)
-        print(gimg)
 
-    fseg = fitsio.FITS(check_fits)
+    print(z.shape)
+    print(gimg)
+
+    fseg = fitsio.FITS(seg_file)
     zm = fseg[0].read()
     fseg.close()
 
@@ -70,21 +67,25 @@ def FindYetSky(fstring, sex_params, SEX_PATH, gimg, wimg, scat,
     #z = f[0].data
     #f.close()
 
-    #fseg = fits.open(check_fits)
+    #fseg = fits.open(seg_file)
     #zm = fseg[0].data
     #fseg.close()
 
-    if verbose:
-        print(zm.shape)
+    print(zm.shape)
 
     SexSky, SkyYet = 9999, 9999
     SkyMed, SkyMin = 9999, 9999
     SkyQua, SkySig = 9999, 9999
 
-    for l_s in open(scat):
-        v_s = [float(l) for l in l_s.split()]
-        obj = GetSExObj(NXPTS=None, NYPTS=None, values=v_s)
-        #sys.exit()
+    
+    sex_values = np.genfromtxt(scat, skip_header=0)
+    print(sex_values)
+    if sex_values.ndim == 1:
+        sex_values = np.expand_dims(sex_values, axis=0)
+        
+    for values in sex_values:
+        print(values.shape)
+        obj = GetSExObj(NXPTS=None, NYPTS=None, values=values)
         SexId = obj.sex_num
         xcntr = obj.xcntr
         ycntr = obj.ycntr
@@ -96,28 +97,32 @@ def FindYetSky(fstring, sex_params, SEX_PATH, gimg, wimg, scat,
         sky = obj.sky
 
         if np.abs(X0 - obj.xcntr) < center_err and np.abs(Y0 - obj.ycntr) < center_err:
-           boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-           zm = pymconvolve.Convolve(zm, boxcar)
-           zm[np.where(zm > 0)] = 1
+            
+            boxcar = np.reshape(np.ones(3 * 3), (3, 3))
+            zm = pymconvolve.Convolve(zm, boxcar)
+            zm[np.where(zm > 0)] = 1
+            
+            #print(np.unique(zm, return_counts=True))
 
-           SkyQua = []
+            SkyQua = []
 
-           for ii in np.arange(1, 5): 
-               SkyQua.append(QuarterMask(z, zm, 
+            for ii in np.arange(1, 5): 
+                SkyQua.append(QuarterMask(z, zm, 
                                          obj.xcntr - 1.0, obj.ycntr - 1.0, 
                                          bbya, pa, ii))
 
-           SkyQua = np.array(SkyQua)
-           SexSky = obj.sky
+            SkyQua = np.array(SkyQua)
+            SexSky = obj.sky
 
-           tmpstd = np.std(ma.masked_array(z, zm).compressed())
-           tmpmed = np.median(ma.masked_array(z, zm).compressed())
-           zm[np.where((z - tmpmed) > median_std * tmpstd)] = 1
-           SkyYet = np.median(ma.masked_array(z, zm).compressed())
-           SkyMed = np.median(SkyQua)
-           SkyMin = np.min(SkyQua)
-           SkySig = np.std(ma.masked_array(z, zm).compressed())
-#               os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
-           break
+            tmpstd = np.std(ma.masked_array(z, zm).compressed())
+            tmpmed = np.median(ma.masked_array(z, zm).compressed())
+            zm[np.where((z - tmpmed) > median_std * tmpstd)] = 1
+            SkyYet = np.median(ma.masked_array(z, zm).compressed())
+            SkyMed = np.median(SkyQua)
+            SkyMin = np.min(SkyQua)
+            SkySig = np.std(ma.masked_array(z, zm).compressed())
+            #               os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
+            break
 
+    print(SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig)
     return SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig

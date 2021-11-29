@@ -643,7 +643,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
 
 
 def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
-                    SexPosAng, axis_rat, sky, fstring, output=False):
+                    SexPosAng, axis_rat, sky, fstring, repeat, output=False):
                     #components, sky, repeat, flag, run, out):
 
     """
@@ -681,14 +681,15 @@ def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
                         SexPosAng, axis_rat, skyval,
                         fstring, output=True)
         run = 1
-    else:
+    #else:
+    if 0:
         WriteError('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
         flag = SetFlag(flag, GetFlag('GALFIT_FAIL'))
         FailedGalfit(cutimage, components)
         run = 0
 
-    return flag, run
+    #return flag, run
 
 def Distance(psffile, ra, dec):
     """Find the distance between psf and object in arcsec. Ra and dec is the \

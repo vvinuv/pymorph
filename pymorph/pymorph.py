@@ -11,6 +11,7 @@ import fitsio
 import numpy as np
 import re
 import configparser
+import subprocess
 from multiprocessing import Pool
 
 import pymorphutils as ut
@@ -23,12 +24,13 @@ from maskfunc_easy import MaskFunc
 from configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
 from yetbackfunc import FindYetSky
-from plotfunc import PlotFunc
-from runsexfunc import RunSex
-from writehtmlfunc import WriteHtmlFunc
+#from plotfunc import PlotFunc
+from runsexfunc import PySex
+#from writehtmlfunc import WriteParams
 import psffunc as pf  
 import mask_or_fit as mf
 from pipeline import Pipeline
+       
         
 
 
@@ -36,12 +38,12 @@ def run_test(option, opt, value, parser):
     print("Using directory {} for output\n".format(value))
     center_deviated = 0
     starthandle = 0
-    FindAndFit()
+    find_and_fit()
     main()
     if crashhandler:
         starthandle = 1
         os.system('mv restart.cat CRASH.CAT')
-        clus_cat = 'CRASH.CAT' 
+        obj_cata = 'CRASH.CAT' 
         main()
     
     sys.exit(0)
@@ -185,32 +187,18 @@ def run_SExtractorConf():
     return
 
 
-def rm_sex_cat(sex_cat):
-    if os.path.exists(sex_cat):
-        os.remove(sex_cat)
+def rm_sex_cata(sex_cata):
+    if os.path.exists(sex_cata):
+        os.remove(sex_cata)
     else:
         pass
     return
 
 
 
+class InitializeParams(object):
 
-
-class PyMorph:
-    
-    __version__ = 3.0
-
-    def __init__(self, config_file='config.ini'):
-
-        self.InitilizeParams(config_file) 
-
-
-
-    def InitilizeParams(self, config_file):
-
-        '''
-        Reading configuration file
-        '''
+    def _initilize_params(self, config_file='config.ini'):
 
         c = configparser.ConfigParser()
         c.read(config_file)
@@ -224,22 +212,22 @@ class PyMorph:
         self.whtfile = c.get('imagecata', 'whtfile')
         self.whtfile = os.path.join(self.DATADIR, self.whtfile)
 
-        self.sex_cat = c.get('imagecata', 'sex_cat')
-        self.sex_cat = os.path.join(self.DATADIR, self.sex_cat)
+        self.sex_cata = c.get('imagecata', 'sex_cata')
+        self.sex_cata = os.path.join(self.DATADIR, self.sex_cata)
 
-        self.clus_cat = c.get('imagecata', 'clus_cat')
-        self.clus_cat = os.path.join(self.DATADIR, self.clus_cat)
+        self.obj_cata = c.get('imagecata', 'obj_cata')
+        self.obj_cata = os.path.join(self.DATADIR, self.obj_cata)
 
-        self.out_cat = c.get('imagecata', 'out_cat')
-        self.out_cat = os.path.join(self.OUTDIR, self.out_cat)
+        self.out_cata = c.get('imagecata', 'out_cata')
+        self.out_cata = os.path.join(self.OUTDIR, self.out_cata)
 
 
         self.rootname = c.get('imagecata', 'rootname')
 
         self.GALFIT_PATH = c.get('external', 'GALFIT_PATH')
         self.SEX_PATH = c.get('external', 'SEX_PATH')
-        self.PYMORPH_PATH = c.get('external', 'PYMORPH_PATH')
 
+        self.findandfit = c.getboolean('modes', 'findandfit')                   
         self.repeat = c.getboolean('modes', 'repeat')                       
         self.galcut = c.getboolean('modes', 'galcut')                        
         self.decompose = c.getboolean('modes', 'decompose')
@@ -328,21 +316,21 @@ class PyMorph:
         self.SEx_SEEING_FWHM = self.pixelscale * 3.37
         self.SEx_MAG_ZEROPOINT = self.mag_zero
 
-
-    def set_sexparams(self, 
-                      SEx_DETECT_MINAREA = 6, 
+        
+    def set_sexparams(self,
+                      SEx_DETECT_MINAREA = 6,
                       SEx_DETECT_THRESH = 1.5,
                       SEx_ANALYSIS_THRESH =1.5,
-                      SEx_FILTER = 'Y',        
+                      SEx_FILTER = 'Y',
                       SEx_FILTER_NAME = 'default.conv',
                       SEx_DEBLEND_NTHRESH = 32,
                       SEx_DEBLEND_MINCONT = 0.005,
-                      SEx_PHOT_FLUXFRAC = 0.5, 
-                      SEx_BACK_SIZE = 64,      
+                      SEx_PHOT_FLUXFRAC = 0.5,
+                      SEx_BACK_SIZE = 64,
                       SEx_BACK_FILTERSIZE = 3,
                       SEx_BACKPHOTO_TYPE = 'GLOBAL',
                       SEx_BACKPHOTO_THICK = 24,
-                      SEx_WEIGHT_TYPE = 'MAP_RMS',     
+                      SEx_WEIGHT_TYPE = 'MAP_RMS',
                       ):
         '''
 
@@ -353,33 +341,34 @@ class PyMorph:
         '''
 
         self.SEx_DETECT_MINAREA =  SEx_DETECT_MINAREA
-        self.SEx_DETECT_THRESH =   SEx_DETECT_THRESH 
+        self.SEx_DETECT_THRESH =   SEx_DETECT_THRESH
         self.SEx_ANALYSIS_THRESH = SEx_ANALYSIS_THRESH
-        self.SEx_FILTER =          SEx_FILTER  
-        self.SEx_FILTER_NAME =     SEx_FILTER_NAME 
+        self.SEx_FILTER =          SEx_FILTER
+        self.SEx_FILTER_NAME =     SEx_FILTER_NAME
         self.SEx_DEBLEND_NTHRESH = SEx_DEBLEND_NTHRESH
         self.SEx_DEBLEND_MINCONT = SEx_DEBLEND_MINCONT
-        self.SEx_PHOT_FLUXFRAC =   SEx_PHOT_FLUXFRAC 
-        self.SEx_BACK_SIZE =       SEx_BACK_SIZE 
+        self.SEx_PHOT_FLUXFRAC =   SEx_PHOT_FLUXFRAC
+        self.SEx_BACK_SIZE =       SEx_BACK_SIZE
         self.SEx_BACK_FILTERSIZE = SEx_BACK_FILTERSIZE
         self.SEx_BACKPHOTO_TYPE =  SEx_BACKPHOTO_TYPE
         self.SEx_BACKPHOTO_THICK = SEx_BACKPHOTO_THICK
         self.SEx_WEIGHT_TYPE =     SEx_WEIGHT_TYPE
 
-        self.sex_params = [SEx_DETECT_MINAREA, SEx_DETECT_THRESH, 
-                           SEx_ANALYSIS_THRESH, SEx_FILTER, 
-                           SEx_FILTER_NAME, SEx_DEBLEND_NTHRESH, 
-                           SEx_DEBLEND_MINCONT, SEx_PHOT_FLUXFRAC, 
-                           SEx_BACK_SIZE, SEx_BACK_FILTERSIZE, 
-                           SEx_BACKPHOTO_TYPE, SEx_BACKPHOTO_THICK, 
-                           SEx_WEIGHT_TYPE]
+        self.sex_params = [SEx_DETECT_MINAREA, SEx_DETECT_THRESH,
+                           SEx_ANALYSIS_THRESH, SEx_FILTER,
+                           SEx_FILTER_NAME, SEx_DEBLEND_NTHRESH,
+                           SEx_DEBLEND_MINCONT, SEx_PHOT_FLUXFRAC,
+                           SEx_BACK_SIZE, SEx_BACK_FILTERSIZE,
+                           SEx_BACKPHOTO_TYPE, SEx_BACKPHOTO_THICK,
+                           SEx_WEIGHT_TYPE, self.SEx_PIXEL_SCALE,
+                           self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
 
     def set_limits(self,
-                   LMag=500, UMag=-500, LN=0.1, UN=20., 
-                   LRe=0., URe=500., LRd=0., URd=500., 
-                   bdbox=False, bbox=False, dbox=False, devauc=False, 
-                   avoidme=50., FILTER='UNKNOWN', 
-                   which_psf=0, stargal_prob=0.9, area_obj=40., 
+                   LMag=500, UMag=-500, LN=0.1, UN=20.,
+                   LRe=0., URe=500., LRd=0., URd=500.,
+                   bdbox=False, bbox=False, dbox=False, devauc=False,
+                   avoidme=50., FILTER='UNKNOWN',
+                   which_psf=0, stargal_prob=0.9, area_obj=40.,
                    no_mask=False, norm_mask=False):
         '''
 
@@ -387,203 +376,211 @@ class PyMorph:
 
         '''
 
-        self.LMag  = LMag        
-        self.UMag  = UMag  
-        self.LN    = LN    
-        self.UN    = UN    
-        self.LRe   = LRe   
-        self.URe   = URe   
-        self.LRd   = LRd   
-        self.URd   = URd   
-        self.bdbox = bdbox 
-        self.bbox  = bbox  
-        self.dbox  = dbox  
+        self.LMag  = LMag
+        self.UMag  = UMag
+        self.LN    = LN
+        self.UN    = UN
+        self.LRe   = LRe
+        self.URe   = URe
+        self.LRd   = LRd
+        self.URd   = URd
+        self.bdbox = bdbox
+        self.bbox  = bbox
+        self.dbox  = dbox
         self.devauc = devauc
-                     
+
         self.avoidme = avoidme
         self.FILTER = FILTER
         self.which_psf = which_psf
         self.stargal_prob = stargal_prob
-        self.area_obj = area_obj 
+        self.area_obj = area_obj
         self.no_mask = no_mask
         self.norm_mask = norm_mask
 
 
 
+    def argparse_input(self):
+
+        '''
+
+        The below is the idea to get arguments through parser. However, it
+        should not be used. Use either set_sexparams() and set_limits()
+
+        Note I set defaults here and call them in creating the options.
+        This is so I can use them in determining whether to retain
+        the default or not.
+
+        '''
+
+        # Note I set defaults here and call them in creating the options. 
+        #This is so I can use them in determining whether to retain 
+        #the default or not.
+
+        usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf [-p]]" \
+                "[--force[-f]] [--help[-h]] [--lmag] [--umag] [--ln] [--un]"\
+                "[--lre] [--ure] [--lrd] [--urd] [--with-in] "\
+                "[--with-filter] [--with-db] [--with-area]  [--no-mask]"\
+                "[--norm-mask] [--with-sg] [--bdbox] [--bbox] [--dbox]"\
+                "[--test [-t]] [--devauc] [--outdir] [--datadir]"
+
+
+        parser = argparse.ArgumentParser(prog='PROG', usage=usage)
+        parser.add_argument("-e", "--sex_conf", action="store_const",
+                          const=SExtractorConfEdit, 
+                          default=SExtractorConfDefault,
+                          help="runs SExtractor configuration")
+        parser.add_argument("-f", "--force", action="store_const",
+                          const=rm_sex_cata,
+                          help="removes SExtractor catalog")
+        parser.add_argument("-t", "--test", action="store_const", 
+                          const=run_test,  
+                          help="runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output")
+        parser.add_argument("--lmag", action="store", 
+                          dest="LMag",default = 500.0,
+                          help="lower magnitude cutoff")
+        parser.add_argument("--umag", action="store", 
+                          dest="UMag", default = -500.0,
+                          help="upper magnitude cutoff")
+        parser.add_argument("--ln", action="store", 
+                          dest="LN", default = 0.1, help="Lower Sersic")
+        parser.add_argument("--un", action="store", 
+                          dest="UN", default = 20.0, help="Upper Sersic")
+        parser.add_argument("--lre", action="store", 
+                          dest="LRe", default = 0.0,
+                          help="Lower Bulge Radius")
+        parser.add_argument("--ure", action="store", 
+                          dest="URe", default = 500.0,
+                          help="Upper Bulge Radius")
+        parser.add_argument("--lrd", action="store", 
+                          dest="LRd", default = 0.0, help="Lower Disk Radius")
+        parser.add_argument("--urd", action="store", 
+                          dest="URd", default = 500.0, help="Upper Disk Radius")
+
+        parser.add_argument("--bdbox", action="store_true", dest="bdbox",
+                          default = False, help="turns on bdbox")
+        parser.add_argument("--bbox", action="store_true", dest="bbox",
+                          default = False, help="turns on bbox")
+        parser.add_argument("--dbox", action="store_true", dest="dbox",
+                          default = False, help="turns on dbox")
+        parser.add_argument("--devauc", action="store_true", dest="devauc",
+                          default = False,
+                          help="turns on DeVacouleur's bulge fitting (sersic index of bulge frozen at 4.0 for fit)")
+
+
+        parser.add_argument("--with-in", action="store", 
+                          dest="avoidme", default = 50.0, help="avoid me!")
+        parser.add_argument("--with-filter", action="store", 
+                          dest="FILTER", default = 'UNKNOWN', 
+                          help="Filter used")
         
-        def argparse_input():
-
-            '''
-
-            The below is the idea to get arguments through parser. However, it
-            should not be used. Use either set_sexparams() and set_limits()
-
-            Note I set defaults here and call them in creating the options. 
-            This is so I can use them in determining whether to retain 
-            the default or not.
-
-            '''
-            
-            
-            usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf [-p]]" \
-                    "[--force[-f]] [--help[-h]] [--lmag] [--umag]"\
-                    "[--ln] [--un]"\
-                    "[--lre] [--ure] [--lrd] [--urd] [--with-in] "\
-                    "[--with-filter] [--with-db] [--with-area]  [--no-mask]"\
-                    "[--norm-mask] [--with-sg] [--bdbox] [--bbox] [--dbox]"\
-                    "[--test [-t]] [--devauc] [--outdir] [--datadir]"
+        parser.add_argument("-p", "--with-psf", action="store",
+                          dest="which_psf", default = 0,
+                          help="Nearest/farthest PSF")
+        parser.add_argument("--with-sg", action="store", 
+                          dest="stargal_prob", default = 0.9,
+                          help="for psf identification")
+        parser.add_argument("--with-area", action="store", 
+                          dest="area_obj", default = 40.0,
+                          help="min Area of psf for selection")
+        parser.add_argument("--no_mask", action="store_true", dest="no_mask",
+                          default=False, help="turns off masking")
+        parser.add_argument("--norm_mask", action="store_true", dest="norm_mask",
+                          default=False, help="turns on Normal masking")
+        
 
 
-            parser = argparse.ArgumentParser(prog='PROG', usage=usage)
-            parser.add_argument("-e", "--sex_conf", action="store_const",
-                              const=SExtractorConfEdit, 
-                              default=SExtractorConfDefault,
-                              help="runs SExtractor configuration")
-            parser.add_argument("-f", "--force", action="store_const",
-                              const=rm_sex_cat,
-                              help="removes SExtractor catalog")
-            parser.add_argument("-t", "--test", action="store_const", 
-                              const=run_test,  
-                              help="runs the test instance-OVERRIDES ALL                                    OTHER INPUT-User must supply a directory                                     for output")
-            parser.add_argument("--lmag", action="store", 
-                              dest="LMag",default = 500.0,
-                              help="lower magnitude cutoff")
-            parser.add_argument("--umag", action="store", 
-                              dest="UMag", default = -500.0,
-                              help="upper magnitude cutoff")
-            parser.add_argument("--ln", action="store", 
-                              dest="LN", default = 0.1, help="Lower Sersic")
-            parser.add_argument("--un", action="store", 
-                              dest="UN", default = 20.0, help="Upper Sersic")
-            parser.add_argument("--lre", action="store", 
-                              dest="LRe", default = 0.0,
-                              help="Lower Bulge Radius")
-            parser.add_argument("--ure", action="store", 
-                              dest="URe", default = 500.0,
-                              help="Upper Bulge Radius")
-            parser.add_argument("--lrd", action="store", 
-                              dest="LRd", default = 0.0, help="Lower Disk \
-                                                               Radius")
-            parser.add_argument("--urd", action="store", 
-                              dest="URd", default = 500.0, help="Upper Disk \
-                                                                 Radius")
+        #parser.add_argument("-d","--datadir", action="store", dest="DATADIR",
+        #                   default = os.getcwd()+'/',
+        #                  help="path to directory containing all input. MUST end in '/'")
+        #parser.add_argument("-o","--outdir", action="store", 
+        #                  dest="OUTDIR", default = os.getcwd()+'/',
+        #                  help="path to directory that will contain all output. MUST end in '/'")
+        
 
-            parser.add_argument("--bdbox", action="store_true", dest="bdbox",
-                              default = False, help="turns on bdbox")
-            parser.add_argument("--bbox", action="store_true", dest="bbox",
-                              default = False, help="turns on bbox")
-            parser.add_argument("--dbox", action="store_true", dest="dbox",
-                              default = False, help="turns on dbox")
-            parser.add_argument("--devauc", action="store_true", dest="devauc",
-                              default = False,
-                              help="turns on DeVacouleur's bulge fitting\
-                                      (sersic index of bulge frozen at 4.0\
-                                      for fit)")
+        parser.add_argument("--with-host", action="store", 
+                           dest="host", default = 'localhost',
+                          help="mysql host used")
+        parser.add_argument("--with-db", action="store", 
+                           dest="database", default = 'UNKNOWN',
+                          help="database used")
+        # parses command line aguments for pymorph
+        args = parser.parse_args()
 
-
-            parser.add_argument("--with-in", action="store", 
-                              dest="avoidme", default = 50.0, help="avoid me!")
-            parser.add_argument("--with-filter", action="store", 
-                              dest="FILTER", default = 'UNKNOWN', 
-                              help="Filter used")
-            
-            parser.add_argument("-p", "--with-psf", action="store",
-                              dest="which_psf", default = 0,
-                              help="Nearest/farthest PSF")
-            parser.add_argument("--with-sg", action="store", 
-                              dest="stargal_prob", default = 0.9,
-                              help="for psf identification")
-            parser.add_argument("--with-area", action="store", 
-                              dest="area_obj", default = 40.0,
-                              help="min Area of psf for selection")
-            parser.add_argument("--no_mask", action="store_true", 
-                              dest="no_mask",
-                              default=False, help="turns off masking")
-            parser.add_argument("--norm_mask", action="store_true", 
-                              dest="norm_mask",
-                              default=False, help="turns on Normal masking")
-            
-
-
-            parser.add_argument("--with-host", action="store", 
-                               dest="host", default = 'localhost',
-                              help="mysql host used")
-            parser.add_argument("--with-db", action="store", 
-                               dest="database", default = 'UNKNOWN',
-                              help="database used")
-            # parses command line aguments for pymorph
-            #print('B3')
-            args = parser.parse_args()
-
-            #print('B4')
-            self.sex_params = args.sex_conf()
-            if len(self.sex_params) == 15:
-                self.sex_params.append(self.mag_zero)
-            else:
-                self.sex_params.append(self.pixelscale)
-                self.sex_params.append(self.pixelscale * 3.37)        
-                self.sex_params.append(self.mag_zero)
-
-            #print('B5')
-
-
-            self.SEx_DETECT_MINAREA = self.sex_params[0]
-            self.SEx_DETECT_THRESH = self.sex_params[1]
-            self.SEx_ANALYSIS_THRESH = self.sex_params[2]
-            self.SEx_FILTER = self.sex_params[3]
-            self.SEx_FILTER_NAME = self.sex_params[4]
-            self.SEx_DEBLEND_NTHRESH = self.sex_params[5]
-            self.SEx_DEBLEND_MINCONT = self.sex_params[6]
-            self.SEx_PHOT_FLUXFRAC = self.sex_params[7]
-            self.SEx_BACK_SIZE = self.sex_params[8]
-            self.SEx_BACK_FILTERSIZE = self.sex_params[9]
-            self.SEx_BACKPHOTO_TYPE = self.sex_params[10]
-            self.SEx_BACKPHOTO_THICK = self.sex_params[11]
-            self.SEx_WEIGHT_TYPE = self.sex_params[12]
-            self.SEx_PIXEL_SCALE = self.sex_params[13]
-            self.SEx_SEEING_FWHM = self.sex_params[14]
-
-            args = parser.parse_args()
-
-            self.LMag  = args.LMag
-            self.UMag  = args.UMag
-            self.LN    = args.LN
-            self.UN    = args.UN
-            self.LRe   = args.LRe
-            self.URe   = args.URe
-            self.LRd   = args.LRd
-            self.URd   = args.URd
-            self.bdbox = args.bdbox
-            self.bbox  = args.bbox
-            self.dbox  = args.dbox
-            self.devauc= args.devauc
-
-            self.avoidme  = args.avoidme
-            self.FILTER   = args.FILTER
-            self.which_psf = args.which_psf
-            self.stargal_prob = args.stargal_prob
-            self.area_obj = args.area_obj
-            self.no_mask  = args.no_mask
-            self.norm_mask= args.norm_mask
-
-            #self.DATADIR  = args.DATADIR
-            #self.OUTDIR   = args.OUTDIR
-
-            self.host     = args.host
-            self.database = args.database
-
-            #self.SP = SexParams(self.sex_params, self.mag_zero)
+        self.sex_params = args.sex_conf()
+        if len(self.sex_params) == 15:
+            self.sex_params.append(self.mag_zero)
+        else:
+            self.sex_params.append(self.pixelscale)
+            self.sex_params.append(self.pixelscale * 3.37)        
+            self.sex_params.append(self.mag_zero)
 
 
 
+        self.SEx_DETECT_MINAREA = self.sex_params[0]
+        self.SEx_DETECT_THRESH = self.sex_params[1]
+        self.SEx_ANALYSIS_THRESH = self.sex_params[2]
+        self.SEx_FILTER = self.sex_params[3]
+        self.SEx_FILTER_NAME = self.sex_params[4]
+        self.SEx_DEBLEND_NTHRESH = self.sex_params[5]
+        self.SEx_DEBLEND_MINCONT = self.sex_params[6]
+        self.SEx_PHOT_FLUXFRAC = self.sex_params[7]
+        self.SEx_BACK_SIZE = self.sex_params[8]
+        self.SEx_BACK_FILTERSIZE = self.sex_params[9]
+        self.SEx_BACKPHOTO_TYPE = self.sex_params[10]
+        self.SEx_BACKPHOTO_THICK = self.sex_params[11]
+        self.SEx_WEIGHT_TYPE = self.sex_params[12]
+        self.SEx_PIXEL_SCALE = self.sex_params[13]
+        self.SEx_SEEING_FWHM = self.sex_params[14]
+
+
+        self.LMag  = args.LMag
+        self.UMag  = args.UMag
+        self.LN    = args.LN
+        self.UN    = args.UN
+        self.LRe   = args.LRe
+        self.URe   = args.URe
+        self.LRd   = args.LRd
+        self.URd   = args.URd
+        self.bdbox = args.bdbox
+        self.bbox  = args.bbox
+        self.dbox  = args.dbox
+        self.devauc= args.devauc
+
+        self.avoidme  = args.avoidme
+        self.FILTER   = args.FILTER
+        self.which_psf = args.which_psf
+        self.stargal_prob = args.stargal_prob
+        self.area_obj = args.area_obj
+        self.no_mask  = args.no_mask
+        self.norm_mask= args.norm_mask
+
+        #self.DATADIR  = args.DATADIR
+        #self.OUTDIR   = args.OUTDIR
+
+        self.host     = args.host
+        self.database = args.database
+
+        #self.SP = SexParams(self.sex_params, self.mag_zero)
+
+
+class PyMorph(InitializeParams):
+    
+    __version__ = 3.0
+
+    def __init__(self, config_file='config.ini'):
+
+        super()._initilize_params(config_file=config_file) 
 
 
 
     def main_thread(self):
 
-        #print(self.pixelscale, self.ReSize, self.FixSize)
+        print(self.pixelscale, self.ReSize, self.FixSize)
 
+        #try:
         os.system('rm -f TmpElliMask.fits TmpElliMask1.fits')
+        #except:
+        #    pass
 
         
 
@@ -597,152 +594,214 @@ class PyMorph:
             indexfile.close()
 
 
-        #Reading image and weigh files
-        if self.repeat == False & self.galcut == False:
-            print("Using large image. imagefile >>> {}".format(self.imagefile))
-
-            if os.path.exists(self.whtfile):
-                wht = fitsio.FITS(self.whtfile)
-
-                if re.search("rms", self.whtfile.lower()):
-                    self.P.weightdata = wht[0].read()
-                    print("whtfile >>> {}".format(self.whtfile))
-                elif re.search("weight", self.whtfile.lower()):
-                    self.P.weightdata = 1 / np.sqrt(wht[0].read())
-                    print("whtfile >>> {}".format(self.whtfile))
-                else:
-                    print('Weight file is not understood. Please include ' + \
-                          'the word weight/rms to the weight file name. ' + \
-                          'If it is weight the rms will be found by 1/sqrt(w)') 
-                wht.close()
-                self.P.weightexists = True
-            else:
-                self.P.weightexists = False
-                print('No weight image found\n')
-        
-        #print('B7')
+        print(self.imagefile)
+        #print(self.imagedata)
+        print('Image done')
+        print(self.whtfile)
+        print('Weight done')
         #Initializing psf array. ie. creating psflist from file 
         self.psflist = pf.PSFArr(self.DATADIR, self.psflist)
-        #print(self.psflist)
-        #Updating the header RA and DEC of PSF if the filename is in a
-        #specific format
         if self.decompose:
             for p in self.psflist:
-                #print('psf', self.DATADIR, p)
+                print('psf', self.DATADIR, p)
                 pf.UpdatePsfRaDec(self.DATADIR, p)
 
-        self.P.psflist = self.psflist
 
-        #print('B8')
+        #XXX
+        #self.P.psflist = self.psflist
+
         # Writing csv header and finding the output parameters
-        params_to_write = ut.PyMorphOutputParams(self.dbparams, 
-                                                 self.decompose)    
-        #print(params_to_write)
-        self.P.params_to_write = params_to_write
+        params_write = ut.PyMorphOutputParams(self.dbparams, self.decompose)    
+
+        #XXX
+        #self.P.params_to_write = params_to_write
+
         if os.path.exists('result.csv'):
             pass
         else:
             f_res = open("result.csv", "a")
-            csvhead = ['{}_{:d}'.format(params_to_write[par_key][0], par_key)
-                       for par_key in params_to_write.keys()]
+            csvhead = ['{}_{:d}'.format(params_write[par_key][0], par_key)
+                       for par_key in params_write.keys()]
             writer = csv.writer(f_res)
             writer.writerow(csvhead)
             f_res.close()
 
-        self.f_cat = open(self.out_cat, 'w')
-        self.f_failed = open('restart.cat', 'w')
-        #obj_file = open(self.clus_cat, 'r')  # The file contains the 
+        f_cat = open(self.out_cata, 'w')
+        f_failed = open('restart.cat', 'w')
+        #obj_cata = open(self.obj_cata, 'r')  # The file contains the 
                                                      # objects of interest
-        #pnames = obj_file.readline().split() #The names of the parameters given 
-                                             #in the first line in the clus_cat
+        #pnames = obj_cata.readline().split() #The names of the parameters given 
+                                             #in the first line in the obj_cata
 
-        with open(self.clus_cat, 'r') as f:
-            obj_file = f.read().splitlines()
+
+        #print('Before multi')
+        #pool = Pool(processes=1)
+        #results = pool.map(self.P.main, obj_cata)
+        #pool.close()
+        #pool.join()
+
+
+        #self.obj_cata = obj_cata
+        #pnames = obj_file.readline().split() #The names of the parameters given 
+                                             #in the first line in the obj_cata
+        #self.obj_cata = obj_cata
+        obj_values = np.genfromtxt(self.obj_cata, names=True)
+
+        pnames = obj_values.dtype.names
+        print('pnames', pnames)
+        print(obj_values.shape)
+
+        if len(obj_values) == 0:
+            print('No lines in {}'.format(self.obj_cata))
+            print('Exiting PyMorph')
+            sys.exit()
+
 
         # writing a input catalogue (restart.cat) for failed objects
-        #for pname in pnames:
-        pnames = obj_file.pop(0).split()
         for pname in pnames:
-            self.f_failed.writelines(['{} '.format(pname)])
-        self.f_failed.writelines(['flag \n'])
+            f_failed.writelines(['{} '.format(pname)])
+        f_failed.writelines(['flag \n'])
 
-        ##print(pnames)
-        ##print(obj_file)
-        self.P.pnames = pnames 
-        self.P.psfcounter = 0
-        self.psfcounter = 0                  #For getting psf in the case of unknown ra
-        #print('Before multi')
-        pool = Pool(processes=1)
-        results = pool.map(self.P.main, obj_file)
-        pool.close()
-        pool.join()
+
+        self.psfcounter = 0       #For getting psf in the case of unknown ra
+
+        #print(1, imgsize, whtsize)
+
+
+        P = Pipeline()
+
+        P.imagedata = self.imagedata
+        P.weightdata = self.weightdata
+        P.TX = self.imagedata.shape[0]
+        P.TY = self.imagedata.shape[1]
+        P.weightexists = self.weightexists
+        
+        P.EXPTIME = self.EXPTIME
+        P.RDNOISE = self.RDNOISE
+        P.GAIN = self.GAIN
+        P.SEx_GAIN = self.SEx_GAIN
+        P.NCOMBINE = self.NCOMBINE
+        P.center_deviated = self.center_deviated
+
+        P.DATADIR  = self.DATADIR
+        P.OUTDIR = self.OUTDIR
+        P.imagefile = self.imagefile
+        P.whtfile  = self.whtfile
+        P.sex_cata = self.sex_cata
+        P.obj_cata  = self.obj_cata
+        P.out_cata = self.out_cata
+        P.rootname = self.rootname
+        P.GALFIT_PATH = self.GALFIT_PATH
+        P.SEX_PATH = self.SEX_PATH
+        P.repeat = self.repeat
+        P.galcut  = self.galcut
+        P.decompose  = self.decompose
+        P.detail = self.detail
+        P.galfit  = self.galfit
+        P.cas  = self.cas
+        P.crashhandler = self.crashhandler
+        P.components  = self.components
+        P.devauc = self.devauc
+        P.fitting  = self.fitting
+        P.chi2sq  = self.chi2sq
+        P.goodness = self.goodness
+        P.center_deviation = self.center_deviation
+        P.center_constrain = self.center_constrain
+        P.ReSize  = self.ReSize
+        P.VarSize  = self.VarSize
+        P.FracRad  = self.FracRad
+        P.Square  = self.Square
+        P.FixSize = self.FixSize
+        P.searchrad  = self.searchrad
+        P.pixelscale = self.pixelscale
+        P.H0 = self.H0
+        P.WM = self.WM
+        P.WV = self.WV
+        P.redshift = self.redshift
+        P.psfselect = self.psfselect
+        P.stargal_prob= self.stargal_prob
+        P.star_size  = self.star_size
+        P.psflist  = self.psflist
+        P.which_psf = self.which_psf
+        P.area_obj = self.area_obj
+        P.manual_mask  = self.manual_mask
+        P.mask_reg  = self.mask_reg
+        P.thresh_area  = self.thresh_area
+        P.threshold  = self.threshold
+        P.mag_zero  = self.mag_zero
+        P.maglim = self.maglim
+        P.host = self.host
+        P.database = self.database
+        P.table = self.table
+        P.usr  = self.usr
+        P.pword  = self.pword
+        P.dbparams = self.dbparams
+        P.galfitv = self.galfitv
+        P.FirstCreateDB= self.FirstCreateDB
+        P.FILTER  = self.FILTER
+        P.LMag = self.LMag
+        P.UMag  = self.UMag
+        P.LN = self.LN
+        P.UN = self.UN
+        P.LRe  = self.LRe
+        P.URe = self.URe
+        P.LRd  = self.LRd
+        P.URd = self.URd
+        P.bdbox  = self.bdbox
+        P.bbox = self.bbox
+        P.dbox = self.dbox
+        P.devauc  = self.devauc
+        P.avoidme  = self.avoidme
+        P.no_mask  = self.no_mask
+        P.norm_mask  = self.norm_mask
+
+        P.sex_params = self.sex_params
+            
+        P.pnames = pnames
+
+        pdb = {}                        #The parameter dictionary
+        for obj_value in obj_values:
+            P.main(obj_value)
+
 
         print(results)
 
+    def find_and_fit(self):
+        '''
+        Find all the sextractor objects and find fits. It rewrites the
+        obj_cata in config.ini
+        '''
 
+        print('find_and_fit 1')
+        #fc = open(self.obj_cata, 'w')
+        #if self.redshift == 9999:
+        #    fc.writelines(['gal_id ra dec mag\n'])
+        #else:
+        #    fc.writelines(['gal_id ra dec mag z\n'])
 
-    def FindAndFit(self):
-        fc = open(self.clus_cat, 'w')
-        if self.redshift == 9999:
-            fc.writelines(['gal_id ra dec mag\n'])
+        values = np.genfromtxt(self.sex_cata)
+       
+        print(values.shape)
+        con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob)
+        values = values[con]
+        values = values[:, [0, 3, 4, 17]]
+        values[3] = values[3] / 15.0
+
+        if self.redshift != 9999:
+            values[:, -1] = self.redshift
+            np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f %.3f',
+                    header='gal_id ra dec mag z', comments='')
         else:
-            fc.writelines(['gal_id ra dec mag z\n'])
+            np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f',
+                    header='gal_id ra dec mag', comments='')
 
-        for line in open(self.sex_cat, 'r'):
-
-            values = line.split()
-            if 1:
-                if float(values[17]) > self.UMag and \
-                   float(values[17]) < self.LMag and \
-                   float(values[16]) < self.stargal_prob:
-                    if self.redshift == 9999:
-                        cline = '{} {} {} {}\n'.format(values[0], 
-                                                    float(values[3]) / 15.0,
-                                                    values[4], 
-                                                    values[17])
-                    else:
-                        cline = '{} {} {} {} {}\n'.format(values[0], 
-                                                      float(values[3]) / 15.0,
-                                                      values[4], 
-                                                      values[17],
-                                                      self.redshift)
-                    fc.writelines([cline])
-            #except:
-            #    pass
-        fc.close()
 
         searchrad = '0.05arc'
 
+        print('find_and_fit 2')
 
     def pymorph(self):
 
-        self.P = Pipeline([self.DATADIR, self.OUTDIR, self.imagefile, 
-                           self.whtfile, self.sex_cat, self.clus_cat, 
-                           self.out_cat, self.rootname, self.GALFIT_PATH, 
-                           self.SEX_PATH, self.repeat, self.galcut, 
-                           self.decompose, self.detail, self.galfit,
-                           self.cas, self.crashhandler, self.components,
-                           self.devauc, self.fitting, self.chi2sq, 
-                           self.goodness, self.center_deviation, 
-                           self.center_constrain, self.ReSize,
-                           self.VarSize, self.FracRad, self.Square, 
-                           self.FixSize, 
-                           self.searchrad, self.pixelscale, self.H0, self.WM, 
-                           self.WV, self.redshift, self.psfselect, 
-                           self.stargal_prob,
-                           self.star_size, self.psflist, self.which_psf, 
-                           self.area_obj, self.manual_mask, self.mask_reg, 
-                           self.thresh_area, self.threshold, self.mag_zero,
-                           self.maglim, self.host, self.database, self.table,
-                           self.usr, self.pword, self.dbparams, self.galfitv, 
-                           self.FirstCreateDB, self.FILTER, 
-                           self.LMag, self.UMag, 
-                           self.LN, self.UN, self.LRe, self.URe, 
-                           self.LRd, self.URd, 
-                           self.bdbox, self.bbox, self.dbox, self.devauc, 
-                           self.avoidme, self.no_mask, self.norm_mask])
-                           
-        self.P.sex_params = self.sex_params 
 
         # now change dir to the 
         thisdir = os.getcwd()
@@ -751,79 +810,111 @@ class PyMorph:
 
         os.chdir(self.OUTDIR)
 
-        try:
+
+
+        if 1:
+            print(1)
+            
             if self.repeat == False & self.galcut == False:
+                print(2)
                 fimg = fitsio.FITS(self.imagefile)
                 self.imagedata = fimg[0].read()
                 self.header0 = fimg[0].read_header()
                 fimg.close()
+                self.TX = self.imagedata.shape[0]
+                self.TY = self.imagedata.shape[1]
                 
                 gheader = ut.CheckHeader(self.header0)
-                self.P.EXPTIME = gheader[0]
-                self.P.RDNOISE = gheader[1],
-                self.P.GAIN = gheader[2]
+                self.EXPTIME = gheader[0]
+                self.RDNOISE = gheader[1],
+                self.GAIN = gheader[2]
                 self.SEx_GAIN = gheader[3]
-                self.P.SEx_GAIN = gheader[3]
-                self.P.NCOMBINE = gheader[4]
+                self.NCOMBINE = gheader[4]
+
+                print("Using large image. imagefile >>> {}".format(self.imagefile))
             else:
+                print(4)
                 self.SEx_GAIN = 1.
-                self.P.SEx_GAIN = 1.
 
-        except IOError as e:
-            print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
-            os._exit(0)
+            if self.repeat == False & self.galcut == False & os.path.exists(self.whtfile):
+                self.weightexists = True
+                
+                wht = fitsio.FITS(self.whtfile)
+
+                if re.search("rms", self.whtfile.lower()):
+                    self.weightdata = wht[0].read()
+                    print("whtfile >>> {}".format(self.whtfile))
+                elif re.search("weight", self.whtfile.lower()):
+                    self.weightdata = 1 / np.sqrt(wht[0].read())
+                    print("whtfile >>> {}".format(self.whtfile))
+                else:
+                    print('Weight file is not understood. Please include ' + \
+                          'the word weight/rms to the weight file name. ' + \
+                          'If it is weight the rms will be found by 1/sqrt(w)')
+                wht.close()
+                print('No weight image found\n')
+
+
+            else:
+                self.weightexists = False
+            
+        #except IOError as e:
+        #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
+        #    os._exit(0)
         
-        ##print(self.sex_cat)
-        self.P.imagedata = self.imagedata
-        self.P.center_deviated = 0
-
-        if os.path.exists(self.sex_cat):
+        print(self.sex_cata)
+        if os.path.exists(self.sex_cata):
             pass
+            print(5)
         elif self.galcut == False:
             print('The SExtractor catalogue for your frame is NOT found. ' \
                   'One is being made using the default values. It is always '\
                   'recommended to make SExtractor catalogue by YOURSELF as '\
                   'the pipeline keeps the sky value at the SExtractor value '\
                   'during the decomposition.')
-            RunSex(self.sex_params, self.SEX_PATH, 
+            print(6)
+            PS = PySex(self.SEX_PATH)
+            PS.RunSex(self.sex_params,  
                    self.imagefile, self.whtfile,
-                   self.sex_cat, self.SEx_GAIN,
-                   check_fits='check.fits', sconfig='default')
+                   self.sex_cata, self.SEx_GAIN,
+                   check_fits=None, sconfig='default')
 
+        #sys.exit()
     #The old function for psfselect = 2
     #    if psfselect == 2:
     #        center_deviated = 0
     #        starthandle = 0
     #        os.system('ds9 &')
     #        time.sleep(2)
-    #        run_psfselect(imagefile, DATADIR, clus_cat, self.galcut)
+    #        run_psfselect(imagefile, DATADIR, obj_cata, self.galcut)
     #        os.system('xpaset -p ds9 quit')
     #        psflist = '@psflist.list'
-    #        FindAndFit()
+    #        find_and_fit()
     #        main()
     #        if crashhandler:
     #            starthandle = 1
     #            os.system('mv restart.cat CRASH.CAT')
-    #            clus_cat = 'CRASH.CAT' 
+    #            obj_cata = 'CRASH.CAT' 
     #            main()
     #New function for psfselect=2 non-interactive for webservice
-        ##print(self.psfselect)
-        ##print(self.clus_cat)
+        print(self.psfselect)
+        print(self.obj_cata)
         if self.psfselect == 2:
             self.Interactive = 0
+            self.center_deviated = 0
             self.starthandle = 0
             run_psfselect(self.imagefile, 
                           self.DATADIR, 
-                          self.clus_cat, 
+                          self.obj_cata, 
                           self.galcut)
             psflist = os.path.join(self.DATADIR, '@psflist.list')
-            self.FindAndFit()
-            self.main_thread()
+            self.find_and_fit()
+            self.main()
             if self.crashhandler:
                 starthandle = 1
                 os.system('mv restart.cat CRASH.CAT')
-                self.clus_cat = 'CRASH.CAT' 
-                self.main_thread()
+                self.obj_cata = 'CRASH.CAT' 
+                self.main()
 
     #The old function for psfselect=1
         elif self.psfselect == 1:
@@ -832,29 +923,29 @@ class PyMorph:
             time.sleep(2)
             run_psfselect(self.imagefile, 
                           self.DATADIR, 
-                          self.clus_cat, 
+                          self.obj_cata, 
                           self.galcut)
             os.system('xpaset -p ds9 quit')
     #new function for psfselect=1 non-interactive for webservice (abhishek rawat)
     #    elif psfselect == 1:
     #        Interactive = 0
-    #        run_psfselect(imagefile, DATADIR, clus_cat, self.galcut)
+    #        run_psfselect(imagefile, DATADIR, obj_cata, self.galcut)
             
 
 
 
         elif self.psfselect == 0:
+            self.center_deviated = 0
             self.starthandle = 0
-            #self.FindAndFit()
-            #print(self.sex_cat)
-            print('B6')
+            if self.findandfit == True:
+                self.find_and_fit()
+            print(self.sex_cata)
             self.main_thread()
-            print('B7')
             if self.crashhandler:
                 self.starthandle = 1
                 os.system('mv restart.cat CRASH.CAT')
-                self.clus_cat = 'CRASH.CAT' 
-                self.main_thread()
+                self.obj_cata = 'CRASH.CAT' 
+                self.main()
 
         os.chdir(thisdir)
 
@@ -863,10 +954,8 @@ class PyMorph:
 
 
 if __name__ == '__main__':
-    print('Beginning1')
     p = PyMorph()
     p.set_sexparams()
     p.set_limits()
-    print('Beginning2')
-    #p.pymorph()
+    p.pymorph()
     #p.main()
