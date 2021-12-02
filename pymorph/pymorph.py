@@ -238,7 +238,8 @@ class InitializeParams(object):
         
 
         try:
-            self.components = c.get('galfit', 'components').split(',')
+            components = c.get('galfit', 'components').split(',')
+            self.components = [cm.strip() for cm in components]
         except:
             print("components undefined. Asuming bulge+disk model")
             self.components = ['bulge', 'disk']
@@ -570,6 +571,19 @@ class PyMorph(InitializeParams):
     def __init__(self, config_file='config.ini'):
 
         super()._initilize_params(config_file=config_file) 
+        galfitv = self.galfitv.split('.')
+        galfitv = galfitv[0] + '.' + galfitv[1]
+        self.galfitv = float(galfitv)
+
+    def _indexfile(self):
+        #Initialize index.html
+        if os.path.exists('index.html'):
+            pass
+        else:
+            indexfile = open('index.html', 'w')
+            indexfile.writelines(['<HTML>\n<BODY>\n'])
+            indexfile.writelines(['</BODY></HTML>'])
+            indexfile.close()
 
 
 
@@ -582,17 +596,8 @@ class PyMorph(InitializeParams):
         #except:
         #    pass
 
+        self._indexfile()
         
-
-        #Initialize index.html
-        if os.path.exists('index.html'):
-            pass
-        else:
-            indexfile = open('index.html', 'w')
-            indexfile.writelines(['<HTML>\n<BODY>\n'])
-            indexfile.writelines(['</BODY></HTML>'])
-            indexfile.close()
-
 
         print(self.imagefile)
         #print(self.imagedata)

@@ -20,17 +20,32 @@ class GalfitConfigFunc:
 
     """
 
-    def __init__(self, datadir, cutimage, whtimage,  
-                 xcntr, ycntr, NXPTS, NYPTS, 
-                 components, fitting, psffile, good_object, 
-                 sex_cata, skyval, mag_zero, flag):
+    def __init__(self, datadir, 
+                 cutimage, whtimage,  
+                 xcntr_img, ycntr_img,
+                 good_object, 
+                 NXPTS, NYPTS, 
+                 components, fitting, 
+                 psffile, 
+                 sex_cata_neighbor, 
+                 SexSky,
+                 fstring,
+                 threshold, thresh_area,
+                 center_deviated, center_constrain,
+                 avoidme,
+                 LMag, UMag,
+                 LN, UN,
+                 LRe, URe,
+                 LRd, URd,
+                 bdbox, bbox, dbox, devauc,
+                 galfitv,
+                 mag_zero, flag):
 
-        print(good_object.shape)
         self.datadir = datadir
         self.cutimage = cutimage
         self.whtimage = whtimage
-        self.xcntr = xcntr
-        self.ycntr = ycntr
+        self.xcntr_img = xcntr_img
+        self.ycntr_img = ycntr_img
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.components = components
@@ -38,157 +53,14 @@ class GalfitConfigFunc:
         self.psffile = psffile
         self.good_object  = good_object
         print(self.good_object.shape)
-        self.sex_cata = sex_cata
-        self.skyval = skyval
-        self.mag_zero = mag_zero
-        self.flag = flag
-
-    def write_config(self, fstring, threshold, thresh_area, 
-                    center_deviated, galfitv, center_constrain=2.0,
-                    avoidme=0, 
-                    LMag=500., UMag=-500.,
-                    LN=0.1, UN=20.,
-                    LRe=0., URe=500.,
-                    LRd=0., URd=500.,
-                    bdbox=False, bbox=False, dbox=False, devauc=False):
-
-        print(self.good_object.shape)
-        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, values=self.good_object)
-        print(self.good_object.shape)
-        target_imcenter =[target.xcntr, target.ycntr]
-        target.set_center(self.xcntr, self.ycntr)
-        target.pos_ang
-        
-        config_file = 'G_{}.in'.format(fstring) #Name of the GALFIT configuration file
-        constrain_file = '{}.con'.format(fstring)
-        self.mask_file = 'M_{}.fits'.format(fstring) 
-        outfile   = 'O_{}.fits'.format(fstring)
-
-        if os.path.exists(constrain_file):
-            make_constrain = 0
-        else:
-            make_constrain = 1
-
-        gconfig = GConfigWrite(config_file, constrain_file, self.fitting,
-                                make_constrain, center_deviated, 
-                                center_constrain, self.skyval,  galfitv,
-                                LMag=500., UMag=-500.,
-                                LN=0.1, UN=20.,
-                                LRe=0., URe=500.,
-                                LRd=0., URd=500.,
-                                bdbox=False, bbox=False, 
-                                dbox=False, devauc=False)
-
-
-        #Write configuration file
-        gconfig.f_G.write('# IMAGE PARAMETERS\n')
-        gconfig.f_G.writelines(['A) ', os.path.join(self.datadir, self.cutimage), '	# Input data image',\
-                      ' (FITS file)\n'])
-        gconfig.f_G.writelines(['B) ', str(outfile), '		# Name for',\
-                      ' the output image\n'])
-        gconfig.f_G.writelines(['C) ', os.path.join(self.datadir, self.whtimage), '		# Noise image name', \
-                      ' (made from data if blank or "none")\n'])
-        gconfig.f_G.writelines(['D) ', os.path.join(self.datadir, self.psffile), '			# Input PSF', \
-                      ' image for convolution (FITS file)\n'])
-        gconfig.f_G.writelines(['E) 1			# PSF oversampling factor relative',
-                      ' to data\n'])
-        gconfig.f_G.writelines(['F) ', str(self.mask_file), '		# Bad pixel',
-                      ' mask(FITS image or ASCII coord list)\n'])
-        gconfig.f_G.writelines(['G) ', str(constrain_file), '       # File with parameter',\
-                      ' constraints (ASCII file)\n'])
-        gconfig.f_G.writelines(['H) 1 ', str(self.NXPTS), ' 1 ', str(self.NYPTS), '		#',\
-                      ' Image region to fit (xmin xmax ymin ymax)\n'])
-        #gconfig.f_G.writelines(['I) ', str(self.NXPTS), ' ', str(self.NYPTS),	'		#',\
-        #              ' Size of convolution box (x y)\n'])
-        # This really shouldn't be hardcoded!!!!
-        gconfig.f_G.writelines(['I) ', str(100), ' ', str(100),	'		#',\
-                      ' Size of convolution box (x y)\n'])
-        gconfig.f_G.writelines(['J) ', str(self.mag_zero), '		# Magnitude',\
-                      ' photometric zeropoint\n'])
-        gconfig.f_G.writelines(['O) regular			# Display type',\
-                      ' (regular, curses, both)\n'])
-        gconfig.f_G.writelines(['P) 0			# Create output image only?',\
-                      ' (1=yes; 0=optimize)\n'])
-        gconfig.f_G.writelines(['S) 0			# Modify/create',\
-                     ' objects interactively?\n\n\n'])
-
-        print('self.components', self.components)
-        for comp in self.components:
-            if comp == 'bulge':
-                gconfig.write_bulge(target)
-                self.flag = SetFlag(self.flag, GetFlag('FIT_BULGE'))
-            elif comp == 'disk':
-                gconfig.write_disk(target)
-                self.flag = SetFlag(self.flag, GetFlag('FIT_DISK'))   
-            elif comp == 'point':
-                gconfig.write_point(target)
-                self.flag = SetFlag(self.flag, GetFlag('FIT_POINT'))
-            elif comp == 'bar':
-                gconfig.write_bar(target)
-                self.flag = SetFlag(self.flag, GetFlag('FIT_BAR'))
-
-        gconfig.write_sky(target)
-        
-        if center_deviated:
-            center_deviated = 0
-
-        isneighbour = 0
-        for line_j in open(self.sex_cata,'r'):
-            values = np.fromstring(line_j, sep=' ')
-            neighbor = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
-                    values=values)
-            if target.get_mask(neighbor, threshold, thresh_area,
-                                  avoidme) == 0:
-                isneighbour = 1
-                # recenter in chip coordinates
-                xn = self.xcntr - target_imcenter[0] + neighbor.xcntr
-                yn = self.xcntr - target_imcenter[1] + neighbor.ycntr
-                neighbor.set_center(xn, yn)
-
-                gconfig.write_neighbor(neighbor)
-
-        if isneighbour:
-            self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
-
-        gconfig.close_files()
-        
-    #    f_fit = open('fit2.log','a')
-    #    if exists('fit.log'):
-    #        os.system('rm fit.log')
-    #Here the user should tell the location of the GALFIT excutable
-    #    os.system('/Vstr/vstr/vvinuv/galfit/modified/galfit "' + config_file + '"')
-    #    if exists('fit.log'):
-    #        for line in open('fit.log','r'):
-    #            f_fit.writelines([str(line)])
-    #    f_fit.close()
-
-class GConfigWrite():
-    """
-
-    This class handles the writing of the configuration file and G file
-
-    """
-
-    def __init__(self, config_file, constrain_file, fitting,
-                 make_constrain, center_deviated,
-                 center_constrain, skyval,  galfitv,
-                 LMag=500., UMag=-500., 
-                 LN=0.1, UN=20., 
-                 LRe=0., URe=500., 
-                 LRd=0., URd=500.,
-                 bdbox=False, bbox=False, dbox=False, devauc=False
-                 ):
-
-        self.obj_counter = 0
-        self.make_constrain = make_constrain
-        self.set_files(config_file, constrain_file)
-        self.fitting = fitting
-        self.make_constrain = center_constrain
+        self.sex_cata_neighbor = sex_cata_neighbor
+        self.SexSky = SexSky
+        self.fstring = fstring
+        self.threshold = threshold
+        self.thresh_area = thresh_area
         self.center_deviated = center_deviated
         self.center_constrain = center_constrain
-        self.skyval = skyval
-        self.set_galfitv(galfitv)
-        
+        self.avoidme = avoidme
         self.LMag = LMag
         self.UMag = UMag
         self.LN = LN
@@ -201,295 +73,533 @@ class GConfigWrite():
         self.bbox = bbox
         self.dbox = dbox
         self.devauc = devauc
+        self.galfitv = galfitv
+        self.mag_zero = mag_zero
+        self.flag = flag
 
+        self.obj_counter = 0
 
-    def set_galfitv(self, galfitv):
-        self.galfitv = np.float(galfitv.split('.')[0])
+        self.make_constrain = 1
 
-    def set_files(self, config_file, constrain_file):
-        """Sets file names and opens those files"""
-        try:
-            self.f_constrain.close()
-        except AttributeError as e:
-            print('f_constrain', e)
+    def _write_sersic_bar_constrain(self, component, cO):
 
-        try:
-            self.f_g.close()
-        except AttributeError as e:
-            print('f_G', e)
+        f_constrain = open(self.constrain_file, 'a')
+        print(cO, self.LN, self.UN)
+        if component == 'sersic_main':
+            f_constrain.write('{}  n  {} to {} \n'.format(cO, self.LN, self.UN))
+        elif component == 'bar':
+            f_constrain.write('{}  n  0.1 to 2.2 \n'.format(cO))
+        elif component == 'sersic_neighbor':
+            f_constrain.write('{}  n  0.5 to 15.0 \n'.format(cO))
+            center_constrain = center_contrain * 10
+        else:
+            print('No sersic is provided')
+
+        if self.center_deviated:
+            xy_lim = self.center_deviation - self.center_deviation / 4.0
+
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, -1 * xy_lim,
+                                                          xy_lim))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, -1 * xy_lim,
+                                                          xy_lim))
+        else:
+            #The below line is used to make the self.center_constrain shorter 
+            #to ccen
+            ccen = -1 * self.center_constrain
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, 
+                                                          ccen,
+                                                          -1 * ccen))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, 
+                                                          ccen,
+                                                          -1 * ccen))
+
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, 
+                                                        self.LMag))
+        f_constrain.write('{}  re  {} to {} \n'.format(cO, self.LRe, self.URe))
+        f_constrain.write('{}  q  {} to {} \n'.format(cO, 0.0, 1.0))
+        f_constrain.write('{}  pa  {} to {} \n'.format(cO, -360.0, 360.0))
+        f_constrain.close()
+
+    def _sersic_main_constrain(self, cO):
+        '''
+        Use _write_sersic_bar_constrain
+        '''
+        f_constrain = open(self.constrain_file, 'a')
+        f_constrain.write('{}  n  {} to {} \n'.format(cO, LN, UN))
+        f_constrain.write('{}  x  {} to {} \n'.format(cO, -center_constrain,
+                                                      center_constrain))
+        f_constrain.write('{}  y  {} to {} \n'.format(cO, -center_constrain,
+                                                      center_constrain))
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, UMag, LMag))
+        f_constrain.write('{}  re  {} to {} \n'.format(cO, LRe, URe))
+        f_constrain.write('{}  q  {} to {} \n'.format(cO, Lq, Uq))
+        f_constrain.write('{}  pa  {} to {} \n'.format(cO, Lpa, Upa))
+        f_constrain.close()
+
+    def _bar_constrain(self, cO):
+        '''
+        Use _write_sersic_bar_constrain
+        '''
+        f_constrain = open(self.constrain_file, 'a')
+        f_constrain.write('{}  n  0.1 to 2.2 \n'.format(cO))
+        f_constrain.write('{}  x  {} to {} \n'.format(cO, -center_constrain,
+                                                      center_constrain))
+        f_constrain.write('{}  y  {} to {} \n'.format(cO, -center_constrain,
+                                                      center_constrain))
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, UMag, LMag))
+        f_constrain.write('{}  re  {} to {} \n'.format(cO, LRe, URe))
+        f_constrain.write('{}  q  {} to {} \n'.format(cO, Lq, Uq))
+        f_constrain.write('{}  pa  {} to {} \n'.format(cO, Lpa, Upa))
+        f_constrain.close()
+
+    def _expdisk_constrain(self, cO):
+        f_constrain = open(self.constrain_file, 'a')
+        if self.center_deviated:
+            xy_lim = self.center_deviation - self.center_deviation / 4.0
+
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, -1 * xy_lim,
+                                                          xy_lim))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, -1 * xy_lim,
+                                                          xy_lim))
+        else:
+            ccen = -1 * self.center_constrain
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, ccen, -ccen))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, ccen, -ccen))
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, 
+                                                        self.LMag))
+        f_constrain.write('{}  rs  {} to {} \n'.format(cO, self.LRd, self.URd))
+        f_constrain.write('{}  q  {} to {} \n'.format(cO, 0.0, 1.0))
+        f_constrain.write('{}  pa  {} to {} \n'.format(cO, -360.0, 360.0))
+        f_constrain.close()
+
+    def _sersic_neighbor_constrain(self, cO):
+        '''
+        Use _write_sersic_bar_constrain
+        '''
+        f_constrain = open(self.constrain_file, 'a')
+        f_constrain.write('{} n 0.2 to 20. \n'.format(cO))
+        f_constrain.write('{} mag 100. to -100 \n'.format(cO))
+        f_constrain.write('{} re 0.1 to 500.0 \n'.format(cO))
+        f_constrain.write('{} q 0.01 to 1.0 \n'.format(cO))
+        f_constrain.write('{} pa -360. to 360. \n'.format(cO))
+        f_constrain.close()
+
+       
+    def _write_bulge(self, target, fcon):
+        self.obj_counter += 1
 
         if self.make_constrain == 1:
-            self.f_constrain = open(constrain_file, 'w')
-
-        self.f_G = open(config_file, 'w')
-
-    print(1)
-    def close_files(self):
-        """Closes configuration file and G file"""
-        if self.make_constrain == 1:
-            self.f_constrain.close()
-        self.f_G.close()
-
-    def write_bulge(self, target):
-        self.obj_counter+=1
-
-        if self.make_constrain == 1:
-            # write constraints
-            sline = '{}     n       {}      to      {}\n'.format(
-                    self.obj_counter, self.LN, self.UN)
-            self.f_constrain.write(sline)
-
-            if self.center_deviated:
-                self.f_constrain.write(str(self.obj_counter) + '      x      -' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + \
-                                  '     ' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '      y      -' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + \
-                                       '     ' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-            else:
-                self.f_constrain.write(str(self.obj_counter) + '      x      ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '      y      ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-
-            self.f_constrain.write(str(self.obj_counter) + '     mag     ' + str(self.UMag) + \
-                              ' to ' + str(self.LMag) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      re     ' + str(self.LRe) +\
-                              ' to ' + str(self.URe) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      q       0.0 to 1.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '      pa       -360.0 to 360.0\n')
+            self._write_sersic_bar_constrain('sersic_main', 1)            
 
         # write config file
-        self.f_G.write('# Sersic function\n\n')
-        self.f_G.writelines([' 0) sersic		# Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
-                             str(self.fitting[0]), ' ', str(self.fitting[0]), '   #',\
-                             ' position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(target.mag), ' 1		# total magnitude\n'])
-        self.f_G.writelines([' 4) ', str(target.radius), ' 1		# R_e [Pixels]\n'])
-        self.f_G.writelines([' 5) 4.0 ', str(int(not self.devauc)) ,\
-                             '		#Sersic exponent (deVauc=4, expdisk=1)\n'])
+        fcon.write('# Sersic function\n\n')
+        comment = 'Object type\n'
+        fcon.writelines([' 0) sersic # {}'.format(comment)])
+
+        comment = ' position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr, 
+                                                          target.ycntr,
+                                                          self.fitting[0],
+                                                          self.fitting[0],
+                                                          comment)])
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} 1 # {}'.format(target.mag, comment)])
+
+        comment = 'R_e [Pixels]\n'
+        fcon.writelines([' 4) {:.2f} 1 # {}'.format(target.radius, comment)])
+
+        comment = 'Sersic exponent (deVauc=4, expdisk=1)\n'
+        fcon.writelines([' 5) 4.0 {} # {}'.format(int(not self.devauc),
+                                                     comment)])
+
         if self.galfitv >= 3.0:
-            self.f_G.writelines([' 9) ', str(target.axis_rat), ' 1		', \
-                                 '# axis ratio (b/a)\n'])
-            self.f_G.writelines([' 10) ', str(target.pos_ang_galfit), ' 1		',\
-                                 '# position angle (PA)',\
-                                 '[Degrees: Up=0, Left=90]\n'])
+            comment1 = 'axis ratio (b/a)\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.axis_rat, 
+                                                        comment1)])
+            
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 10) {:.2f} 1 # {}'.format(target.pos_ang_galfit,
+                                                         comment2)])
         else:
-            self.f_G.writelines([' 8) ', str(target.axis_rat), ' 1		',\
-                                 '# axis ratio (b/a)\n'])
-            self.f_G.writelines([' 9) ', str(target.pos_ang_galfit), ' 1		',\
-                                 '# position angle (PA)',\
-                                 '[Degrees: Up=0, Left=90]\n'])
+            fcon.writelines([' 8) {:.2f} 1 # {}'.format(target.axis_rat, 
+                                                        comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.pos_ang_galfit,                                                          comment2)])
+
             if self.bdbox or self.bbox:
-                self.f_G.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
-                                     'boxiness (> 0)\n'])
+                comment = 'diskiness (< 0) or boxiness (> 0)\n'
+                fcon.writelines(['10) 0.0 1	# {}'.format(comment)])
             else:
-                self.f_G.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
-                              'boxiness (> 0)\n'])
-        self.f_G.writelines([' Z) 0 			# output image',\
-                             ' (see above)\n\n\n']) 
+                fcon.writelines(['10) 0.0 0	# {}'.format(comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 # {}'.format(comment)])
 
     
 
-    def write_disk(self, target):
-        self.obj_counter+=1
+    def _write_disk(self, target, fcon):
+        self.obj_counter += 1
 
         if self.make_constrain == 1:
-            # write constraints
-            if self.center_deviated:
-                self.f_constrain.write(str(self.obj_counter) + '      x      -' + \
-                                  str(self.center_deviation - self.center_deviation / 4.0) + \
-                                  '     ' + \
-                                  str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '      y      -' + \
-                                  str(self.center_deviation - self.center_deviation / 4.0) + \
-                                  '     ' + \
-                                  str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-            else:
-                self.f_constrain.write(str(self.obj_counter) + '       x       ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '       y       ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '     mag     ' + str(self.UMag) + \
-                              ' to ' + str(self.LMag) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      rs     ' + str(self.LRd) + \
-                              ' to ' + str(self.URd) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      q       0.0 to 1.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '      pa       -360.0 to 360.0\n')
+            self._expdisk_constrain(2)
 
         # write config file
-        self.f_G.writelines(['# Exponential function\n\n'])
-        self.f_G.writelines([' 0) expdisk 		# Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
-                      str(self.fitting[1]), ' ', str(self.fitting[1]), '    #',\
-                      ' position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(target.mag), ' 1     	# total magnitude\n'])
-        self.f_G.writelines([' 4) ', str(target.radius), ' 1 		# R_e [Pixels]\n'])
+        fcon.writelines(['# Exponential function\n\n'])
+
+        comment = 'Object type\n'
+        fcon.writelines([' 0) expdisk # {}'.format(comment)])
+
+        comment = ' position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr,
+                                                          target.ycntr,
+                                                          self.fitting[0],
+                                                          self.fitting[0],
+                                                          comment)])
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} 1 # {}'.format(target.mag, comment)])
+
+        comment = 'R_e [Pixels]\n'
+        fcon.writelines([' 4) {:.2f} 1 # {}'.format(target.radius, comment)])
+
+        comment1 = 'axis ratio (b/a)\n'
+        comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
         if self.galfitv >= 3.0:
-            self.f_G.writelines([' 9) ', str(target.axis_rat), ' 1		', \
-                          '# axis ratio (b/a)\n'])
-            self.f_G.writelines([' 10) ', str(target.pos_ang_galfit), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-            self.f_G.writelines([' Z) 0 			# output image',\
-                              ' (see above)\n\n\n']) 
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.axis_rat,
+                                                        comment1)])
+
+            fcon.writelines([' 10) {:.2f} 1 # {}'.format(target.pos_ang_galfit,
+                                                         comment2)])        
         else:
-            self.f_G.writelines([' 8) ', str(target.axis_rat), ' 1		',\
-                          '# axis ratio (b/a)\n'])
-            self.f_G.writelines([' 9) ', str(target.pos_ang_galfit), ' 1		',\
-                          '# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
+            fcon.writelines([' 8) {:.2f} 1 # {}'.format(target.axis_rat,
+                                                        comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.pos_ang_galfit,                                                          comment2)])
+
             if self.bdbox or self.bbox:
-                self.f_G.writelines(['10) 0.0 1		# diskiness (< 0) or ' \
-                              'boxiness (> 0)\n'])
+                comment = 'diskiness (< 0) or boxiness (> 0)\n'
+                fcon.writelines(['10) 0.0 1 # {}'.format(comment)])
             else:
-                self.f_G.writelines(['10) 0.0 0            # diskiness (< 0) or ' \
-                                  'boxiness (> 0)\n'])
-        self.f_G.writelines([' Z) 0 			# output image',\
-                             ' (see above)\n\n\n']) 
+                fcon.writelines(['10) 0.0 0 # {}'.format(comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 # {}'.format(comment)])
+
 
     
                          
-    def write_point(self, target):
-        self.obj_counter+=1
+    def _write_point(self, target, fcon):
+        self.obj_counter += 1
 
         if self.make_constrain == 1:
             # write constraints
-            self.f_constrain.write(str(self.obj_counter) + '       x       -2.0      2.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '       y       -2.0      2.0\n')
+            self.f_constrain.write('{} x -2.0 -2.0'.format(self.obj_counter)) 
+            self.f_constrain.write('{} y -2.0 -2.0'.format(self.obj_counter))
             
         # write config
         pmag = target.mag + 2.5 * np.log10(6.0)
-        self.f_G.writelines(['#point source\n\n'])
-        self.f_G.writelines([' 0) psf              # Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
-                               str(self.fitting[4]), ' ', str(self.fitting[4]), '    #',\
-                      ' position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(pmag), ' 1             # total magnitude\n'])
-        self.f_G.writelines([' Z) 0                    # output image '\
-                             '(see above)\n\n\n'])
+        fcon.writelines(['#point source\n\n'])
+        comment = 'Object type\n'
+        fcon.writelines([' 0) psf {} # '.format(comment)])
+
+        comment = 'position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr, 
+                                                           target.ycntr,
+                                                           self.fitting[4],
+                                                           self.fitting[4])])
+
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} # {}'.format(pmag, comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 {}'.format(comment)])
 
     
-    def write_gaussian(self, target):
-        self.obj_counter+=1
+    def _write_gaussian(self, target, fcon):
+        self.obj_counter += 1
 
         if self.make_constrain == 1:
             # write constraints
-            self.f_constrain.write(str(self.obj_counter) + '       x       -2.0      2.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '       y       -2.0      2.0\n')
+            self.f_constrain.write('{} x -2.0 2.0\n'.format(self.obj_counter))
+            self.f_constrain.write('{} y -2.0 2.0\n'.format(self.obj_counter))
             
 
         # write config
         gmag = target.mag + 2.5 * np.log10(2.0)
-        self.f_G.writelines(['# Gaussian function\n\n'])
-        self.f_G.writelines([' 0) gaussian              # Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' 1 1  #',\
-                      ' position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(gmag), ' 1             # total magnitude\n'])
-        self.f_G.writelines([' 4) 0.50 0             #FWHM\n'])
-        self.f_G.writelines([' 8) 1 0     # axis ratio (b/a)\n'])
-        self.f_G.writelines([' 9) 10.0 0                 # position '\
-                      'angle(PA) [Degrees: Up=0, Left=90]\n'])
-        self.f_G.writelines(['10) 0.0 0                # diskiness (< 0) or '\
-                      'boxiness (> 0)\n'])
-        self.f_G.writelines([' Z) 0                    # output image '\
-                      '(see above)\n\n\n'])
+        fcon.writelines(['# Gaussian function\n\n'])
+        fcon.writelines([' 0) gaussian              # Object type\n'])
+
+        comment = ' position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} 1 1 # {}'.format(target.xcntr,
+                                                          target.ycntr,
+                                                          comment)])
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} 1 # {}'.format(gmag, comment)])
+
+        comment = 'FWHM\n'
+        fcon.writelines([' 4) 0.50 1 # {}'.format(comment)])
 
 
-    def write_bar(self, target):
-        self.obj_counter+=1
-        
-        if self.make_constrain == 1:
-            # write constraints
-            self.f_constrain.write(str(self.obj_counter) + '      n      ' + str('0.1') + \
-                                   ' to ' + str('2.2') +  '\n')
-            if self.center_deviated:
-                self.f_constrain.write(str(self.obj_counter) + '      x      -' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + \
-                                       '     ' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '      y      -' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + \
-                                       '     ' + \
-                                       str(self.center_deviation - self.center_deviation / 4.0) + '\n')
-            else:
-                self.f_constrain.write(str(self.obj_counter) + '      x      ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-                self.f_constrain.write(str(self.obj_counter) + '      y      ' + str(-self.center_constrain) + '     ' + str(self.center_constrain) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '     mag     ' + str(self.UMag) + \
-                                   ' to ' + str(self.LMag) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      re     ' + str(self.LRe) +\
-                                   ' to ' + str(self.URe) + '\n')
-            self.f_constrain.write(str(self.obj_counter) + '      q       0.0 to 0.5\n')
-            self.f_constrain.write(str(self.obj_counter) + '      pa       -360.0 to 360.0\n')
-
-        barmag = target.mag + 2.5 * np.log10(3.0)
-        self.f_G.write('# Sersic function for bar\n\n')
-        self.f_G.writelines([' 0) sersic		# Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr),' ', \
-                      str(self.fitting[3]), ' ', str(self.fitting[3]), '   #',\
-                      ' position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(barmag), ' 1		# total magnitude\n'])
-        self.f_G.writelines([' 4) ', str(target.radius), ' 1		# R_e [Pixels]\n'])
-        self.f_G.writelines([' 5) 0.5 1		#Sersic exponent',\
-                      ' (deVauc=4, expdisk=1)\n'])
-        self.f_G.writelines([' 8) ', str('0.3'), ' 1	# axis ratio (b/a)\n'])
-        self.f_G.writelines([' 9) ', str(target.pos_ang_galfit), ' 1		# position angle (PA)',\
-                          '[Degrees: Up=0, Left=90]\n'])
-        self.f_G.writelines(['10) 0.0 0		# diskiness (< 0) or ' \
-                      'boxiness (> 0)\n'])
-        self.f_G.writelines([' Z) 0 			# output image',\
-                      ' (see above)\n\n\n']) 
-
-    
-    def write_sky(self, target):
-        self.obj_counter+=1
-            
-        self.f_G.writelines(['# sky\n\n']) 
-        self.f_G.writelines([' 0) sky\n'])
-        self.f_G.writelines([' 1) ', str(self.skyval),' ', str(self.fitting[2]), \
-                      '	# sky background [ADU counts\n'])
-        self.f_G.writelines([' 2) 0.000      0       # dsky/dx (sky gradient in x)\n',\
-                      ' 3) 0.000      0       # dsky/dy (sky gradient in y)\n',\
-                      ' Z) 0                  # output image\n\n\n'])
-
-
-
-    def write_neighbor(self, target):
-        self.obj_counter+=1
-        
-        if self.make_constrain == 1:
-            # write constraints
-            self.f_constrain.write(str(self.obj_counter) + '      n      0.02 to 20.0  \n')
-            self.f_constrain.write(str(self.obj_counter) + '     mag    -100.0 to 100.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '      re      0.0 to 500.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '      q       0.0 to 1.0\n')
-            self.f_constrain.write(str(self.obj_counter) + '      pa    -360.0 to 360.0\n')
-
-        # write config
-        self.f_G.writelines(['# neighbor sersic function\n\n'])
-        self.f_G.writelines([' 0) sersic               # Object type\n'])
-        self.f_G.writelines([' 1) ', str(target.xcntr), ' ', str(target.ycntr), \
-                      ' 1 1  # position x, y [pixel]\n'])
-        self.f_G.writelines([' 3) ', str(target.mag), ' 1     	#',\
-                      ' total magnitude\n'])
-        self.f_G.writelines([' 4) ', str(target.radius), ' 1  		',\
-                      '# R_e [Pixels]\n'])
-        self.f_G.writelines([' 5) 4.0 1        	#Sersic exponent', \
-                      ' (deVauc=4, expdisk=1)\n'])
         if self.galfitv >= 3.0:
-            self.f_G.writelines([' 9) ', str(target.axis_rat), ' 1        # axis',\
-                          ' ratio (b/a)\n'])
-            self.f_G.writelines([' 10) ', str(target.pos_ang_galfit), ' 1 	       ',\
-                          ' # position angle (PA)  [Degrees: Up=0,'\
-                          ' Left=90]\n'])
+            comment1 = 'axis ratio (b/a)\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.axis_rat,
+                                                            comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 10) {:.2f} 1 # {}'.format(target.pos_ang_galfit,
+                                                             comment2)])         
         else:
-            self.f_G.writelines([' 8) ', str(target.axis_rat), ' 1        # axis',\
-                          ' ratio (b/a)\n'])
-            self.f_G.writelines([' 9) ', str(target.pos_ang_galfit), ' 1 	       ',\
-                          ' # position angle (PA)  [Degrees: Up=0,'\
-                          ' Left=90]\n'])
-            self.f_G.writelines(['10) 0.0 0         	# diskiness',\
-                          ' (< 0) or boxiness (> 0)\n'])
-        self.f_G.writelines([' Z) 0 	           	# output',\
-                      ' image (see above)\n\n\n'])
+            fcon.writelines([' 8) {:.2f} 1 # {}'.format(target.axis_rat,
+                                                        comment1)])
+
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.pos_ang_galfit,                                                          comment2)])
+
+            comment = 'diskiness (< 0) or boxiness (> 0)\n'
+            fcon.writelines(['10) 0.0 0 # {}'.format(comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 {}'.format(comment)])
+
+
+    def _write_bar(self, target, fcon):
+        self.obj_counter += 1
+        
+        if self.make_constrain == 1:
+            self._write_sersic_bar_constrain('bar', self.obj_counter)
+        
+        barmag = target.mag + 2.5 * np.log10(3.0)
+        fcon.write('# Sersic function for bar\n\n')
+
+        comment = 'Object type\n'
+        fcon.writelines([' 0) sersic # {}'.format(comment)])
+
+        comment = ' position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr,
+                                                          target.ycntr,
+                                                          self.fitting[3],
+                                                          self.fitting[3],
+                                                          comment)])
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} 1 # {}'.format(barmag, comment)])
+
+        comment = 'R_e [Pixels]\n'
+        fcon.writelines([' 4) {:.2f} 1 # {}'.format(target.radius, comment)])
+
+        comment = 'Sersic exponent using a lower value of n=0.05\n'
+        fcon.writelines([' 5) 0.5 1 # {}'.format(comment)])
+
+        if self.galfitv >= 3.0:
+            comment1 = 'smaller axis ratio (b/a) = 0.3\n'
+            fcon.writelines([' 9) 0.3 1 # {}'.format(comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 10) {:.2f} 1 # {}'.format(target.pos_ang_galfit,
+                                                         comment2)])
+        else:
+            fcon.writelines([' 8) 0.3 1 # {}'.format(comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(target.pos_ang_galfit,                                                          comment2)])
+
+            if self.bdbox or self.bbox:
+                comment = 'diskiness (< 0) or boxiness (> 0)\n'
+                fcon.writelines(['10) 0.0 1 # {}'.format(comment)])
+            else:
+                fcon.writelines(['10) 0.0 0 # {}'.format(comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 # {}'.format(comment)])
+
 
     
+    def _write_sky(self, target, fcon):
+        self.obj_counter += 1
+            
+        fcon.writelines(['# sky\n\n']) 
+        fcon.writelines([' 0) sky\n'])
+        comment = 'sky background [ADU counts\n'
+        fcon.writelines([' 1) {:.5f} {} # {}'.format(self.SexSky, 
+                                                     self.fitting[2], 
+                                                     comment)])
+        comment = 'dsky/dy (sky gradient in x)\n'
+        fcon.writelines([' 2) 0.0 0 # {}'.format(comment)])
+
+        comment = 'dsky/dy (sky gradient in y)\n'
+        fcon.writelines([' 3) 0.0 0 # {}'.format(comment)])   
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 # {}'.format(comment)])
+
+
+
+    def _write_neighbor(self, neighbor, fcon):
+        self.obj_counter += 1
+        
+        if self.make_constrain == 1:
+            # write constraints
+            self._sersic_neighbor_constrain(self.obj_counter)
+
+        # write config file
+        fcon.write('# Neighbor Sersic function\n\n')
+        comment = 'Object type\n'
+        fcon.writelines([' 0) sersic # {}'.format(comment)])
+
+        comment = ' position x, y [pixel]\n'
+        fcon.writelines([' 1) {:.2f} {:.2f} 1 1 # {}'.format(neighbor.xcntr, 
+                                                     neighbor.ycntr,
+                                                     comment)])
+        comment = 'total magnitude\n'
+        fcon.writelines([' 3) {:.2f} 1 # {}'.format(neighbor.mag, comment)])
+
+        comment = 'R_e [Pixels]\n'
+        fcon.writelines([' 4) {:.2f} 1 # {}'.format(neighbor.radius, comment)])
+
+        comment = 'Sersic exponent (deVauc=4, expdisk=1)\n'
+        fcon.writelines([' 5) 4.0 1 # {}'.format(comment)])
+
+        if self.galfitv >= 3.0:
+            comment1 = 'axis ratio (b/a)\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(neighbor.axis_rat, 
+                                                    comment1)])
+            
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 10) {:.2f} 1 # {}'.format(neighbor.pos_ang_galfit,
+                                                     comment2)])
+        else:
+            fcon.writelines([' 8) {:.2f} 1 # {}'.format(neighbor.axis_rat, 
+                                                    comment1)])
+
+            comment2 = 'position angle (PA) [Degrees: Up=0, Left=90]\n'
+            fcon.writelines([' 9) {:.2f} 1 # {}'.format(neighbor.pos_ang_galfit,                                                          comment2)])
+
+            if self.bdbox or self.bbox:
+                comment = 'diskiness (< 0) or boxiness (> 0)\n'
+                fcon.writelines(['10) 0.0 1	# {}'.format(comment)])
+            else:
+                fcon.writelines(['10) 0.0 0	# {}'.format(comment)])
+
+        comment = 'output image (see above)\n\n\n'
+        fcon.writelines([' Z) 0 # {}'.format(comment)])
+
+    def write_config(self):
+
+        print(self.good_object.shape)
+        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+                              values=self.good_object)
+        print(self.good_object.shape)
+        target_imcenter = [target.xcntr, target.ycntr]
+        target.set_center(self.xcntr_img, self.ycntr_img)
+        target.pos_ang
+        
+        self.config_file = 'G_{}.in'.format(self.fstring) #GALFIT configuration file
+        self.constrain_file = '{}.con'.format(self.fstring)
+        self.mask_file = 'M_{}.fits'.format(self.fstring) 
+        self.oimg   = 'O_{}.fits'.format(self.fstring)
+
+        if os.path.exists(self.constrain_file):
+            make_constrain = 0
+        else:
+            make_constrain = 1
+
+        if os.path.exists(self.config_file):
+            pass
+        else:
+            fcon = open(self.config_file, 'w')
+
+            #Write configuration file
+            fcon.write('# IMAGE PARAMETERS\n')
+            cutimg = os.path.join(self.datadir, self.cutimage)
+
+            comment = 'Input data image(FITS file)\n'
+            fcon.writelines(['A) {} # {}'.format(cutimg, comment)])
+
+            comment = 'Name of the output image\n'
+            fcon.writelines(['B) {} # {}'.format(self.oimg, comment)])
+
+            cutwimg = os.path.join(self.datadir, self.whtimage)
+            comment = 'Noise image name (made from data if blank or "none")\n'
+            fcon.writelines(['C) {} # {}'.format(cutwimg, comment)])
+
+            cpsf = os.path.join(self.datadir, self.psffile)
+            comment = 'Input PSF image for convolution (FITS file)\n'
+            fcon.writelines(['D) {} # {}'.format(cpsf, comment)])
+
+            comment = 'PSF oversampling factor relative to data\n'
+            fcon.writelines(['E) 1 # {}'.format(comment)])
+
+            comment = 'Bad pixel mask(FITS image or ASCII coord list)\n'
+            fcon.writelines(['F) {} # {}'.format(self.mask_file, comment)])
+
+            comment = 'File with parameter constraints (ASCII file)\n'
+            fcon.writelines(['G) {} # {}'.format(self.constrain_file, comment)])
+
+
+            comment = 'Image region to fit (xmin xmax ymin ymax)\n'
+            fcon.writelines(['H) 1 {} 1 {} # {}'.format(self.NXPTS, 
+                                                               self.NYPTS,
+                                                               comment)])
+            #comment = 'Size of convolution box (x y)\n'
+            #fcon.writelines(['I) {} {} # {}'.format(self.NXPTS, 
+                                                               #self.NYPTS,
+                                                               #comment)])
+            # This below line really shouldn't be hardcoded!!!!
+            comment = 'Size of convolution box (x y)\n'
+            fcon.writelines(['I) 100 100 # {}'.format(comment)])
+
+            comment = 'Magnitude photometric zeropoint\n'
+            fcon.writelines(['J) {} # {}'.format(self.mag_zero, comment)])
+
+            comment = 'Display type (regular, curses, both)\n'
+            fcon.writelines(['O) regular # {}'.format(comment)])
+
+            comment = 'Create output image only? (1=yes; 0=optimize)\n'
+            fcon.writelines(['P) 0 # {}'.format(comment)])
+
+            comment = 'Modify/create objects interactively?\n\n\n'
+            fcon.writelines(['S) 0 # {}'.format(comment)]) 
+
+
+            print('self.components', self.components)
+            for comp in self.components:
+                if comp == 'bulge':
+                    self._write_bulge(target, fcon)
+                    self.flag = SetFlag(self.flag, GetFlag('FIT_BULGE'))
+                elif comp == 'disk':
+                    self._write_disk(target, fcon)
+                    self.flag = SetFlag(self.flag, GetFlag('FIT_DISK'))   
+                elif comp == 'point':
+                    self._write_point(target, fcon)
+                    self.flag = SetFlag(self.flag, GetFlag('FIT_POINT'))
+                elif comp == 'bar':
+                    self._write_bar(target, fcon)
+                    self.flag = SetFlag(self.flag, GetFlag('FIT_BAR'))
+
+            self._write_sky(target, fcon)
+            
+            if self.center_deviated:
+                self.center_deviated = 0
+
+            isneighbour = 0
+            for line_neigh in open(self.sex_cata_neighbor, 'r'):
+                values_neigh = np.fromstring(line_neigh, sep=' ')
+                neighbor = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+                        values=values_neigh)
+                if neighbor.get_mask(neighbor, self.threshold, self.thresh_area,
+                                   self.avoidme) == 0:
+                    isneighbour = 1
+                    # recenter in chip coordinates
+                    xn = self.xcntr_img - target_imcenter[0] + neighbor.xcntr
+                    yn = self.xcntr_img - target_imcenter[1] + neighbor.ycntr
+                    neighbor.set_center(xn, yn)
+
+                    self._write_neighbor(neighbor, fcon)
+
+            if isneighbour:
+                self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
+            
+            fcon.close()
+
+ 
+
+   

@@ -143,29 +143,29 @@ class ReturnClass(object):
     def _make_cutout(self):
         """
 
-        Make cutout image. The xcntr, ycntr are like iraf.
+        Make cutout image. The xcntr_sex, ycntr_sex are like iraf.
         SizeX, SizeY are half size
 
         """
-        print(9, self.xcntr, self.SizeX, self.ycntr, self.SizeY)
+        print(9, self.xcntr_sex, self.SizeX, self.ycntr_sex, self.SizeY)
         ExceedSize = 0
         #All are floor to make the size even number
-        xmin = np.floor(self.xcntr - self.SizeX)
-        ymin = np.floor(self.ycntr - self.SizeY)
-        xmax = np.floor(self.xcntr + self.SizeX)
-        ymax = np.floor(self.ycntr + self.SizeY)
+        xmin = np.floor(self.xcntr_sex - self.SizeX)
+        ymin = np.floor(self.ycntr_sex - self.SizeY)
+        xmax = np.floor(self.xcntr_sex + self.SizeX)
+        ymax = np.floor(self.ycntr_sex + self.SizeY)
         if xmin < 0:
             xmin = 0
-            cut_xcntr = self.xcntr
+            xcntr_img = self.xcntr_sex
             self.ExceedSize = 1
         else:
-            cut_xcntr = self.SizeX + np.modf(self.xcntr)[0]
+            xcntr_img = self.SizeX + np.modf(self.xcntr_sex)[0]
         if ymin < 0:
-            cut_ycntr = self.ycntr
+            ycntr_img = self.ycntr_sex
             ymin = 0
             self.ExceedSize = 1
         else:
-            cut_ycntr = self.SizeY + np.modf(self.ycntr)[0]
+            ycntr_img = self.SizeY + np.modf(self.ycntr_sex)[0]
         if xmax > self.TX - 1:
             xmax = self.TX
             self.ExceedSize = 1
@@ -226,7 +226,7 @@ class ReturnClass(object):
             print('Cannot creat weight image. If you supply weight image \
                    please check whether it exists or report a bug')
         #END
-        return cut_xcntr, cut_ycntr
+        return xcntr_img, ycntr_img
 
 
 
@@ -462,11 +462,9 @@ class Pipeline(ReturnClass):
                 run = 0
                 #break #Breaking the sextractor loop
             try:
-                cut_params = self._make_cutout(self.TX, self.TY,
-                                               self.gimg, self.wimg,
-                                               self.weightexists)
-                cut_xcntr = cut_params[0]
-                cut_ycntr = cut_params[1]
+                cut_params = self._make_cutout()
+                xcntr_img = cut_params[0]
+                ycntr_img = cut_params[1]
                 self.ExceedSize = cut_params[4]
             except  Exception as e:
                 print(type(e))     # the exception instance
@@ -478,13 +476,11 @@ class Pipeline(ReturnClass):
                 print(traceback.print_exc())
                 #break
         else:
-            cut_xcntr = xcntr
-            cut_ycntr = ycntr 
-            SizeX = self.TX
-            SizeY = self.TY
+            xcntr_img = xcntr_sex
+            ycntr_img = ycntr_sex 
             self.ExceedSize = 0
         
-        return cut_xcntr, cut_ycntr, SizeX, SizeY
+        return xcntr_img, ycntr_img
         ##return run
                             
             
@@ -505,8 +501,8 @@ class Pipeline(ReturnClass):
         #XXX
         if 1:#try: 
             cut_params = self._make_cutout()
-            cut_xcntr = cut_params[0]
-            cut_ycntr = cut_params[1]
+            xcntr_img = cut_params[0]
+            ycntr_img = cut_params[1]
 
         #except  Exception as e:
         else:
@@ -519,7 +515,7 @@ class Pipeline(ReturnClass):
             print(traceback.print_exc())
             #break
         
-        return cut_xcntr, cut_ycntr
+        return xcntr_img, ycntr_img
 
     def _get_ximg_yimg(self, pdb):
            
@@ -603,8 +599,8 @@ class Pipeline(ReturnClass):
             alpha_s = np.full_like(values_sex.shape[0], 9999)
             delta_s = np.full_like(values_sex.shape[0], 9999)
         sex_id = values_sex[0]
-        xcntr  = values_sex[:, 1]
-        ycntr  = values_sex[:, 2]
+        xcntr_sex  = values_sex[:, 1]
+        ycntr_sex  = values_sex[:, 2]
 
         print(self.alpha_j, alpha_s)
         print(self.SeaDeg, self.SeaPix)
@@ -615,8 +611,8 @@ class Pipeline(ReturnClass):
             curr_distance = np.sqrt((self.alpha_j - alpha_s)**2 + (delta_s - self.delta_j)**2)
             
         else:
-            con = (abs(xcntr - self.ximg) < self.SeaPix) & (abs(ycntr - self.yimg) < self.SeaPix)
-            curr_distance = np.sqrt((xcntr - self.ximg)**2 + (ycntr - self.yimg)**2)
+            con = (abs(xcntr_sex - self.ximg) < self.SeaPix) & (abs(ycntr_sex - self.yimg) < self.SeaPix)
+            curr_distance = np.sqrt((xcntr_sex - self.ximg)**2 + (ycntr_sex - self.yimg)**2)
 
         curr_distance = curr_distance[con]
         values_sex = values_sex[con] 
@@ -655,8 +651,8 @@ class Pipeline(ReturnClass):
         print("SExtractor ID >>> {}".format(sex_id))
 
 
-        self.xcntr, self.ycntr = target.sex_center
-        print('sex_xcntr', self.xcntr)
+        self.xcntr_sex, self.ycntr_sex = target.sex_center
+        print('sex_xcntr', self.xcntr_sex)
         self.SexHalfRad = target.radius #Sex halfrad 
         self.SexPosAng = target.pos_ang
         self.pos_ang = target.pos_ang
@@ -749,9 +745,9 @@ class Pipeline(ReturnClass):
         good_object = self._potential_target()
         print(6)
         #print(2, imgsize, whtsize)
-        ##XXX, xcntr or ximg?
-        xcntr = good_object[1]
-        ycntr = good_object[2]
+        ##XXX, xcntr_sex or ximg?
+        xcntr_sex = good_object[1]
+        ycntr_sex = good_object[2]
         # now fit best object            
         #XXX
                 
@@ -799,13 +795,13 @@ class Pipeline(ReturnClass):
             #print(3, imgsize, whtsize)
             # For the new run
             if self.repeat:
-                cut_xcntr = self.TX / 2.0
-                cut_ycntr = self.TY / 2.0
+                xcntr_img = self.TX / 2.0
+                ycntr_img = self.TY / 2.0
                 if os.path.exists(mimg):
                     pass
                 else:
                     MF = MaskFunc(mimg, 
-                                  cut_xcntr, cut_ycntr, 
+                                  xcntr_img, ycntr_img, 
                                   self.SizeX, self.SizeY, 
                                   good_object)
                     MF.gmask(self.threshold, self.thresh_area,
@@ -816,14 +812,14 @@ class Pipeline(ReturnClass):
                     #Handling image cutout names
                     #XXX
                     self._galcut_images()
-                    cut_xcntr, cut_ycntr = self._galcut_cutout()
+                    xcntr_img, ycntr_img = self._galcut_cutout()
                 else:
-                    cut_xcntr, cut_ycntr = self._not_galcut_cutout()
+                    xcntr_img, ycntr_img = self._not_galcut_cutout()
 
                 print(2, self.gimg)
 
                 print('Center of cutimage and exceed size ', \
-                      cut_xcntr, cut_ycntr, self.ExceedSize)
+                      xcntr_img, ycntr_img, self.ExceedSize)
                 print('Full Sizes ', self.SizeX, self.SizeY)
 
                 if self.galcut & self.ReSize == 0:
@@ -851,12 +847,13 @@ class Pipeline(ReturnClass):
                     os.remove(seg_cata)
 
                 #sys.exit()
+                # The following is to generate segmentation image for mask
                 PS = PySex(self.SEX_PATH)
                 PS.RunSex(self.sex_params, self.gimg, self.wimg, 
                           seg_cata, self.SEx_GAIN, check_fits=seg_file, 
                           sconfig='seg')
                 #sys.exit()
-                EM = ElliMaskFunc(cut_xcntr, cut_ycntr,
+                EM = ElliMaskFunc(xcntr_img, ycntr_img,
                                   center_limit=5., seg_limit=1e-5)
                 EM.emask(seg_file, seg_cata, self.fstring)
 
@@ -864,50 +861,49 @@ class Pipeline(ReturnClass):
                 #sys.exit()
                 # Fitting ellipse task or the manual 1d finder
                 mimg = 'M_{}.fits'.format(self.fstring)
+                #print(xcntr_sex, xcntr_img, ycntr_sex, ycntr_img)
+                #sys.exit()
                 print(3, self.gimg)
                 if self.decompose:
                     print(4, self.gimg, self.SexSky)
-                    ut.FindEllipse(xcntr, ycntr, self.SexHalfRad,
+                    ut.FindEllipse(xcntr_sex, ycntr_sex, self.SexHalfRad,
                                   self.SexPosAng, self.axis_rat, self.SexSky, 
                                   self.fstring)
 
                     MaskFunc(self.gimg, 
-                             cut_xcntr, cut_ycntr, 
+                             xcntr_img, ycntr_img, 
                              self.SizeX, self.SizeY, 
                              good_object)
-
-                    galfit_conf = 'G_{}.in'.format(self.fstring)
-                    oimg = 'O_{}.fits'.format(self.fstring)
 
                     print(4, self.gimg)
 
                     print(good_object.shape)
+                    print(self.mag_zero)
                     CF = GalfitConfigFunc(self.DATADIR,
                                           self.gimg, self.wimg,  
-                                          cut_xcntr, cut_ycntr, 
+                                          xcntr_img, ycntr_img,
+                                          good_object,
                                           self.SizeX, self.SizeY,
                                           self.components, self.fitting,
                                           psffile,
-                                          good_object, 
                                           self.sex_cata,
-                                          self.SexSky, self.mag_zero, self.flag)
-                    CF.write_config(self.fstring, 
-                                    self.threshold, self.thresh_area, 
-                                    self.center_deviated, self.galfitv, 
-                                    center_constrain=2.0,
-                                    avoidme=self.avoidme,
-                                    LMag = self.LMag,
-                                    UMag = self.UMag,
-                                    LN = self.LN,
-                                    UN = self.UN,
-                                    LRe = self.LRe,
-                                    URe = self.URe,
-                                    LRd = self.LRd,
-                                    URd = self.URd,
-                                    bdbox = self.bdbox,
-                                    bbox = self.bbox,
-                                    dbox = self.dbox,
-                                    devauc = self.devauc)
+                                          self.SexSky, 
+                                          self.fstring, 
+                                          self.threshold, self.thresh_area, 
+                                          self.center_deviated, 
+                                          self.center_constrain,
+                                          self.avoidme,
+                                          self.LMag, self.UMag,
+                                          self.LN, self.UN,
+                                          self.LRe, self.URe,
+                                          self.LRd, self.URd,
+                                          self.bdbox, self.bbox,
+                                          self.dbox, self.devauc,
+                                          self.galfitv, 
+                                          self.mag_zero, self.flag)
+                    CF.write_config()
+                    galfit_conf = CF.config_file
+                    oimg = CF.oimg
                     #continue
             
 
@@ -917,7 +913,7 @@ class Pipeline(ReturnClass):
                 sky_values = FindYetSky(self.sex_params, self.SEX_PATH, 
                                         self.gimg, self.wimg,
                                         seg_file, 
-                                        cut_xcntr, cut_ycntr,
+                                        xcntr_img, ycntr_img,
                                         seg_cata,
                                         self.SEx_GAIN,
                                         center_err=5., median_std=1.3,
@@ -953,7 +949,7 @@ class Pipeline(ReturnClass):
             # Estimate CASGM  
             if self.cas:
                 cas_values = ut.HandleCasgm(self.gimg, 
-                                            cut_xcntr, cut_ycntr, 
+                                            xcntr_img, ycntr_img, 
                                             alpha_j, delta_j, 
                                             z, 
                                             SizeX, SizeY, 
@@ -986,7 +982,7 @@ class Pipeline(ReturnClass):
                 try:
                     if self.galfit & self.detail:
                         ConfigIter(self.gimg, self.wimg, 
-                                   cut_xcntr, cut_ycntr, 
+                                   xcntr_img, ycntr_img, 
                                    SizeX, SizeY, 
                                    good_object, 
                                    psffile, z)
@@ -1003,7 +999,7 @@ class Pipeline(ReturnClass):
                         # FIX
                         # Mainly the FindEllipse problem
                         ut.OImgFindEllipse(oimg, 
-                                           cut_xcntr, cut_ycntr,
+                                           xcntr_img, ycntr_img,
                                            self.SexHalfRad,
                                            self.SexPosAng, self.axis_rat, 
                                            self.SexSky, self.fstring, 
@@ -1034,7 +1030,7 @@ class Pipeline(ReturnClass):
                 if os.access('P_' + self.fstring + '.png', os.F_OK):	
                     os.remove('P_' + self.fstring + '.png')
                 GoodNess = PlotFunc(oimg, mimg, 
-                                    cut_xcntr, cut_ycntr, 
+                                    xcntr_img, ycntr_img, 
                                     self.SexSky, SkySig)
                 Goodness = GoodNess.plot_profile
             except:
@@ -1062,7 +1058,7 @@ class Pipeline(ReturnClass):
             try:
                 WriteParams(ParamToWrite, 
                             self.gimg, 
-                            cut_xcntr, cut_ycntr, 
+                            xcntr_img, ycntr_img, 
                             distance, 
                             alpha_j, delta_j, 
                             z, Goodness, 
