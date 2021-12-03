@@ -54,9 +54,9 @@ class ReturnClass(object):
         SizeX = int(SizeX)
         SizeY = int(SizeY)
 
-        if self.Square:
-            SizeX = max(SizeX, SizeY)
-            SizeY = SizeX
+        #if self.Square:
+        #    SizeX = max(SizeX, SizeY)
+        #    SizeY = SizeX
         if self.galcut:
             if self.ReSize:
                 if self.VarSize:
@@ -75,7 +75,47 @@ class ReturnClass(object):
             else:
                 SizeX = self.FixSize
                 SizeY = self.FixSize
+        print(SizeX, SizeY)
         return SizeX, SizeY
+
+    def _make_img_square(self):
+
+        print(9, self.NXPTS, self.xcntr_sex, self.SizeX, self.ycntr_sex, self.SizeY)
+        self.ExceedSize = 0
+        #All are floor to make the size even number
+        xmin = np.floor(self.xcntr_sex - self.SizeX)
+        ymin = np.floor(self.ycntr_sex - self.SizeY)
+        xmax = np.floor(self.xcntr_sex + self.SizeX)
+        ymax = np.floor(self.ycntr_sex + self.SizeY)
+        if xmin < 0:
+            xmin = 0
+            xcntr_img = self.xcntr_sex
+            self.ExceedSize = 1
+        else:
+            xcntr_img = self.SizeX + np.modf(self.xcntr_sex)[0]
+        print(ymin, self.ExceedSize)
+        if ymin < 0:
+            ycntr_img = self.ycntr_sex
+            ymin = 0
+            self.ExceedSize = 1
+        else:
+            ycntr_img = self.SizeY + np.modf(self.ycntr_sex)[0]
+        print(self.ExceedSize)
+        if xmax > self.NXPTS - 1:
+            xmax = self.NXPTS
+            self.ExceedSize = 1
+        print(self.ExceedSize)
+        if ymax > self.NYPTS - 1:
+            ymax = self.NYPTS
+            self.ExceedSize = 1
+        
+        if self.ExceedSize:
+            self.SizeX = min(self.SizeX, self.SizeY)
+            self.SizeY = self.SizeX
+        else:
+            self.SizeX = max(self.SizeX, self.SizeY)
+            self.SizeY = self.SizeX
+
 
     def _distance_psf_obj(self):
         """
@@ -148,7 +188,7 @@ class ReturnClass(object):
 
         """
         print(9, self.xcntr_sex, self.SizeX, self.ycntr_sex, self.SizeY)
-        ExceedSize = 0
+        self.ExceedSize = 0
         #All are floor to make the size even number
         xmin = np.floor(self.xcntr_sex - self.SizeX)
         ymin = np.floor(self.ycntr_sex - self.SizeY)
@@ -160,19 +200,22 @@ class ReturnClass(object):
             self.ExceedSize = 1
         else:
             xcntr_img = self.SizeX + np.modf(self.xcntr_sex)[0]
+        print(ymin, self.ExceedSize)
         if ymin < 0:
             ycntr_img = self.ycntr_sex
             ymin = 0
             self.ExceedSize = 1
         else:
             ycntr_img = self.SizeY + np.modf(self.ycntr_sex)[0]
-        if xmax > self.TX - 1:
-            xmax = self.TX
+        if xmax > self.NXPTS - 1:
+            xmax = self.NXPTS
             self.ExceedSize = 1
-        if ymax > self.TY - 1:
-            ymax = self.TY
+        if ymax > self.NYPTS - 1:
+            ymax = self.NYPTS
             self.ExceedSize = 1
 
+        print(xmin, ymin, xmax, ymax, self.NXPTS, self.NYPTS)
+        print(self.ExceedSize)
         ymin = int(ymin)
         ymax = int(ymax)
         xmin = int(xmin)
@@ -184,6 +227,7 @@ class ReturnClass(object):
         # END
         self.SizeY, self.SizeX = data.shape
 
+        print(self.SizeY, self.SizeX)
         hdict = {}
         try:
             hdict['RA_TARG'] = self.alpha_j
@@ -208,11 +252,12 @@ class ReturnClass(object):
             print('NCOMBINE have value -9999. Something wrong?')
 
         print(13, self.gimg)
-        print(14, data)
+        #print(14, data)
         fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
         fits.write(data, header=hdict)
         fits.close()
 
+        #sys.exit()
 
         # FIX
         #Making weight image cut
@@ -411,8 +456,8 @@ class Pipeline(ReturnClass):
         print('Using cutouts')
 
         print(1, self.gimg)
-        self.TX = self.imagedata.shape[0]
-        self.TY = self.imagedata.shape[1]
+        self.NXPTS = self.imagedata.shape[0]
+        self.NYPTS = self.imagedata.shape[1]
 
         if self.ReSize:
             self.gimg = 'I{}.fits'.format(self.fstring)
@@ -525,26 +570,26 @@ class Pipeline(ReturnClass):
         try:
             ximg = float(pdb["ximg"])
             if self.ReSize and self.galcut and self.repeat:
-                ximg = self.TX / 2.0
+                ximg = self.NXPTS / 2.0
         except:
             print('No ximg is given or either ReSize or galcut or repeat '\
                   'keywords are False. Trying to find from the cutout if '\
                   'no ra dec in the image header')
             if self.galcut == True & self.position == 0:
-                ximg = self.TX / 2.0
+                ximg = self.NXPTS / 2.0
             else:
                 ximg = -9999
 
         try:
             yimg = float(pdb["yimg"])
             if self.ReSize and self.galcut and self.repeat:
-                yimg = self.TY / 2.0
+                yimg = self.NYPTS / 2.0
         except:
             print('No yimg is given or either ReSize or galcut or repeat '\
                   'keywords are False. Trying to find from the cutout if '\
                   'no ra dec in the image header')
             if self.galcut == True & self.position == 0:
-                yimg = self.TY / 2.0
+                yimg = self.NYPTS / 2.0
             else:
                 yimg = -9999
                 
@@ -664,21 +709,20 @@ class Pipeline(ReturnClass):
 
         self.SexMagAuto = target.mag
         self.SexMagAutoErr = target.mag_err
-        self.UMag = -1e5
-        self.LMag = -1e5
-        self.URe = 1e0
-        self.URd = 1e0
-        if self.UMag > -9999.0:
+        
+        self.set_lim_mag_rad_sex = False
+        if self.set_lim_mag_rad_sex is True:
+            #self.UMag = -1e5
+            #self.LMag = -1e5
+            #self.URe = 1e0
+            #self.URd = 1e0
             self.UMag = self.SexMagAuto - 7.0
-        if self.LMag < 9999.0:
             self.LMag = self.SexMagAuto + 7.0
 
-        # FIX
-        if self.URe < 9999.0:
+            # FIX
             self.URe = self.SexHalfRad * 50.0
-        if self.URd < 9999.0:
             self.URd = self.SexHalfRad * 50.0
-        # END
+            # END
         print(1)
 
         return good_object
@@ -776,6 +820,12 @@ class Pipeline(ReturnClass):
             # Calculating the cutout size (half size).
             # SizeX, SizeY return from make_cutout are full sizes
             self.SizeX, self.SizeY = super()._find_cutout_size()
+           
+            if self.Square:
+                self._make_img_square()
+
+            print(self.SizeX, self.SizeY)
+            #sys.exit()
             print('Calculated half sizes {}, {}'.format(self.SizeX, self.SizeY))
 
             # Finding psf and the distance between psf and image
@@ -795,16 +845,16 @@ class Pipeline(ReturnClass):
             #print(3, imgsize, whtsize)
             # For the new run
             if self.repeat:
-                xcntr_img = self.TX / 2.0
-                ycntr_img = self.TY / 2.0
+                xcntr_img = self.NXPTS / 2.0
+                ycntr_img = self.NYPTS / 2.0
                 if os.path.exists(mimg):
                     pass
                 else:
-                    MF = MaskFunc(mimg, 
-                                  xcntr_img, ycntr_img, 
-                                  self.SizeX, self.SizeY, 
-                                  good_object)
-                    MF.gmask(self.threshold, self.thresh_area,
+                    MaskF = MaskFunc(mimg, 
+                                     xcntr_img, ycntr_img, 
+                                     self.NXPTS, self.NYPTS, 
+                                     good_object)
+                    MaskF.gmask(self.threshold, self.thresh_area,
                              0, NoMask=False)
 
             else:
@@ -839,10 +889,10 @@ class Pipeline(ReturnClass):
                 self.gimg = os.path.join(self.DATADIR, self.gimg)
                 self.wimg = os.path.join(self.DATADIR, self.wimg)
 
-                seg_file = os.path.join(self.OUTDIR, 'check.fits')
+                seg_fits = os.path.join(self.OUTDIR, 'check.fits')
 
-                #if os.path.exists(seg_file):
-                #    os.remove(seg_file)
+                #if os.path.exists(seg_fits):
+                #    os.remove(seg_fits)
                 if os.path.exists(seg_cata):
                     os.remove(seg_cata)
 
@@ -850,30 +900,36 @@ class Pipeline(ReturnClass):
                 # The following is to generate segmentation image for mask
                 PS = PySex(self.SEX_PATH)
                 PS.RunSex(self.sex_params, self.gimg, self.wimg, 
-                          seg_cata, self.SEx_GAIN, check_fits=seg_file, 
+                          seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
                           sconfig='seg')
                 #sys.exit()
-                EM = ElliMaskFunc(xcntr_img, ycntr_img,
+                EM = ElliMaskFunc(self.DATADIR, xcntr_img, ycntr_img,
                                   center_limit=5., seg_limit=1e-5)
-                EM.emask(seg_file, seg_cata, self.fstring)
+                EM.emask(seg_fits, seg_cata, self.fstring)
 
                 print(11)
                 #sys.exit()
                 # Fitting ellipse task or the manual 1d finder
                 mimg = 'M_{}.fits'.format(self.fstring)
+                mimg = os.path.join(self.DATADIR, mimg)
                 #print(xcntr_sex, xcntr_img, ycntr_sex, ycntr_img)
                 #sys.exit()
                 print(3, self.gimg)
                 if self.decompose:
                     print(4, self.gimg, self.SexSky)
-                    ut.FindEllipse(xcntr_sex, ycntr_sex, self.SexHalfRad,
-                                  self.SexPosAng, self.axis_rat, self.SexSky, 
-                                  self.fstring)
+                    FE_gimg = ut.FindEllipse(xcntr_img, ycntr_img, 
+                                             self.SexHalfRad, self.SexPosAng, 
+                                             self.axis_rat, self.SexSky, 
+                                             self.fstring)
+                    FE_gimg.profile(self.gimg, output=False)
 
-                    MaskFunc(self.gimg, 
+                    MaskF = MaskFunc(mimg, 
                              xcntr_img, ycntr_img, 
-                             self.SizeX, self.SizeY, 
+                             self.NXPTS, self.NYPTS, 
                              good_object)
+                    MaskF.gmask(self.threshold, self.thresh_area, 
+                                seg_fits, seg_cata,         
+                                self.avoidme, NoMask=False)
 
                     print(4, self.gimg)
 
@@ -912,7 +968,7 @@ class Pipeline(ReturnClass):
             if 1:
                 sky_values = FindYetSky(self.sex_params, self.SEX_PATH, 
                                         self.gimg, self.wimg,
-                                        seg_file, 
+                                        seg_fits, 
                                         xcntr_img, ycntr_img,
                                         seg_cata,
                                         self.SEx_GAIN,
@@ -968,15 +1024,10 @@ class Pipeline(ReturnClass):
                 C, C_err, A, A_err = 9999, 9999, 9999, 9999
                 S, S_err, G, M = 9999, 9999, 9999, 9999
 
-            # Removing CASGM temp files
-            for f in ['BMask.fits', 'MRotated.fits', 
-                      'MaskedGalaxy.fits', 'Rotated.fits']:
-                if os.access(f, os.F_OK):
-                    os.remove(f)
 
             # Decomposition
-            if os.access('fit.log', os.F_OK):
-                os.remove('fit.log')
+            #if os.access('fit.log', os.F_OK):
+            #    os.remove('fit.log')
 
             if self.decompose:
                 try:
@@ -1010,6 +1061,7 @@ class Pipeline(ReturnClass):
                         #                SexSky, self.repeat, 
                         #                self.flag, run, 1)
                         #END
+                        print(11)
                 except Exception as e:
                     print(type(e))     # the exception instance
                     print(e.args)      # arguments stored in\
@@ -1023,7 +1075,8 @@ class Pipeline(ReturnClass):
                         
                 if run == 1:
                     ut.WriteError('((((( Decomposition Successful )))))\n')
-
+            
+            print(12)
             sys.exit()
             try:
                 Goodness = -9999
@@ -1171,7 +1224,7 @@ class Pipeline(ReturnClass):
         print("Current directory is ", thisdir)
         print("Output directory is ", self.OUTDIR)
 
-        os.chdir(self.OUTDIR)
+        os.chdir(self.DATADIR)
 
 
 
@@ -1184,8 +1237,8 @@ class Pipeline(ReturnClass):
                 self.imagedata = fimg[0].read()
                 self.header0 = fimg[0].read_header()
                 fimg.close()
-                self.TX = self.imagedata.shape[0]
-                self.TY = self.imagedata.shape[1]
+                self.NXPTS = self.imagedata.shape[0]
+                self.NYPTS = self.imagedata.shape[1]
                 
                 gheader = ut.CheckHeader(self.header0)
                 self.EXPTIME = gheader[0]
@@ -1239,7 +1292,7 @@ class Pipeline(ReturnClass):
             RunSex(self.sex_params, self.SEX_PATH, 
                    self.imagefile, self.whtfile,
                    self.sex_cata, self.SEx_GAIN,
-                   seg_file=None, sconfig='default')
+                   seg_fits=None, sconfig='default')
 
         #sys.exit()
     #The old function for psfselect = 2

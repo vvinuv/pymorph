@@ -367,6 +367,7 @@ def WriteError(err):
 
 class FindEllipse(object):
 
+
     def __init__(self, xcntr, ycntr, SexHalfRad, SexPosAng, axis_rat, 
                 sky, fstring):
         
@@ -378,36 +379,31 @@ class FindEllipse(object):
         self.sky = sky
         self.fstring = fstring
 
-    def profile(self, img, output=False, emimg=None):
+    def profile(self, img, output=False):
 
         """
         Find 1-d profile of image
+        output : whether it is output image or not
         """
 
         ang_arc = np.pi / 180.0 
 
         print('Working on elliptical profile ')
 
-        #print(cutimage, self.xcntr, self.ycntr, SizeX, SizeY, sky, out
         if output:
             fits = fitsio.FITS(img, 'r')
-            fout  = fits[2].read()
+            galaxy  = fits[2].read()
             fits.close()
-
-            fits = fitsio.FITS(img, 'rw')
-            fits.write(fout)
-            fits.close()
-
-            if emimg is None:
-                mask = nd.zeros_like(img)
-            else:
-                ell_out = 'OE_' + self.fstring + '.txt'
+            
+            ell_out = 'OE_' + self.fstring + '.txt'
         else:
-            ell_mask_file = 'EM_{}.fits'.format(self.fstring)
-            #cutimage = os.path.join(datadir, cutimage)
+            f = fitsio.FITS(img)
+            galaxy = f[0].read()
+            f.close()
+            
             ell_out = 'E_' + self.fstring + '.txt'
 
-
+        emimg = 'EM_{}.fits'.format(self.fstring)
         if os.path.exists(emimg):
             f = fitsio.FITS(emimg)
             mask = f[0].read()
@@ -416,18 +412,16 @@ class FindEllipse(object):
             mask = nd.zeros_like(img)
 
 
-        f = fitsio.FITS(img)
-        galaxy = f[0].read()
-        f.close()
-
+        
         galaxy = galaxy - self.sky
 
        
         #print('galaxy.shape, mask.shape', galaxy.shape, mask.shape)
 
-        SizeX, SizeY = galaxy.shape
+        NXPTS, NYPTS = galaxy.shape
 
-        x, y = np.meshgrid(np.arange(SizeX) * 1.0, np.arange(SizeY) * 1.0)
+        print(NXPTS, NYPTS, self.xcntr, self.ycntr)
+        x, y = np.meshgrid(np.arange(NXPTS) * 1.0, np.arange(NYPTS) * 1.0)
 
         # r is the radius parameter
         co = np.cos(self.SexPosAng * ang_arc)
@@ -473,31 +467,37 @@ class FindEllipse(object):
             # STOP
 
         intensity = np.array(intensity)
+        mask_int = np.where(intensity > 0, 1, 0)
+        intensity = intensity * mask_int
         intensity_err = np.array(intensity_err)
+        intensity_err = intensity_err * mask_int
         # END
 
         mag = -2.5 * np.log10(intensity)
-        mag_l = np.abs(-2.5 * (np.log10(intensity) - np.log10(intensity - intensity_err))) 
+        print(intensity - intensity_err)
+        int_l = intensity - intensity_err
+        int_l = np.where(int_l <= 0, intensity, int_l)
+        mag_l = np.abs(-2.5 * (np.log10(intensity) - np.log10(int_l))) 
         mag_u = np.abs(-2.5 * (np.log10(intensity + intensity_err) - np.log10(intensity)))
 
-        f = open(ell_out, 'w')
-        writer = csv.writer(f, delimiter=' ')
-        writer.writerow(['sma', 'intensity', 'intensity_err', 'mag', 'magl', 'magu'])
-        for i in range(intensity.shape[0]):
-            p = [R[i], intensity[i], intensity_err[i], mag[i], mag_l[i], mag_u[i]]
-            writer.writerow(p)
-        f.close()
-        print('Done' )
 
+        write_array = np.array([R, intensity, intensity_err, mag, mag_l, mag_u])
+       # print(R)
+       # print(intensity)
+       # print(intensity_err)
+       # print(mag)
+       # print(mag_l)
+       # print(mag_u)
+        np.savetxt(ell_out, write_array.T, delimiter=',', header='sma,intensity,intensity_err,mag,magl,magu', fmt='%.2f', comments='')
 
-
-
-
-
-
-
-
-
+       # f = open(ell_out, 'w')
+       # writer = csv.writer(f, delimiter=' ')
+       # writer.writerow(['sma', 'intensity', 'intensity_err', 'mag', 'magl', 'magu'])
+       # for i in range(intensity.shape[0]):
+       #     p = [R[i], intensity[i], intensity_err[i], mag[i], mag_l[i], mag_u[i]]
+       #     writer.writerow(p)
+       # f.close()
+       # print('Done' )
 
 
 
@@ -653,36 +653,36 @@ def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
     """
 
     if os.path.exists(oimg):
-        if(repeat == False):
-            omimg = 'OEM_{}.fits'.format(fstring)
-            emimg = 'EM_{}.fits'.format(fstring)
-            os.system('cp {} {}'.format(emimg, omimg))
 
-        outmodel = 'S{}'.format(oimg)
-        if os.access(outmodel, os.F_OK):
-            os.remove(outmodel)
+        #outmodel = 'S{}'.format(oimg)
+        #if os.access(outmodel, os.F_OK):
+        #    os.remove(outmodel)
 
         # FIX. Add the header also in the file
         fits = fitsio.FITS(oimg, 'r')
         fout  = fits[2].read()
         fits.close()
 
-        fits = fitsio.FITS(outmodel, 'rw')
-        fits.write(fout)
-        fits.close()
+        #fits = fitsio.FITS(outmodel, 'rw')
+        #fits.write(fout)
+        #fits.close()
         # END
         # FIX . Now sky = c.SexSky is passing to the ellipse task. This \
         # means that 
         # we are comparing images with same sky. may be fixed later   
         #FitEllipse(outmodel, xcntr, ycntr, sky, fstring, out)
 
-        if 0:
-            FindEllipse(outmodel, xcntr, ycntr, SexHalfRad,
-                        SexPosAng, axis_rat, skyval,
-                        fstring, output=True)
-        run = 1
-    #else:
-    if 0:
+        try:
+            FE = FindEllipse(xcntr, ycntr, SexHalfRad,
+                             SexPosAng, axis_rat, sky,
+                             fstring)
+            FE.profile(oimg, output=True)
+
+            run = 1
+        except Exception as e:
+            print('Failed to extract 1D profile from output image')
+            print(e)
+    else:
         WriteError('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
         flag = SetFlag(flag, GetFlag('GALFIT_FAIL'))

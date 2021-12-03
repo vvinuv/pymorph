@@ -153,17 +153,29 @@ class GetSExObj():
 
         mask_it = -999
 
-        if(abs(neighbor.xcntr - self.xcntr) < self.NXPTS / 2.0 + avoidme and \
-           abs(neighbor.ycntr - self.ycntr) < self.NYPTS / 2.0 + avoidme and \
-           np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
-           (neighbor.ycntr - self.ycntr)**2.0) > 5.0):
+        xmask_left = abs(neighbor.xcntr - self.xcntr)  
+        xmask_right = (self.NXPTS / 2.0) + avoidme
+        xmask = xmask_left < xmask_right
+
+        ymask_left = abs(neighbor.ycntr - self.ycntr)
+        ymask_right = (self.NYPTS / 2.0) + avoidme
+        ymask = ymask_left < ymask_right
+
+        dr_targ_neig = np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
+                              (neighbor.ycntr - self.ycntr)**2.0) > 5.0
+        threshold_targ_neig = threshold * (neighbor.maj_axis + self.maj_axis)
+
+        print(xmask_left, xmask_right, ymask_left, ymask_right, dr_targ_neig, threshold_targ_neig)
+
+        print(neighbor.area, thresh_area * self.area)
+
+        if xmask & ymask & dr_targ_neig:
+
+            dxcntr_targ_neig = xmask_left > threshold_targ_neig 
+            dycntr_targ_neig = ymask_left > threshold_targ_neig
+
             
-        
-            if(abs(neighbor.xcntr - self.xcntr) > threshold * (neighbor.maj_axis + \
-                                                               self.maj_axis) or \
-               abs(neighbor.ycntr - self.ycntr) > threshold * (neighbor.maj_axis + \
-                                                               self.maj_axis) or \
-               neighbor.area < thresh_area * self.area):
+            if dxcntr_targ_neig | dycntr_targ_neig | (neighbor.area < thresh_area * self.area):
 
                 mask_it = 1 #Mask it!!!!
 

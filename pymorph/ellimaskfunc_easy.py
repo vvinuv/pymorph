@@ -1,3 +1,4 @@
+import os
 import fitsio
 import numpy as np
 import pymconvolve 
@@ -12,9 +13,10 @@ class ElliMaskFunc:
 
     """
 
-    def __init__(self, xcntr_o, ycntr_o, 
+    def __init__(self, DATADIR, xcntr_o, ycntr_o, 
                  center_limit=5., seg_limit=1e-5):
 
+        self.DATADIR = DATADIR
         self.xcntr_o = xcntr_o
         self.ycntr_o = ycntr_o
 
@@ -23,7 +25,7 @@ class ElliMaskFunc:
 
         #from astropy.io import fits
         mask_file = 'EM_{}.fits'.format(fstring)
-        
+        mask_file = os.path.join(self.DATADIR, mask_file) 
         #print('seg file', seg_file)
         #print('seg_cata', seg_cata)
         

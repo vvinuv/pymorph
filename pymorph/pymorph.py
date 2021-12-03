@@ -677,8 +677,8 @@ class PyMorph(InitializeParams):
 
         P.imagedata = self.imagedata
         P.weightdata = self.weightdata
-        P.TX = self.imagedata.shape[0]
-        P.TY = self.imagedata.shape[1]
+        P.NXPTS = self.imagedata.shape[0]
+        P.NYPTS = self.imagedata.shape[1]
         P.weightexists = self.weightexists
         
         P.EXPTIME = self.EXPTIME
@@ -813,7 +813,7 @@ class PyMorph(InitializeParams):
         print("Current directory is ", thisdir)
         print("Output directory is ", self.OUTDIR)
 
-        os.chdir(self.OUTDIR)
+        os.chdir(self.DATADIR)
 
 
 
@@ -826,8 +826,8 @@ class PyMorph(InitializeParams):
                 self.imagedata = fimg[0].read()
                 self.header0 = fimg[0].read_header()
                 fimg.close()
-                self.TX = self.imagedata.shape[0]
-                self.TY = self.imagedata.shape[1]
+                self.NXPTS = self.imagedata.shape[0]
+                self.NYPTS = self.imagedata.shape[1]
                 
                 gheader = ut.CheckHeader(self.header0)
                 self.EXPTIME = gheader[0]

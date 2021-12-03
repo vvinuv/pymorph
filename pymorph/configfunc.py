@@ -97,21 +97,24 @@ class GalfitConfigFunc:
 
         if self.center_deviated:
             xy_lim = self.center_deviation - self.center_deviation / 4.0
-
-            f_constrain.write('{}  x  {} to {} \n'.format(cO, -1 * xy_lim,
-                                                          xy_lim))
-            f_constrain.write('{}  y  {} to {} \n'.format(cO, -1 * xy_lim,
-                                                          xy_lim))
+            xlim_l = self.xcntr_img - xy_lim
+            xlim_u = self.xcntr_img + xy_lim
+            ylim_l = self.ycntr_img - xy_lim
+            ylim_u = self.ycntr_img + xy_lim
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, xlim_l,
+                                                          xlim_u))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, ylim_l,
+                                                          ylim_u))
         else:
-            #The below line is used to make the self.center_constrain shorter 
-            #to ccen
-            ccen = -1 * self.center_constrain
+            xlim_l = self.xcntr_img - self.center_constrain
+            xlim_u = self.xcntr_img + self.center_constrain
+            ylim_l = self.ycntr_img - self.center_constrain
+            ylim_u = self.ycntr_img + self.center_constrain
+
             f_constrain.write('{}  x  {} to {} \n'.format(cO, 
-                                                          ccen,
-                                                          -1 * ccen))
-            f_constrain.write('{}  y  {} to {} \n'.format(cO, 
-                                                          ccen,
-                                                          -1 * ccen))
+                                                          xlim_l, xlim_u))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO,
+                                                          ylim_l, ylim_u))
 
         f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, 
                                                         self.LMag))
@@ -156,15 +159,27 @@ class GalfitConfigFunc:
         f_constrain = open(self.constrain_file, 'a')
         if self.center_deviated:
             xy_lim = self.center_deviation - self.center_deviation / 4.0
-
-            f_constrain.write('{}  x  {} to {} \n'.format(cO, -1 * xy_lim,
-                                                          xy_lim))
-            f_constrain.write('{}  y  {} to {} \n'.format(cO, -1 * xy_lim,
-                                                          xy_lim))
+            xlim_l = self.xcntr_img - xy_lim
+            xlim_u = self.xcntr_img + xy_lim
+            ylim_l = self.ycntr_img - xy_lim
+            ylim_u = self.ycntr_img + xy_lim
+            f_constrain.write('{}  x  {} to {} \n'.format(cO, xlim_l,
+                                                          xlim_u))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO, ylim_l,
+                                                          ylim_u))
         else:
-            ccen = -1 * self.center_constrain
-            f_constrain.write('{}  x  {} to {} \n'.format(cO, ccen, -ccen))
-            f_constrain.write('{}  y  {} to {} \n'.format(cO, ccen, -ccen))
+            #The below line is used to make the self.center_constrain shorter
+            #to ccen
+            xlim_l = self.xcntr_img - self.center_constrain
+            xlim_u = self.xcntr_img + self.center_constrain
+            ylim_l = self.ycntr_img - self.center_constrain
+            ylim_u = self.ycntr_img + self.center_constrain
+
+            f_constrain.write('{}  x  {} to {} \n'.format(cO,
+                                                          xlim_l, xlim_u))
+            f_constrain.write('{}  y  {} to {} \n'.format(cO,
+                                                          ylim_l, ylim_u))
+
         f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, 
                                                         self.LMag))
         f_constrain.write('{}  rs  {} to {} \n'.format(cO, self.LRd, self.URd))
@@ -509,21 +524,21 @@ class GalfitConfigFunc:
 
             #Write configuration file
             fcon.write('# IMAGE PARAMETERS\n')
-            cutimg = os.path.join(self.datadir, self.cutimage)
 
+            self.cutimage = os.path.split(self.cutimage)[-1]
             comment = 'Input data image(FITS file)\n'
-            fcon.writelines(['A) {} # {}'.format(cutimg, comment)])
+            fcon.writelines(['A) {} # {}'.format(self.cutimage, comment)])
 
             comment = 'Name of the output image\n'
             fcon.writelines(['B) {} # {}'.format(self.oimg, comment)])
 
-            cutwimg = os.path.join(self.datadir, self.whtimage)
+            self.whtimage = os.path.split(self.whtimage)[-1]
             comment = 'Noise image name (made from data if blank or "none")\n'
-            fcon.writelines(['C) {} # {}'.format(cutwimg, comment)])
+            fcon.writelines(['C) {} # {}'.format(self.whtimage, comment)])
 
             cpsf = os.path.join(self.datadir, self.psffile)
             comment = 'Input PSF image for convolution (FITS file)\n'
-            fcon.writelines(['D) {} # {}'.format(cpsf, comment)])
+            fcon.writelines(['D) {} # {}'.format(self.psffile, comment)])
 
             comment = 'PSF oversampling factor relative to data\n'
             fcon.writelines(['E) 1 # {}'.format(comment)])
