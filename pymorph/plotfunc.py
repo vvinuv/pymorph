@@ -17,7 +17,7 @@ class PlotFunc:
         good or bad according to some conditions. This will also plot the 1D
         profile of the galaxy and model galaxy from ellipse fitting. The other
         plot it gives is the mask image. After plotting it saves the image
-        as png file with name P_string(galid).pngi
+        as png file with name P_string(galid).png
 
     """
 
@@ -47,11 +47,11 @@ class PlotFunc:
             #print('P1')
             # Read the GALFIT output
             fits = fitsio.FITS(self.oimg)
-            galaxy = fits[0].read()
+            galaxy = fits[1].read()
             #print('P01')
-            model = fits[1].read()
+            model = fits[2].read()
             #print('P02')
-            residual = fits[2].read()
+            residual = fits[3].read()
             #print('P03')
             fits.close()
             #Color normalization
@@ -96,7 +96,7 @@ class PlotFunc:
         #print('P8')
         fell = 'E_{}.txt'.format(self.fstring)
         if os.path.exists(fell):
-            data = np.genfromtxt(fell, delimiter=' ', names=True)
+            data = np.genfromtxt(fell, delimiter=',', names=True)
             sma = data['sma']           #sma from ellise fitting
             flux = data['intensity'] #Flux at various sma
             flux_err =data['intensity_err']     #Error in Flux
@@ -110,7 +110,7 @@ class PlotFunc:
         #print('P9')
         oell = 'OE_{}.txt'.format(self.fstring)
         if os.path.exists(oell):
-            data_o = np.genfromtxt(oell, delimiter=' ', names=True)
+            data_o = np.genfromtxt(oell, delimiter=',', names=True)
             sma_o = data_o['sma']               #sma from ellise fitting
             flux_o = data_o['intensity']     #Flux at various sma
             flux_err_o =data_o['intensity_err'] #Error in Flux
@@ -122,7 +122,7 @@ class PlotFunc:
             ModelEll = 0
 
         #print('P10')
-        try:
+        if 1:
             try:
                 MaxRad = sma.max()
             except:
@@ -149,8 +149,8 @@ class PlotFunc:
 
             MagUErr = (np.log10((FluxI / FluxI_o) + FluxErr) -\
                            (np.log10(FluxI / FluxI_o))) * -2.5
-        except Exception as e:
-            print(e)
+        #except Exception as e:
+        #    print(e)
 
         #Plotting Starts
         FigSize = [8.0, 4.6]
@@ -161,17 +161,18 @@ class PlotFunc:
                          'figure.figsize': FigSize}
         plt.rcParams.update(MatPlotParams)
 
-        rect1 = [0.125, 0.5, 0.225, 1.5*0.225]
-        rect2 = [3.25*0.125, 0.5, 0.225, 1.5*0.225]
-        rect3 = [5.5*0.125, 0.5, 0.225, 1.5*0.225]
-        rect4 = [5.5*0.125, 0.075, 0.225, 1.5*0.225]
-        rect5 = [3.25*0.125, 0.075, 0.225, 1.5*0.225]
+        rect1 = [0.125, 0.5, 0.225, 1.5 * 0.225]
+        rect2 = [3.25 * 0.125, 0.5, 0.225, 1.5 * 0.225]
+        rect3 = [5.5 * 0.125, 0.5, 0.225, 1.5 * 0.225]
+        rect4 = [5.5 * 0.125, 0.075, 0.225, 1.5 * 0.225]
+        rect5 = [3.25 * 0.125, 0.075, 0.225, 1.5 * 0.225]
     #    rect6 = [0.125, 0.75*0.225 + 0.075, 0.225, 1.5*0.225]
-        rect7 = [0.125, 0.075, 0.225, 1.5*0.225]
+        rect7 = [0.125, 0.075, 0.225, 1.5 * 0.225]
 
-        try:
+        if 1:
             axUL = plt.axes(rect1)
-            im = plt.imshow(galaxy, extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+            im = plt.imshow(galaxy, extent=[0, NXPTS, 0, NYPTS], 
+                    cmap='Blues_r')#norm=anorm)
             Dx = abs(axUL.get_xlim()[0]-axUL.get_xlim()[1])
             Dy = abs(axUL.get_ylim()[0]-axUL.get_ylim()[1])
             plt.colorbar(shrink=0.9, format='%.2f')
@@ -179,8 +180,8 @@ class PlotFunc:
             plt.title('Original Galaxy')
 
             axUM = plt.axes(rect2)
-            im = plt.imshow(model, cmap=plt.cm.jet,
-                            extent=[0, NXPTS, 0, NYPTS], norm=anorm)
+            im = plt.imshow(model, cmap='Blues_r',
+                            extent=[0, NXPTS, 0, NYPTS])# norm=anorm)
             plt.colorbar(shrink=0.9, format='%.2f')
             Dx = abs(axUM.get_xlim()[0]-axUM.get_xlim()[1])
             Dy = abs(axUM.get_ylim()[0]-axUM.get_ylim()[1])
@@ -188,8 +189,8 @@ class PlotFunc:
             plt.title('Model Galaxy + Mask')
 
             axUR = plt.axes(rect3)
-            im = plt.imshow(residual, cmap=plt.cm.jet,
-                            extent=[0, NXPTS, 0, NYPTS], norm=anormRes)
+            im = plt.imshow(residual, cmap='Blues_r',
+                            extent=[0, NXPTS, 0, NYPTS])#, norm=anormRes)
             plt.colorbar(shrink=0.9)
             Dx = abs(axUR.get_xlim()[0]-axUR.get_xlim()[1])
             Dy = abs(axUR.get_ylim()[0]-axUR.get_ylim()[1])
@@ -199,16 +200,14 @@ class PlotFunc:
             axLR = plt.axes(rect4)
             hist_res1d = hist_res.compressed()
             nn, bins, patches = plt.hist(hist_res1d, 50, density=False)
-            nMaxArg = nn.argmax()
-            if(nMaxArg < 16):
-                ArgInc = nMaxArg
+            if (nn.argmax() < 16):
+                arg_inc = nn.argmax()
             else:
-                ArgInc = 16
+                arg_inc = 16
             # print trapz(bins, nn)
-            nMax = max(nn)
-            binmin = bins[nMaxArg - ArgInc]
-            binmax = bins[nMaxArg + ArgInc]
-            plt.axis([binmin, binmax, 0.0, nMax])
+            binmin = bins[nn.argmax() - arg_inc]
+            binmax = bins[nn.argmax() + arg_inc]
+            plt.axis([binmin, binmax, 0.0, max(nn)])
             plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
             plt.xticks((binmin, binmin /2.0, 0.0, binmax/2.0, binmax),\
                     (str(binmin)[:5], str(binmin /2.0)[:5], str(0.0)[:3], \
@@ -219,30 +218,36 @@ class PlotFunc:
             Dy = abs(axLR.get_ylim()[0]-axLR.get_ylim()[1])
             axLR.set_aspect(Dx/Dy)
 
-        except Exception as e:
-            print(e)
+        #except Exception as e:
+        #    print(e)
 
 
         if GalEll and ModelEll:
-            ymin = min(min(mag), min(mag1))
-            ymax = max(max(mag), max(mag1))
-            xmax = max(max(sma), max(sma1))
+
             axLL = plt.axes(rect7)
-            plt.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3)
+
+            ymin = min(min(mag), min(mag_o))
+            ymax = max(max(mag), max(mag_o))
+            xmax = max(max(sma), max(sma_o))
+
+            plt.errorbar(sma, mag, [mag_uerr, mag_lerr], fmt='o',
+                         ecolor='r', ms=3)
             plt.plot(sma_o, mag_o, color='g',lw=2)
+
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
-            plt.xlabel(r'Radius')
-            plt.ylabel(r'Surface Brightness')
+            plt.xlabel('Radius')
+            plt.ylabel('Surface Brightness')
             plt.title('1-D Profile Comparison')
             plt.grid(True)
             Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
             Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
             axLL.set_aspect(Dx/Dy)
+
             axLM = plt.axes(rect5)
             try:
-                plt.errorbar(SmaCommon, MagDev, [MagUErr, MagLErr], \
-                         fmt='o',ecolor='r', ms=3)
+                plt.errorbar(SmaCommon, MagDev, [MagUErr, MagLErr], 
+                             fmt='o', ecolor='r', ms=3)
                 plt.ylabel('Magnitude Deviation')
                 plt.xlabel('Radius')
                 plt.grid(True)
@@ -256,7 +261,8 @@ class PlotFunc:
             ymax = max(mag)
             xmax = max(sma)
             axLL = plt.axes(rect7)
-            plt.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',ecolor='r', ms=3)
+            plt.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',
+                         ecolor='r', ms=3)
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
             plt.xlabel(r'Radius')
@@ -271,7 +277,7 @@ class PlotFunc:
             ymax = max(mag_o)
             xmax = max(sma_o)
             axLL = plt.axes(rect7)
-            plt.plot(sma_o, mag_o,color='g',lw=2)
+            plt.plot(sma_o, mag_o, color='g',lw=2)
             axLL.set_ylim(ymax, ymin)
             axLL.set_xlim(0, xmax)
             plt.xlabel(r'Radius')

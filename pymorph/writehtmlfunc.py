@@ -5,19 +5,17 @@ import fileinput
 from cosmocal import CosmoCal 
 import traceback
 from flagfunc import *
-from pymorphutils import RaDegToHMS, DecDegToDMS
+from pymorphutils import RaDegToHMS, DecDegToDMS, output_params
 
-class WriteHtmlFunc:
+class WriteHtmlCSV(object):
     """The class which will write html and csv output. This class will also 
        check whether the fit is good or bad using the Chisq and Goodness value
        It will also notify the goodness/badness of fit"""
     def __init__(self, fstring, xcntr, ycntr, alpha_j, delta_j, 
-                 distance, z, 
                  SexMagAuto, SexMagAutoErr, SexTargets, SexSky,
                  flag, SexHalfRad, mag_zero,
                  C, C_err, A, A_err, S, S_err, G, M, 
-                 components, decompose, repeat,
-                 goodness, EXPTIME,
+                 components, decompose, repeat, detail,
                  H0, WM, WV, pixelscale):
 
         self.PYMORPH_PATH = os.path.dirname(__file__)
@@ -27,8 +25,6 @@ class WriteHtmlFunc:
         self.ycntr = ycntr
         self.alpha_j = alpha_j
         self.delta_j = delta_j
-        self.distance = distance
-        self.z  = z
 
         self.SexMagAuto = SexMagAuto
         self.SexMagAutoErr = SexMagAutoErr
@@ -50,8 +46,7 @@ class WriteHtmlFunc:
         self.components = components 
         self.decompose = decompose
         self.repeat = repeat
-        self.goodness = goodness
-        self.EXPTIME = EXPTIME
+        self.detail = detail
 
         self.repeat = repeat
 
@@ -60,17 +55,16 @@ class WriteHtmlFunc:
         self.WV = WV
         self.pixelscale = pixelscale
 
-    def writeparams(self, ParamNamesToWrite):
+    def writeparams(self, params_to_write, distance_psf_gal, z, goodness):
 
         # this dictionary will hold any parameters that may be printed
-        all_params = dict((ParamNamesToWrite[key][0], -999) for key in ParamNamesToWrite.keys())
-
+        all_params = dict((params_to_write[key][0], -999) for key in params_to_write.keys())
         # load some of the passed in parameters
         all_params['Name'] = self.fstring
         all_params['ra_gal'] = self.alpha_j
         all_params['dec_gal'] = self.delta_j
-        all_params['z'] = self.z
-        all_params['goodness'] = float(str(round(self.goodness, 3))[:5])
+        all_params['z'] = z
+        all_params['goodness'] = round(goodness, 3)
         all_params['C'] = self.C
         all_params['C_err'] = self.C_err 
         all_params['A'] = self.A
@@ -79,7 +73,7 @@ class WriteHtmlFunc:
         all_params['S_err'] = self.S_err
         all_params['G'] = self.G
         all_params['M'] = self.M
-        all_params['distance'] = float(str(round(self.distance, 3))[:5])
+        all_params['distance_psf_gal'] = round(distance_psf_gal, 3)
         all_params['mag_auto'] = self.SexMagAuto
         all_params['magerr_auto'] = self.SexMagAutoErr
         all_params['num_targets'] = self.SexTargets
@@ -88,13 +82,9 @@ class WriteHtmlFunc:
         all_params['SexHalfRad'] = self.SexHalfRad
         all_params['magzp'] = self.mag_zero
 
+        print(all_params['C'])
         # Now continue
-        try:
-            comp = self.components
-        except:
-            comp = ['bulge', 'disk']
-        if len(comp) == 0:
-            comp = ['bulge', 'disk']
+        comp = self.components
 
         f_tpl = open(str(self.PYMORPH_PATH) + '/html/default.html', 'r')
         template = f_tpl.read()
@@ -268,7 +258,7 @@ class WriteHtmlFunc:
 
             # Converting fitted params to physical params
             if(z != 9999 and z > 0):
-                phy_parms = CosmoCal.cal(self.z, self.H0, 
+                phy_parms = CosmoCal.cal(z, self.H0, 
                                          self.WM, self.WV, self.pixelscale)
                 all_params['dis_modu'] = phy_parms[2]
                 if 'bulge' in comp:
@@ -476,13 +466,13 @@ class WriteHtmlFunc:
                             # the flag is already set
                             pass
 
-            wC = str(C)[:5]
-            wA = str(A)[:5]
-            wS = str(S)[:5]
-            wG = str(G)[:5]
-            wM = str(M)[:5]
-            wBD = str( all_params['BD'])[:5]
-            wBT = str( all_params['BT'])[:5]
+            wC = str(all_params['C'])[:5]
+            wA = str(all_params['A'])[:5]
+            wS = str(all_params['S'])[:5]
+            wG = str(all_params['G'])[:5]
+            wM = str(all_params['M'])[:5]
+            wBD = str(all_params['BD'])[:5]
+            wBT = str(all_params['BT'])[:5]
             wAvgMagInsideRe = str( all_params['AvgIe'])[:5]
             error_mesg1 = ''
             error_mesg2 = ''
@@ -491,7 +481,7 @@ class WriteHtmlFunc:
             error_mesg5 = ''
             error_mesg6 = ''
             error_mesg7 = ''
-            if self.starthandle:
+            if 0:#self.starthandle:
                 error_mesg6 = '<a href="R_' + self.fstring + \
                               '_1.html"> Crashed </a>' 
 
@@ -499,6 +489,16 @@ class WriteHtmlFunc:
             all_params['FitFlag'] = 0
             HitLimit = 0
 
+            self.UMag = -10
+            self.LMag = 50
+            self.LRe = 0.
+            self.URe = 200.
+            self.LN = 0.2
+            self.UN = 20
+            self.LRd = 0.
+            self.URd = 200.
+            self.center_deviation = 2
+            gimg = 'I{}.fits'.format(self.fstring)
             if not self.detail:
                 if 'bulge' in comp:
                     if abs(all_params['Ie'] - self.UMag) < 0.2 or abs(all_params['Ie'] - self.LMag) < 0.2:
@@ -521,17 +521,17 @@ class WriteHtmlFunc:
                 error_mesg4 = str(error_mesg4) + 'One of the parameters'
                 error_mesg5 = str(error_mesg5) + '          hits limit!'
 
-            if all_params['goodness'] < self.goodness:
+            if all_params['goodness'] < goodness:
                 error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
                 all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('SMALL_GOODNESS'))
             if all_params['chi2nu'] > self.chi2sq:
                 error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
                 if all_params['chi2nu'] != 9999:
                     all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
-            if abs(all_params['bulge_xctr'] - xcntr) > self.center_deviation or \
-                   abs(all_params['bulge_yctr'] - ycntr) > self.center_deviation or \
-                   abs(all_params['disk_xctr'] - xcntr) > self.center_deviation or \
-                   abs(all_params['disk_yctr'] - ycntr) > self.center_deviation:
+            if abs(all_params['bulge_xctr'] - self.xcntr) > self.center_deviation or \
+                   abs(all_params['bulge_yctr'] - self.ycntr) > self.center_deviation or \
+                   abs(all_params['disk_xctr'] - self.xcntr) > self.center_deviation or \
+                   abs(all_params['disk_yctr'] - self.ycntr) > self.center_deviation:
                 if all_params['bulge_xctr'] == -999 or all_params['bulge_yctr'] == -999 or \
                        all_params['disk_xctr'] == -999 or all_params['disk_yctr'] == -999:
                     pass
@@ -546,7 +546,6 @@ class WriteHtmlFunc:
                 img_notify = str(self.PYMORPH_PATH) + '/html/badfit.gif'
                 good_fit = 0
             chi2nu = all_params['chi2nu']
-            Distance = all_params['distance']
 
             # This can be a waste of time if the list is wrong...
             # Finding number of runs in the csv file 
@@ -555,8 +554,8 @@ class WriteHtmlFunc:
                 for line_res in csv.reader(open('result.csv').readlines()[1:]):    
                     if(str(line_res[0]) == self.fstring):
                         all_params['run'] += 1
-            if self.GalSky != 9999:
-                all_params['GalSky'] = self.GalSky
+            #if self.GalSky != 9999:
+            #    all_params['GalSky'] = self.GalSky
         
         # Writing data base
         try:
@@ -567,15 +566,15 @@ class WriteHtmlFunc:
             #pass
             #I have temporarily suppressed this in order to keep mysql
             # connections free for others.
-            WriteDb(ParamNamesToWrite, all_params)
+            WriteDb(params_to_write, all_params)
         except:
             print('No database can be created!')
             #traceback.print_exc()
 
         # Writing csv file 
-        f_res = open("result.csv", "ab")
+        f_res = open("result.csv", "a")
         writer = csv.writer(f_res)
-        writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in ParamNamesToWrite.keys()])
+        writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
         f_res.close()
 
         if self.decompose:
@@ -740,3 +739,10 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
         print("{} File in {} does not exist!!!!".format(filename, os.getcwd()))
     
     return basic_info, fit_info, is_comp
+
+if __name__ == '__main__':
+    
+    params_to_write = output_params(dbparams=None, decompose=True)
+
+    WF = WriteHtmlCSV('cl1358_1.0', 13.540899999999993, 13.9297, 221.8572889, 8.4680823, 22.9636, 0.0319, 1, 0.656651, 6, 2.546, 25.256, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, ['bulge', 'disk'], True, False, False, 71.0, 0.27, 0.73, 0.045)
+    WF.writeparams(params_to_write, 65, 9999, 0.6)

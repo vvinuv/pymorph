@@ -616,7 +616,7 @@ class PyMorph(InitializeParams):
         #self.P.psflist = self.psflist
 
         # Writing csv header and finding the output parameters
-        params_write = ut.PyMorphOutputParams(self.dbparams, self.decompose)    
+        params_to_write = ut.output_params(self.dbparams, self.decompose)    
 
         #XXX
         #self.P.params_to_write = params_to_write
@@ -625,8 +625,8 @@ class PyMorph(InitializeParams):
             pass
         else:
             f_res = open("result.csv", "a")
-            csvhead = ['{}_{:d}'.format(params_write[par_key][0], par_key)
-                       for par_key in params_write.keys()]
+            csvhead = ['{}_{:d}'.format(params_to_write[par_key][0], par_key)
+                       for par_key in params_to_write.keys()]
             writer = csv.writer(f_res)
             writer.writerow(csvhead)
             f_res.close()
@@ -763,6 +763,7 @@ class PyMorph(InitializeParams):
         P.sex_params = self.sex_params
             
         P.pnames = pnames
+        P.params_to_write = params_to_write
 
         pdb = {}                        #The parameter dictionary
         for obj_value in obj_values:
@@ -942,8 +943,8 @@ class PyMorph(InitializeParams):
         elif self.psfselect == 0:
             self.center_deviated = 0
             self.starthandle = 0
-            if self.findandfit == True:
-                self.find_and_fit()
+            #if self.findandfit == True:
+            #    self.find_and_fit()
             print(self.sex_cata)
             self.main_thread()
             if self.crashhandler:

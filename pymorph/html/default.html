@@ -7,7 +7,7 @@
 <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"> 
 <TR align="center" bgcolor="#CCFFFF">
 <TH> Image </TH> 
-<TD align="left">&nbsp;&nbsp;&nbsp;%(cutimage)s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=%(alpha_ned)sd&amp;lat=%(delta_ned)sd&amp;radius=0.5&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A></TD> 
+<TD align="left">&nbsp;&nbsp;&nbsp;%(gimg)s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?search_type=Near+Position+Search&amp;in_csys=Equatorial&amp;in_equinox=J2000.0&amp;lon=%(alpha_ned)sd&amp;lat=%(delta_ned)sd&amp;radius=0.5&amp;out_csys=Equatorial&amp;out_equinox=J2000.0&amp;obj_sort=Distance+to+search+center&amp;of=pre_text&amp;zv_breaker=30000.0&amp;list_limit=5&amp;img_stamp=YES&amp;z_constraint=Unconstrained&amp;ot_include=ANY&amp;nmp_op=ANY">NED</A></TD> 
 <TH> RA </TH> 
 <TD align="left">&nbsp;&nbsp;&nbsp;%(alpha1)s %(alpha2)s %(alpha3)s</TD> 
 </TR> 
@@ -24,9 +24,9 @@
 <TD align="left">&nbsp;&nbsp;&nbsp;%(z)s</TD>
 </TR>
 <TR align="center" bgcolor="#99CCFF"> 
-<TD COLSPAN=2> <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"><TR><TH> &chi; <sup> 2 </sup> / &nu; </TH> <TD align="left">%(chi2nu)s</TD> <TH> Goodness</TH><TD>%(Goodness)s</TD></TR></TABLE></TD>
+<TD COLSPAN=2> <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"><TR><TH> &chi; <sup> 2 </sup> / &nu; </TH> <TD align="left">%(chi2nu)s</TD> <TH> Goodness</TH><TD>%(goodness)s</TD></TR></TABLE></TD>
 <TH>Separation between <br> psf and image </TH>
-<TD align="left">&nbsp;&nbsp;&nbsp;%(Distance)s arc sec</TD>
+<TD align="left">&nbsp;&nbsp;&nbsp;%(distance_psf_gal)s arc sec</TD>
 </TR>
 </TABLE> 
 <TABLE BORDER="0" align="center" cellspacing=1 width="100%%"> 

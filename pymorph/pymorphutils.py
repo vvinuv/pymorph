@@ -151,66 +151,69 @@ def CrashHandlerToRemove(gal_id, fstring, outdir):
         if os.path.exists(f):
             os.remove(outdir + f)
 
-def PyMorphOutputParams(dbparams, decompose = 0):
-    """Returns the output parameters from pymorph in two shapes. One shape is for writing and the other is for passing to writehtml"""
+def output_params(dbparams=None, decompose=False):
+    """
+    Returns the output parameters from pymorph in two shapes. 
+    One shape is for writing and the other is for passing to writehtml
+    """
 
-    params = {1: ['Name','varchar(500)'], 2: ['ra_gal','float'],
-              3: ['dec_gal','float'], 4: ['z','float'],
-              5: [ 'MorphType','int'], 6: [ 'mag_auto','float'],
-              7: ['magerr_auto','float'], 8: ['SexHalfRad','float'],
-              9: [ 'num_targets','float'],10: [ 'C','float'],
-              11: ['C_err','float'], 12: [ 'A','float'],
-              13: [ 'A_err','float'], 14: ['S','float'],
-              15: [ 'S_err','float'], 16: [ 'G','float'],
-              17: [ 'M','float'], 18: ['magzp', 'float']}
+    params = {1: ['Name', 'varchar(500)'], 2: ['ra_gal', 'float'],
+              3: ['dec_gal', 'float'], 4: ['z', 'float'],
+              5: [ 'MorphType', 'int'], 6: [ 'mag_auto', 'float'],
+              7: ['magerr_auto', 'float'], 8: ['SexHalfRad', 'float'],
+              9: [ 'num_targets', 'float'],10: [ 'C', 'float'],
+              11: ['C_err', 'float'], 12: [ 'A', 'float'],
+              13: [ 'A_err', 'float'], 14: ['S', 'float'],
+              15: [ 'S_err', 'float'], 16: [ 'G', 'float'],
+              17: [ 'M', 'float'], 18: ['magzp', 'float']}
     
     if decompose:
-        extra_params = [['bulge_xctr','float'], ['bulge_xctr_err','float'],
-                        ['bulge_yctr','float'], ['bulge_yctr_err','float'],
-                        [ 'Ie','float'], ['Ie_err','float'],
-                        [ 'AvgIe','float'], [ 'AvgIe_err','float'],
-                        ['re_pix','float'], [ 're_pix_err','float'],
-                        ['re_kpc','float'], [ 're_kpc_err','float' ],
-                        ['n','float'], ['n_err','float'],
-                        ['eb','float'], [ 'eb_err','float'],
-                        ['bpa','float'], ['bpa_err','float'],
-                        [ 'bboxy','float'], [ 'bboxy_err','float'],
-                        ['disk_xctr','float'], ['disk_xctr_err','float'],
-                        ['disk_yctr','float'], ['disk_yctr_err','float'],
-                        ['Id','float'], [ 'Id_err','float'],
-                        [ 'rd_pix','float'], ['rd_pix_err','float'],
-                        [ 'rd_kpc','float'], ['rd_kpc_err','float'],
-                        [ 'ed','float'], [ 'ed_err','float'],
-                        ['dpa','float'], [ 'dpa_err','float'],
-                        ['dboxy','float'], [ 'dboxy_err','float'],
-                        ['BD','float'], [ 'BT','float'],
-                        ['p_xctr','float'], ['p_xctr_err','float'],
-                        ['p_yctr','float'], ['p_yctr_err','float'],
-                        [ 'Ip','float'], ['Ip_err','float'],
-                        [ 'Pfwhm','float'], [ 'Pfwhm_kpc','float'],
-                        ['bar_xctr','float'], ['bar_xctr_err','float'],
-                        ['bar_yctr','float'], ['bar_yctr_err','float'],
-                        ['Ibar','float'], [ 'Ibar_err','float'],
-                        ['rbar_pix','float'], [ 'rbar_pix_err','float'],
-                        ['rbar_kpc','float'], [ 'rbar_kpc_err','float'],
-                        ['n_bar','float'], [ 'n_bar_err','float'],
-                        ['ebar','float'], ['ebar_err','float'],
-                        [ 'barpa','float'], [ 'barpa_err','float'],
-                        [ 'barboxy','float'], [ 'barboxy_err','float'],
-                        [ 'chi2nu','float'], ['Goodness','float'],
-                        [ 'run','int'], ['SexSky','float'],
-                        [ 'YetSky','float'], ['GalSky','float'],
-                        ['GalSky_err','float'], ['dis_modu','float'],
-                        ['distance','float'], [ 'fit','int'],
-                        ['FitFlag','bigint']]
+        extra_params = [['bulge_xctr', 'float'], ['bulge_xctr_err', 'float'],
+                        ['bulge_yctr', 'float'], ['bulge_yctr_err', 'float'],
+                        [ 'Ie', 'float'], ['Ie_err', 'float'],
+                        [ 'AvgIe', 'float'], [ 'AvgIe_err', 'float'],
+                        ['re_pix', 'float'], [ 're_pix_err', 'float'],
+                        ['re_kpc', 'float'], [ 're_kpc_err', 'float' ],
+                        ['n', 'float'], ['n_err', 'float'],
+                        ['eb', 'float'], [ 'eb_err', 'float'],
+                        ['bpa', 'float'], ['bpa_err', 'float'],
+                        [ 'bboxy', 'float'], [ 'bboxy_err', 'float'],
+                        ['disk_xctr', 'float'], ['disk_xctr_err', 'float'],
+                        ['disk_yctr', 'float'], ['disk_yctr_err', 'float'],
+                        ['Id', 'float'], [ 'Id_err', 'float'],
+                        [ 'rd_pix', 'float'], ['rd_pix_err', 'float'],
+                        [ 'rd_kpc', 'float'], ['rd_kpc_err', 'float'],
+                        [ 'ed', 'float'], [ 'ed_err', 'float'],
+                        ['dpa', 'float'], [ 'dpa_err', 'float'],
+                        ['dboxy', 'float'], [ 'dboxy_err', 'float'],
+                        ['BD', 'float'], [ 'BT', 'float'],
+                        ['p_xctr', 'float'], ['p_xctr_err', 'float'],
+                        ['p_yctr', 'float'], ['p_yctr_err', 'float'],
+                        [ 'Ip', 'float'], ['Ip_err', 'float'],
+                        [ 'Pfwhm', 'float'], [ 'Pfwhm_kpc', 'float'],
+                        ['bar_xctr', 'float'], ['bar_xctr_err', 'float'],
+                        ['bar_yctr', 'float'], ['bar_yctr_err', 'float'],
+                        ['Ibar', 'float'], [ 'Ibar_err', 'float'],
+                        ['rbar_pix', 'float'], [ 'rbar_pix_err', 'float'],
+                        ['rbar_kpc', 'float'], [ 'rbar_kpc_err', 'float'],
+                        ['n_bar', 'float'], [ 'n_bar_err', 'float'],
+                        ['ebar', 'float'], ['ebar_err', 'float'],
+                        [ 'barpa', 'float'], [ 'barpa_err', 'float'],
+                        [ 'barboxy', 'float'], [ 'barboxy_err', 'float'],
+                        [ 'chi2nu', 'float'], ['Goodness', 'float'],
+                        [ 'run', 'int'], ['SexSky', 'float'],
+                        [ 'YetSky', 'float'], ['GalSky', 'float'],
+                        ['GalSky_err', 'float'], ['dis_modu', 'float'],
+                        ['distance', 'float'], [ 'fit', 'int'],
+                        ['FitFlag', 'bigint']]
     else:
         extra_params = []
 
-    extra_params += [['flag','bigint'], ['Manual_flag','bigint'],
-                    ['Comments','varchar(1000)'], ['Date', 'varchar(50)'],
-                    ['Version','float'], ['Filter','varchar(500)'],
-                    ['Version','float'],['Filter','varchar(500)'],
-                    ['Total_Run','int'], ['rootname', 'varchar(500)']]
+    extra_params += [['flag', 'bigint'], ['Manual_flag', 'bigint'],
+                    ['Comments', 'varchar(1000)'], ['Date', 'varchar(50)'],
+                    ['Version', 'float'], ['Filter', 'varchar(500)'],
+                    ['Version', 'float'],['Filter', 'varchar(500)'],
+                    ['Total_Run', 'int'], ['rootname', 'varchar(500)']]
 
     # add additional keys to params
     fill_key = max(params.keys()) 
@@ -218,15 +221,18 @@ def PyMorphOutputParams(dbparams, decompose = 0):
         fill_key += 1
         params[fill_key] = add_param
 
-    fill_key = max(params.keys()) 
-    dbparams = dbparams.split(',')
-    for dbparam in dbparams:
-        fill_key += 1
-        DBparam = dbparam.split(':')
-        try:
-            params[fill_key] = [DBparam[0], DBparam[2]]
-        except:
-            params[fill_key] = [DBparam[0], 'varchar(500)']
+    if dbparams is None:
+        pass
+    else:
+        fill_key = max(params.keys()) 
+        dbparams = dbparams.split(',')
+        for dbparam in dbparams:
+            fill_key += 1
+            DBparam = dbparam.split(':')
+            try:
+                params[fill_key] = [DBparam[0], DBparam[2]]
+            except:
+                params[fill_key] = [DBparam[0], 'varchar(500)']
         
     return params
 
@@ -286,77 +292,6 @@ def CheckHeader(header0):
     return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE
 
 
-def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, 
-               cutimage, whtimage, ReSize):
-    """
-    
-    Make cutout image. The xcntr, ycntr are like iraf.  
-    SizeX, SizeY are half size
-
-    """
-    ExceedSize = 0
-    #All are floor to make the size even number
-    xmin = np.floor(xcntr - SizeX)
-    ymin = np.floor(ycntr - SizeY)
-    xmax = np.floor(xcntr + SizeX)
-    ymax = np.floor(ycntr + SizeY)
-    if xmin < 0:
-        xmin = 0
-        cut_xcntr = xcntr
-        ExceedSize = 1
-    else:
-        cut_xcntr = SizeX + np.modf(xcntr)[0]
-    if ymin < 0:
-        cut_ycntr = ycntr
-        ymin = 0
-        ExceedSize = 1
-    else:
-        cut_ycntr = SizeY + np.modf(ycntr)[0]
-    if xmax > TX - 1:
-        xmax = TX
-        ExceedSize = 1
-    if ymax > TY - 1:
-        ymax = TY
-        ExceedSize = 1
-
-    # FIX check c.imagedata or c.ggimage
-    CutImDa = c.imagedata[ymin:ymax, xmin:xmax].copy()
-    # END
-    hdu = pyfits.PrimaryHDU(CutImDa.astype(np.float32))
-    SizeY, SizeX = CutImDa.shape
-    try:
-        hdu.header.update('RA_TARG', alpha_j)
-        hdu.header.update('DEC_TARG', delta_j)
-    except:
-        print('Problem updating the Ra and Dec in cutout image')
-    if c.EXPTIME != -9999:
-        hdu.header.update('EXPTIME', c.EXPTIME)
-    else:
-        print('c.EXPTIME have value -9999. Something wrong?')
-    if c.RDNOISE != -9999:
-        hdu.header.update('RDNOISE', c.RDNOISE)
-    else:
-        print('c.RDNOISE have value -9999. Something wrong?')
-    if c.GAIN != -9999:
-        hdu.header.update('GAIN', c.GAIN)
-    else:
-        print('c.GAIN have value -9999. Something wrong?')
-    if c.NCOMBINE != -9999:
-        hdu.header.update('NCOMBINE', c.NCOMBINE)
-    else:
-        print('c.NCOMBINE have value -9999. Something wrong?')
-    hdu.writeto(os.path.join(c.datadir, cutimage))
-    # FIX
-    #Making weight image cut
-    if c.weightexists:
-        z2 = c.weightdata[ymin:ymax,xmin:xmax].copy()
-        hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
-        hdu.writeto(os.path.join(c.datadir, whtimage))
-    else:
-        print('Cannot creat weight image. If you supply weight image please ',\
-              'check whether it exists or report a bug')
-    #END
-    return (cut_xcntr, cut_ycntr, SizeX, SizeY, ExceedSize) 
 
 def WriteError(err):
     """Write error.log file"""

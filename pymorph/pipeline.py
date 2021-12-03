@@ -27,9 +27,9 @@ from maskfunc_easy import MaskFunc
 from configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
 from yetbackfunc import FindYetSky
-#from plotfunc import PlotFunc
+from plotfunc import PlotFunc
 from runsexfunc import PySex
-#from writehtmlfunc import WriteParams
+from writehtmlfunc import WriteHtmlCSV
 import psffunc as pf  
 import mask_or_fit as mf
        
@@ -159,25 +159,25 @@ class ReturnClass(object):
             else:
                 psffile = c.pfile
                 pf.UpdatePsfRaDec(c.pfile)
-                distance = super()._distance_psf_obj(c.pfile, ra, dec)
+                distance_psf_gal = super()._distance_psf_obj(c.pfile, ra, dec)
 
         else:
             if UserGivenPsf != 'None':
                 psffile = UserGivenPsf
                 pf.UpdatePsfRaDec(self.DATADIR, psffile)
-                distance = super()._distance_psf_obj(psffile, ra, dec)
+                distance_psf_gal = super()._distance_psf_obj(psffile, ra, dec)
             elif np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 psffile = self.psflist[self.psfcounter]
                 pf.UpdatePsfRaDec(self.DATADIR, psffile)
-                distance = 9999
+                distance_psf_gal = 9999
                 self.psfcounter += 1
             else:
-                psffile, distance = pf.getpsf(self.DATADIR,
+                psffile, distance_psf_gal = pf.getpsf(self.DATADIR,
                                               self.psflist, self.which_psf,
                                               ra, dec)
-                distance = distance * 60. * 60.
+                distance_psf_gal = distance_psf_gal * 60. * 60.
 
-        return psffile, distance
+        return psffile, distance_psf_gal
 
 
     def _make_cutout(self):
@@ -725,7 +725,7 @@ class Pipeline(ReturnClass):
             # END
         print(1)
 
-        return good_object
+        return good_object, SexTargets
                 
     def main(self, obj_value):
         
@@ -786,7 +786,7 @@ class Pipeline(ReturnClass):
         
         # first count the number of "potential" targets in the search radius
         
-        good_object = self._potential_target()
+        good_object, SexTargets = self._potential_target()
         print(6)
         #print(2, imgsize, whtsize)
         ##XXX, xcntr_sex or ximg?
@@ -830,12 +830,12 @@ class Pipeline(ReturnClass):
 
             # Finding psf and the distance between psf and image
             if self.decompose:
-                psffile, distance = super()._handle_psf(self.UserGivenPsf, 
+                psffile, distance_psf_gal = super()._handle_psf(self.UserGivenPsf, 
                                                    self.alpha_j, self.delta_j)
             else:
-                psffile, distance = 'None', 9999
+                psffile, distance_psf_gal = 'None', 9999
 
-            print('psffile: {}, distance: {}'.format(psffile, distance))
+            print('psffile: {}, distance: {}'.format(psffile, distance_psf_gal))
 
             
             run = 1 #run =1 if pipeline runs sucessfuly
@@ -1047,8 +1047,10 @@ class Pipeline(ReturnClass):
                             for line in open('fit.log','r'):
                                 f_fit.writelines([str(line)])
                         f_fit.close()
+                        ut.WriteError('((((( Decomposition Successful )))))\n')
+                        
                         # FIX
-                        # Mainly the FindEllipse problem
+                        # Should be GALFIT sky instead of self.SexSky 
                         ut.OImgFindEllipse(oimg, 
                                            xcntr_img, ycntr_img,
                                            self.SexHalfRad,
@@ -1056,10 +1058,6 @@ class Pipeline(ReturnClass):
                                            self.SexSky, self.fstring, 
                                            self.repeat,
                                            output=False)
-                        #                good_object, self.fstring,
-                        #                self.components, 
-                        #                SexSky, self.repeat, 
-                        #                self.flag, run, 1)
                         #END
                         print(11)
                 except Exception as e:
@@ -1073,20 +1071,16 @@ class Pipeline(ReturnClass):
 
             
                         
-                if run == 1:
-                    ut.WriteError('((((( Decomposition Successful )))))\n')
-            
-            print(12)
-            sys.exit()
-            try:
-                Goodness = -9999
+            #sys.exit()
+            if 1:
+                goodness = -9999
                 if os.access('P_' + self.fstring + '.png', os.F_OK):	
                     os.remove('P_' + self.fstring + '.png')
-                GoodNess = PlotFunc(oimg, mimg, 
-                                    xcntr_img, ycntr_img, 
-                                    self.SexSky, SkySig)
-                Goodness = GoodNess.plot_profile
-            except:
+                PlotF = PlotFunc(oimg, mimg, self.fstring, 
+                                    self.SexSky, SkySig, self.mag_zero)
+                PlotF.plot_profile()
+                goodness = PlotF.goodness
+            else:
                 ut.WriteError('Error in plotting \n')
                 if mimg == 'None':
                     ut.WriteError('Could not find Mask image for plottong \n')
@@ -1103,28 +1097,46 @@ class Pipeline(ReturnClass):
                     f_failed.writelines([' '.format(fv)])
                 f_failed.writelines(['{}\n'.format(self.flag)])
 
-            f_cat.writelines(['{} '.format(gal_id)])
-            f_cat.write(good_object)
+            #FIX
+            #f_cat.writelines(['{} '.format(gal_id)])
+            #f_cat.write(good_object)
 
 
-            sys.exit()
-            try:
-                WriteParams(ParamToWrite, 
-                            self.gimg, 
-                            xcntr_img, ycntr_img, 
-                            distance, 
-                            alpha_j, delta_j, 
-                            z, Goodness, 
-                            C, C_err, A, A_err, S, S_err, G, M, 
-                            EXPTIME)
-            except Exception as e:
-                print(type(e))     # the exception instance
-                print(e.args)      # arguments stored in\
-                # .args
-                print(e)        # __str__ allows args\
-                # to printed directly
-                print("Something bad happened (Writing)!!!!\n\n")
-                print(traceback.print_exc())
+            #sys.exit()
+            if 1:
+                WF = WriteHtmlCSV(self.fstring, 
+                                  xcntr_img, ycntr_img, 
+                                  self.alpha_j, self.delta_j,
+                                  self.SexMagAuto, self.SexMagAutoErr, 
+                                  SexTargets, self.SexSky,
+                                  self.flag, self.SexHalfRad, self.mag_zero,
+                                  C, C_err, A, A_err, S, S_err, G, M,
+                                  self.components, self.decompose, 
+                                  self.repeat, self.detail, 
+                                  self.H0, self.WM, self.WV, self.pixelscale)
+
+                WF.UMag = self.UMag
+                WF.LMag = self.LMag
+                WF.LRe = self.LRe
+                WF.URe = self.URe 
+                WF.LN = self.LN
+                WF.UN = self.UN
+                WF.LRd = self.LRd 
+                WF.URd = self.URd
+                WF.chi2sq = self.chi2sq
+                WF.center_deviation = self.center_deviation
+                WF.cutimage = '{}.fits'.format(self.fstring)
+
+                WF.writeparams(self.params_to_write, distance_psf_gal, 
+                               self.z, goodness)
+           # except Exception as e:
+           #     print(type(e))     # the exception instance
+           #     print(e.args)      # arguments stored in\
+           #     # .args
+           #     print(e)        # __str__ allows args\
+           #     # to printed directly
+           #     print("Something bad happened (Writing)!!!!\n\n")
+           #     print(traceback.print_exc())
 
                 #except:
                 #    ut.WriteError('Error in writing html\n')
@@ -1161,11 +1173,11 @@ class Pipeline(ReturnClass):
 
             #NOTE CHANGE THIS ADD ADDITIONAL IF len > 0 HERE
 
-        if values[0].strip().isdigit():
-            print('Something happend in the pipeline. ' + \
-                  'Check error.log 2')
-        else:
-            pass
+        #if values[0].strip().isdigit():
+        #    print('Something happend in the pipeline. ' + \
+        #          'Check error.log 2')
+        #else:
+        #    pass
 
         if self.galcut:
             if os.access(self.sex_cata, os.F_OK):
