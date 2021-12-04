@@ -18,6 +18,7 @@ class WriteHtmlCSV(object):
                  components, decompose, repeat, detail,
                  H0, WM, WV, pixelscale):
 
+        self.chi2sq = 1.0
         self.PYMORPH_PATH = os.path.dirname(__file__)
 
         self.fstring = fstring
@@ -56,6 +57,9 @@ class WriteHtmlCSV(object):
         self.pixelscale = pixelscale
 
     def writeparams(self, params_to_write, distance_psf_gal, z, goodness):
+
+        bkg1 = "#E6E6FA"
+        bkg2 = "#D3D3D3"
 
         # this dictionary will hold any parameters that may be printed
         all_params = dict((params_to_write[key][0], -999) for key in params_to_write.keys())
@@ -324,7 +328,7 @@ class WriteHtmlCSV(object):
                     if 'neighbor' in key:
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
                                            '<TR align="center" bgcolor=' + \
-                                           '"#99CCFF"><TD> neighbor sersic' + \
+                                           '{}><TD> neighbor sersic'.format(bkg2) + \
                                            ' </TD> <TD> ' + \
                                            str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
                                            + str(fit_info[key]['yctr'][0]) + \
@@ -338,7 +342,7 @@ class WriteHtmlCSV(object):
                                            str(fit_info[key]['boxy'][0]) + ' </TD> </TR>'
                         Neighbour_Sersic = str(Neighbour_Sersic) + \
                                            '<TR align="center" ' + \
-                                           'bgcolor="#CCFFFF"> <TD>' + ' ' + \
+                                           'bgcolor={}> <TD>'.format(bkg1) + ' ' + \
                                            ' </TD> <TD> ' + \
                                            str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
                                            + str(fit_info[key]['yctr'][1]) + \
@@ -352,7 +356,7 @@ class WriteHtmlCSV(object):
                                            str(fit_info[key]['boxy'][1]) + ' </TD> </TR>'
                     if 'bulge' in key:
                         Object_Sersic = '<TR align="center" ' +\
-                                        'bgcolor="#99CCFF">' +\
+                                        'bgcolor={}>'.format(bkg2) +\
                                         '<TD> sersic bulge</TD> <TD> ' +\
                                         str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
                                         + str(fit_info[key]['yctr'][0]) + \
@@ -365,7 +369,7 @@ class WriteHtmlCSV(object):
                                         str(fit_info[key]['pa'][0]) + ' </TD> <TD> ' + \
                                         str(0) + ' </TD> </TR>'
                         Object_Sersic_err = '<TR align="center" ' + \
-                                            'bgcolor="#CCFFFF">' + \
+                                            'bgcolor={}>'.format(bkg1) + \
                                             '<TD>' + ' ' + '</TD> <TD>' + \
                                             str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
                                             + str(fit_info[key]['yctr'][1]) + \
@@ -378,7 +382,7 @@ class WriteHtmlCSV(object):
                                             str(fit_info[key]['pa'][1]) + ' </TD> <TD> ' + \
                                             str(0) + ' </TD> </TR>'
                     if 'disk' in key:
-                        Object_Exp = '<TR align="center" bgcolor="#99CCFF">' +\
+                        Object_Exp = '<TR align="center" bgcolor={}>'.format(bkg2) +\
                                      '<TD> disk </TD> <TD> ' + \
                                      str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
                                      + str(fit_info[key]['yctr'][0]) + \
@@ -392,7 +396,7 @@ class WriteHtmlCSV(object):
                                      str(0) + ' </TD> </TR>'
 
                         Object_Exp_err = '<TR align="center" ' + \
-                                         'bgcolor="#CCFFFF">' + \
+                                         'bgcolor={}>'.format(bkg1) + \
                                          '<TD>' + ' ' + '</TD> <TD>' + \
                                          str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
                                          + str(fit_info[key]['yctr'][1]) + \
@@ -407,7 +411,7 @@ class WriteHtmlCSV(object):
 
 
                     if 'point' in key:
-                        Point_Vals = '<TR align="center" bgcolor="#99CCFF">' + \
+                        Point_Vals = '<TR align="center" bgcolor={}>'.format(bkg2) + \
                                      '<TD> point </TD> <TD> ' + \
                                      str(fit_info[key]['xctr'][0]) + '</TD> <TD> '\
                                      + str(fit_info[key]['yctr'][0]) + \
@@ -418,7 +422,7 @@ class WriteHtmlCSV(object):
                                      ' </TD> <TD> ' + str('9999') + \
                                      ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
                         Point_Vals_err = '<TR align="center" ' + \
-                                         'bgcolor="#CCFFFF">' + \
+                                         'bgcolor={}>'.format(bkg1) + \
                                          '<TD>' + ' ' + '</TD> <TD>' + \
                                          str(fit_info[key]['xctr'][1]) + '</TD> <TD> '\
                                          + str(fit_info[key]['yctr'][1]) + \
@@ -576,7 +580,7 @@ class WriteHtmlCSV(object):
         writer = csv.writer(f_res)
         writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
         f_res.close()
-
+        
         if self.decompose:
             #writing html
             outfile = open('R_{}.html'.format(self.fstring),'w')

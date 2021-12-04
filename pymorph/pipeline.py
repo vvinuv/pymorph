@@ -177,7 +177,7 @@ class ReturnClass(object):
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
 
-        return psffile, distance_psf_gal
+        return psffile, round(distance_psf_gal, 1)
 
 
     def _make_cutout(self):
@@ -1079,7 +1079,7 @@ class Pipeline(ReturnClass):
                 PlotF = PlotFunc(oimg, mimg, self.fstring, 
                                     self.SexSky, SkySig, self.mag_zero)
                 PlotF.plot_profile()
-                goodness = PlotF.goodness
+                goodness = round(PlotF.goodness, 2)
             else:
                 ut.WriteError('Error in plotting \n')
                 if mimg == 'None':

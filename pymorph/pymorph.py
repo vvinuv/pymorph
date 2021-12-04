@@ -943,8 +943,8 @@ class PyMorph(InitializeParams):
         elif self.psfselect == 0:
             self.center_deviated = 0
             self.starthandle = 0
-            #if self.findandfit == True:
-            #    self.find_and_fit()
+            if self.findandfit == True:
+                self.find_and_fit()
             print(self.sex_cata)
             self.main_thread()
             if self.crashhandler:
