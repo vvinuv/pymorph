@@ -211,7 +211,6 @@ def output_params(dbparams=None, decompose=False):
 
     extra_params += [['flag', 'bigint'], ['Manual_flag', 'bigint'],
                     ['Comments', 'varchar(1000)'], ['Date', 'varchar(50)'],
-                    ['Version', 'float'], ['Filter', 'varchar(500)'],
                     ['Version', 'float'],['Filter', 'varchar(500)'],
                     ['Total_Run', 'int'], ['rootname', 'varchar(500)']]
 

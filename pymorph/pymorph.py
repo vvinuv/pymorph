@@ -196,6 +196,8 @@ def rm_sex_cata(sex_cata):
 
 
 
+
+
 class InitializeParams(object):
 
     def _initilize_params(self, config_file='config.ini'):
@@ -203,6 +205,7 @@ class InitializeParams(object):
         c = configparser.ConfigParser()
         c.read(config_file)
         
+
         self.DATADIR = c.get('imagecata', 'datadir')
         self.OUTDIR = c.get('imagecata', 'outdir')
 
@@ -227,15 +230,15 @@ class InitializeParams(object):
         self.GALFIT_PATH = c.get('external', 'GALFIT_PATH')
         self.SEX_PATH = c.get('external', 'SEX_PATH')
 
-        self.findandfit = c.getboolean('modes', 'findandfit')                   
-        self.repeat = c.getboolean('modes', 'repeat')                       
-        self.galcut = c.getboolean('modes', 'galcut')                        
+        self.findandfit = c.getboolean('modes', 'findandfit')
+        self.repeat = c.getboolean('modes', 'repeat')
+        self.galcut = c.getboolean('modes', 'galcut')
         self.decompose = c.getboolean('modes', 'decompose')
         self.detail = c.getboolean('modes', 'detail')
         self.galfit = c.getboolean('modes', 'galfit')
         self.cas = c.getboolean('modes', 'cas')
         self.crashhandler = c.getboolean('modes', 'crashhandler')
-        
+
 
         try:
             components = c.get('galfit', 'components').split(',')
@@ -247,13 +250,13 @@ class InitializeParams(object):
         self.devauc = c.get('galfit', 'devauc')
         self.fitting = c.get('galfit', 'fitting')
         self.fitting = [int(tf) for tf in self.fitting.split(',')]
-        
+
         self.chi2sq = c.getfloat('diagnosis', 'chi2sq')
         self.goodness = c.getfloat('diagnosis', 'goodness')
         self.center_deviation = c.getfloat('diagnosis', 'center_deviation')
         self.center_constrain = c.getfloat('diagnosis', 'center_constrain')
-     
-       
+
+
         try:
             size = c.get('size', 'size_list')
             size = [int(s) for s in size.split(',')]
@@ -261,10 +264,10 @@ class InitializeParams(object):
             self.VarSize = size[1]
             self.FracRad = size[2]
             self.Square = size[3]
-            self.FixSize = size[4] 
+            self.FixSize = size[4]
         except:
             self.ReSize = c.getint('size', 'size_list')
-      
+
             if self.ReSize:
                 self.VarSize = 1
             else:
@@ -283,7 +286,7 @@ class InitializeParams(object):
         self.WM = c.getfloat('cosmology', 'WM')
         self.WV = c.getfloat('cosmology', 'WV')
         self.redshift = c.getfloat('cosmology', 'redshift')
- 
+
         self.psfselect = c.getint('psf', 'psfselect')
         self.stargal_prob = c.getfloat('psf', 'stargal_prob')
         self.star_size = c.getint('psf', 'star_size')
@@ -295,7 +298,7 @@ class InitializeParams(object):
         self.mask_reg = c.getfloat('mask', 'mask_reg')
         self.thresh_area = c.getfloat('mask', 'thresh_area')
         self.threshold = c.getfloat('mask', 'threshold')
-
+        self.avoidme = c.getfloat('mask', 'avoidme')
         self.mag_zero = c.getfloat('mag', 'mag_zero')
         self.maglim = c.get('mag', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
@@ -304,20 +307,169 @@ class InitializeParams(object):
         self.host = c.get('db', 'host')
         self.database = c.get('db', 'database')
         self.table = c.get('db', 'table')
-        self.usr = c.get('db', 'usr')
-        self.pword = c.get('db', 'pword')
+        self.user = c.get('db', 'user')
+        self.password = c.get('db', 'password')
         self.dbparams = c.get('db', 'dbparams')
 
         self.galfitv = c.get('version', 'galfitv')
-
         self.FirstCreateDB = 1 #Won't create table when FirstCreateDB=0
         self.FILTER = 'UNKNOWN'
 
+
+        self.bdbox = c.get('params_limit', 'bdbox')
+        self.bbox = c.get('params_limit', 'bbox')
+        self.dbox = c.get('params_limit', 'dbox')
+        self.no_mask = c.get('mask', 'no_mask')
+        self.norm_mask = c.get('mask', 'norm_mask')
+
+        #Sextractor configuration
         self.SEx_PIXEL_SCALE = self.pixelscale
         self.SEx_SEEING_FWHM = self.pixelscale * 3.37
         self.SEx_MAG_ZEROPOINT = self.mag_zero
+        self.SEx_DETECT_MINAREA = 6
+        self.SEx_DETECT_THRESH = 1.5
+        self.SEx_ANALYSIS_THRESH =1.5
+        self.SEx_FILTER = 'Y'
+        self.SEx_FILTER_NAME = 'default.conv'
+        self.SEx_DEBLEND_NTHRESH = 32
+        self.SEx_DEBLEND_MINCONT = 0.005
+        self.SEx_PHOT_FLUXFRAC = 0.5
+        self.SEx_BACK_SIZE = 64
+        self.SEx_BACK_FILTERSIZE = 3
+        self.SEx_BACKPHOTO_TYPE = 'GLOBAL'
+        self.SEx_BACKPHOTO_THICK = 24
+        self.SEx_WEIGHT_TYPE = 'MAP_RMS'
 
-        
+
+        #Limit of parameters
+        self.LMag  = 50.
+        self.UMag  = -50.
+        self.LN    = 0.1
+        self.UN    = 15.
+        self.LRe   = 0.
+        self.URe   = 200.
+        self.LRd   = 0.
+        self.URd   = 200.
+
+
+        self.pymorph_config = self.get_pymorph_config_dict()
+        self.sex_config = self.get_sex_config_dict()
+        self.limit_config = self.get_limit_config_dict()
+
+
+
+    def get_pymorph_config_dict(self):
+
+        pymorph_config = dict()
+
+        pymorph_config['DATADIR'] = self.DATADIR
+        pymorph_config['OUTDIR'] = self.OUTDIR
+        pymorph_config['imagefile'] = self.imagefile
+        pymorph_config['whtfile'] = self.whtfile
+        pymorph_config['sex_cata'] = self.sex_cata
+        pymorph_config['obj_cata'] = self.obj_cata
+        pymorph_config['out_cata'] = self.out_cata
+        pymorph_config['rootname'] = self.rootname
+        pymorph_config['GALFIT_PATH'] = self.GALFIT_PATH
+        pymorph_config['SEX_PATH'] = self.SEX_PATH
+        pymorph_config['findandfit'] = self.findandfit
+        pymorph_config['repeat'] = self.repeat
+        pymorph_config['galcut'] = self.galcut
+        pymorph_config['decompose'] = self.decompose
+        pymorph_config['detail'] = self.detail
+        pymorph_config['galfit'] = self.galfit
+        pymorph_config['cas'] = self.cas
+        pymorph_config['crashhandler'] = self.crashhandler
+        pymorph_config['devauc'] = self.devauc
+        pymorph_config['fitting'] = self.fitting
+        pymorph_config['fitting'] = self.fitting
+        pymorph_config['chi2sq'] = self.chi2sq
+        pymorph_config['goodness'] = self.goodness
+        pymorph_config['center_deviation'] = self.center_deviation
+        pymorph_config['center_constrain'] = self.center_constrain
+        pymorph_config['pixelscale'] = self.pixelscale
+        pymorph_config['H0'] = self.H0
+        pymorph_config['WM'] = self.WM
+        pymorph_config['WV'] = self.WV
+        pymorph_config['redshift'] = self.redshift
+        pymorph_config['psfselect'] = self.psfselect
+        pymorph_config['stargal_prob'] = self.stargal_prob
+        pymorph_config['star_size'] = self.star_size
+        pymorph_config['psflist'] = self.psflist
+        pymorph_config['which_psf'] = self.which_psf
+        pymorph_config['area_obj'] = self.area_obj
+        pymorph_config['manual_mask'] = self.manual_mask
+        pymorph_config['mask_reg'] = self.mask_reg
+        pymorph_config['thresh_area'] = self.thresh_area
+        pymorph_config['threshold'] = self.threshold
+        pymorph_config['mag_zero'] = self.mag_zero
+        pymorph_config['maglim'] = self.maglim
+        pymorph_config['maglim'] = self.maglim
+        pymorph_config['host'] = self.host
+        pymorph_config['database'] = self.database
+        pymorph_config['table'] = self.table
+        pymorph_config['user'] = self.user
+        pymorph_config['password'] = self.password
+        pymorph_config['dbparams'] = self.dbparams
+        pymorph_config['galfitv'] = self.galfitv
+        pymorph_config['FirstCreateDB'] = self.FirstCreateDB
+        pymorph_config['bdbox'] = self.bdbox
+        pymorph_config['bbox'] = self.bbox
+        pymorph_config['dbox'] = self.dbox
+        pymorph_config['FILTER'] = self.FILTER
+        pymorph_config['no_mask'] = self.no_mask
+        pymorph_config['norm_mask'] = self.norm_mask
+        pymorph_config['components'] = self.components
+        pymorph_config['ReSize'] = self.ReSize
+        pymorph_config['VarSize'] = self.VarSize
+        pymorph_config['FracRad'] = self.FracRad
+        pymorph_config['Square'] = self.Square
+        pymorph_config['FixSize'] = self.FixSize
+        pymorph_config['searchrad'] = self.searchrad
+
+        return pymorph_config
+
+
+    def get_sex_config_dict(self):
+
+        sex_config = dict()
+
+        sex_config['SEx_PIXEL_SCALE'] = self.pixelscale
+        sex_config['SEx_SEEING_FWHM'] = self.pixelscale * 3.37
+        sex_config['SEx_MAG_ZEROPOINT'] = self.mag_zero
+        sex_config['SEx_DETECT_MINAREA'] = self.SEx_DETECT_MINAREA
+        sex_config['SEx_DETECT_THRESH'] = self.SEx_DETECT_THRESH
+        sex_config['SEx_ANALYSIS_THRESH'] = self.SEx_ANALYSIS_THRESH
+        sex_config['SEx_FILTER'] = self.SEx_FILTER
+        sex_config['SEx_FILTER_NAME'] = self.SEx_FILTER_NAME
+        sex_config['SEx_DEBLEND_NTHRESH'] = self.SEx_DEBLEND_NTHRESH
+        sex_config['SEx_DEBLEND_MINCONT'] = self.SEx_DEBLEND_MINCONT
+        sex_config['SEx_PHOT_FLUXFRAC'] = self.SEx_PHOT_FLUXFRAC
+        sex_config['SEx_BACK_SIZE'] = self.SEx_BACK_SIZE
+        sex_config['SEx_BACK_FILTERSIZE'] = self.SEx_BACK_FILTERSIZE
+        sex_config['SEx_BACKPHOTO_TYPE'] = self.SEx_BACKPHOTO_TYPE
+        sex_config['SEx_BACKPHOTO_THICK'] = self.SEx_BACKPHOTO_THICK
+        sex_config['SEx_WEIGHT_TYPE'] = self.SEx_WEIGHT_TYPE
+
+        return sex_config
+
+
+    def get_limit_config_dict(self):
+
+        limit_config = dict()
+
+        limit_config['LMag'] = self.LMag 
+        limit_config['UMag'] = self.UMag
+        limit_config['LN'] = self.LN
+        limit_config['UN'] = self.UN
+        limit_config['LRe'] = self.LRe
+        limit_config['URe'] = self.URe 
+        limit_config['LRd'] = self.LRd
+        limit_config['URd'] = self.URd
+
+        return limit_config
+
+
     def set_sexparams(self,
                       SEx_DETECT_MINAREA = 6,
                       SEx_DETECT_THRESH = 1.5,
@@ -340,6 +492,7 @@ class InitializeParams(object):
         FHWH is 3.37 * SEx_PIXEL_SCALE
 
         '''
+
 
         self.SEx_DETECT_MINAREA =  SEx_DETECT_MINAREA
         self.SEx_DETECT_THRESH =   SEx_DETECT_THRESH
@@ -364,13 +517,12 @@ class InitializeParams(object):
                            SEx_WEIGHT_TYPE, self.SEx_PIXEL_SCALE,
                            self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
 
+        self.sex_config = self.get_sex_config_dict()
+
+
     def set_limits(self,
                    LMag=500, UMag=-500, LN=0.1, UN=20.,
-                   LRe=0., URe=500., LRd=0., URd=500.,
-                   bdbox=False, bbox=False, dbox=False, devauc=False,
-                   avoidme=50., FILTER='UNKNOWN',
-                   which_psf=0, stargal_prob=0.9, area_obj=40.,
-                   no_mask=False, norm_mask=False):
+                   LRe=0., URe=500., LRd=0., URd=500.):
         '''
 
         Setting pymorph parameters limits
@@ -385,183 +537,10 @@ class InitializeParams(object):
         self.URe   = URe
         self.LRd   = LRd
         self.URd   = URd
-        self.bdbox = bdbox
-        self.bbox  = bbox
-        self.dbox  = dbox
-        self.devauc = devauc
 
-        self.avoidme = avoidme
-        self.FILTER = FILTER
-        self.which_psf = which_psf
-        self.stargal_prob = stargal_prob
-        self.area_obj = area_obj
-        self.no_mask = no_mask
-        self.norm_mask = norm_mask
+        self.limit_config = self.get_limit_config_dict()
 
 
-
-    def argparse_input(self):
-
-        '''
-
-        The below is the idea to get arguments through parser. However, it
-        should not be used. Use either set_sexparams() and set_limits()
-
-        Note I set defaults here and call them in creating the options.
-        This is so I can use them in determining whether to retain
-        the default or not.
-
-        '''
-
-        # Note I set defaults here and call them in creating the options. 
-        #This is so I can use them in determining whether to retain 
-        #the default or not.
-
-        usage = "Usage: pymorph [--edit-conf[-e]] [--with-psf [-p]]" \
-                "[--force[-f]] [--help[-h]] [--lmag] [--umag] [--ln] [--un]"\
-                "[--lre] [--ure] [--lrd] [--urd] [--with-in] "\
-                "[--with-filter] [--with-db] [--with-area]  [--no-mask]"\
-                "[--norm-mask] [--with-sg] [--bdbox] [--bbox] [--dbox]"\
-                "[--test [-t]] [--devauc] [--outdir] [--datadir]"
-
-
-        parser = argparse.ArgumentParser(prog='PROG', usage=usage)
-        parser.add_argument("-e", "--sex_conf", action="store_const",
-                          const=SExtractorConfEdit, 
-                          default=SExtractorConfDefault,
-                          help="runs SExtractor configuration")
-        parser.add_argument("-f", "--force", action="store_const",
-                          const=rm_sex_cata,
-                          help="removes SExtractor catalog")
-        parser.add_argument("-t", "--test", action="store_const", 
-                          const=run_test,  
-                          help="runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output")
-        parser.add_argument("--lmag", action="store", 
-                          dest="LMag",default = 500.0,
-                          help="lower magnitude cutoff")
-        parser.add_argument("--umag", action="store", 
-                          dest="UMag", default = -500.0,
-                          help="upper magnitude cutoff")
-        parser.add_argument("--ln", action="store", 
-                          dest="LN", default = 0.1, help="Lower Sersic")
-        parser.add_argument("--un", action="store", 
-                          dest="UN", default = 20.0, help="Upper Sersic")
-        parser.add_argument("--lre", action="store", 
-                          dest="LRe", default = 0.0,
-                          help="Lower Bulge Radius")
-        parser.add_argument("--ure", action="store", 
-                          dest="URe", default = 500.0,
-                          help="Upper Bulge Radius")
-        parser.add_argument("--lrd", action="store", 
-                          dest="LRd", default = 0.0, help="Lower Disk Radius")
-        parser.add_argument("--urd", action="store", 
-                          dest="URd", default = 500.0, help="Upper Disk Radius")
-
-        parser.add_argument("--bdbox", action="store_true", dest="bdbox",
-                          default = False, help="turns on bdbox")
-        parser.add_argument("--bbox", action="store_true", dest="bbox",
-                          default = False, help="turns on bbox")
-        parser.add_argument("--dbox", action="store_true", dest="dbox",
-                          default = False, help="turns on dbox")
-        parser.add_argument("--devauc", action="store_true", dest="devauc",
-                          default = False,
-                          help="turns on DeVacouleur's bulge fitting (sersic index of bulge frozen at 4.0 for fit)")
-
-
-        parser.add_argument("--with-in", action="store", 
-                          dest="avoidme", default = 50.0, help="avoid me!")
-        parser.add_argument("--with-filter", action="store", 
-                          dest="FILTER", default = 'UNKNOWN', 
-                          help="Filter used")
-        
-        parser.add_argument("-p", "--with-psf", action="store",
-                          dest="which_psf", default = 0,
-                          help="Nearest/farthest PSF")
-        parser.add_argument("--with-sg", action="store", 
-                          dest="stargal_prob", default = 0.9,
-                          help="for psf identification")
-        parser.add_argument("--with-area", action="store", 
-                          dest="area_obj", default = 40.0,
-                          help="min Area of psf for selection")
-        parser.add_argument("--no_mask", action="store_true", dest="no_mask",
-                          default=False, help="turns off masking")
-        parser.add_argument("--norm_mask", action="store_true", dest="norm_mask",
-                          default=False, help="turns on Normal masking")
-        
-
-
-        #parser.add_argument("-d","--datadir", action="store", dest="DATADIR",
-        #                   default = os.getcwd()+'/',
-        #                  help="path to directory containing all input. MUST end in '/'")
-        #parser.add_argument("-o","--outdir", action="store", 
-        #                  dest="OUTDIR", default = os.getcwd()+'/',
-        #                  help="path to directory that will contain all output. MUST end in '/'")
-        
-
-        parser.add_argument("--with-host", action="store", 
-                           dest="host", default = 'localhost',
-                          help="mysql host used")
-        parser.add_argument("--with-db", action="store", 
-                           dest="database", default = 'UNKNOWN',
-                          help="database used")
-        # parses command line aguments for pymorph
-        args = parser.parse_args()
-
-        self.sex_params = args.sex_conf()
-        if len(self.sex_params) == 15:
-            self.sex_params.append(self.mag_zero)
-        else:
-            self.sex_params.append(self.pixelscale)
-            self.sex_params.append(self.pixelscale * 3.37)        
-            self.sex_params.append(self.mag_zero)
-
-
-
-        self.SEx_DETECT_MINAREA = self.sex_params[0]
-        self.SEx_DETECT_THRESH = self.sex_params[1]
-        self.SEx_ANALYSIS_THRESH = self.sex_params[2]
-        self.SEx_FILTER = self.sex_params[3]
-        self.SEx_FILTER_NAME = self.sex_params[4]
-        self.SEx_DEBLEND_NTHRESH = self.sex_params[5]
-        self.SEx_DEBLEND_MINCONT = self.sex_params[6]
-        self.SEx_PHOT_FLUXFRAC = self.sex_params[7]
-        self.SEx_BACK_SIZE = self.sex_params[8]
-        self.SEx_BACK_FILTERSIZE = self.sex_params[9]
-        self.SEx_BACKPHOTO_TYPE = self.sex_params[10]
-        self.SEx_BACKPHOTO_THICK = self.sex_params[11]
-        self.SEx_WEIGHT_TYPE = self.sex_params[12]
-        self.SEx_PIXEL_SCALE = self.sex_params[13]
-        self.SEx_SEEING_FWHM = self.sex_params[14]
-
-
-        self.LMag  = args.LMag
-        self.UMag  = args.UMag
-        self.LN    = args.LN
-        self.UN    = args.UN
-        self.LRe   = args.LRe
-        self.URe   = args.URe
-        self.LRd   = args.LRd
-        self.URd   = args.URd
-        self.bdbox = args.bdbox
-        self.bbox  = args.bbox
-        self.dbox  = args.dbox
-        self.devauc= args.devauc
-
-        self.avoidme  = args.avoidme
-        self.FILTER   = args.FILTER
-        self.which_psf = args.which_psf
-        self.stargal_prob = args.stargal_prob
-        self.area_obj = args.area_obj
-        self.no_mask  = args.no_mask
-        self.norm_mask= args.norm_mask
-
-        #self.DATADIR  = args.DATADIR
-        #self.OUTDIR   = args.OUTDIR
-
-        self.host     = args.host
-        self.database = args.database
-
-        #self.SP = SexParams(self.sex_params, self.mag_zero)
 
 
 class PyMorph(InitializeParams):
@@ -571,9 +550,10 @@ class PyMorph(InitializeParams):
     def __init__(self, config_file='config.ini'):
 
         super()._initilize_params(config_file=config_file) 
-        galfitv = self.galfitv.split('.')
+        galfitv = self.pymorph_config['galfitv'].split('.')
         galfitv = galfitv[0] + '.' + galfitv[1]
         self.galfitv = float(galfitv)
+        self.pymorph_config['galfitv'] = float(galfitv)
 
     def _indexfile(self):
         #Initialize index.html
@@ -674,13 +654,17 @@ class PyMorph(InitializeParams):
 
 
         P = Pipeline()
+        P.pymorph_config = self.pymorph_config
+        P.sex_config = self.sex_config
+        P.limit_config = self.limit_config
 
+            
         P.imagedata = self.imagedata
         P.weightdata = self.weightdata
         P.NXPTS = self.imagedata.shape[0]
         P.NYPTS = self.imagedata.shape[1]
         P.weightexists = self.weightexists
-        
+
         P.EXPTIME = self.EXPTIME
         P.RDNOISE = self.RDNOISE
         P.GAIN = self.GAIN
@@ -738,8 +722,8 @@ class PyMorph(InitializeParams):
         P.host = self.host
         P.database = self.database
         P.table = self.table
-        P.usr  = self.usr
-        P.pword  = self.pword
+        P.user  = self.user
+        P.password  = self.password
         P.dbparams = self.dbparams
         P.galfitv = self.galfitv
         P.FirstCreateDB= self.FirstCreateDB
@@ -761,7 +745,7 @@ class PyMorph(InitializeParams):
         P.norm_mask  = self.norm_mask
 
         P.sex_params = self.sex_params
-            
+
         P.pnames = pnames
         P.params_to_write = params_to_write
 
@@ -786,12 +770,14 @@ class PyMorph(InitializeParams):
         #    fc.writelines(['gal_id ra dec mag z\n'])
 
         values = np.genfromtxt(self.sex_cata)
-       
+        print(self.sex_cata)
+
         print(values.shape)
         con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob)
         values = values[con]
         values = values[:, [0, 3, 4, 17]]
-        values[3] = values[3] / 15.0
+        print(values)
+        values[:, 3] = values[:, 3] / 15.0
 
         if self.redshift != 9999:
             values[:, -1] = self.redshift
@@ -880,7 +866,7 @@ class PyMorph(InitializeParams):
                   'during the decomposition.')
             print(6)
             PS = PySex(self.SEX_PATH)
-            PS.RunSex(self.sex_params,  
+            PS.RunSex(self.sex_config,  
                    self.imagefile, self.whtfile,
                    self.sex_cata, self.SEx_GAIN,
                    check_fits=None, sconfig='default')

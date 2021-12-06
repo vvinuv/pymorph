@@ -97,25 +97,25 @@ class PySex(object):
 
 
 
-    def RunSex(self, sex_params, gimg, wimg, sex_cata, 
+    def RunSex(self, sex_config, gimg, wimg, sex_cata, 
                SEx_GAIN, check_fits=None, sconfig='default'):
         
-        SEx_DETECT_MINAREA = sex_params[0]
-        SEx_DETECT_THRESH = sex_params[1]
-        SEx_ANALYSIS_THRESH = sex_params[2]
-        SEx_FILTER = sex_params[3]
-        SEx_FILTER_NAME = sex_params[4]
-        SEx_DEBLEND_NTHRESH = sex_params[5]
-        SEx_DEBLEND_MINCONT = sex_params[6]
-        SEx_PHOT_FLUXFRAC = sex_params[7]
-        SEx_BACK_SIZE = sex_params[8]
-        SEx_BACK_FILTERSIZE = sex_params[9]
-        SEx_BACKPHOTO_TYPE = sex_params[10]
-        SEx_BACKPHOTO_THICK = sex_params[11]
-        SEx_WEIGHT_TYPE = sex_params[12]
-        SEx_PIXEL_SCALE = sex_params[13]
-        SEx_SEEING_FWHM = sex_params[14]
-        mag_zero = sex_params[15]
+        SEx_DETECT_MINAREA= sex_config['SEx_DETECT_MINAREA']
+        SEx_DETECT_THRESH = sex_config['SEx_DETECT_THRESH']
+        SEx_ANALYSIS_THRESH = sex_config['SEx_ANALYSIS_THRESH']
+        SEx_FILTER = sex_config['SEx_FILTER']
+        SEx_FILTER_NAME = sex_config['SEx_FILTER_NAME']
+        SEx_DEBLEND_NTHRESH = sex_config['SEx_DEBLEND_NTHRESH']
+        SEx_DEBLEND_MINCONT = sex_config['SEx_DEBLEND_MINCONT']
+        SEx_PHOT_FLUXFRAC = sex_config['SEx_PHOT_FLUXFRAC']
+        SEx_BACK_SIZE = sex_config['SEx_BACK_SIZE']
+        SEx_BACK_FILTERSIZE = sex_config['SEx_BACK_FILTERSIZE']
+        SEx_BACKPHOTO_TYPE = sex_config['SEx_BACKPHOTO_TYPE']
+        SEx_BACKPHOTO_THICK = sex_config['SEx_BACKPHOTO_THICK']
+        SEx_WEIGHT_TYPE = sex_config['SEx_WEIGHT_TYPE']
+        SEx_PIXEL_SCALE = sex_config['SEx_PIXEL_SCALE']
+        SEx_SEEING_FWHM = sex_config['SEx_SEEING_FWHM']
+        mag_zero = sex_config['SEx_MAG_ZEROPOINT']
 
         PYMORPH_PATH = os.path.dirname(__file__)
 

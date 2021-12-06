@@ -6,6 +6,7 @@ from cosmocal import CosmoCal
 import traceback
 from flagfunc import *
 from pymorphutils import RaDegToHMS, DecDegToDMS, output_params
+from writedbfunc import WriteDB
 
 class WriteHtmlCSV(object):
     """The class which will write html and csv output. This class will also 
@@ -16,7 +17,7 @@ class WriteHtmlCSV(object):
                  flag, SexHalfRad, mag_zero,
                  C, C_err, A, A_err, S, S_err, G, M, 
                  components, decompose, repeat, detail,
-                 H0, WM, WV, pixelscale):
+                 H0, WM, WV, pixelscale, pymorph_config):
 
         self.chi2sq = 1.0
         self.PYMORPH_PATH = os.path.dirname(__file__)
@@ -55,6 +56,7 @@ class WriteHtmlCSV(object):
         self.WM = WM
         self.WV = WV
         self.pixelscale = pixelscale
+        self.pymorph_config = pymorph_config
 
     def writeparams(self, params_to_write, distance_psf_gal, z, goodness):
 
@@ -560,20 +562,20 @@ class WriteHtmlCSV(object):
                         all_params['run'] += 1
             #if self.GalSky != 9999:
             #    all_params['GalSky'] = self.GalSky
-        
+
+        print('params_to_write', params_to_write)
+        print('all_params', all_params)
+
+        #sys.exit()
         # Writing data base
+        #print('params_to_write', params_to_write)
+        #print('all_params', all_params)
         try:
-            from utilities import WriteDb
-        except:
-            print('DB writing Problem')
-        try:
-            #pass
-            #I have temporarily suppressed this in order to keep mysql
-            # connections free for others.
-            WriteDb(params_to_write, all_params)
-        except:
+            WDB = WriteDB()
+            WDB._first_db(params_to_write, all_params, self.pymorph_config)
+        except Exception as e:
             print('No database can be created!')
-            #traceback.print_exc()
+            print(e)
 
         # Writing csv file 
         f_res = open("result.csv", "a")
@@ -581,6 +583,7 @@ class WriteHtmlCSV(object):
         writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
         f_res.close()
         
+        #print(error_mesg1, error_mesg2, error_mesg3, error_mesg4, error_mesg5, error_mesg6, error_mesg7)
         if self.decompose:
             #writing html
             outfile = open('R_{}.html'.format(self.fstring),'w')

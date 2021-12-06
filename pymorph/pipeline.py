@@ -283,7 +283,7 @@ class Pipeline(ReturnClass):
     def __init__(self, config_file='config.ini'):
 
         pass
-        #self.SP = SexParams(self.sex_params, self.mag_zero)
+        #self.SP = SexParams(self.sex_config, self.mag_zero)
 
 
     def _target_initialize(self, obj_value, pdb, pnames):
@@ -472,14 +472,14 @@ class Pipeline(ReturnClass):
         if not os.path.exists(self.sex_cata):
             if 1:
 
-                PS.RunSex(self.sex_params, 
+                PS.RunSex(self.sex_config, 
                           os.path.join(self.DATADIR, self.gimg),
                           os.path.join(self.DATADIR, self.wimg),
                           os.path.join(self.DATADIR, self.sex_cata),
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='default')
 
-                PS.RunSex(self.sex_params,
+                PS.RunSex(self.sex_config,
                           os.path.join(self.DATADIR, self.gimg),
                           os.path.join(self.DATADIR, self.wimg),
                           os.path.join(self.DATADIR, 
@@ -899,7 +899,7 @@ class Pipeline(ReturnClass):
                 #sys.exit()
                 # The following is to generate segmentation image for mask
                 PS = PySex(self.SEX_PATH)
-                PS.RunSex(self.sex_params, self.gimg, self.wimg, 
+                PS.RunSex(self.sex_config, self.gimg, self.wimg, 
                           seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
                           sconfig='seg')
                 #sys.exit()
@@ -966,7 +966,7 @@ class Pipeline(ReturnClass):
             # Estimates sky parameters
             #XXX
             if 1:
-                sky_values = FindYetSky(self.sex_params, self.SEX_PATH, 
+                sky_values = FindYetSky(self.sex_config, self.SEX_PATH, 
                                         self.gimg, self.wimg,
                                         seg_fits, 
                                         xcntr_img, ycntr_img,
@@ -1113,7 +1113,8 @@ class Pipeline(ReturnClass):
                                   C, C_err, A, A_err, S, S_err, G, M,
                                   self.components, self.decompose, 
                                   self.repeat, self.detail, 
-                                  self.H0, self.WM, self.WV, self.pixelscale)
+                                  self.H0, self.WM, self.WV, self.pixelscale,
+                                  self.pymorph_config)
 
                 WF.UMag = self.UMag
                 WF.LMag = self.LMag
@@ -1182,7 +1183,7 @@ class Pipeline(ReturnClass):
         if self.galcut:
             if os.access(self.sex_cata, os.F_OK):
                 os.remove(self.sex_cata)
-
+        sys.exit()
     #except Exception as e:
     #    print(type(e))     # the exception instance
     #    print(e.args)      # arguments stored in\
@@ -1301,7 +1302,7 @@ class Pipeline(ReturnClass):
                   'the pipeline keeps the sky value at the SExtractor value '\
                   'during the decomposition.')
             print(6)
-            RunSex(self.sex_params, self.SEX_PATH, 
+            RunSex(self.sex_config, self.SEX_PATH, 
                    self.imagefile, self.whtfile,
                    self.sex_cata, self.SEx_GAIN,
                    seg_fits=None, sconfig='default')
