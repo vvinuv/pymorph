@@ -43,7 +43,8 @@ class ElliMaskFunc:
         
         #print('seg_cata', seg_cata)
         print(np.unique(seg))
-        
+
+        #Find values of objects        
         values = np.genfromtxt(seg_cata)
         #print(values)
         if values.ndim > 1:
@@ -55,6 +56,8 @@ class ElliMaskFunc:
             xcntr_n = values[1]
             ycntr_n = values[2]
             
+        #Find distance to all objects wrt target and get the minimum distance
+        #to find the target 
         dist_neigh_obj = np.sqrt((xcntr_n - self.xcntr_o)**2. + (ycntr_n - self.ycntr_o)**2)
         #print(dist_neigh_obj)
         if values.ndim > 1:

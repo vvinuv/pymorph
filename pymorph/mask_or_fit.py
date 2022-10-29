@@ -18,7 +18,8 @@ class GetSExObj():
         if values is None:
             self.values = [-999]
         
-        print(self.values.shape)
+        #print('mask values', self.values)
+        #print(len(self.values))
         ##values = line_s.split()
         if len(self.values) != 19:
             ##values = [float(a) for a in values]
@@ -154,26 +155,31 @@ class GetSExObj():
         mask_it = -999
 
         xmask_left = abs(neighbor.xcntr - self.xcntr)  
+        # It is an object beyond the bounds that should be ignored
         xmask_right = (self.NXPTS / 2.0) + avoidme
         xmask = xmask_left < xmask_right
 
         ymask_left = abs(neighbor.ycntr - self.ycntr)
+        # It is an object beyond the bounds that should be ignored
         ymask_right = (self.NYPTS / 2.0) + avoidme
         ymask = ymask_left < ymask_right
 
+        # Find objects greater than 5 pixels
         dr_targ_neig = np.sqrt((neighbor.xcntr - self.xcntr)**2.0 + \
                               (neighbor.ycntr - self.ycntr)**2.0) > 5.0
         threshold_targ_neig = threshold * (neighbor.maj_axis + self.maj_axis)
 
-        print(xmask_left, xmask_right, ymask_left, ymask_right, dr_targ_neig, threshold_targ_neig)
+        #print('xmask_left', xmask_left, xmask_right, ymask_left, ymask_right, dr_targ_neig, threshold_targ_neig, xmask, ymask, threshold)
 
-        print(neighbor.area, thresh_area * self.area)
+        #print('neighbor.area', neighbor.area, self.area, thresh_area * self.area)
 
+        #If all things are satisfied 
         if xmask & ymask & dr_targ_neig:
-
+            #If the centre of the neighbor is greater than the average of the
+            #target major and minor axis times threshold it will be masked
             dxcntr_targ_neig = xmask_left > threshold_targ_neig 
             dycntr_targ_neig = ymask_left > threshold_targ_neig
-
+            #print(dxcntr_targ_neig, dycntr_targ_neig)
             
             if dxcntr_targ_neig | dycntr_targ_neig | (neighbor.area < thresh_area * self.area):
 
@@ -184,5 +190,5 @@ class GetSExObj():
 
         else:
             mask_it = -1 # It is an object beyond the bounds that should be ignored
-
+        #print('mask_it', mask_it)
         return mask_it

@@ -26,21 +26,21 @@ class WriteDB(object):
 
         cursor = conn.cursor()
 
-        pymorph_config['create_db'] = True
+        #pymorph_config['create_db'] = True
 
-        if pymorph_config['create_db']:
-            cmd = "CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARACTER SET 'utf8'".format(pymorph_config['database'])
-            pymorph_config['create_db'] = False
+        #if pymorph_config['create_db']:
+        cmd = "CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARACTER SET 'utf8'".format(pymorph_config['database'])
+        #pymorph_config['create_db'] = False
 
         cursor.execute(cmd)
 
         cursor.execute('USE {}'.format(pymorph_config['database']))
 
-        x = datetime.date.today()
-        yyyy = x.year
-        mm = x.month
-        dd = x.day
-        curr_date = str(yyyy) + '.' + str(mm) + '.' + str(dd)
+        #x = datetime.date.today()
+        #yyyy = x.year
+        #mm = x.month
+        #dd = x.day
+        #curr_date = str(yyyy) + '.' + str(mm) + '.' + str(dd)
         #all_params['Date'] = curr_date
         #all_params['Version'] = 3. #pymorph_config.VERSION
         #all_params['Filter'] = 'A' #pymorph_config.FILTER
@@ -51,15 +51,15 @@ class WriteDB(object):
 
 
         #param_values = {1: ['Name', 'varchar(500)'], 2: ['ra_gal', 'FLOAT']}
-        pymorph_config['create_table'] = True      
-        if pymorph_config['create_table']:
-            cmd1 = "CREATE TABLE IF NOT EXISTS {} (".format(pymorph_config['table'])
-            cmd2 = ', '.join(["{} {}".format(param_values[key][0], \
-                    param_values[key][1]) for key in param_values.keys()]) 
-            cmd = '{} {} )'.format(cmd1, cmd2)
-            #print(cmd)
-            cursor.execute(cmd)
-            pymorph_config['create_table'] = False
+        #pymorph_config['create_table'] = True      
+        #if pymorph_config['create_table']:
+        cmd1 = "CREATE TABLE IF NOT EXISTS {} (".format(pymorph_config['table'])
+        cmd2 = ', '.join(["{} {}".format(param_values[key][0], \
+                param_values[key][1]) for key in param_values.keys()]) 
+        cmd = '{} {} )'.format(cmd1, cmd2)
+        #print(cmd)
+        cursor.execute(cmd)
+        #pymorph_config['create_table'] = False
 
 
         total_run = 1
@@ -89,7 +89,7 @@ class WriteDB(object):
             else:
                 cmd = cmd + '"{}",'.format(all_params[param_values[p][0]])
 
-        cmd = cmd[:-2] + ')'
+        cmd = cmd[:-1] + ')'
         #print(cmd)
         cursor.execute(cmd)
         conn.commit()

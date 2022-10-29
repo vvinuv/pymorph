@@ -1,5 +1,6 @@
 import os
 import csv
+import datetime
 import numpy as np
 import fileinput
 from cosmocal import CosmoCal 
@@ -16,7 +17,7 @@ class WriteHtmlCSV(object):
                  SexMagAuto, SexMagAutoErr, SexTargets, SexSky,
                  flag, SexHalfRad, mag_zero,
                  C, C_err, A, A_err, S, S_err, G, M, 
-                 components, decompose, repeat, detail,
+                 components, decompose, repeat, detail, final_result_file,
                  H0, WM, WV, pixelscale, pymorph_config):
 
         self.chi2sq = 1.0
@@ -50,7 +51,7 @@ class WriteHtmlCSV(object):
         self.repeat = repeat
         self.detail = detail
 
-        self.repeat = repeat
+        self.final_result_file = final_result_file
 
         self.H0 = H0
         self.WM = WM
@@ -65,6 +66,8 @@ class WriteHtmlCSV(object):
 
         # this dictionary will hold any parameters that may be printed
         all_params = dict((params_to_write[key][0], -999) for key in params_to_write.keys())
+        x = datetime.date.today()
+        all_params['Date'] = f'{x.year}-{x.month}-{x.day}' 
         # load some of the passed in parameters
         all_params['Name'] = self.fstring
         all_params['ra_gal'] = self.alpha_j
@@ -96,6 +99,7 @@ class WriteHtmlCSV(object):
         template = f_tpl.read()
         f_tpl.close()
 
+        cutimage = 'I{}.fits'.format(self.fstring)
         ra1, ra2, ra3 = RaDegToHMS(self.alpha_j)
         dec1, dec2, dec3 = DecDegToDMS(self.delta_j)
 
@@ -161,7 +165,7 @@ class WriteHtmlCSV(object):
         else:
             basic_info, fit_info, is_comp = read_fitlog(filename='fit.log', 
                                                       yes_bar=0)
-
+        print(fit_info)
         if is_comp:
             try:
                 #set the flag
@@ -304,8 +308,8 @@ class WriteHtmlCSV(object):
                     fbar = 0.0
 
                 try:
-                    all_params['BD'] = fb / fd
-                    all_params['BT'] = fb / (fb + fd + fp + fbar)
+                    all_params['BD'] = round(fb / fd, 2)
+                    all_params['BT'] = round(fb / (fb + fd + fp + fbar), 2)
                 except:
                     all_params['BD'] = 9999
                     all_params['BT'] = 9999
@@ -450,12 +454,13 @@ class WriteHtmlCSV(object):
                 try:
                     all_params['AvgIe'] = all_params['Ie'] + 2.5 * np.log10(2 * 3.14 * pixelscale * \
                                           pixelscale *  all_params['re_pix'] *  all_params['re_pix'] * np.sqrt(1 -  all_params['eb']**2.0))
+                    all_params['AvgIe'] = round(all_params['AvgIe'], 2)
                     AvgMagInsideReErr2 = (1.085 * np.sqrt((2 *  all_params['re_pix'] *  all_params['re_pix_err'])**2.0 + \
                                                          (( all_params['eb'] *  all_params['eb_err']) / \
                                                           np.sqrt(1 -  all_params['eb']**2.0))**2.0)) / \
                                                           (np.sqrt(1 -  all_params['eb']**2.0) * 2 * 3.14 * \
                                                            all_params['re_pix'] *  all_params['re_pix'])
-                    all_params['AvgIe_err'] = np.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0)
+                    all_params['AvgIe_err'] = round(np.sqrt( all_params['Ie_err']**2.0 + AvgMagInsideReErr2**2.0), 2)
                 except OverflowError:
                     all_params['AvgIe'] = np.inf
                     all_params['AvgIe_err'] = np.inf
@@ -504,7 +509,6 @@ class WriteHtmlCSV(object):
             self.LRd = 0.
             self.URd = 200.
             self.center_deviation = 2
-            gimg = 'I{}.fits'.format(self.fstring)
             if not self.detail:
                 if 'bulge' in comp:
                     if abs(all_params['Ie'] - self.UMag) < 0.2 or abs(all_params['Ie'] - self.LMag) < 0.2:
@@ -556,8 +560,8 @@ class WriteHtmlCSV(object):
             # This can be a waste of time if the list is wrong...
             # Finding number of runs in the csv file 
             all_params['run'] = 1
-            if os.path.exists('result.csv'):
-                for line_res in csv.reader(open('result.csv').readlines()[1:]):    
+            if os.path.exists(self.final_result_file):
+                for line_res in csv.reader(open(self.final_result_file).readlines()[1:]):    
                     if(str(line_res[0]) == self.fstring):
                         all_params['run'] += 1
             #if self.GalSky != 9999:
@@ -566,6 +570,19 @@ class WriteHtmlCSV(object):
         print('params_to_write', params_to_write)
         print('all_params', all_params)
 
+        round_output_params = ['mag_auto','magerr_auto','SexHalfRad','C','C_err','A','A_err','S','S_err','G','M','bulge_xctr','bulge_xctr_err','bulge_yctr','bulge_yctr_err','Ie','Ie_err','AvgIe','AvgIe_err','re_pix','re_pix_err','re_kpc','re_kpc_err','n','n_err','eb','eb_err','bpa','bpa_err','bboxy','bboxy_err','disk_xctr','disk_xctr_err','disk_yctr','disk_yctr_err','Id','Id_err','rd_pix','rd_pix_err','rd_kpc','rd_kpc_err','ed','ed_err','dpa','dpa_err','dboxy','dboxy_err','BD','BT','p_xctr','p_xctr_err','p_yctr','p_yctr_err','Ip','Ip_err','Pfwhm','Pfwhm_kpc','bar_xctr','bar_xctr_err','bar_yctr','bar_yctr_err','Ibar','Ibar_err','rbar_pix','rbar_pix_err','rbar_kpc','rbar_kpc_err','n_bar','n_bar_err','ebar','ebar_err','barpa','barpa_err','barboxy','barboxy_err']
+        #for key in round_output_params:
+        #    print(key, all_params[key], round(all_params[key], 2))
+        #    all_params[key] = round(all_params[key], 2) 
+
+        for key in params_to_write.keys():
+            print(key, all_params[params_to_write[key][0]])
+        # Writing csv file 
+        print('self.final_result_file', self.final_result_file)
+        f_res = open(self.final_result_file, "a")
+        writer = csv.writer(f_res)
+        writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
+        f_res.close()
         #sys.exit()
         # Writing data base
         #print('params_to_write', params_to_write)
@@ -577,11 +594,7 @@ class WriteHtmlCSV(object):
             print('No database can be created!')
             print(e)
 
-        # Writing csv file 
-        f_res = open("result.csv", "a")
-        writer = csv.writer(f_res)
-        writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
-        f_res.close()
+        
         
         #print(error_mesg1, error_mesg2, error_mesg3, error_mesg4, error_mesg5, error_mesg6, error_mesg7)
         if self.decompose:

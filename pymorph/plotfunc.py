@@ -63,14 +63,14 @@ class PlotFunc:
             mask = f_mask[0].read().astype(int)
             f_mask.close()
             #print('P3')
-            model = ma.array(model, mask=mask, fill_value=9999)
+            model = ma.array(model, mask=mask, fill_value=0)#9999)
             model = model.filled()
 
             #print('P4')
             #The calculations for Goodness is starting here
             maskedresidual = ma.masked_array(residual, mask)
             anormRes = Normalize(-2 * self.skysig, 3 * self.skysig)
-            residual = ma.filled(maskedresidual, 9999)
+            residual = ma.filled(maskedresidual, 0)#9999)
 
             #print('P5')
             #colorbar(shrink=0.90)

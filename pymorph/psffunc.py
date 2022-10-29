@@ -372,14 +372,17 @@ def run_psfselect(imagefile, datadir, clus_cata, galcut):
                               "catalogue. Exiting")
                         os._exit(0)
                 try:
-                    gimg = pdb["gimg"]    #Galaxy cutout
+                    #gimg = pdb["gimg"]    #Galaxy cutout
+                    cutimage = pdb["gimg"]    #Galaxy cutout
                 except:
                     if os.path.exists(os.path.join(datadir,
                                      'I{}_{}.fits'.format(rootname, gal_id))):
-                        gimg = 'I{}_{}.fits'.format(rootname, gal_id)
+                        #gimg = 'I{}_{}.fits'.format(rootname, gal_id)
+                        cutimage = 'I{}_{}.fits'.format(rootname, gal_id)
                     elif os.path.exists(os.path.join(datadir,
                                         '{}.fits'.format(gal_id))):
-                        gimg = '{}.fits'.format(gal_id)
+                        #gimg = '{}.fits'.format(gal_id)
+                        cutimage = '{}.fits'.format(gal_id)
                     else:
                         print("No image found. Exiting")
                         os._exit(0)
@@ -392,7 +395,8 @@ def run_psfselect(imagefile, datadir, clus_cata, galcut):
                     else:
                         wimg = 'None'
 
-                gfits = pyfits.open(os.path.join(datadir, gimg))
+                #gfits = pyfits.open(os.path.join(datadir, gimg))
+                gfits = pyfits.open(os.path.join(datadir, cutimage))
                 header = gfits[0].header
                 if 'GAIN' in header:
                     SEx_GAIN = header['GAIN']
@@ -403,11 +407,13 @@ def run_psfselect(imagefile, datadir, clus_cata, galcut):
                 if os.path.exists(sex_cata):
                     pass
                 else:
-                    RS = RunSex(os.path.join(datadir, gimg), os.path.join(datadir, wimg), 'None', 9999, 9999, 0)
+                    #RS = RunSex(os.path.join(datadir, gimg), os.path.join(datadir, wimg), 'None', 9999, 9999, 0)
+                    RS = RunSex(os.path.join(datadir, cutimage), os.path.join(datadir, wimg), 'None', 9999, 9999, 0)
                     RS.sex()
 
                 try:
-                    selectpsf(os.path.join(datadir, gimg), sex_cata)
+                    #selectpsf(os.path.join(datadir, gimg), sex_cata)
+                    selectpsf(os.path.join(datadir, cutimage), sex_cata)
                 except:
                     pass
 

@@ -40,8 +40,8 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
 
     return np.median(ma.masked_array(z, zmm).compressed())
 
-
-def FindYetSky(sex_params, SEX_PATH, gimg, wimg, seg_file, 
+#XXX gimg was here instead of cutimage
+def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file, 
                X0, Y0, scat, SEx_GAIN,
                center_err=5., median_std=1.3, sconfig='seg'):
 
@@ -50,14 +50,17 @@ def FindYetSky(sex_params, SEX_PATH, gimg, wimg, seg_file,
     ##XXX
     print('scat', scat)
     PS = PySex(SEX_PATH)
-    PS.RunSex(sex_params, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
+    #PS.RunSex(sex_params, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
+    PS.RunSex(sex_params, cutimage, wimg, scat, SEx_GAIN, sconfig='seg')
 
-    f = fitsio.FITS(gimg)
+    #f = fitsio.FITS(gimg)
+    f = fitsio.FITS(cutimage)
     z = f[0].read()
     f.close()
 
     print(z.shape)
-    print(gimg)
+    #print(gimg)
+    print(cutimage)
 
     fseg = fitsio.FITS(seg_file)
     zm = fseg[0].read()

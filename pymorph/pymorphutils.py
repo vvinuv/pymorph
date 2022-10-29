@@ -210,7 +210,7 @@ def output_params(dbparams=None, decompose=False):
         extra_params = []
 
     extra_params += [['flag', 'bigint'], ['Manual_flag', 'bigint'],
-                    ['Comments', 'varchar(1000)'], ['Date', 'varchar(50)'],
+                    ['Comments', 'varchar(1000)'], ['Date', 'DATE'],
                     ['Version', 'float'],['Filter', 'varchar(500)'],
                     ['Total_Run', 'int'], ['rootname', 'varchar(500)']]
 
@@ -242,7 +242,8 @@ def ReadGalfitConfig(cfile):
         try:
             valuec = line_c.split()
             if str(valuec[0]) == 'A)':
-                gimg = valuec[1]
+                #gimg = valuec[1]
+                cutimage = valuec[1]
             if str(valuec[0]) == 'B)':
                 oimg = valuec[1]
             if str(valuec[0]) == 'C)':
@@ -259,7 +260,8 @@ def ReadGalfitConfig(cfile):
                 cofile = valuec[1]
         except:
             pass
-    return (gimg, oimg, wimg, pfile, mimg, cofile) 
+    #return (gimg, oimg, wimg, pfile, mimg, cofile) 
+    return (cutimage, oimg, wimg, pfile, mimg, cofile) 
 
 def CheckHeader(header0):
     """Set the global keywords from the fits header"""
@@ -576,8 +578,8 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
 
 
 
-def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
-                    SexPosAng, axis_rat, sky, fstring, repeat, output=False):
+def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad, SexPosAng, axis_rat, 
+                    sky, fstring, repeat, flag, components, output=False):
                     #components, sky, repeat, flag, run, out):
 
     """
@@ -620,10 +622,11 @@ def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad,
         WriteError('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
         flag = SetFlag(flag, GetFlag('GALFIT_FAIL'))
+        cutimage = 'I{}'.format(os.path.split(oimg)[-1][1:])
         FailedGalfit(cutimage, components)
         run = 0
 
-    #return flag, run
+    return flag #, run
 
 def Distance(psffile, ra, dec):
     """Find the distance between psf and object in arcsec. Ra and dec is the \
@@ -735,15 +738,19 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
 def returngimg():
     print("No gimg given.")
     if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
-        gimg = 'I' + c.fstring + '.fits'
+        #gimg = 'I' + c.fstring + '.fits'
+        cutimage = 'I' + c.fstring + '.fits'
     elif exists(os.path.join(c.datadir, str(gal_id) + '.fits')):
-        gimg = str(gal_id) + '.fits'
+        #gimg = str(gal_id) + '.fits'
+        cutimage = str(gal_id) + '.fits'
     else:
         print("No possible gimg found")
-        gimg = 'None'
-    return gimg
+        #gimg = 'None'
+        cutimage = 'None'
+    #return gimg
+    return cutimage
 
-def returnthenames(gal_id, gimg, wimg):
+def returnthenames(gal_id, cutimage, wimg):
     """This function returns the names of cutout, weight \
        based on the parameters set in the config.py"""
     if c.galcut:

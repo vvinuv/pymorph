@@ -24,7 +24,7 @@ class GalfitConfigFunc:
                  cutimage, whtimage,  
                  xcntr_img, ycntr_img,
                  good_object, 
-                 NXPTS, NYPTS, 
+                 half_size, 
                  components, fitting, 
                  psffile, 
                  sex_cata_neighbor, 
@@ -46,8 +46,7 @@ class GalfitConfigFunc:
         self.whtimage = whtimage
         self.xcntr_img = xcntr_img
         self.ycntr_img = ycntr_img
-        self.NXPTS = NXPTS
-        self.NYPTS = NYPTS 
+        self.half_size = half_size
         self.components = components
         self.fitting = fitting
         self.psffile = psffile
@@ -250,7 +249,6 @@ class GalfitConfigFunc:
 
         comment = 'output image (see above)\n\n\n'
         fcon.writelines([' Z) 0 # {}'.format(comment)])
-
     
 
     def _write_disk(self, target, fcon):
@@ -308,21 +306,25 @@ class GalfitConfigFunc:
         self.obj_counter += 1
 
         if self.make_constrain == 1:
+            f_constrain = open(self.constrain_file, 'a')
             # write constraints
-            self.f_constrain.write('{} x -2.0 -2.0'.format(self.obj_counter)) 
-            self.f_constrain.write('{} y -2.0 -2.0'.format(self.obj_counter))
-            
+            f_constrain.write('{} x -2.0 -2.0'.format(self.obj_counter)) 
+            f_constrain.write('{} y -2.0 -2.0'.format(self.obj_counter))
+            f_constrain.close()
+ 
         # write config
         pmag = target.mag + 2.5 * np.log10(6.0)
         fcon.writelines(['#point source\n\n'])
         comment = 'Object type\n'
-        fcon.writelines([' 0) psf {} # '.format(comment)])
+        fcon.writelines([' 0) psf # {}'.format(comment)])
 
         comment = 'position x, y [pixel]\n'
+        #print('Point', target.xcntr, target.ycntr, self.fitting[4], self.fitting[4])
         fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr, 
                                                            target.ycntr,
                                                            self.fitting[4],
-                                                           self.fitting[4])])
+                                                           self.fitting[4],
+                                                           comment)])
 
         comment = 'total magnitude\n'
         fcon.writelines([' 3) {:.2f} # {}'.format(pmag, comment)])
@@ -336,9 +338,10 @@ class GalfitConfigFunc:
 
         if self.make_constrain == 1:
             # write constraints
-            self.f_constrain.write('{} x -2.0 2.0\n'.format(self.obj_counter))
-            self.f_constrain.write('{} y -2.0 2.0\n'.format(self.obj_counter))
-            
+            f_constrain = open(self.constrain_file, 'a')
+            f_constrain.write('{} x -2.0 2.0\n'.format(self.obj_counter))
+            f_constrain.write('{} y -2.0 2.0\n'.format(self.obj_counter))
+            f_constrain.close()            
 
         # write config
         gmag = target.mag + 2.5 * np.log10(2.0)
@@ -500,11 +503,14 @@ class GalfitConfigFunc:
     def write_config(self):
 
         print(self.good_object.shape)
-        target = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+        target = mf.GetSExObj(NXPTS=2 * self.half_size, 
+                              NYPTS=2 * self.half_size, 
                               values=self.good_object)
         print(self.good_object.shape)
         target_imcenter = [target.xcntr, target.ycntr]
+        print('target_imcenter', target_imcenter)
         target.set_center(self.xcntr_img, self.ycntr_img)
+        print(target.xcntr, target.ycntr)
         target.pos_ang
         
         self.config_file = 'G_{}.in'.format(self.fstring) #GALFIT configuration file
@@ -551,8 +557,8 @@ class GalfitConfigFunc:
 
 
             comment = 'Image region to fit (xmin xmax ymin ymax)\n'
-            fcon.writelines(['H) 1 {} 1 {} # {}'.format(self.NXPTS, 
-                                                               self.NYPTS,
+            fcon.writelines(['H) 1 {} 1 {} # {}'.format(self.half_size * 2, 
+                                                        self.half_size * 2,
                                                                comment)])
             #comment = 'Size of convolution box (x y)\n'
             #fcon.writelines(['I) {} {} # {}'.format(self.NXPTS, 
@@ -596,25 +602,41 @@ class GalfitConfigFunc:
                 self.center_deviated = 0
 
             isneighbour = 0
+            print('CCCC')
+            #Neighbour in the cutimage needs to be fitted
+            fit_neighbor_cutimage = [[self.xcntr_img, self.ycntr_img]]
+            target.set_center(target_imcenter[0], target_imcenter[1])
             for line_neigh in open(self.sex_cata_neighbor, 'r'):
+                #print(line_neigh) 
                 values_neigh = np.fromstring(line_neigh, sep=' ')
-                neighbor = mf.GetSExObj(NXPTS=self.NXPTS, NYPTS=self.NYPTS, 
+                neighbor = mf.GetSExObj(NXPTS=self.half_size * 2, 
+                                        NYPTS=self.half_size * 2, 
                         values=values_neigh)
-                if neighbor.get_mask(neighbor, self.threshold, self.thresh_area,
+                #print('target area', target.area)
+                #print('target xcntr', target.xcntr, target.ycntr)
+                #print('neigh xcntr', neighbor.xcntr, neighbor.ycntr)
+                #print('self.xcntr_img', self.xcntr_img, self.ycntr_img)
+                xn = self.xcntr_img - target_imcenter[0] + neighbor.xcntr
+                yn = self.ycntr_img - target_imcenter[1] + neighbor.ycntr
+                #print(xn, yn)
+                if target.get_mask(neighbor, self.threshold, self.thresh_area,
                                    self.avoidme) == 0:
                     isneighbour = 1
                     # recenter in chip coordinates
                     xn = self.xcntr_img - target_imcenter[0] + neighbor.xcntr
-                    yn = self.xcntr_img - target_imcenter[1] + neighbor.ycntr
+                    yn = self.ycntr_img - target_imcenter[1] + neighbor.ycntr
                     neighbor.set_center(xn, yn)
-
+                    
                     self._write_neighbor(neighbor, fcon)
-
+                    fit_neighbor_cutimage.append([xn, yn])
+            
+            print('CCCC')
             if isneighbour:
                 self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             
             fcon.close()
 
- 
-
+            self.fit_neighbor_cutimage = np.array(fit_neighbor_cutimage).astype(int)
+            #print('neighbor_cutimage', self.fit_neighbor_cutimage)
+            
    

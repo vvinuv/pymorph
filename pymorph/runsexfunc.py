@@ -97,9 +97,11 @@ class PySex(object):
 
 
 
-    def RunSex(self, sex_config, gimg, wimg, sex_cata, 
+    #def RunSex(self, sex_config, gimg, wimg, sex_cata, 
+    #           SEx_GAIN, check_fits=None, sconfig='default'):
+    def RunSex(self, sex_config, cutimage, wimg, sex_cata, 
                SEx_GAIN, check_fits=None, sconfig='default'):
-        
+   
         SEx_DETECT_MINAREA= sex_config['SEx_DETECT_MINAREA']
         SEx_DETECT_THRESH = sex_config['SEx_DETECT_THRESH']
         SEx_ANALYSIS_THRESH = sex_config['SEx_ANALYSIS_THRESH']
@@ -153,7 +155,7 @@ class PySex(object):
      
         print('Sex 2')
 
-        cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, gimg, fsex)
+        cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, cutimage, fsex)
         print(cmd)
         os.system(cmd)
         print('Sex 2')

@@ -42,64 +42,60 @@ class ReturnClass(object):
         pass
     
     def _find_cutout_size(self): 
-        """Return the size of the cutout. SizeXX, SizeYY are the size of 
+        """Return the size of the cutout. half_sizeX, y_half_sizeY are the size of 
           cutout if c.galcut is True"""
 
-        print(self.pos_ang)
-        self.pos_ang = self.pos_ang * np.pi / 180. #pa in radian
-        SizeX = self.SexHalfRad * self.FracRad * np.abs(np.cos(self.pos_ang)) + \
-                self.axis_rat * self.SexHalfRad * self.FracRad * np.abs(np.sin(self.pos_ang))
-        SizeY = self.SexHalfRad * self.FracRad * np.abs(np.sin(self.pos_ang)) + \
-                self.axis_rat * self.SexHalfRad * self.FracRad * np.abs(np.cos(self.pos_ang))
-        SizeX = int(SizeX)
-        SizeY = int(SizeY)
+        print(self.SexPosAng)
+        self.SexPosAng = self.SexPosAng * np.pi / 180. #pa in radian
+        half_size = self.SexHalfRad * self.FracRad * np.abs(np.cos(self.SexPosAng)) + \
+                self.SexAxisRatio * self.SexHalfRad * self.FracRad * np.abs(np.sin(self.SexPosAng))
+        #y_half_size = self.SexHalfRad * self.FracRad * np.abs(np.sin(self.SexPosAng)) + \
+        #        self.SexAxisRatio * self.SexHalfRad * self.FracRad * np.abs(np.cos(self.SexPosAng))
+        half_size = int(half_size)
 
         #if self.Square:
-        #    SizeX = max(SizeX, SizeY)
-        #    SizeY = SizeX
+        #    half_size = max(half_size, y_half_size)
+        #    y_half_size = half_size
         if self.galcut:
             if self.ReSize:
                 if self.VarSize:
                     pass
                 else:
-                    SizeX = self.FixSize
-                    SizeY = self.FixSize
+                    half_size = self.FixSize
             else:
                 # FIX
-                SizeX = SizeXX
-                SizeY = SizeYY
+                pass
                 # END
         else:
             if self.VarSize:
                 pass
             else:
-                SizeX = self.FixSize
-                SizeY = self.FixSize
-        print(SizeX, SizeY)
-        return SizeX, SizeY
+                half_size = self.FixSize
+        print(half_size)
+        return half_size
 
     def _make_img_square(self):
 
-        print(9, self.NXPTS, self.xcntr_sex, self.SizeX, self.ycntr_sex, self.SizeY)
+        print(9, self.NXPTS, self.sex_xcntr, self.sex_ycntr, self.half_size)
         self.ExceedSize = 0
         #All are floor to make the size even number
-        xmin = np.floor(self.xcntr_sex - self.SizeX)
-        ymin = np.floor(self.ycntr_sex - self.SizeY)
-        xmax = np.floor(self.xcntr_sex + self.SizeX)
-        ymax = np.floor(self.ycntr_sex + self.SizeY)
+        xmin = np.floor(self.sex_xcntr - self.half_size)
+        ymin = np.floor(self.sex_ycntr - self.half_size)
+        xmax = np.floor(self.sex_xcntr + self.half_size)
+        ymax = np.floor(self.sex_ycntr + self.half_size)
         if xmin < 0:
             xmin = 0
-            xcntr_img = self.xcntr_sex
+            xcntr_img = self.sex_xcntr
             self.ExceedSize = 1
         else:
-            xcntr_img = self.SizeX + np.modf(self.xcntr_sex)[0]
+            xcntr_img = self.half_size + np.modf(self.sex_xcntr)[0]
         print(ymin, self.ExceedSize)
         if ymin < 0:
-            ycntr_img = self.ycntr_sex
+            ycntr_img = self.sex_ycntr
             ymin = 0
             self.ExceedSize = 1
         else:
-            ycntr_img = self.SizeY + np.modf(self.ycntr_sex)[0]
+            ycntr_img = self.half_size + np.modf(self.sex_ycntr)[0]
         print(self.ExceedSize)
         if xmax > self.NXPTS - 1:
             xmax = self.NXPTS
@@ -110,11 +106,11 @@ class ReturnClass(object):
             self.ExceedSize = 1
         
         if self.ExceedSize:
-            self.SizeX = min(self.SizeX, self.SizeY)
-            self.SizeY = self.SizeX
+            self.half_size = min(self.half_size, self.half_size)
+            self.half_size = self.half_size
         else:
-            self.SizeX = max(self.SizeX, self.SizeY)
-            self.SizeY = self.SizeX
+            self.half_size = max(self.half_size, self.half_size)
+            self.half_size = self.half_size
 
 
     def _distance_psf_obj(self):
@@ -165,6 +161,7 @@ class ReturnClass(object):
             if UserGivenPsf != 'None':
                 psffile = UserGivenPsf
                 pf.UpdatePsfRaDec(self.DATADIR, psffile)
+                print('U2')
                 distance_psf_gal = super()._distance_psf_obj(psffile, ra, dec)
             elif np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 psffile = self.psflist[self.psfcounter]
@@ -176,46 +173,40 @@ class ReturnClass(object):
                                               self.psflist, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
-
+        print('U2')
         return psffile, round(distance_psf_gal, 1)
 
 
     def _make_cutout(self):
         """
 
-        Make cutout image. The xcntr_sex, ycntr_sex are like iraf.
-        SizeX, SizeY are half size
+        Make cutout image. The sex_xcntr, sex_ycntr are like iraf.
+        half_size, y_half_size are half size
 
         """
-        print(9, self.xcntr_sex, self.SizeX, self.ycntr_sex, self.SizeY)
+        print(9, self.sex_xcntr, self.sex_ycntr, self.half_size)
         self.ExceedSize = 0
         #All are floor to make the size even number
-        xmin = np.floor(self.xcntr_sex - self.SizeX)
-        ymin = np.floor(self.ycntr_sex - self.SizeY)
-        xmax = np.floor(self.xcntr_sex + self.SizeX)
-        ymax = np.floor(self.ycntr_sex + self.SizeY)
-        if xmin < 0:
-            xmin = 0
-            xcntr_img = self.xcntr_sex
-            self.ExceedSize = 1
-        else:
-            xcntr_img = self.SizeX + np.modf(self.xcntr_sex)[0]
-        print(ymin, self.ExceedSize)
-        if ymin < 0:
-            ycntr_img = self.ycntr_sex
-            ymin = 0
-            self.ExceedSize = 1
-        else:
-            ycntr_img = self.SizeY + np.modf(self.ycntr_sex)[0]
-        if xmax > self.NXPTS - 1:
-            xmax = self.NXPTS
-            self.ExceedSize = 1
-        if ymax > self.NYPTS - 1:
-            ymax = self.NYPTS
+        xmin = np.floor(self.sex_xcntr - self.half_size)
+        ymin = np.floor(self.sex_ycntr - self.half_size)
+        xmax = np.floor(self.sex_xcntr + self.half_size)
+        ymax = np.floor(self.sex_ycntr + self.half_size)
+        print(10, ymin, ymax, xmin, xmax, self.half_size * 2 - 1)
+        if xmin < 0 or xmax > (self.NXPTS - 1) or ymin < 0 or ymax > (self.NYPTS - 1):
+            half_size = self.half_size - np.max([abs(xmin), abs(ymin), self.NXPTS - self.half_size * 2 + 1, self.NYPTS - self.half_size * 2 + 1])
+            xcntr_img = self.half_size + np.modf(self.sex_xcntr)[0]
+            ycntr_img = self.half_size + np.modf(self.sex_ycntr)[0]
             self.ExceedSize = 1
 
-        print(xmin, ymin, xmax, ymax, self.NXPTS, self.NYPTS)
-        print(self.ExceedSize)
+            ymin = 0
+            ymax = int(2 * half_size)
+            xmin = 0
+            xmax = int(2 * half_size)
+            print('inside', ymin, ymax, xmin, xmax)
+        else:
+            xcntr_img = self.half_size + np.modf(self.sex_xcntr)[0]
+            ycntr_img = self.half_size + np.modf(self.sex_ycntr)[0]
+            print('outside', ymin, ymax, xmin, xmax)
         ymin = int(ymin)
         ymax = int(ymax)
         xmin = int(xmin)
@@ -225,9 +216,9 @@ class ReturnClass(object):
         data = self.imagedata[ymin:ymax, xmin:xmax]
         print(100, self.imagedata.shape)
         # END
-        self.SizeY, self.SizeX = data.shape
+        self.img_NPTS = data.shape[0]
 
-        print(self.SizeY, self.SizeX)
+        print(self.half_size)
         hdict = {}
         try:
             hdict['RA_TARG'] = self.alpha_j
@@ -251,9 +242,11 @@ class ReturnClass(object):
         else:
             print('NCOMBINE have value -9999. Something wrong?')
 
-        print(13, self.gimg)
+        #print(13, self.gimg)
+        print(13, self.cutimage)
         #print(14, data)
-        fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
+        #fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
+        fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage), 'rw')
         fits.write(data, header=hdict)
         fits.close()
 
@@ -307,24 +300,31 @@ class Pipeline(ReturnClass):
                 print("No image or gal_id found in the object catalogue." \
                       "Exiting")
                 os._exit(0)
-
+        try:
+            self.gal_id = int(self.gal_id)
+        except:
+            pass
         self.fstring = '{}_{}'.format(self.rootname, self.gal_id)
         print('fstring {}'.format(self.fstring))
 
 
         try:
-            self.gimg = pdb["gimg"]    #Galaxy cutout
+            #self.gimg = pdb["gimg"]    #Galaxy cutout
+            self.cutimage = pdb["gimg"]    #Galaxy cutout
         except:
             print("No gimg given.")
             if os.path.exists(os.path.join(self.DATADIR, 
                              'I{}.fits'.format(self.fstring))):
-                self.gimg = 'I{}.fits'.format(self.fstring)
+                #self.gimg = 'I{}.fits'.format(self.fstring)
+                self.cutimage = 'I{}.fits'.format(self.fstring)
             elif os.path.exists(os.path.join(self.DATADIR, 
                                '{}.fits'.format(self.gal_id))): 
-                self.gimg = '{}.fits'.format(self.gal_id)
+                #self.gimg = '{}.fits'.format(self.gal_id)
+                self.cutimage = '{}.fits'.format(self.gal_id)
             else:
                 print("No possible gimg found")
-                self.gimg = 'None'
+                #self.gimg = 'None'
+                self.cutimage = 'None'
 
         try:
             self.wimg = pdb["wimg"]   #Weight cut
@@ -386,7 +386,7 @@ class Pipeline(ReturnClass):
         print('self.SeaPix, self.SeaDeg', self.SeaPix, self.SeaDeg)
 
             
-    def _get_shallow_sky(self, target_sky):
+    def _get_shallow_sky(self, target_sex_xcntr, target_sex_ycntr, target_sex_sky):
         
         # The shallow sky from the shallow run. If no shallow
         # sky it uses the deep sky.
@@ -395,13 +395,12 @@ class Pipeline(ReturnClass):
         if os.path.exists(file_shallow):
             v_shallow = np.genfromtxt(file_shallow)
             try:
-                con = (v_shallow[:, 19] == sex_id)
-                
-                self.SexSky = v_shallow[:, 10][con]
+                distance_diff = (v_shallow[1] - target_sex_xcntr)**2 + (v_shallow[2] - target_sex_ycntr)**2
+                self.SexSky = v_shallow[:, 10][distance_diff.argmin()]
             except:
                 pass
         else:
-            self.SexSky = target_sky
+            self.SexSky = target_sex_sky
             
         print('SexSky', self.SexSky)
 
@@ -430,9 +429,11 @@ class Pipeline(ReturnClass):
         If ReSize is True then it will create the usual file and weight names
         '''
 
-        print('Image is >>> {}'.format(self.gimg))
+        #print('Image is >>> {}'.format(self.gimg))
+        print('Image is >>> {}'.format(self.cutimage))
 
-        gfits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'r')
+        #gfits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'r')
+        gfits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage), 'r')
         self.imagedata = gfits[0].read()
         self.header0 = gfits[0].read_header()
         gfits.close()
@@ -455,12 +456,14 @@ class Pipeline(ReturnClass):
 
         print('Using cutouts')
 
-        print(1, self.gimg)
+        #print(1, self.gimg)
+        print(1, self.cutimage)
         self.NXPTS = self.imagedata.shape[0]
         self.NYPTS = self.imagedata.shape[1]
 
         if self.ReSize:
-            self.gimg = 'I{}.fits'.format(self.fstring)
+            #self.gimg = 'I{}.fits'.format(self.fstring)
+            self.cutimage = 'I{}.fits'.format(self.fstring)
             self.wimg = 'W{}.fits'.format(self.fstring)
 
         #The sextractor runs on the cutout before resizing to estimate 
@@ -472,21 +475,33 @@ class Pipeline(ReturnClass):
         if not os.path.exists(self.sex_cata):
             if 1:
 
+                #PS.RunSex(self.sex_config, 
+                #          os.path.join(self.DATADIR, self.gimg),
+                #          os.path.join(self.DATADIR, self.wimg),
+                #          os.path.join(self.DATADIR, self.sex_cata),
+                #          self.SEx_GAIN, check_fits=None, 
+                #          sconfig='default')
                 PS.RunSex(self.sex_config, 
-                          os.path.join(self.DATADIR, self.gimg),
+                          os.path.join(self.DATADIR, self.cutimage),
                           os.path.join(self.DATADIR, self.wimg),
                           os.path.join(self.DATADIR, self.sex_cata),
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='default')
 
+                #PS.RunSex(self.sex_config,
+                #          os.path.join(self.DATADIR, self.gimg),
+                #          os.path.join(self.DATADIR, self.wimg),
+                #          os.path.join(self.DATADIR, 
+                #                      '.Shallow'.format(self.sex_cata)),
+                #          self.SEx_GAIN, check_fits=None, 
+                #          sconfig='shallow')
                 PS.RunSex(self.sex_config,
-                          os.path.join(self.DATADIR, self.gimg),
+                          os.path.join(self.DATADIR, self.cutimage),
                           os.path.join(self.DATADIR, self.wimg),
                           os.path.join(self.DATADIR, 
                                       '.Shallow'.format(self.sex_cata)),
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='shallow')
-
 #             except Exception as e:
 #                 print(type(e))     # the exception instance
 #                 print(e.args)      # arguments stored in\
@@ -502,15 +517,14 @@ class Pipeline(ReturnClass):
         if self.ReSize: 
             #Can take a function
             #Can check whether a decorator can be used
-            if os.path.exists(self.gimg):
-                ut.WriteError('The file {} exists\n'.format(self.gimg))
+            #if os.path.exists(self.gimg):
+            if os.path.exists(self.cutimage):
+                #ut.WriteError('The file {} exists\n'.format(self.gimg))
+                ut.WriteError('The file {} exists\n'.format(self.cutimage))
                 run = 0
                 #break #Breaking the sextractor loop
             try:
-                cut_params = self._make_cutout()
-                xcntr_img = cut_params[0]
-                ycntr_img = cut_params[1]
-                self.ExceedSize = cut_params[4]
+                xcntr_img, ycntr_img = self._make_cutout()
             except  Exception as e:
                 print(type(e))     # the exception instance
                 print(e.args)      # arguments stored in\
@@ -521,8 +535,8 @@ class Pipeline(ReturnClass):
                 print(traceback.print_exc())
                 #break
         else:
-            xcntr_img = xcntr_sex
-            ycntr_img = ycntr_sex 
+            xcntr_img = sex_xcntr
+            ycntr_img = sex_ycntr 
             self.ExceedSize = 0
         
         return xcntr_img, ycntr_img
@@ -531,23 +545,26 @@ class Pipeline(ReturnClass):
             
     def _not_galcut_cutout(self):
         
-        print(11, self.gimg)
-        self.gimg = 'I{}.fits'.format(self.fstring)
+        #print(11, self.gimg)
+        print('self.cutimage', self.cutimage)
+        #self.gimg = 'I{}.fits'.format(self.fstring)
+        self.cutimage = 'I{}.fits'.format(self.fstring)
         self.wimg = 'W{}.fits'.format(self.fstring)
         #Can take a function
-        if os.path.exists(self.gimg):
-            ut.WriteError('The file {} exists\n'.format(self.gimg))
+        #if os.path.exists(self.gimg):
+        if os.path.exists(self.cutimage):
+            #ut.WriteError('The file {} exists\n'.format(self.gimg))
+            ut.WriteError('The file {} exists\n'.format(self.cutimage))
             run = 0
             #break #Breaking the sextractor loop
             print(3)
 
         # Sizes are total size
-        print(12, self.gimg)
+        #print(12, self.gimg)
+        print(12, self.cutimage)
         #XXX
         if 1:#try: 
-            cut_params = self._make_cutout()
-            xcntr_img = cut_params[0]
-            ycntr_img = cut_params[1]
+            xcntr_img, ycntr_img = self._make_cutout()
 
         #except  Exception as e:
         else:
@@ -625,40 +642,36 @@ class Pipeline(ReturnClass):
         '''
 
         SexTargets = 0
-        good_objects = []
-        bad_objects = []
-        good_distance = []
-        bad_distance = []
         good_object = None
 
         subprocess.call(['cp', '{}'.format(self.sex_cata), 
                          'sex_{}.txt'.format(self.fstring)])
 
-        print(2, self.gimg)
+        #print(2, self.gimg)
+        print(2, self.cutimage)
 
         values_sex = np.genfromtxt(self.sex_cata)
+        sex_id = values_sex[0]
+        sex_xcntr  = values_sex[:, 1]
+        sex_ycntr  = values_sex[:, 2]
         print(self.sex_cata)
-        alpha_s = values_sex[:, 3]
-        delta_s = values_sex[:, 4]
         if self.position == 0:
             alpha_s = np.full_like(values_sex.shape[0], 9999)
             delta_s = np.full_like(values_sex.shape[0], 9999)
-        sex_id = values_sex[0]
-        xcntr_sex  = values_sex[:, 1]
-        ycntr_sex  = values_sex[:, 2]
+            con = (abs(sex_xcntr - self.ximg) < self.SeaPix) & (abs(sex_ycntr - self.yimg) < self.SeaPix)
+            curr_distance = np.sqrt((sex_xcntr - self.ximg)**2 + (sex_ycntr - self.yimg)**2)
 
-        print(self.alpha_j, alpha_s)
-        print(self.SeaDeg, self.SeaPix)
-        
-        if self.alpha_j is not None:
+        else:
+            alpha_s = values_sex[:, 3]
+            delta_s = values_sex[:, 4]
             con = (abs(self.alpha_j - alpha_s) < self.SeaDeg) & \
             (abs(delta_s - self.delta_j) < self.SeaDeg)
             curr_distance = np.sqrt((self.alpha_j - alpha_s)**2 + (delta_s - self.delta_j)**2)
-            
-        else:
-            con = (abs(xcntr_sex - self.ximg) < self.SeaPix) & (abs(ycntr_sex - self.yimg) < self.SeaPix)
-            curr_distance = np.sqrt((xcntr_sex - self.ximg)**2 + (ycntr_sex - self.yimg)**2)
-
+         
+        
+        print(self.alpha_j, alpha_s)
+        print(self.SeaDeg, self.SeaPix)
+        
         curr_distance = curr_distance[con]
         values_sex = values_sex[con] 
         
@@ -696,16 +709,14 @@ class Pipeline(ReturnClass):
         print("SExtractor ID >>> {}".format(sex_id))
 
 
-        self.xcntr_sex, self.ycntr_sex = target.sex_center
-        print('sex_xcntr', self.xcntr_sex)
+        self.sex_xcntr, self.sex_ycntr = target.sex_center
+        print('sex_xcntr', self.sex_xcntr)
         self.SexHalfRad = target.radius #Sex halfrad 
         self.SexPosAng = target.pos_ang
-        self.pos_ang = target.pos_ang
-        self.axis_rat = target.bbya #axis ration b/a
+        self.SexAxisRatio = target.bbya #axis ration b/a
         self.eg = target.eg
         if self.eg <= 0.05:
-            self.eg = 0.07
-        self.major_axis = target.maj_axis
+            self.eg = 0.05
 
         self.SexMagAuto = target.mag
         self.SexMagAutoErr = target.mag_err
@@ -745,7 +756,8 @@ class Pipeline(ReturnClass):
             self.position = 1 #Understood position is given
         
         print(3)
-        
+       
+        #XXX Need to check whether we use this anywhere 
         self.ximg, self.yimg = self._get_ximg_yimg(pdb)
         
         print(self.ximg, self.yimg)
@@ -787,18 +799,17 @@ class Pipeline(ReturnClass):
         # first count the number of "potential" targets in the search radius
         
         good_object, SexTargets = self._potential_target()
+        print('good_object', good_object)
         print(6)
         #print(2, imgsize, whtsize)
-        ##XXX, xcntr_sex or ximg?
-        xcntr_sex = good_object[1]
-        ycntr_sex = good_object[2]
         # now fit best object            
         #XXX
                 
         if 1:#try:
             
             print('Shallow', self.sex_cata)
-            self._get_shallow_sky(good_object[10])
+            #good_object[10] is the sky value
+            self._get_shallow_sky(self.sex_xcntr, self.sex_ycntr, good_object[10])
            
 
             #XXX Need to check whether a few line should be needed  
@@ -812,21 +823,22 @@ class Pipeline(ReturnClass):
                 self.delta_j = delta_s
 
             print('alpha', self.alpha_j)
-            print(0, self.gimg)
+            #print(0, self.gimg)
+            print(0, self.cutimage)
 
             self._flags_initialization()
             
             
             # Calculating the cutout size (half size).
-            # SizeX, SizeY return from make_cutout are full sizes
-            self.SizeX, self.SizeY = super()._find_cutout_size()
+            # half_size, y_half_size return from make_cutout are full sizes
+            self.half_size = super()._find_cutout_size()
            
             if self.Square:
                 self._make_img_square()
 
-            print(self.SizeX, self.SizeY)
+            print(self.half_size)
             #sys.exit()
-            print('Calculated half sizes {}, {}'.format(self.SizeX, self.SizeY))
+            print('Calculated half sizes {}'.format(self.half_size))
 
             # Finding psf and the distance between psf and image
             if self.decompose:
@@ -866,11 +878,12 @@ class Pipeline(ReturnClass):
                 else:
                     xcntr_img, ycntr_img = self._not_galcut_cutout()
 
-                print(2, self.gimg)
+                #print(2, self.gimg)
+                print(2, self.cutimage)
 
                 print('Center of cutimage and exceed size ', \
                       xcntr_img, ycntr_img, self.ExceedSize)
-                print('Full Sizes ', self.SizeX, self.SizeY)
+                print('Full Sizes ', self.half_size)
 
                 if self.galcut & self.ReSize == 0:
                     pass
@@ -886,9 +899,11 @@ class Pipeline(ReturnClass):
                                         '{}.seg'.format(self.sex_cata))
 
                 
-                self.gimg = os.path.join(self.DATADIR, self.gimg)
+                #self.gimg = os.path.join(self.DATADIR, self.gimg)
+                self.cutimage = os.path.join(self.DATADIR, self.cutimage)
                 self.wimg = os.path.join(self.DATADIR, self.wimg)
-
+                
+                #seg_fits is used to generate elliptical mask and galfit mask 
                 seg_fits = os.path.join(self.OUTDIR, 'check.fits')
 
                 #if os.path.exists(seg_fits):
@@ -899,7 +914,10 @@ class Pipeline(ReturnClass):
                 #sys.exit()
                 # The following is to generate segmentation image for mask
                 PS = PySex(self.SEX_PATH)
-                PS.RunSex(self.sex_config, self.gimg, self.wimg, 
+                #PS.RunSex(self.sex_config, self.gimg, self.wimg, 
+                #          seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
+                #          sconfig='seg')
+                PS.RunSex(self.sex_config, self.cutimage, self.wimg, 
                           seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
                           sconfig='seg')
                 #sys.exit()
@@ -912,34 +930,35 @@ class Pipeline(ReturnClass):
                 # Fitting ellipse task or the manual 1d finder
                 mimg = 'M_{}.fits'.format(self.fstring)
                 mimg = os.path.join(self.DATADIR, mimg)
-                #print(xcntr_sex, xcntr_img, ycntr_sex, ycntr_img)
+                #print(sex_xcntr, xcntr_img, sex_ycntr, ycntr_img)
                 #sys.exit()
-                print(3, self.gimg)
+                #print(3, self.gimg)
+                print(3, self.cutimage)
                 if self.decompose:
-                    print(4, self.gimg, self.SexSky)
+                    #print(4, self.gimg, self.SexSky)
+                    print(4, self.cutimage, self.SexSky)
+                    #print(5, self.gimg, self.SexSky)
+                    print(5, self.cutimage, self.SexSky)
                     FE_gimg = ut.FindEllipse(xcntr_img, ycntr_img, 
                                              self.SexHalfRad, self.SexPosAng, 
-                                             self.axis_rat, self.SexSky, 
+                                             self.SexAxisRatio, self.SexSky, 
                                              self.fstring)
-                    FE_gimg.profile(self.gimg, output=False)
-
-                    MaskF = MaskFunc(mimg, 
-                             xcntr_img, ycntr_img, 
-                             self.NXPTS, self.NYPTS, 
-                             good_object)
-                    MaskF.gmask(self.threshold, self.thresh_area, 
-                                seg_fits, seg_cata,         
-                                self.avoidme, NoMask=False)
-
-                    print(4, self.gimg)
+                    #FE_gimg.profile(self.gimg, output=False)
+                    FE_gimg.profile(self.cutimage, output=False)
+                    print('Pipeline repeat', self.repeat)
+                    #MaskF = MaskFunc(mimg, xcntr_img, ycntr_img, self.NXPTS, self.NYPTS, good_object)
+                    #MaskF.gmask(self.threshold, self.thresh_area, seg_fits, seg_cata,         self.avoidme, NoMask=False)
+                    #print(4, self.gimg)
+                    print(4, self.cutimage)
 
                     print(good_object.shape)
-                    print(self.mag_zero)
+                    print('MZ', self.mag_zero)
+                    #XXX Here self.gimg was instead of self.cutimage
                     CF = GalfitConfigFunc(self.DATADIR,
-                                          self.gimg, self.wimg,  
+                                          self.cutimage, self.wimg,  
                                           xcntr_img, ycntr_img,
                                           good_object,
-                                          self.SizeX, self.SizeY,
+                                          self.half_size,
                                           self.components, self.fitting,
                                           psffile,
                                           self.sex_cata,
@@ -958,16 +977,25 @@ class Pipeline(ReturnClass):
                                           self.galfitv, 
                                           self.mag_zero, self.flag)
                     CF.write_config()
+                    print('CF done')
                     galfit_conf = CF.config_file
                     oimg = CF.oimg
                     #continue
-            
+                    
+                    MaskF = MaskFunc(mimg) 
+                    print('seg_fits', seg_fits)
+                    MaskF.gmask(self.threshold, self.thresh_area, 
+                                seg_fits, CF.fit_neighbor_cutimage,         
+                                self.avoidme, NoMask=False)
+
+
 
             # Estimates sky parameters
             #XXX
             if 1:
+                #XXX It was self.gimg was instead of self.cutimage
                 sky_values = FindYetSky(self.sex_config, self.SEX_PATH, 
-                                        self.gimg, self.wimg,
+                                        self.cutimage, self.wimg,
                                         seg_fits, 
                                         xcntr_img, ycntr_img,
                                         seg_cata,
@@ -1004,11 +1032,12 @@ class Pipeline(ReturnClass):
 
             # Estimate CASGM  
             if self.cas:
-                cas_values = ut.HandleCasgm(self.gimg, 
+                #XXX self.gimg was instead of self.cutimage
+                cas_values = ut.HandleCasgm(self.cutimage, 
                                             xcntr_img, ycntr_img, 
                                             alpha_j, delta_j, 
                                             z, 
-                                            SizeX, SizeY, 
+                                            half_size, y_half_size, 
                                             good_object, 
                                             bxcntr, bycntr)
 
@@ -1030,15 +1059,17 @@ class Pipeline(ReturnClass):
             #    os.remove('fit.log')
 
             if self.decompose:
-                try:
+                if 1:#try:
                     if self.galfit & self.detail:
-                        ConfigIter(self.gimg, self.wimg, 
+                        #XXX self.gimg was instead of self.cutimage
+                        ConfigIter(self.cutimage, self.wimg, 
                                    xcntr_img, ycntr_img, 
-                                   SizeX, SizeY, 
+                                   half_size, y_half_size, 
                                    good_object, 
                                    psffile, z)
                     elif self.galfit:
-                        #cmd = '{} {}'.format(self.GALFIT_PATH, galfit_conf)
+                        cmd = '{} {}'.format(self.GALFIT_PATH, galfit_conf)
+                        print(cmd)
                         #os.system(cmd)
                         subprocess.call(['{}'.format(self.GALFIT_PATH), '{}'.format(galfit_conf)])
 
@@ -1051,23 +1082,24 @@ class Pipeline(ReturnClass):
                         
                         # FIX
                         # Should be GALFIT sky instead of self.SexSky 
-                        ut.OImgFindEllipse(oimg, 
+                        self.flag = ut.OImgFindEllipse(oimg, 
                                            xcntr_img, ycntr_img,
                                            self.SexHalfRad,
-                                           self.SexPosAng, self.axis_rat, 
+                                           self.SexPosAng, self.SexAxisRatio, 
                                            self.SexSky, self.fstring, 
-                                           self.repeat,
+                                           self.repeat, self.flag,
+                                           self.components,
                                            output=False)
                         #END
                         print(11)
-                except Exception as e:
-                    print(type(e))     # the exception instance
-                    print(e.args)      # arguments stored in\
+                #except Exception as e:
+                #    print(type(e))     # the exception instance
+                #    print(e.args)      # arguments stored in\
                                          # .args
-                    print(e)           # __str__ allows args\
+                #    print(e)           # __str__ allows args\
                                          # to printed directly
-                    print("Something bad happened (GALFIT)\n\n")
-                    print(traceback.print_exc())
+                #    print("Something bad happened (GALFIT)\n\n")
+                #    print(traceback.print_exc())
 
             
                         
@@ -1076,27 +1108,33 @@ class Pipeline(ReturnClass):
                 goodness = -9999
                 if os.access('P_' + self.fstring + '.png', os.F_OK):	
                     os.remove('P_' + self.fstring + '.png')
-                PlotF = PlotFunc(oimg, mimg, self.fstring, 
-                                    self.SexSky, SkySig, self.mag_zero)
-                PlotF.plot_profile()
-                goodness = round(PlotF.goodness, 2)
-            else:
-                ut.WriteError('Error in plotting \n')
-                if mimg == 'None':
-                    ut.WriteError('Could not find Mask image for plottong \n')
-                run = 0	
-                self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
+                if not os.path.exists(oimg):
+                    print('No output image exists. GALFIT might have been failed')
+                    print('Exiting plotting')
+                else:
+                    try:
+                        PlotF = PlotFunc(oimg, mimg, self.fstring, 
+                                            self.SexSky, SkySig, self.mag_zero)
+                        PlotF.plot_profile()
+                        goodness = round(PlotF.goodness, 2)
+                    except: 
+                        ut.WriteError('Error in plotting \n')
+                        if mimg == 'None':
+                            ut.WriteError('Could not find Mask image for plottong \n')
+                        run = 0	
+                        self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
             
             if isset(self.flag, GetFlag("GALFIT_FAIL")): #or \
                #isset(flag, GetFlag("LARGE_CHISQ")) or \
                #isset(flag, GetFlag("FAKE_CNTR")) or \
                #isset(flag, GetFlag("BULGE_AT_LIMIT")) or \
                #isset(flag, GetFlag("DISK_AT_LIMIT")):
-                failedvalues = line_j.split()
+                f_failed = open(self.restart_file, 'a')
+                failedvalues = obj_value.copy()
                 for fv in failedvalues:
-                    f_failed.writelines([' '.format(fv)])
+                    f_failed.writelines(['{} '.format(fv)])
                 f_failed.writelines(['{}\n'.format(self.flag)])
-
+                f_failed.close()
             #FIX
             #f_cat.writelines(['{} '.format(gal_id)])
             #f_cat.write(good_object)
@@ -1113,6 +1151,7 @@ class Pipeline(ReturnClass):
                                   C, C_err, A, A_err, S, S_err, G, M,
                                   self.components, self.decompose, 
                                   self.repeat, self.detail, 
+                                  self.final_result_file,
                                   self.H0, self.WM, self.WV, self.pixelscale,
                                   self.pymorph_config)
 
@@ -1128,6 +1167,8 @@ class Pipeline(ReturnClass):
                 WF.center_deviation = self.center_deviation
                 WF.cutimage = '{}.fits'.format(self.fstring)
 
+                print('WRITE HTML', self.params_to_write)
+                # self.params_to_write is defined in pymorph.py
                 WF.writeparams(self.params_to_write, distance_psf_gal, 
                                self.z, goodness)
            # except Exception as e:
@@ -1183,7 +1224,7 @@ class Pipeline(ReturnClass):
         if self.galcut:
             if os.access(self.sex_cata, os.F_OK):
                 os.remove(self.sex_cata)
-        sys.exit()
+        #sys.exit()
     #except Exception as e:
     #    print(type(e))     # the exception instance
     #    print(e.args)      # arguments stored in\
@@ -1229,7 +1270,7 @@ class Pipeline(ReturnClass):
 
         print('find_and_fit 2')
 
-    def pymorph(self):
+    def pymorph_duplicated_from_pymorph_script(self):
 
 
         # now change dir to the 

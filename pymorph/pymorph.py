@@ -13,7 +13,6 @@ import re
 import configparser
 import subprocess
 from multiprocessing import Pool
-
 import pymorphutils as ut
 from flagfunc import GetFlag, isset, SetFlag
 
@@ -42,8 +41,8 @@ def run_test(option, opt, value, parser):
     main()
     if crashhandler:
         starthandle = 1
-        os.system('mv restart.cat CRASH.CAT')
-        obj_cata = 'CRASH.CAT' 
+        os.system(f'mv {self.restart_file} CRASH.CAT')
+        self.obj_cata = os.path.join(self.OUTDIR, 'CRASH.CAT')
         main()
     
     sys.exit(0)
@@ -205,9 +204,15 @@ class InitializeParams(object):
         c = configparser.ConfigParser()
         c.read(config_file)
         
+        try:
+            self.DATADIR = c.get('imagecata', 'datadir')
+        except:
+            self.DATADIR = os.getpwd()
 
-        self.DATADIR = c.get('imagecata', 'datadir')
-        self.OUTDIR = c.get('imagecata', 'outdir')
+        try:
+            self.OUTDIR = c.get('imagecata', 'outdir')
+        except:
+            self.OUTDIR = os.getpwd()
 
         self.imagefile = c.get('imagecata', 'imagefile')
         self.imagefile = os.path.join(self.DATADIR, self.imagefile)
@@ -303,6 +308,7 @@ class InitializeParams(object):
         self.maglim = c.get('mag', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
+        self.stargal_prob_lim = c.getfloat('findfit', 'stargal_prob_lim')
 
         self.host = c.get('db', 'host')
         self.database = c.get('db', 'database')
@@ -554,6 +560,8 @@ class PyMorph(InitializeParams):
         galfitv = galfitv[0] + '.' + galfitv[1]
         self.galfitv = float(galfitv)
         self.pymorph_config['galfitv'] = float(galfitv)
+        self.final_result_file = os.path.join(self.OUTDIR, 'result.csv')
+        self.restart_file = os.path.join(self.OUTDIR, 'restart.cat') 
 
     def _indexfile(self):
         #Initialize index.html
@@ -591,28 +599,30 @@ class PyMorph(InitializeParams):
                 print('psf', self.DATADIR, p)
                 pf.UpdatePsfRaDec(self.DATADIR, p)
 
-
         #XXX
         #self.P.psflist = self.psflist
 
         # Writing csv header and finding the output parameters
         params_to_write = ut.output_params(self.dbparams, self.decompose)    
 
+        print('P4')
         #XXX
         #self.P.params_to_write = params_to_write
 
-        if os.path.exists('result.csv'):
+        print(self.final_result_file) 
+        if os.path.exists(self.final_result_file):
             pass
         else:
-            f_res = open("result.csv", "a")
+            f_res = open(self.final_result_file, "w")
             csvhead = ['{}_{:d}'.format(params_to_write[par_key][0], par_key)
                        for par_key in params_to_write.keys()]
             writer = csv.writer(f_res)
             writer.writerow(csvhead)
             f_res.close()
 
+        print(self.out_cata)
+
         f_cat = open(self.out_cata, 'w')
-        f_failed = open('restart.cat', 'w')
         #obj_cata = open(self.obj_cata, 'r')  # The file contains the 
                                                      # objects of interest
         #pnames = obj_cata.readline().split() #The names of the parameters given 
@@ -633,27 +643,33 @@ class PyMorph(InitializeParams):
         obj_values = np.genfromtxt(self.obj_cata, names=True)
 
         pnames = obj_values.dtype.names
-        print('pnames', pnames)
-        print(obj_values.shape)
+        obj_values = list(obj_values[i] for i in pnames)
+        obj_values = np.column_stack(obj_values)                              
 
-        if len(obj_values) == 0:
+        print('pnames', pnames)
+        print(obj_values)
+        print(obj_values.size)
+
+        if obj_values.size == 0:
             print('No lines in {}'.format(self.obj_cata))
             print('Exiting PyMorph')
             sys.exit()
 
 
         # writing a input catalogue (restart.cat) for failed objects
+        f_failed = open(self.restart_file, 'w')
         for pname in pnames:
             f_failed.writelines(['{} '.format(pname)])
         f_failed.writelines(['flag \n'])
-
+        f_failed.close()
 
         self.psfcounter = 0       #For getting psf in the case of unknown ra
 
         #print(1, imgsize, whtsize)
 
-
+        print('P5')
         P = Pipeline()
+        print('P6')
         P.pymorph_config = self.pymorph_config
         P.sex_config = self.sex_config
         P.limit_config = self.limit_config
@@ -679,9 +695,12 @@ class PyMorph(InitializeParams):
         P.sex_cata = self.sex_cata
         P.obj_cata  = self.obj_cata
         P.out_cata = self.out_cata
+        P.final_result_file = self.final_result_file
+        P.restart_file = self.restart_file 
         P.rootname = self.rootname
         P.GALFIT_PATH = self.GALFIT_PATH
         P.SEX_PATH = self.SEX_PATH
+        print('Repeat', self.repeat)
         P.repeat = self.repeat
         P.galcut  = self.galcut
         P.decompose  = self.decompose
@@ -754,7 +773,7 @@ class PyMorph(InitializeParams):
             P.main(obj_value)
 
 
-        print(results)
+        #print(results)
 
     def find_and_fit(self):
         '''
@@ -773,17 +792,20 @@ class PyMorph(InitializeParams):
         print(self.sex_cata)
 
         print(values.shape)
-        con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob)
+        con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob_lim)
+        con = (values[:, 16] < 0.8)# & (values[:, 16] > 0.65)
         values = values[con]
         values = values[:, [0, 3, 4, 17]]
-        print(values)
-        values[:, 3] = values[:, 3] / 15.0
+        values[:, 0] = values[:, 0].astype(int)
+        print(1, values)
+        #values[:, 3] = values[:, 3] / 15.0
 
         if self.redshift != 9999:
             values[:, -1] = self.redshift
             np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f %.3f',
                     header='gal_id ra dec mag z', comments='')
         else:
+            print(2, values)
             np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f',
                     header='gal_id ra dec mag', comments='')
 
@@ -904,8 +926,8 @@ class PyMorph(InitializeParams):
             self.main()
             if self.crashhandler:
                 starthandle = 1
-                os.system('mv restart.cat CRASH.CAT')
-                self.obj_cata = 'CRASH.CAT' 
+                os.system(f'mv {self.restart_file} CRASH.CAT')
+                self.obj_cata = os.path.join(self.OUTDIR, 'CRASH.CAT') 
                 self.main()
 
     #The old function for psfselect=1
@@ -929,14 +951,16 @@ class PyMorph(InitializeParams):
         elif self.psfselect == 0:
             self.center_deviated = 0
             self.starthandle = 0
+            print(111)
             if self.findandfit == True:
                 self.find_and_fit()
+            print(111)
             print(self.sex_cata)
             self.main_thread()
             if self.crashhandler:
                 self.starthandle = 1
-                os.system('mv restart.cat CRASH.CAT')
-                self.obj_cata = 'CRASH.CAT' 
+                os.system(f'mv {self.restart_file} CRASH.CAT')
+                self.obj_cata = os.path.join(self.OUTDIR, 'CRASH.CAT')
                 self.main()
 
         os.chdir(thisdir)
