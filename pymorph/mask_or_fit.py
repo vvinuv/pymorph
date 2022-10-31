@@ -23,7 +23,7 @@ class GetSExObj():
         ##values = line_s.split()
         if len(self.values) != 19:
             ##values = [float(a) for a in values]
-            print(self.values)
+            #print(self.values)
             print("Non-standard SEx Cat line!!\nAll values set to -999!!")
             self.values = 20*[-999.0]
         #It will be nice it we can have @property decorator        

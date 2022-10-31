@@ -51,7 +51,7 @@ class GalfitConfigFunc:
         self.fitting = fitting
         self.psffile = psffile
         self.good_object  = good_object
-        print(self.good_object.shape)
+        #print(self.good_object.shape)
         self.sex_cata_neighbor = sex_cata_neighbor
         self.SexSky = SexSky
         self.fstring = fstring
@@ -502,15 +502,15 @@ class GalfitConfigFunc:
 
     def write_config(self):
 
-        print(self.good_object.shape)
+        #print(self.good_object.shape)
         target = mf.GetSExObj(NXPTS=2 * self.half_size, 
                               NYPTS=2 * self.half_size, 
                               values=self.good_object)
-        print(self.good_object.shape)
+        #print(self.good_object.shape)
         target_imcenter = [target.xcntr, target.ycntr]
-        print('target_imcenter', target_imcenter)
+        #print('target_imcenter', target_imcenter)
         target.set_center(self.xcntr_img, self.ycntr_img)
-        print(target.xcntr, target.ycntr)
+        #print(target.xcntr, target.ycntr)
         target.pos_ang
         
         self.config_file = 'G_{}.in'.format(self.fstring) #GALFIT configuration file
@@ -581,7 +581,7 @@ class GalfitConfigFunc:
             fcon.writelines(['S) 0 # {}'.format(comment)]) 
 
 
-            print('self.components', self.components)
+            #print('self.components', self.components)
             for comp in self.components:
                 if comp == 'bulge':
                     self._write_bulge(target, fcon)
@@ -602,7 +602,7 @@ class GalfitConfigFunc:
                 self.center_deviated = 0
 
             isneighbour = 0
-            print('CCCC')
+            #print('CCCC')
             #Neighbour in the cutimage needs to be fitted
             fit_neighbor_cutimage = [[self.xcntr_img, self.ycntr_img]]
             target.set_center(target_imcenter[0], target_imcenter[1])
@@ -630,7 +630,7 @@ class GalfitConfigFunc:
                     self._write_neighbor(neighbor, fcon)
                     fit_neighbor_cutimage.append([xn, yn])
             
-            print('CCCC')
+            #print('CCCC')
             if isneighbour:
                 self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             

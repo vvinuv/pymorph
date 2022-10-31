@@ -32,7 +32,7 @@ class PlotFunc:
         self.skysig = skysig
         self.mag_zero = mag_zero
         self.save_name = save_name
-        print(oimg, mimg, fstring, sky, skysig)
+        #print(oimg, mimg, fstring, sky, skysig)
         if self.save_name is None:
             self.save_name = 'P_{}.png'.format(self.fstring)
 
@@ -67,7 +67,6 @@ class PlotFunc:
             model = model.filled()
 
             #print('P4')
-            #The calculations for Goodness is starting here
             maskedresidual = ma.masked_array(residual, mask)
             anormRes = Normalize(-2 * self.skysig, 3 * self.skysig)
             residual = ma.filled(maskedresidual, 0)#9999)
@@ -80,11 +79,7 @@ class PlotFunc:
             pixels_in_skysig = residual[np.where(abs(residual) <= self.skysig)].size
             print('No of pixels within sky sigma >>> ', pixels_in_skysig)
 
-            try:
-                self.goodness = pixels_in_skysig / float(valid_pixels)
-            except:
-                self.goodness = 9999
-
+            #goodness is the probability of the model being correct. It is identified using chi2 and dof. The probability is calculated using chisq distribution.
             #print('P6')
             NYPTS, NXPTS = galaxy.shape
             hist_mask = np.zeros((NXPTS, NYPTS))

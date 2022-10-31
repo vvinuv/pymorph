@@ -121,7 +121,7 @@ class PySex(object):
 
         PYMORPH_PATH = os.path.dirname(__file__)
 
-        print('Sex 1')
+        #print('Sex 1')
 
         if sconfig == 'default':
             if wimg is None:
@@ -153,17 +153,17 @@ class PySex(object):
         f_sex.write(template %vars())
         f_sex.close()
      
-        print('Sex 2')
+        #print('Sex 2')
 
         cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, cutimage, fsex)
-        print(cmd)
+        #print(cmd)
         os.system(cmd)
-        print('Sex 2')
+        #print('Sex 2')
 
         check_fits_not_exists = False
         sleep = 0
         ti = time.time()
-        print('check_fits', check_fits)
+        #print('check_fits', check_fits)
         while (check_fits_not_exists) & (sleep < 10):
             if os.path.exists(check_fits):
                 check_fits_not_exists = False

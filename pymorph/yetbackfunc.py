@@ -48,7 +48,7 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
     #from astropy.io import fits
 
     ##XXX
-    print('scat', scat)
+    #print('scat', scat)
     PS = PySex(SEX_PATH)
     #PS.RunSex(sex_params, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
     PS.RunSex(sex_params, cutimage, wimg, scat, SEx_GAIN, sconfig='seg')
@@ -58,9 +58,9 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
     z = f[0].read()
     f.close()
 
-    print(z.shape)
+    #print(z.shape)
     #print(gimg)
-    print(cutimage)
+    #print(cutimage)
 
     fseg = fitsio.FITS(seg_file)
     zm = fseg[0].read()
@@ -74,7 +74,7 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
     #zm = fseg[0].data
     #fseg.close()
 
-    print(zm.shape)
+    #print(zm.shape)
 
     SexSky, SkyYet = 9999, 9999
     SkyMed, SkyMin = 9999, 9999
@@ -82,12 +82,12 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
 
     
     sex_values = np.genfromtxt(scat, skip_header=0)
-    print(sex_values)
+    #print(sex_values)
     if sex_values.ndim == 1:
         sex_values = np.expand_dims(sex_values, axis=0)
         
     for values in sex_values:
-        print(values.shape)
+        #print(values.shape)
         obj = GetSExObj(NXPTS=None, NYPTS=None, values=values)
         SexId = obj.sex_num
         xcntr = obj.xcntr
@@ -127,5 +127,5 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
             #               os.system('rm -f SegCat.cat default_seg.sex seg.fits') 
             break
 
-    print(SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig)
+    #print(SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig)
     return SexSky, SkyYet, SkyMed, SkyMin, SkyQua, SkySig

@@ -200,7 +200,9 @@ def output_params(dbparams=None, decompose=False):
                         ['ebar', 'float'], ['ebar_err', 'float'],
                         [ 'barpa', 'float'], [ 'barpa_err', 'float'],
                         [ 'barboxy', 'float'], [ 'barboxy_err', 'float'],
-                        [ 'chi2nu', 'float'], ['Goodness', 'float'],
+                        [ 'chi2nu', 'float'], ['dof', 'int'], 
+                        ['goodness_upper', 'float'],
+                        ['goodness_lower', 'float'],
                         [ 'run', 'int'], ['SexSky', 'float'],
                         [ 'YetSky', 'float'], ['GalSky', 'float'],
                         ['GalSky_err', 'float'], ['dis_modu', 'float'],
@@ -356,7 +358,7 @@ class FindEllipse(object):
 
         NXPTS, NYPTS = galaxy.shape
 
-        print(NXPTS, NYPTS, self.xcntr, self.ycntr)
+        #print(NXPTS, NYPTS, self.xcntr, self.ycntr)
         x, y = np.meshgrid(np.arange(NXPTS) * 1.0, np.arange(NYPTS) * 1.0)
 
         # r is the radius parameter
@@ -410,7 +412,7 @@ class FindEllipse(object):
         # END
 
         mag = -2.5 * np.log10(intensity)
-        print(intensity - intensity_err)
+        #print(intensity - intensity_err)
         int_l = intensity - intensity_err
         int_l = np.where(int_l <= 0, intensity, int_l)
         mag_l = np.abs(-2.5 * (np.log10(intensity) - np.log10(int_l))) 

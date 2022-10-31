@@ -256,9 +256,9 @@ class InitializeParams(object):
         self.fitting = c.get('galfit', 'fitting')
         self.fitting = [int(tf) for tf in self.fitting.split(',')]
 
-        self.chi2sq = c.getfloat('diagnosis', 'chi2sq')
-        self.goodness = c.getfloat('diagnosis', 'goodness')
-        self.center_deviation = c.getfloat('diagnosis', 'center_deviation')
+        self.chi2nu_limit = c.getfloat('diagnosis', 'chi2nu_limit')
+        self.goodness_limit = c.getfloat('diagnosis', 'goodness_limit')
+        self.center_deviation_limit = c.getfloat('diagnosis', 'center_deviation_limit')
         self.center_constrain = c.getfloat('diagnosis', 'center_constrain')
 
 
@@ -389,9 +389,9 @@ class InitializeParams(object):
         pymorph_config['devauc'] = self.devauc
         pymorph_config['fitting'] = self.fitting
         pymorph_config['fitting'] = self.fitting
-        pymorph_config['chi2sq'] = self.chi2sq
-        pymorph_config['goodness'] = self.goodness
-        pymorph_config['center_deviation'] = self.center_deviation
+        pymorph_config['chi2nu_limit'] = self.chi2nu_limit
+        pymorph_config['goodness_limit'] = self.goodness_limit
+        pymorph_config['center_deviation_limit'] = self.center_deviation_limit
         pymorph_config['center_constrain'] = self.center_constrain
         pymorph_config['pixelscale'] = self.pixelscale
         pymorph_config['H0'] = self.H0
@@ -577,7 +577,7 @@ class PyMorph(InitializeParams):
 
     def main_thread(self):
 
-        print(self.pixelscale, self.ReSize, self.FixSize)
+        #print(self.pixelscale, self.ReSize, self.FixSize)
 
         #try:
         os.system('rm -f TmpElliMask.fits TmpElliMask1.fits')
@@ -605,11 +605,11 @@ class PyMorph(InitializeParams):
         # Writing csv header and finding the output parameters
         params_to_write = ut.output_params(self.dbparams, self.decompose)    
 
-        print('P4')
+        #print('P4')
         #XXX
         #self.P.params_to_write = params_to_write
 
-        print(self.final_result_file) 
+        #print(self.final_result_file) 
         if os.path.exists(self.final_result_file):
             pass
         else:
@@ -620,7 +620,7 @@ class PyMorph(InitializeParams):
             writer.writerow(csvhead)
             f_res.close()
 
-        print(self.out_cata)
+        #print(self.out_cata)
 
         f_cat = open(self.out_cata, 'w')
         #obj_cata = open(self.obj_cata, 'r')  # The file contains the 
@@ -646,9 +646,9 @@ class PyMorph(InitializeParams):
         obj_values = list(obj_values[i] for i in pnames)
         obj_values = np.column_stack(obj_values)                              
 
-        print('pnames', pnames)
-        print(obj_values)
-        print(obj_values.size)
+        #print('pnames', pnames)
+        #print(obj_values)
+        #print(obj_values.size)
 
         if obj_values.size == 0:
             print('No lines in {}'.format(self.obj_cata))
@@ -667,9 +667,9 @@ class PyMorph(InitializeParams):
 
         #print(1, imgsize, whtsize)
 
-        print('P5')
+        #print('P5')
         P = Pipeline()
-        print('P6')
+        #print('P6')
         P.pymorph_config = self.pymorph_config
         P.sex_config = self.sex_config
         P.limit_config = self.limit_config
@@ -700,7 +700,7 @@ class PyMorph(InitializeParams):
         P.rootname = self.rootname
         P.GALFIT_PATH = self.GALFIT_PATH
         P.SEX_PATH = self.SEX_PATH
-        print('Repeat', self.repeat)
+        #print('Repeat', self.repeat)
         P.repeat = self.repeat
         P.galcut  = self.galcut
         P.decompose  = self.decompose
@@ -711,9 +711,9 @@ class PyMorph(InitializeParams):
         P.components  = self.components
         P.devauc = self.devauc
         P.fitting  = self.fitting
-        P.chi2sq  = self.chi2sq
-        P.goodness = self.goodness
-        P.center_deviation = self.center_deviation
+        P.chi2nu_limit  = self.chi2nu_limit
+        P.goodness_limit = self.goodness_limit
+        P.center_deviation_limit = self.center_deviation_limit
         P.center_constrain = self.center_constrain
         P.ReSize  = self.ReSize
         P.VarSize  = self.VarSize
@@ -781,7 +781,7 @@ class PyMorph(InitializeParams):
         obj_cata in config.ini
         '''
 
-        print('find_and_fit 1')
+        #print('find_and_fit 1')
         #fc = open(self.obj_cata, 'w')
         #if self.redshift == 9999:
         #    fc.writelines(['gal_id ra dec mag\n'])
@@ -789,15 +789,15 @@ class PyMorph(InitializeParams):
         #    fc.writelines(['gal_id ra dec mag z\n'])
 
         values = np.genfromtxt(self.sex_cata)
-        print(self.sex_cata)
+        #print(self.sex_cata)
 
-        print(values.shape)
+        #print(values.shape)
         con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob_lim)
-        con = (values[:, 16] < 0.8)# & (values[:, 16] > 0.65)
+        con = (values[:, 16] < 0.8) & (values[:, 16] > 0.65)
         values = values[con]
         values = values[:, [0, 3, 4, 17]]
         values[:, 0] = values[:, 0].astype(int)
-        print(1, values)
+        #print(1, values)
         #values[:, 3] = values[:, 3] / 15.0
 
         if self.redshift != 9999:
@@ -805,14 +805,14 @@ class PyMorph(InitializeParams):
             np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f %.3f',
                     header='gal_id ra dec mag z', comments='')
         else:
-            print(2, values)
+            #print(2, values)
             np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f',
                     header='gal_id ra dec mag', comments='')
 
 
         searchrad = '0.05arc'
 
-        print('find_and_fit 2')
+        #print('find_and_fit 2')
 
     def pymorph(self):
 
@@ -827,10 +827,10 @@ class PyMorph(InitializeParams):
 
 
         if 1:
-            print(1)
+            #print(1)
             
             if self.repeat == False & self.galcut == False:
-                print(2)
+                #print(2)
                 fimg = fitsio.FITS(self.imagefile)
                 self.imagedata = fimg[0].read()
                 self.header0 = fimg[0].read_header()
@@ -847,7 +847,7 @@ class PyMorph(InitializeParams):
 
                 print("Using large image. imagefile >>> {}".format(self.imagefile))
             else:
-                print(4)
+                #print(4)
                 self.SEx_GAIN = 1.
 
             if self.repeat == False & self.galcut == False & os.path.exists(self.whtfile):
@@ -876,17 +876,17 @@ class PyMorph(InitializeParams):
         #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
         #    os._exit(0)
         
-        print(self.sex_cata)
+        #print(self.sex_cata)
         if os.path.exists(self.sex_cata):
             pass
-            print(5)
+            #print(5)
         elif self.galcut == False:
             print('The SExtractor catalogue for your frame is NOT found. ' \
                   'One is being made using the default values. It is always '\
                   'recommended to make SExtractor catalogue by YOURSELF as '\
                   'the pipeline keeps the sky value at the SExtractor value '\
                   'during the decomposition.')
-            print(6)
+            #print(6)
             PS = PySex(self.SEX_PATH)
             PS.RunSex(self.sex_config,  
                    self.imagefile, self.whtfile,
@@ -911,8 +911,8 @@ class PyMorph(InitializeParams):
     #            obj_cata = 'CRASH.CAT' 
     #            main()
     #New function for psfselect=2 non-interactive for webservice
-        print(self.psfselect)
-        print(self.obj_cata)
+        #print(self.psfselect)
+        #print(self.obj_cata)
         if self.psfselect == 2:
             self.Interactive = 0
             self.center_deviated = 0
@@ -951,11 +951,11 @@ class PyMorph(InitializeParams):
         elif self.psfselect == 0:
             self.center_deviated = 0
             self.starthandle = 0
-            print(111)
+            #print(111)
             if self.findandfit == True:
                 self.find_and_fit()
-            print(111)
-            print(self.sex_cata)
+            #print(111)
+            #print(self.sex_cata)
             self.main_thread()
             if self.crashhandler:
                 self.starthandle = 1

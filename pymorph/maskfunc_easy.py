@@ -38,7 +38,7 @@ class MaskFunc:
         else:
             pass
 
-        print('MMMMMM')
+        #print('MMMMMM')
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
         seg_mask = pymconvolve.Convolve(seg_mask, boxcar)
         #print('2, seg_mask')

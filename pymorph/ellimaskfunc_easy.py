@@ -42,7 +42,7 @@ class ElliMaskFunc:
 
         
         #print('seg_cata', seg_cata)
-        print(np.unique(seg))
+        #print(np.unique(seg))
 
         #Find values of objects        
         values = np.genfromtxt(seg_cata)

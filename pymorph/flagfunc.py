@@ -33,17 +33,18 @@ def GetFlag(flagname):
 
 def Get_FitFlag(flagname):
     FlagDict = dict([('LARGE_CHISQ', 0),
-                    ('SMALL_GOODNESS', 1),
-                    ('FAKE_CNTR', 2),
-                    ('IE_AT_LIMIT', 3),
-                    ('ID_AT_LIMIT', 4),
-                    ('RERD_AT_LIMIT', 5),
-                    ('BT_AT_LIMIT', 6),
-                    ('N_AT_LIMIT', 7),
-                    ('RE_AT_LIMIT', 8),
-                    ('RD_AT_LIMIT', 9),
-                    ('EB_AT_LIMIT', 10),
-                    ('ED_AT_LIMIT', 11)
+                    ('SMALL_UPPER_GOODNESS', 1),
+                    ('SMALL_LOWER_GOODNESS', 2),
+                    ('FAKE_CNTR', 3),
+                    ('IE_AT_LIMIT', 4),
+                    ('ID_AT_LIMIT', 5),
+                    ('RERD_AT_LIMIT', 6),
+                    ('BT_AT_LIMIT', 7),
+                    ('N_AT_LIMIT', 8),
+                    ('RE_AT_LIMIT', 9),
+                    ('RD_AT_LIMIT', 10),
+                    ('EB_AT_LIMIT', 11),
+                    ('ED_AT_LIMIT', 12)
                     ])	                 
     return FlagDict[flagname]
 

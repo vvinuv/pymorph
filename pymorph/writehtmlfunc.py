@@ -59,7 +59,7 @@ class WriteHtmlCSV(object):
         self.pixelscale = pixelscale
         self.pymorph_config = pymorph_config
 
-    def writeparams(self, params_to_write, distance_psf_gal, z, goodness):
+    def writeparams(self, params_to_write, distance_psf_gal, z):
 
         bkg1 = "#E6E6FA"
         bkg2 = "#D3D3D3"
@@ -73,7 +73,6 @@ class WriteHtmlCSV(object):
         all_params['ra_gal'] = self.alpha_j
         all_params['dec_gal'] = self.delta_j
         all_params['z'] = z
-        all_params['goodness'] = round(goodness, 3)
         all_params['C'] = self.C
         all_params['C_err'] = self.C_err 
         all_params['A'] = self.A
@@ -91,7 +90,7 @@ class WriteHtmlCSV(object):
         all_params['SexHalfRad'] = self.SexHalfRad
         all_params['magzp'] = self.mag_zero
 
-        print(all_params['C'])
+        #print(all_params['C'])
         # Now continue
         comp = self.components
 
@@ -160,21 +159,53 @@ class WriteHtmlCSV(object):
 
         # Reading fit.log
         if 'bar' in comp:
-            basic_info, fit_info, is_comp = read_fitlog(filename='fit.log', 
+            basic_info, fit_info, measured_error_bad = read_fitlog(filename='fit.log', 
                                                       yes_bar=1)
         else:
-            basic_info, fit_info, is_comp = read_fitlog(filename='fit.log', 
+            basic_info, fit_info, measured_error_bad = read_fitlog(filename='fit.log', 
                                                       yes_bar=0)
-        print(fit_info)
-        if is_comp:
+
+        #print('basic_info', basic_info)
+        if basic_info['dof'] != 9999:
+            try:
+                from scipy import stats
+                #sf=1-cdf which gives the probability of large chi2 given dof
+                chisqprob_upper = lambda chisq, df: stats.chi2.sf(chisq, df)
+                chi2 = basic_info['chi2nu'] * basic_info['dof']
+                goodness_upper = chisqprob_upper(chi2, basic_info['dof']) 
+                #cdf which gives the probability of sum upto a chi2 given dof
+                goodness_lower = stats.chi2.cdf(chi2, basic_info['dof']) 
+                goodness_upper = float(f'{goodness_upper:.2E}')
+                goodness_lower = float(f'{goodness_lower:.2E}')
+            except:
+                goodness_upper = 9999
+                goodness_lower
+        else:
+            goodness_upper = 9999
+            goodness_lower = 9999
+
+        all_params['goodness_upper'] = goodness_upper
+        all_params['goodness_lower'] = goodness_lower
+        #print('goodness_upper', goodness_upper)
+        #print('goodness_lower', goodness_lower)
+
+        #print('fit_info', fit_info)
+        #print('measured_error_bad', measured_error_bad, self.flag)
+        if measured_error_bad:
             try:
                 #set the flag
+                #print(1, 'all_params', all_params['flag'])
                 all_params['flag'] = SetFlag(all_params['flag'], 
                                              GetFlag('ERRORS_FAILED'))
-            except badflag:
+                all_params['flag'] = SetFlag(all_params['flag'], 
+                                             GetFlag('GALFIT_FAIL'))
+
+                #print(2, all_params['flag'])
+            except:# badflag:
                 # the flag is already set
                 pass
             
+ 
         if 'Input' in basic_info:
             alpha_ned = str(self.alpha_j)[:10]
             delta_ned = str(self.delta_j)[:10]
@@ -185,7 +216,7 @@ class WriteHtmlCSV(object):
         if self.decompose:
             initial_conf = basic_info['initial_conf']
             restart_conf = basic_info['restart_conf']
-            print(restart_conf)
+            #print(restart_conf)
             # move the restart file to a reasonably named output file
             new_outname = initial_conf.replace('in','out')
             try:
@@ -195,7 +226,7 @@ class WriteHtmlCSV(object):
             basic_info['restart_conf'] = new_outname
 
             all_params['chi2nu'] = basic_info['chi2nu']
-
+            all_params['dof'] = basic_info['dof']
             # first check all err components and replace if nan or inf
 
             if 'bulge' in fit_info:
@@ -319,7 +350,6 @@ class WriteHtmlCSV(object):
             elif 'disk' in comp:
                 all_params['BD'] = 0.0
                 all_params['BT'] = 0.0
-
             # Start writing html file. Now the template keywords will get values
             pngfile = 'P_{}.png'.format(self.fstring)
             Neighbour_Sersic = ''
@@ -473,7 +503,7 @@ class WriteHtmlCSV(object):
                         try:
                             #set the AVGIe flag
                             all_params['flag'] = SetFlag(all_params['flag'], GetFlag('AVGIE_FAILED'))
-                        except badflag:
+                        except:# badflag:
                             # the flag is already set
                             pass
 
@@ -508,7 +538,8 @@ class WriteHtmlCSV(object):
             self.UN = 20
             self.LRd = 0.
             self.URd = 200.
-            self.center_deviation = 2
+            self.center_deviation_limit = 2
+            chi2nu = all_params['chi2nu']
             if not self.detail:
                 if 'bulge' in comp:
                     if abs(all_params['Ie'] - self.UMag) < 0.2 or abs(all_params['Ie'] - self.LMag) < 0.2:
@@ -531,22 +562,33 @@ class WriteHtmlCSV(object):
                 error_mesg4 = str(error_mesg4) + 'One of the parameters'
                 error_mesg5 = str(error_mesg5) + '          hits limit!'
 
-            if all_params['goodness'] < goodness:
-                error_mesg2 = str(error_mesg2) + 'Goodness is poor!'
-                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('SMALL_GOODNESS'))
-            if all_params['chi2nu'] > self.chi2sq:
+            sigma_percentage = {1:0.682689, 2:0.954499, 3:0.997300, 4:0.999936,
+                                5:0.999999}
+
+            print('sigma_percentage', sigma_percentage[self.pymorph_config['goodness_limit']])
+            #3sigma gaussian has 0.997 probability. Then probabilty 0.003 shows than the model is not agreeing with the data. This means it is significant  
+            if all_params['goodness_upper'] < sigma_percentage[self.pymorph_config['goodness_limit']]: 
+                error_mesg2 = str(error_mesg2) + 'Upper Goodness is poor!'
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'], Get_FitFlag('SMALL_UPPER_GOODNESS'))
                 error_mesg1 = str(error_mesg1) + 'Chi2nu is large!'
-                if all_params['chi2nu'] != 9999:
-                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
-            if abs(all_params['bulge_xctr'] - self.xcntr) > self.center_deviation or \
-                   abs(all_params['bulge_yctr'] - self.ycntr) > self.center_deviation or \
-                   abs(all_params['disk_xctr'] - self.xcntr) > self.center_deviation or \
-                   abs(all_params['disk_yctr'] - self.ycntr) > self.center_deviation:
-                if all_params['bulge_xctr'] == -999 or all_params['bulge_yctr'] == -999 or \
-                       all_params['disk_xctr'] == -999 or all_params['disk_yctr'] == -999:
+
+            
+            if all_params['goodness_lower'] < sigma_percentage[self.pymorph_config['goodness_limit']]: 
+                error_mesg2 = str(error_mesg2) + 'Lower Goodness is poor!'
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'], Get_FitFlag('SMALL_LOWER_GOODNESS'))
+                error_mesg1 = str(error_mesg1) + 'Chi2nu is low!'
+
+            if all_params['chi2nu'] > self.pymorph_config['chi2nu_limit']:
+                all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('LARGE_CHISQ'))
+
+            if abs(all_params['bulge_xctr'] - self.xcntr) > self.center_deviation_limit or \
+                   abs(all_params['bulge_yctr'] - self.ycntr) > self.center_deviation_limit or \
+                   abs(all_params['disk_xctr'] - self.xcntr) > self.center_deviation_limit or \
+                   abs(all_params['disk_yctr'] - self.ycntr) > self.center_deviation_limit:
+                if all_params['bulge_xctr'] == -999 or all_params['disk_yctr'] == -999:
                     pass
                 else:
-                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'],Get_FitFlag('FAKE_CNTR'))
+                    all_params['FitFlag'] = SetFlag(all_params['FitFlag'], Get_FitFlag('FAKE_CNTR'))
                     error_mesg3 = str(error_mesg3) + 'Fake Center!'
 
             if all_params['FitFlag'] > 0:
@@ -555,7 +597,6 @@ class WriteHtmlCSV(object):
             else:
                 img_notify = str(self.PYMORPH_PATH) + '/html/badfit.gif'
                 good_fit = 0
-            chi2nu = all_params['chi2nu']
 
             # This can be a waste of time if the list is wrong...
             # Finding number of runs in the csv file 
@@ -567,18 +608,22 @@ class WriteHtmlCSV(object):
             #if self.GalSky != 9999:
             #    all_params['GalSky'] = self.GalSky
 
-        print('params_to_write', params_to_write)
-        print('all_params', all_params)
+        #print('params_to_write', params_to_write)
+        #print('all_params', all_params)
 
-        round_output_params = ['mag_auto','magerr_auto','SexHalfRad','C','C_err','A','A_err','S','S_err','G','M','bulge_xctr','bulge_xctr_err','bulge_yctr','bulge_yctr_err','Ie','Ie_err','AvgIe','AvgIe_err','re_pix','re_pix_err','re_kpc','re_kpc_err','n','n_err','eb','eb_err','bpa','bpa_err','bboxy','bboxy_err','disk_xctr','disk_xctr_err','disk_yctr','disk_yctr_err','Id','Id_err','rd_pix','rd_pix_err','rd_kpc','rd_kpc_err','ed','ed_err','dpa','dpa_err','dboxy','dboxy_err','BD','BT','p_xctr','p_xctr_err','p_yctr','p_yctr_err','Ip','Ip_err','Pfwhm','Pfwhm_kpc','bar_xctr','bar_xctr_err','bar_yctr','bar_yctr_err','Ibar','Ibar_err','rbar_pix','rbar_pix_err','rbar_kpc','rbar_kpc_err','n_bar','n_bar_err','ebar','ebar_err','barpa','barpa_err','barboxy','barboxy_err']
+        #round_output_params = ['mag_auto','magerr_auto','SexHalfRad','C','C_err','A','A_err','S','S_err','G','M','bulge_xctr','bulge_xctr_err','bulge_yctr','bulge_yctr_err','Ie','Ie_err','AvgIe','AvgIe_err','re_pix','re_pix_err','re_kpc','re_kpc_err','n','n_err','eb','eb_err','bpa','bpa_err','bboxy','bboxy_err','disk_xctr','disk_xctr_err','disk_yctr','disk_yctr_err','Id','Id_err','rd_pix','rd_pix_err','rd_kpc','rd_kpc_err','ed','ed_err','dpa','dpa_err','dboxy','dboxy_err','BD','BT','p_xctr','p_xctr_err','p_yctr','p_yctr_err','Ip','Ip_err','Pfwhm','Pfwhm_kpc','bar_xctr','bar_xctr_err','bar_yctr','bar_yctr_err','Ibar','Ibar_err','rbar_pix','rbar_pix_err','rbar_kpc','rbar_kpc_err','n_bar','n_bar_err','ebar','ebar_err','barpa','barpa_err','barboxy','barboxy_err']
         #for key in round_output_params:
         #    print(key, all_params[key], round(all_params[key], 2))
         #    all_params[key] = round(all_params[key], 2) 
 
-        for key in params_to_write.keys():
-            print(key, all_params[params_to_write[key][0]])
+        #for key in params_to_write.keys():
+        #    print(key, all_params[params_to_write[key][0]])
+
+        #Final flag and FitFlag
+        self.flag = all_params['flag']
+        self.fit_flag = all_params['FitFlag']
         # Writing csv file 
-        print('self.final_result_file', self.final_result_file)
+        #print('self.final_result_file', self.final_result_file)
         f_res = open(self.final_result_file, "a")
         writer = csv.writer(f_res)
         writer.writerow([all_params[params_to_write[key][0]] for key in params_to_write.keys()])
@@ -694,6 +739,7 @@ def load_component(data_line, err_line):
                 obj['boxy'][0]=-999.
                 obj['boxy'][1]=-999.                
 
+    #print('obj', obj)
     # now replace any nan or inf parameters
     for key in obj.keys():
         if np.isnan(obj[key][1]):
@@ -709,7 +755,7 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
     information in 2 Dictionaries, 1 with the basic info and one with
     the fit info"""
 
-    is_comp = False
+    measured_error_bad = False
     
     neighbor = 0
     basic_info = {}
@@ -729,8 +775,13 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                     basic_info['restart_conf'] = str(line[3])
                 elif(str(line[0]) == 'Chi^2/nu'):
                     basic_info['chi2nu'] = float(line[2])
-                elif(str(line[0]) in ['Output', 'Chi^2']):
+                elif(str(line[0]) == 'Chi^2'):
+                    basic_info['dof'] = int(line[5]) 
+                    #print('basic_info', basic_info)
+                    #sys.exit()
+                elif(str(line[0]) == 'Output'):
                     continue
+                
                 # for galaxy bulge
                 else: # it must be part of the fit...
                     if str(line[0]) == 'sersic':
@@ -749,16 +800,18 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                         key = 'sky'
                     
                     err_line = getline(values)
-                    
+                    #print('err_line', err_line)
+                    #print('line', line) 
                     fit_info[key], is_comp= load_component(line, err_line)    
-
+                    measured_error_bad += is_comp
+                    #print('measured_error_bad, is_comp', measured_error_bad, is_comp)
             except: 
                 pass
             
     else:
         print("{} File in {} does not exist!!!!".format(filename, os.getcwd()))
     
-    return basic_info, fit_info, is_comp
+    return basic_info, fit_info, measured_error_bad
 
 if __name__ == '__main__':
     
