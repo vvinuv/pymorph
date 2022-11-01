@@ -24,10 +24,11 @@ def GetFlag(flagname):
                     ('CASGM_FAIL', 14),
                     ('GALFIT_FAIL', 15),
                     ('PLOT_FAIL', 16),
-                    ('ERRORS_FAILED', 17),
-                    ('AVGIE_FAILED', 18),
-                    ('BACK_FAILED', 19),
-                    ('DETAIL_FAILED', 20)
+                    ('PLOT_NOT_SELECTED', 17),
+                    ('ERRORS_FAILED', 18),
+                    ('AVGIE_FAILED', 19),
+                    ('BACK_FAILED', 20),
+                    ('DETAIL_FAILED', 21)
                     ])
     return FlagDict[flagname]
 

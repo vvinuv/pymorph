@@ -259,8 +259,8 @@ class InitializeParams(object):
         self.chi2nu_limit = c.getfloat('diagnosis', 'chi2nu_limit')
         self.goodness_limit = c.getfloat('diagnosis', 'goodness_limit')
         self.center_deviation_limit = c.getfloat('diagnosis', 'center_deviation_limit')
-        self.center_constrain = c.getfloat('diagnosis', 'center_constrain')
-
+        self.remove_obj_boundary = c.getfloat('diagnosis', 'remove_obj_boundary')
+        self.do_plot = c.get('diagnosis', 'do_plot')
 
         try:
             size = c.get('size', 'size_list')
@@ -322,6 +322,15 @@ class InitializeParams(object):
         self.FILTER = 'UNKNOWN'
 
 
+        #if self.set_lim_mag_rad_sex == False:
+        self.NMag = c.getfloat('params_limit', 'NMag')
+        self.NRadius = c.getfloat('params_limit', 'NRadius')
+
+        self.LN = c.getfloat('params_limit', 'LN')
+        self.UN = c.getfloat('params_limit', 'UN')
+        
+        self.center_constrain = c.getfloat('params_limit', 'center_constrain')
+
         self.bdbox = c.get('params_limit', 'bdbox')
         self.bbox = c.get('params_limit', 'bbox')
         self.dbox = c.get('params_limit', 'dbox')
@@ -347,20 +356,8 @@ class InitializeParams(object):
         self.SEx_WEIGHT_TYPE = 'MAP_RMS'
 
 
-        #Limit of parameters
-        self.LMag  = 50.
-        self.UMag  = -50.
-        self.LN    = 0.1
-        self.UN    = 15.
-        self.LRe   = 0.
-        self.URe   = 200.
-        self.LRd   = 0.
-        self.URd   = 200.
-
-
         self.pymorph_config = self.get_pymorph_config_dict()
         self.sex_config = self.get_sex_config_dict()
-        self.limit_config = self.get_limit_config_dict()
 
 
 
@@ -393,6 +390,8 @@ class InitializeParams(object):
         pymorph_config['goodness_limit'] = self.goodness_limit
         pymorph_config['center_deviation_limit'] = self.center_deviation_limit
         pymorph_config['center_constrain'] = self.center_constrain
+        pymorph_config['remove_obj_boundary'] = self.remove_obj_boundary
+        pymorph_config['do_plot'] = self.do_plot
         pymorph_config['pixelscale'] = self.pixelscale
         pymorph_config['H0'] = self.H0
         pymorph_config['WM'] = self.WM
@@ -460,22 +459,6 @@ class InitializeParams(object):
         return sex_config
 
 
-    def get_limit_config_dict(self):
-
-        limit_config = dict()
-
-        limit_config['LMag'] = self.LMag 
-        limit_config['UMag'] = self.UMag
-        limit_config['LN'] = self.LN
-        limit_config['UN'] = self.UN
-        limit_config['LRe'] = self.LRe
-        limit_config['URe'] = self.URe 
-        limit_config['LRd'] = self.LRd
-        limit_config['URd'] = self.URd
-
-        return limit_config
-
-
     def set_sexparams(self,
                       SEx_DETECT_MINAREA = 6,
                       SEx_DETECT_THRESH = 1.5,
@@ -524,27 +507,6 @@ class InitializeParams(object):
                            self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
 
         self.sex_config = self.get_sex_config_dict()
-
-
-    def set_limits(self,
-                   LMag=500, UMag=-500, LN=0.1, UN=20.,
-                   LRe=0., URe=500., LRd=0., URd=500.):
-        '''
-
-        Setting pymorph parameters limits
-
-        '''
-
-        self.LMag  = LMag
-        self.UMag  = UMag
-        self.LN    = LN
-        self.UN    = UN
-        self.LRe   = LRe
-        self.URe   = URe
-        self.LRd   = LRd
-        self.URd   = URd
-
-        self.limit_config = self.get_limit_config_dict()
 
 
 
@@ -672,13 +634,12 @@ class PyMorph(InitializeParams):
         #print('P6')
         P.pymorph_config = self.pymorph_config
         P.sex_config = self.sex_config
-        P.limit_config = self.limit_config
 
             
         P.imagedata = self.imagedata
         P.weightdata = self.weightdata
-        P.NXPTS = self.imagedata.shape[0]
-        P.NYPTS = self.imagedata.shape[1]
+        P.NXPTS = self.imagedata.shape[1]
+        P.NYPTS = self.imagedata.shape[0]
         P.weightexists = self.weightexists
 
         P.EXPTIME = self.EXPTIME
@@ -715,6 +676,7 @@ class PyMorph(InitializeParams):
         P.goodness_limit = self.goodness_limit
         P.center_deviation_limit = self.center_deviation_limit
         P.center_constrain = self.center_constrain
+        P.do_plot = self.do_plot
         P.ReSize  = self.ReSize
         P.VarSize  = self.VarSize
         P.FracRad  = self.FracRad
@@ -747,14 +709,10 @@ class PyMorph(InitializeParams):
         P.galfitv = self.galfitv
         P.FirstCreateDB= self.FirstCreateDB
         P.FILTER  = self.FILTER
-        P.LMag = self.LMag
-        P.UMag  = self.UMag
+        P.NMag = self.NMag
+        P.NRadius  = self.NRadius
         P.LN = self.LN
         P.UN = self.UN
-        P.LRe  = self.LRe
-        P.URe = self.URe
-        P.LRd  = self.LRd
-        P.URd = self.URd
         P.bdbox  = self.bdbox
         P.bbox = self.bbox
         P.dbox = self.dbox
@@ -792,12 +750,17 @@ class PyMorph(InitializeParams):
         #print(self.sex_cata)
 
         #print(values.shape)
-        con = (values[:, 17] > self.UMag) & (values[:, 17] < self.LMag) & (values[:, 16] < self.stargal_prob_lim)
-        con = (values[:, 16] < 0.8) & (values[:, 16] > 0.65)
+        con_remove = (values[:, 1] > self.remove_obj_boundary) & (values[:, 2] > self.remove_obj_boundary) & (values[:, 1] < self.NXPTS - self.remove_obj_boundary) & (values[:, 2] < self.NYPTS - self.remove_obj_boundary) 
+
+        con = (values[:, 17] > self.maglim[1]) & (values[:, 17] < self.maglim[0]) & (values[:, 16] < self.stargal_prob_lim) & con_remove # & (values[:, 1] > 1845) & (values[:, 1] < 1846) & (values[:, 2] > 1469) & (values[:, 2] < 1470) 
+        #con = (values[:, 16] < 0.8) #& (values[:, 16] > 0.65)
+        #con = (values[:, 16] < 0.8) #& (values[:, 17] < 23)
+         
         values = values[con]
+        print(values.shape)
         values = values[:, [0, 3, 4, 17]]
         values[:, 0] = values[:, 0].astype(int)
-        #print(1, values)
+        print(1, values)
         #values[:, 3] = values[:, 3] / 15.0
 
         if self.redshift != 9999:
@@ -835,9 +798,10 @@ class PyMorph(InitializeParams):
                 self.imagedata = fimg[0].read()
                 self.header0 = fimg[0].read_header()
                 fimg.close()
-                self.NXPTS = self.imagedata.shape[0]
-                self.NYPTS = self.imagedata.shape[1]
-                
+                self.NXPTS = self.imagedata.shape[1]
+                self.NYPTS = self.imagedata.shape[0]
+                print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
+                #sys.exit()
                 gheader = ut.CheckHeader(self.header0)
                 self.EXPTIME = gheader[0]
                 self.RDNOISE = gheader[1],
@@ -972,6 +936,6 @@ class PyMorph(InitializeParams):
 if __name__ == '__main__':
     p = PyMorph()
     p.set_sexparams()
-    p.set_limits()
+    #p.set_limits()
     p.pymorph()
     #p.main()

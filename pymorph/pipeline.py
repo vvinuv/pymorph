@@ -71,7 +71,7 @@ class ReturnClass(object):
                 pass
             else:
                 half_size = self.FixSize
-        print('half_size', half_size)
+        #print('half_size', half_size)
         return half_size
 
     def _make_img_square(self):
@@ -187,37 +187,43 @@ class ReturnClass(object):
         self.ExceedSize = 0
         #All are floor to make the size even number
         xmin = np.floor(self.sex_xcntr - self.half_size)
-        ymin = np.floor(self.sex_ycntr - self.half_size)
         xmax = np.floor(self.sex_xcntr + self.half_size)
+        ymin = np.floor(self.sex_ycntr - self.half_size)
         ymax = np.floor(self.sex_ycntr + self.half_size)
-        #print(10, ymin, ymax, xmin, xmax, self.half_size * 2 - 1)
-        if xmin < 0 or xmax > (self.NXPTS - 1) or ymin < 0 or ymax > (self.NYPTS - 1):
-            half_size = self.half_size - np.max([abs(xmin), abs(ymin), self.NXPTS - self.half_size * 2 + 1, self.NYPTS - self.half_size * 2 + 1])
+        #print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
+        #print(10, xmin, xmax, self.NXPTS - xmax, ymin, ymax, self.NYPTS - ymax, self.half_size * 2 - 1)
+        #print(11, xmin < 0, xmax > (self.NXPTS - 2), ymin < 0, ymax > (self.NYPTS - 2))
+        if xmin < 0 or xmax > (self.NXPTS - 2) or ymin < 0 or ymax > (self.NYPTS - 2):
+            max_diff = np.array([xmin, self.NXPTS - 2 - xmax, ymin, self.NYPTS - 2 - ymax])
+            con = (max_diff < 0)
+            max_diff = abs(max_diff[con]).max() + 1
+            self.half_size = self.half_size - max_diff #np.max([abs(xmin), abs(ymin), xmax, ymax])
             xcntr_img = self.half_size + np.modf(self.sex_xcntr)[0]
             ycntr_img = self.half_size + np.modf(self.sex_ycntr)[0]
             self.ExceedSize = 1
 
-            ymin = 0
-            ymax = int(2 * half_size)
-            xmin = 0
-            xmax = int(2 * half_size)
             #print('inside', ymin, ymax, xmin, xmax)
+            xmin = int(self.sex_xcntr - self.half_size)
+            xmax = int(self.sex_xcntr + self.half_size)
+            ymin = int(self.sex_ycntr - self.half_size)
+            ymax = int(self.sex_ycntr + self.half_size)
+            data = self.imagedata[ymin:ymax, xmin:xmax]
         else:
             xcntr_img = self.half_size + np.modf(self.sex_xcntr)[0]
             ycntr_img = self.half_size + np.modf(self.sex_ycntr)[0]
             #print('outside', ymin, ymax, xmin, xmax)
-        ymin = int(ymin)
-        ymax = int(ymax)
-        xmin = int(xmin)
-        xmax = int(xmax)
-        # FIX check c.imagedata or c.ggimage
-        #print(10, ymin, ymax, xmin, xmax)
-        data = self.imagedata[ymin:ymax, xmin:xmax]
-        #print(100, self.imagedata.shape)
-        # END
+            ymin = int(ymin)
+            ymax = int(ymax)
+            xmin = int(xmin)
+            xmax = int(xmax)
+            # FIX check c.imagedata or c.ggimage
+            #print(10, xmin, xmax, ymin, ymax)
+            data = self.imagedata[ymin:ymax, xmin:xmax]
+            #print(100, self.imagedata.shape)
+            # END
         self.img_NPTS = data.shape[0]
 
-        print('half_size', self.half_size)
+        #print('half_size', self.half_size)
         hdict = {}
         try:
             hdict['RA_TARG'] = self.alpha_j
@@ -457,8 +463,8 @@ class Pipeline(ReturnClass):
 
         #print(1, self.gimg)
         #print(1, self.cutimage)
-        self.NXPTS = self.imagedata.shape[0]
-        self.NYPTS = self.imagedata.shape[1]
+        self.NXPTS = self.imagedata.shape[1]
+        self.NYPTS = self.imagedata.shape[0]
 
         if self.ReSize:
             #self.gimg = 'I{}.fits'.format(self.fstring)
@@ -545,7 +551,7 @@ class Pipeline(ReturnClass):
     def _not_galcut_cutout(self):
         
         #print(11, self.gimg)
-        print('self.cutimage', self.cutimage)
+        #print('self.cutimage', self.cutimage)
         #self.gimg = 'I{}.fits'.format(self.fstring)
         self.cutimage = 'I{}.fits'.format(self.fstring)
         self.wimg = 'W{}.fits'.format(self.fstring)
@@ -720,18 +726,12 @@ class Pipeline(ReturnClass):
         self.SexMagAuto = target.mag
         self.SexMagAutoErr = target.mag_err
         
-        self.set_lim_mag_rad_sex = False
-        if self.set_lim_mag_rad_sex is True:
-            #self.UMag = -1e5
-            #self.LMag = -1e5
-            #self.URe = 1e0
-            #self.URd = 1e0
-            self.UMag = self.SexMagAuto - 7.0
-            self.LMag = self.SexMagAuto + 7.0
+        self.LMag = self.SexMagAuto + self.NMag
+        self.UMag = self.SexMagAuto - self.NMag
 
-            # FIX
-            self.URe = self.SexHalfRad * 50.0
-            self.URd = self.SexHalfRad * 50.0
+        # FIX
+        self.LRadius = 0.2
+        self.URadius = self.SexHalfRad * self.NRadius
             # END
         #print(1)
 
@@ -969,8 +969,7 @@ class Pipeline(ReturnClass):
                                           self.avoidme,
                                           self.LMag, self.UMag,
                                           self.LN, self.UN,
-                                          self.LRe, self.URe,
-                                          self.LRd, self.URd,
+                                          self.LRadius, self.URadius,
                                           self.bdbox, self.bbox,
                                           self.dbox, self.devauc,
                                           self.galfitv, 
@@ -1104,7 +1103,9 @@ class Pipeline(ReturnClass):
             
                         
             #sys.exit()
-            if 1:
+            t1 = time.time()
+            #print(self.do_plot)
+            if self.do_plot == True:
                 if os.access('P_' + self.fstring + '.png', os.F_OK):	
                     os.remove('P_' + self.fstring + '.png')
                 if not os.path.exists(oimg):
@@ -1121,7 +1122,13 @@ class Pipeline(ReturnClass):
                             ut.WriteError('Could not find Mask image for plottong \n')
                         run = 0	
                         self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
-            
+            else:
+                ut.WriteError('No plot \n')
+                run = 0	
+                self.flag = SetFlag(self.flag, GetFlag('PLOT_NOT_SELECTED'))
+
+            t2 = time.time()
+            #print('PF time >>> ', t2 - t1)
             #FIX
             #f_cat.writelines(['{} '.format(gal_id)])
             #f_cat.write(good_object)
@@ -1144,12 +1151,12 @@ class Pipeline(ReturnClass):
 
                 WF.UMag = self.UMag
                 WF.LMag = self.LMag
-                WF.LRe = self.LRe
-                WF.URe = self.URe 
+                WF.LRe = self.LRadius
+                WF.URe = self.URadius
                 WF.LN = self.LN
                 WF.UN = self.UN
-                WF.LRd = self.LRd 
-                WF.URd = self.URd
+                WF.LRd = self.LRadius 
+                WF.URd = self.URadius
 
                 #print('WRITE HTML', self.params_to_write)
                 # self.params_to_write is defined in pymorph.py
@@ -1167,7 +1174,7 @@ class Pipeline(ReturnClass):
                 #except:
                 #    ut.WriteError('Error in writing html\n')
                 #    run = 0
-
+            #print('WF time >>> ', time.time() - t2)
             #The following removes all the temporary files 
             # after every fit
             if isset(self.flag, GetFlag("GALFIT_FAIL")) or \
@@ -1234,184 +1241,6 @@ class Pipeline(ReturnClass):
     #f_failed.close()
 
 
-
-
-
-
-    def find_and_fit(self):
-        #print('find_and_fit 1')
-        #fc = open(self.obj_cata, 'w')
-        #if self.redshift == 9999:
-        #    fc.writelines(['gal_id ra dec mag\n'])
-        #else:
-        #    fc.writelines(['gal_id ra dec mag z\n'])
-
-        values = np.genfromtxt(self.sex_cata)
-        
-        con = (values[17] > self.UMag) & (values[17] < self.LMag) & (values[16] < self.stargal_prob)
-        values = values[con]
-        values = values[:, [0, 3, 4, 17]]
-        values[3] = values[3] / 15.0
-
-        if self.redshift != 9999:
-            values[:, -1] = self.redshift
-            np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f %.3f',
-                    header='gal_id ra dec mag z', comments='')
-        else:
-            np.savetxt(self.obj_cata, values, fmt='%i %.8f %.8f %.2f',
-                    header='gal_id ra dec mag', comments='')
-
-
-        searchrad = '0.05arc'
-
-        #print('find_and_fit 2')
-
-    def pymorph_duplicated_from_pymorph_script(self):
-
-
-        # now change dir to the 
-        thisdir = os.getcwd()
-        print("Current directory is ", thisdir)
-        print("Output directory is ", self.OUTDIR)
-
-        os.chdir(self.DATADIR)
-
-
-
-        if 1:
-            print(1)
-            
-            if self.repeat == False & self.galcut == False:
-                print(2)
-                fimg = fitsio.FITS(self.imagefile)
-                self.imagedata = fimg[0].read()
-                self.header0 = fimg[0].read_header()
-                fimg.close()
-                self.NXPTS = self.imagedata.shape[0]
-                self.NYPTS = self.imagedata.shape[1]
-                
-                gheader = ut.CheckHeader(self.header0)
-                self.EXPTIME = gheader[0]
-                self.RDNOISE = gheader[1],
-                self.GAIN = gheader[2]
-                self.SEx_GAIN = gheader[3]
-                self.NCOMBINE = gheader[4]
-
-                print("Using large image. imagefile >>> {}".format(self.imagefile))
-            else:
-                print(4)
-                self.SEx_GAIN = 1.
-
-            if self.repeat == False & self.galcut == False & os.path.exists(self.whtfile):
-                self.weightexists = True
-                
-                wht = fitsio.FITS(self.whtfile)
-
-                if re.search("rms", self.whtfile.lower()):
-                    self.weightdata = wht[0].read()
-                    print("whtfile >>> {}".format(self.whtfile))
-                elif re.search("weight", self.whtfile.lower()):
-                    self.weightdata = 1 / np.sqrt(wht[0].read())
-                    print("whtfile >>> {}".format(self.whtfile))
-                else:
-                    print('Weight file is not understood. Please include ' + \
-                          'the word weight/rms to the weight file name. ' + \
-                          'If it is weight the rms will be found by 1/sqrt(w)')
-                wht.close()
-                print('No weight image found\n')
-
-
-            else:
-                self.weightexists = False
-            
-        #except IOError as e:
-        #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
-        #    os._exit(0)
-        
-        print(self.sex_cata)
-        if os.path.exists(self.sex_cata):
-            pass
-            print(5)
-        elif self.galcut == False:
-            print('The SExtractor catalogue for your frame is NOT found. ' \
-                  'One is being made using the default values. It is always '\
-                  'recommended to make SExtractor catalogue by YOURSELF as '\
-                  'the pipeline keeps the sky value at the SExtractor value '\
-                  'during the decomposition.')
-            print(6)
-            RunSex(self.sex_config, self.SEX_PATH, 
-                   self.imagefile, self.whtfile,
-                   self.sex_cata, self.SEx_GAIN,
-                   seg_fits=None, sconfig='default')
-
-        #sys.exit()
-    #The old function for psfselect = 2
-    #    if psfselect == 2:
-    #        center_deviated = 0
-    #        starthandle = 0
-    #        os.system('ds9 &')
-    #        time.sleep(2)
-    #        run_psfselect(imagefile, DATADIR, obj_cata, self.galcut)
-    #        os.system('xpaset -p ds9 quit')
-    #        psflist = '@psflist.list'
-    #        find_and_fit()
-    #        main()
-    #        if crashhandler:
-    #            starthandle = 1
-    #            os.system('mv restart.cat CRASH.CAT')
-    #            obj_cata = 'CRASH.CAT' 
-    #            main()
-    #New function for psfselect=2 non-interactive for webservice
-        print(self.psfselect)
-        print(self.obj_cata)
-        if self.psfselect == 2:
-            self.Interactive = 0
-            self.center_deviated = 0
-            self.starthandle = 0
-            run_psfselect(self.imagefile, 
-                          self.DATADIR, 
-                          self.obj_cata, 
-                          self.galcut)
-            psflist = os.path.join(self.DATADIR, '@psflist.list')
-            self.find_and_fit()
-            self.main()
-            if self.crashhandler:
-                starthandle = 1
-                os.system('mv restart.cat CRASH.CAT')
-                self.obj_cata = 'CRASH.CAT' 
-                self.main()
-
-    #The old function for psfselect=1
-        elif self.psfselect == 1:
-            self.Interactive = 1
-            os.system('ds9 &')
-            time.sleep(2)
-            run_psfselect(self.imagefile, 
-                          self.DATADIR, 
-                          self.obj_cata, 
-                          self.galcut)
-            os.system('xpaset -p ds9 quit')
-    #new function for psfselect=1 non-interactive for webservice (abhishek rawat)
-    #    elif psfselect == 1:
-    #        Interactive = 0
-    #        run_psfselect(imagefile, DATADIR, obj_cata, self.galcut)
-            
-
-
-
-        elif self.psfselect == 0:
-            self.center_deviated = 0
-            self.starthandle = 0
-            self.find_and_fit()
-            print(self.sex_cata)
-            self.main()
-            if self.crashhandler:
-                self.starthandle = 1
-                os.system('mv restart.cat CRASH.CAT')
-                self.obj_cata = 'CRASH.CAT' 
-                self.main()
-
-        os.chdir(thisdir)
 
 
 

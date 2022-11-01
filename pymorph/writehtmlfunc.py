@@ -564,6 +564,7 @@ class WriteHtmlCSV(object):
 
             sigma_percentage = {1:0.682689, 2:0.954499, 3:0.997300, 4:0.999936,
                                 5:0.999999}
+            sigma_percentage = {1: 0.317311, 2: 0.0455, 3: 0.0027, 4: 6.399e-5, 5: 1e-6}
 
             print('sigma_percentage', sigma_percentage[self.pymorph_config['goodness_limit']])
             #3sigma gaussian has 0.997 probability. Then probabilty 0.003 shows than the model is not agreeing with the data. This means it is significant  

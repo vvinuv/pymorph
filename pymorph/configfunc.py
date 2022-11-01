@@ -35,8 +35,7 @@ class GalfitConfigFunc:
                  avoidme,
                  LMag, UMag,
                  LN, UN,
-                 LRe, URe,
-                 LRd, URd,
+                 LRadius, URadius,
                  bdbox, bbox, dbox, devauc,
                  galfitv,
                  mag_zero, flag):
@@ -64,10 +63,10 @@ class GalfitConfigFunc:
         self.UMag = UMag
         self.LN = LN
         self.UN = UN
-        self.LRe = LRe
-        self.URe = URe
-        self.LRd = LRd
-        self.URd = URd
+        self.LRe = LRadius
+        self.URe = URadius
+        self.LRd = LRadius
+        self.URd = URadius
         self.bdbox = bdbox
         self.bbox = bbox
         self.dbox = dbox
@@ -127,13 +126,13 @@ class GalfitConfigFunc:
         Use _write_sersic_bar_constrain
         '''
         f_constrain = open(self.constrain_file, 'a')
-        f_constrain.write('{}  n  {} to {} \n'.format(cO, LN, UN))
+        f_constrain.write('{}  n  {} to {} \n'.format(cO, self.LN, self.UN))
         f_constrain.write('{}  x  {} to {} \n'.format(cO, -center_constrain,
                                                       center_constrain))
         f_constrain.write('{}  y  {} to {} \n'.format(cO, -center_constrain,
                                                       center_constrain))
-        f_constrain.write('{}  mag  {} to {} \n'.format(cO, UMag, LMag))
-        f_constrain.write('{}  re  {} to {} \n'.format(cO, LRe, URe))
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, self.LMag))
+        f_constrain.write('{}  re  {} to {} \n'.format(cO, self.LRe, self.URe))
         f_constrain.write('{}  q  {} to {} \n'.format(cO, Lq, Uq))
         f_constrain.write('{}  pa  {} to {} \n'.format(cO, Lpa, Upa))
         f_constrain.close()
@@ -148,8 +147,8 @@ class GalfitConfigFunc:
                                                       center_constrain))
         f_constrain.write('{}  y  {} to {} \n'.format(cO, -center_constrain,
                                                       center_constrain))
-        f_constrain.write('{}  mag  {} to {} \n'.format(cO, UMag, LMag))
-        f_constrain.write('{}  re  {} to {} \n'.format(cO, LRe, URe))
+        f_constrain.write('{}  mag  {} to {} \n'.format(cO, self.UMag, self.LMag))
+        f_constrain.write('{}  re  {} to {} \n'.format(cO, self.LRe, self.URe))
         f_constrain.write('{}  q  {} to {} \n'.format(cO, Lq, Uq))
         f_constrain.write('{}  pa  {} to {} \n'.format(cO, Lpa, Upa))
         f_constrain.close()
