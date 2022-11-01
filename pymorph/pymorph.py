@@ -751,8 +751,7 @@ class PyMorph(InitializeParams):
 
         #print(values.shape)
         con_remove = (values[:, 1] > self.remove_obj_boundary) & (values[:, 2] > self.remove_obj_boundary) & (values[:, 1] < self.NXPTS - self.remove_obj_boundary) & (values[:, 2] < self.NYPTS - self.remove_obj_boundary) 
-
-        con = (values[:, 17] > self.maglim[1]) & (values[:, 17] < self.maglim[0]) & (values[:, 16] < self.stargal_prob_lim) & con_remove # & (values[:, 1] > 1845) & (values[:, 1] < 1846) & (values[:, 2] > 1469) & (values[:, 2] < 1470) 
+        con = (values[:, 17] > self.maglim[1]) & (values[:, 17] < self.maglim[0]) & (values[:, 16] < self.stargal_prob_lim) & con_remove  & (values[:, 1] > 1839) & (values[:, 1] < 1840) & (values[:, 2] > 1101) & (values[:, 2] < 1102) 
         #con = (values[:, 16] < 0.8) #& (values[:, 16] > 0.65)
         #con = (values[:, 16] < 0.8) #& (values[:, 17] < 23)
          

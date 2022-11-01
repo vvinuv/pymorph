@@ -977,6 +977,7 @@ class Pipeline(ReturnClass):
                     CF.write_config()
                     #print('CF done')
                     galfit_conf = CF.config_file
+                    self.flag = CF.flag
                     oimg = CF.oimg
                     #continue
                     
@@ -1162,6 +1163,7 @@ class Pipeline(ReturnClass):
                 # self.params_to_write is defined in pymorph.py
                 WF.writeparams(self.params_to_write, distance_psf_gal, 
                                self.z)
+                self.flag = WF.flag
            # except Exception as e:
            #     print(type(e))     # the exception instance
            #     print(e.args)      # arguments stored in\

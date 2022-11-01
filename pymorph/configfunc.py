@@ -628,13 +628,17 @@ class GalfitConfigFunc:
                     
                     self._write_neighbor(neighbor, fcon)
                     fit_neighbor_cutimage.append([xn, yn])
-            
+            #print(isneighbour)
+            #print(2, self.flag) 
             #print('CCCC')
-            if isneighbour:
+            if isneighbour > 0:
                 self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             
+            #print(3, self.flag) 
             fcon.close()
 
+            
+            #It is the catalog of neighbors which will be used for maskfunc
             self.fit_neighbor_cutimage = np.array(fit_neighbor_cutimage).astype(int)
             #print('neighbor_cutimage', self.fit_neighbor_cutimage)
             

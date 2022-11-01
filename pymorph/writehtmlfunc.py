@@ -612,11 +612,6 @@ class WriteHtmlCSV(object):
         #print('params_to_write', params_to_write)
         #print('all_params', all_params)
 
-        #round_output_params = ['mag_auto','magerr_auto','SexHalfRad','C','C_err','A','A_err','S','S_err','G','M','bulge_xctr','bulge_xctr_err','bulge_yctr','bulge_yctr_err','Ie','Ie_err','AvgIe','AvgIe_err','re_pix','re_pix_err','re_kpc','re_kpc_err','n','n_err','eb','eb_err','bpa','bpa_err','bboxy','bboxy_err','disk_xctr','disk_xctr_err','disk_yctr','disk_yctr_err','Id','Id_err','rd_pix','rd_pix_err','rd_kpc','rd_kpc_err','ed','ed_err','dpa','dpa_err','dboxy','dboxy_err','BD','BT','p_xctr','p_xctr_err','p_yctr','p_yctr_err','Ip','Ip_err','Pfwhm','Pfwhm_kpc','bar_xctr','bar_xctr_err','bar_yctr','bar_yctr_err','Ibar','Ibar_err','rbar_pix','rbar_pix_err','rbar_kpc','rbar_kpc_err','n_bar','n_bar_err','ebar','ebar_err','barpa','barpa_err','barboxy','barboxy_err']
-        #for key in round_output_params:
-        #    print(key, all_params[key], round(all_params[key], 2))
-        #    all_params[key] = round(all_params[key], 2) 
-
         #for key in params_to_write.keys():
         #    print(key, all_params[params_to_write[key][0]])
 
