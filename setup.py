@@ -1,7 +1,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-
+from setuptools.command.easy_install import easy_install
 
 # Check if pymouse could run on the given system
 if os.name != 'posix':
@@ -24,10 +24,13 @@ with open(os.path.join(current_dir, 'requirements.txt')) as f:
 
 extras_reqs = dict(zip(extras_reqs, extras_reqs))
 
-with open("__version__") as f:
-    version = f.readlines()[-1].split()[-1].strip("\"'")
+import _version
+#with open("pymorph/_version.py") as f:
+#    version = f.readlines()[-1].split()[-1].strip("\"'")
+version = _version.__version__
 
 long_description = 'This pipeline was written as a part of some projects on galaxy morphology by Vinu Vikraman and Alan Meert. Yogesh Wadadekar, Ajit Kembhavi, G V Vijayagovidan and Mariangela Bernardi were working on those projects. It REQUIRES SExtractor and GALFIT.'
+
 
 setup(
     name='pymorph',
@@ -40,7 +43,9 @@ setup(
     version=version,
     packages=find_packages(),
     include_package_data=True,
+    package_data={'pymorph': ['SEx/*', 'html/*']},
     #extras_require=extras_reqs,
+    scripts=['scripts/pymorph_bin'],
     license='BSD',
     platforms=['Linux'],
     classifiers=[
