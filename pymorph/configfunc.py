@@ -2,9 +2,9 @@ import os
 import sys
 import fitsio
 import numpy as np
-from flagfunc import GetFlag, isset, SetFlag
+from .flagfunc import GetFlag, isset, SetFlag
 import traceback
-import mask_or_fit as mf
+from .mask_or_fit import GetSExObj
 
 class GalfitConfigFunc:
     
@@ -502,7 +502,7 @@ class GalfitConfigFunc:
     def write_config(self):
 
         #print(self.good_object.shape)
-        target = mf.GetSExObj(NXPTS=2 * self.half_size, 
+        target = GetSExObj(NXPTS=2 * self.half_size, 
                               NYPTS=2 * self.half_size, 
                               values=self.good_object)
         #print(self.good_object.shape)
@@ -608,7 +608,7 @@ class GalfitConfigFunc:
             for line_neigh in open(self.sex_cata_neighbor, 'r'):
                 #print(line_neigh) 
                 values_neigh = np.fromstring(line_neigh, sep=' ')
-                neighbor = mf.GetSExObj(NXPTS=self.half_size * 2, 
+                neighbor = GetSExObj(NXPTS=self.half_size * 2, 
                                         NYPTS=self.half_size * 2, 
                         values=values_neigh)
                 #print('target area', target.area)

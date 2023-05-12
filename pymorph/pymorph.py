@@ -13,22 +13,23 @@ import re
 import configparser
 import subprocess
 from multiprocessing import Pool
-import pymorphutils as ut
-from flagfunc import GetFlag, isset, SetFlag
+#import pymorphutils as ut
+from .pymorphutils import CheckHeader, output_params
+from .flagfunc import GetFlag, isset, SetFlag
 
-from ellimaskfunc_easy import ElliMaskFunc
+from .ellimaskfunc_easy import ElliMaskFunc
 
-from maskfunc_easy import MaskFunc
+from .maskfunc_easy import MaskFunc
 
-from configfunc import GalfitConfigFunc
+from .configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
-from yetbackfunc import FindYetSky
+from .yetbackfunc import FindYetSky
 #from plotfunc import PlotFunc
-from runsexfunc import PySex
+from .runsexfunc import PySex
 #from writehtmlfunc import WriteParams
-import psffunc as pf  
-import mask_or_fit as mf
-from pipeline import Pipeline
+from .psffunc import PSFArr, UpdatePsfRaDec  
+#import mask_or_fit as mf
+from .pipeline import Pipeline
        
         
 
@@ -207,12 +208,12 @@ class InitializeParams(object):
         try:
             self.DATADIR = c.get('imagecata', 'datadir')
         except:
-            self.DATADIR = os.getpwd()
+            self.DATADIR = os.getcwd()
 
         try:
             self.OUTDIR = c.get('imagecata', 'outdir')
         except:
-            self.OUTDIR = os.getpwd()
+            self.OUTDIR = os.getcwd()
 
         self.imagefile = c.get('imagecata', 'imagefile')
         self.imagefile = os.path.join(self.DATADIR, self.imagefile)
@@ -555,17 +556,17 @@ class PyMorph(InitializeParams):
         print(self.whtfile)
         print('Weight done')
         #Initializing psf array. ie. creating psflist from file 
-        self.psflist = pf.PSFArr(self.DATADIR, self.psflist)
+        self.psflist = PSFArr(self.DATADIR, self.psflist)
         if self.decompose:
             for p in self.psflist:
                 print('psf', self.DATADIR, p)
-                pf.UpdatePsfRaDec(self.DATADIR, p)
+                UpdatePsfRaDec(self.DATADIR, p)
 
         #XXX
         #self.P.psflist = self.psflist
 
         # Writing csv header and finding the output parameters
-        params_to_write = ut.output_params(self.dbparams, self.decompose)    
+        params_to_write = output_params(self.dbparams, self.decompose)    
 
         #print('P4')
         #XXX
@@ -801,7 +802,7 @@ class PyMorph(InitializeParams):
                 self.NYPTS = self.imagedata.shape[0]
                 print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
                 #sys.exit()
-                gheader = ut.CheckHeader(self.header0)
+                gheader = CheckHeader(self.header0)
                 self.EXPTIME = gheader[0]
                 self.RDNOISE = gheader[1],
                 self.GAIN = gheader[2]

@@ -37,10 +37,10 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     install_requires=install_reqs,
-    extras_require=extras_reqs,
     version=version,
     packages=find_packages(),
     include_package_data=True,
+    #extras_require=extras_reqs,
     license='BSD',
     platforms=['Linux'],
     classifiers=[

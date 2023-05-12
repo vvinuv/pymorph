@@ -1,7 +1,7 @@
 import os
 import fitsio
 import numpy as np
-import pymconvolve 
+from .pymconvolve import Convolve
 #from astropy.io import fits
 
 class ElliMaskFunc:
@@ -67,7 +67,7 @@ class ElliMaskFunc:
         seg[np.where(seg == id_n)] = 0
 
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-        seg = pymconvolve.Convolve(seg, boxcar)
+        seg = Convolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
 
         #print(mask.shape, type(mask), mask_file)
@@ -114,7 +114,7 @@ class ElliMaskFunc:
                 break
 
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-        seg = pymconvolve.Convolve(seg, boxcar)
+        seg = Convolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
 
         print(mask.shape, type(mask), mask_file)

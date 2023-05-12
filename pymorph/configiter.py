@@ -4,9 +4,9 @@ import pyfits
 import config as c
 from os.path import exists
 from numpy import log10
-from readlog import ReadLog
-from runsexfunc import *
-from flagfunc import *
+from .readlog import ReadLog
+from .runsexfunc import *
+from .flagfunc import *
 
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 

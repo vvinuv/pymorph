@@ -1,10 +1,10 @@
 import os
 import numpy as np
-import pymconvolve
+from .pymconvolve import Convolve 
 import numpy.ma as ma
 import fitsio
-from mask_or_fit import GetSExObj
-from runsexfunc import PySex
+from .mask_or_fit import GetSExObj
+from .runsexfunc import PySex
 
 def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
 
@@ -102,7 +102,7 @@ def FindYetSky(sex_params, SEX_PATH, cutimage, wimg, seg_file,
         if np.abs(X0 - obj.xcntr) < center_err and np.abs(Y0 - obj.ycntr) < center_err:
             
             boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-            zm = pymconvolve.Convolve(zm, boxcar)
+            zm = Convolve(zm, boxcar)
             zm[np.where(zm > 0)] = 1
             
             #print(np.unique(zm, return_counts=True))

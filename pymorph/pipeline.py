@@ -15,23 +15,23 @@ import subprocess
 from multiprocessing import Pool
 
 #import config as c
-import pymorphutils as ut
-from flagfunc import GetFlag, Get_FitFlag, isset, SetFlag
+from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, CheckHeader, WriteError, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
+from .flagfunc import GetFlag, Get_FitFlag, isset, SetFlag
 
-from ellimaskfunc_easy import ElliMaskFunc
+from .ellimaskfunc_easy import ElliMaskFunc
 #from ellimaskfunc import ElliMaskFunc
 
-from maskfunc_easy import MaskFunc
+from .maskfunc_easy import MaskFunc
 #from maskfunc import MaskFunc
 
-from configfunc import GalfitConfigFunc
+from .configfunc import GalfitConfigFunc
 #from configtwostep import ConfigIter
-from yetbackfunc import FindYetSky
-from plotfunc import PlotFunc
-from runsexfunc import PySex
-from writehtmlfunc import WriteHtmlCSV
-import psffunc as pf  
-import mask_or_fit as mf
+from .yetbackfunc import FindYetSky
+from .plotfunc import PlotFunc
+from .runsexfunc import PySex
+from .writehtmlfunc import WriteHtmlCSV
+from .psffunc import UpdatePsfRaDec, getpsf
+from .mask_or_fit import GetSExObj
        
         
 
@@ -136,7 +136,7 @@ class ReturnClass(object):
                 dec_p = header['DEC']
 
             distance = 3600.0 * np.sqrt((dec - dec_p)**2.0 + \
-                       ((ra - ra_p) * np.cos(dec * ut.Get_R()))**2.0)
+                       ((ra - ra_p) * np.cos(dec * Get_R()))**2.0)
         except:
             distance = 9999
             print('Distance between psf and image is 9999')
@@ -153,22 +153,22 @@ class ReturnClass(object):
                 psffile = c.pfile
             else:
                 psffile = c.pfile
-                pf.UpdatePsfRaDec(c.pfile)
+                UpdatePsfRaDec(c.pfile)
                 distance_psf_gal = super()._distance_psf_obj(c.pfile, ra, dec)
 
         else:
             if UserGivenPsf != 'None':
                 psffile = UserGivenPsf
-                pf.UpdatePsfRaDec(self.DATADIR, psffile)
+                UpdatePsfRaDec(self.DATADIR, psffile)
                 #print('U2')
                 distance_psf_gal = super()._distance_psf_obj(psffile, ra, dec)
             elif np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 psffile = self.psflist[self.psfcounter]
-                pf.UpdatePsfRaDec(self.DATADIR, psffile)
+                UpdatePsfRaDec(self.DATADIR, psffile)
                 distance_psf_gal = 9999
                 self.psfcounter += 1
             else:
-                psffile, distance_psf_gal = pf.getpsf(self.DATADIR,
+                psffile, distance_psf_gal = getpsf(self.DATADIR,
                                               self.psflist, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
@@ -342,7 +342,7 @@ class Pipeline(ReturnClass):
             self.alpha_j = pdb["ra"]     
         elif isinstance(pdb["ra"], str):
             h, m, s = pdb["ra"].split(':')
-            self.alpha_j = ut.HMSToDeg(int(h), int(m), float(s)) 
+            self.alpha_j = HMSToDeg(int(h), int(m), float(s)) 
         else:
             print("No ra is given")
             self.alpha_j = -9999
@@ -351,7 +351,7 @@ class Pipeline(ReturnClass):
             self.delta_j = pdb["dec"]
         elif isinstance(pdb["dec"], str):
             d, m, s = delta.split(':')
-            self.delta_j = ut.DMSToDeg(int(d), int(m), float(s))
+            self.delta_j = DMSToDeg(int(d), int(m), float(s))
         else:
             print("No dec is given")
             self.delta_j = -9999
@@ -443,7 +443,7 @@ class Pipeline(ReturnClass):
         self.header0 = gfits[0].read_header()
         gfits.close()
 
-        gheader = ut.CheckHeader(self.header0) #Will set up global header parameters
+        gheader = CheckHeader(self.header0) #Will set up global header parameters
         self.EXPTIME = gheader[0]
         self.RDNOISE = gheader[1], 
         self.GAIN = gheader[2]
@@ -524,8 +524,8 @@ class Pipeline(ReturnClass):
             #Can check whether a decorator can be used
             #if os.path.exists(self.gimg):
             if os.path.exists(self.cutimage):
-                #ut.WriteError('The file {} exists\n'.format(self.gimg))
-                ut.WriteError('The file {} exists\n'.format(self.cutimage))
+                #WriteError('The file {} exists\n'.format(self.gimg))
+                WriteError('The file {} exists\n'.format(self.cutimage))
                 run = 0
                 #break #Breaking the sextractor loop
             try:
@@ -536,7 +536,7 @@ class Pipeline(ReturnClass):
                                      # .args
                 print(e)           # __str__ allows args\
                                      # to printed directly
-                ut.WriteError('Cutout exists!')
+                WriteError('Cutout exists!')
                 print(traceback.print_exc())
                 #break
         else:
@@ -558,8 +558,8 @@ class Pipeline(ReturnClass):
         #Can take a function
         #if os.path.exists(self.gimg):
         if os.path.exists(self.cutimage):
-            #ut.WriteError('The file {} exists\n'.format(self.gimg))
-            ut.WriteError('The file {} exists\n'.format(self.cutimage))
+            #WriteError('The file {} exists\n'.format(self.gimg))
+            WriteError('The file {} exists\n'.format(self.cutimage))
             run = 0
             #break #Breaking the sextractor loop
             #print(3)
@@ -578,7 +578,7 @@ class Pipeline(ReturnClass):
                                  # .args
             print(e)           # __str__ allows args\
                                  # to printed directly
-            ut.WriteError('Cutout exists!')
+            WriteError('Cutout exists!')
             print(traceback.print_exc())
             #break
         
@@ -708,7 +708,7 @@ class Pipeline(ReturnClass):
         #print(good_object)
 
         
-        target = mf.GetSExObj(values=good_object)
+        target = GetSExObj(values=good_object)
 
         sex_id = target.sex_num
         print("SExtractor ID >>> {}".format(sex_id))
@@ -786,7 +786,7 @@ class Pipeline(ReturnClass):
         if self.crashhandler:# & starthandle:
             print("CrashHandler is invoked")
 
-            ut.CrashHandlerToRemove(gal_id, self.fstring, self.OUTDIR)
+            CrashHandlerToRemove(gal_id, self.fstring, self.OUTDIR)
 
             self._crash_handler(pdb)
 
@@ -851,7 +851,7 @@ class Pipeline(ReturnClass):
             
             run = 1 #run =1 if pipeline runs sucessfuly
 
-            ut.WriteError('\n\n###########   {} ###########\n'.format(self.gal_id))
+            WriteError('\n\n###########   {} ###########\n'.format(self.gal_id))
 
             #print(3, imgsize, whtsize)
             # For the new run
@@ -938,7 +938,7 @@ class Pipeline(ReturnClass):
                     #print(4, self.cutimage, self.SexSky)
                     #print(5, self.gimg, self.SexSky)
                     #print(5, self.cutimage, self.SexSky)
-                    FE_gimg = ut.FindEllipse(xcntr_img, ycntr_img, 
+                    FE_gimg = FindEllipse(xcntr_img, ycntr_img, 
                                              self.SexHalfRad, self.SexPosAng, 
                                              self.SexAxisRatio, self.SexSky, 
                                              self.fstring)
@@ -1026,13 +1026,13 @@ class Pipeline(ReturnClass):
                                      # .args
                 print(e)           # __str__ allows args\
                                      # to printed directly
-                ut.WriteError('YetSky estimation failed\n')
+                WriteError('YetSky estimation failed\n')
                 print(traceback.print_exc())
 
             # Estimate CASGM  
             if self.cas:
                 #XXX self.gimg was instead of self.cutimage
-                cas_values = ut.HandleCasgm(self.cutimage, 
+                cas_values = HandleCasgm(self.cutimage, 
                                             xcntr_img, ycntr_img, 
                                             alpha_j, delta_j, 
                                             z, 
@@ -1077,11 +1077,11 @@ class Pipeline(ReturnClass):
                             for line in open('fit.log','r'):
                                 f_fit.writelines([str(line)])
                         f_fit.close()
-                        ut.WriteError('((((( Decomposition Successful )))))\n')
+                        WriteError('((((( Decomposition Successful )))))\n')
                         
                         # FIX
                         # Should be GALFIT sky instead of self.SexSky 
-                        self.flag = ut.OImgFindEllipse(oimg, 
+                        self.flag = OImgFindEllipse(oimg, 
                                            xcntr_img, ycntr_img,
                                            self.SexHalfRad,
                                            self.SexPosAng, self.SexAxisRatio, 
@@ -1118,13 +1118,13 @@ class Pipeline(ReturnClass):
                                             self.SexSky, SkySig, self.mag_zero)
                         PlotF.plot_profile()
                     except: 
-                        ut.WriteError('Error in plotting \n')
+                        WriteError('Error in plotting \n')
                         if mimg == 'None':
-                            ut.WriteError('Could not find Mask image for plottong \n')
+                            WriteError('Could not find Mask image for plottong \n')
                         run = 0	
                         self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
             else:
-                ut.WriteError('No plot \n')
+                WriteError('No plot \n')
                 run = 0	
                 self.flag = SetFlag(self.flag, GetFlag('PLOT_NOT_SELECTED'))
 
@@ -1174,7 +1174,7 @@ class Pipeline(ReturnClass):
            #     print(traceback.print_exc())
 
                 #except:
-                #    ut.WriteError('Error in writing html\n')
+                #    WriteError('Error in writing html\n')
                 #    run = 0
             #print('WF time >>> ', time.time() - t2)
             #The following removes all the temporary files 

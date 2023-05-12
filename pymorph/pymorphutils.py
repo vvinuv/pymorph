@@ -10,7 +10,7 @@ import csv
 #from ellimaskfunc import ElliMaskFunc
 #from bkgdfunc import BkgdFunc
 #from casgm import casgm
-from flagfunc import GetFlag, isset, SetFlag
+from .flagfunc import GetFlag, isset, SetFlag
 #from outmaskfunc_easy import OutMaskFunc
 #from outmaskfunc import OutMaskFunc
 

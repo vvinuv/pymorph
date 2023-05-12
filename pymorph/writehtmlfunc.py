@@ -3,11 +3,11 @@ import csv
 import datetime
 import numpy as np
 import fileinput
-from cosmocal import CosmoCal 
+from .cosmocal import CosmoCal 
 import traceback
-from flagfunc import *
-from pymorphutils import RaDegToHMS, DecDegToDMS, output_params
-from writedbfunc import WriteDB
+from .flagfunc import *
+from .pymorphutils import RaDegToHMS, DecDegToDMS, output_params
+from .writedbfunc import WriteDB
 
 class WriteHtmlCSV(object):
     """The class which will write html and csv output. This class will also 

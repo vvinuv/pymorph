@@ -2,7 +2,7 @@ import os
 import csv
 import numpy as np
 import fitsio
-import pymorphutils as ut
+from .pymorphutils import HMSToDeg, DMSToDeg
 
 verbose = False
 
@@ -97,8 +97,8 @@ def UpdatePsfRaDec(datadir, element):
         dec1 = float(str(element)[11:-10])
         dec2 = float(str(element)[-10:-8])
         dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
-        ra = ut.HMSToDeg(ra1, ra2, ra3)
-        dec = ut.DMSToDeg(dec1, dec2, dec3)
+        ra = HMSToDeg(ra1, ra2, ra3)
+        dec = DMSToDeg(dec1, dec2, dec3)
         pfits = fitsio.FITS(os.path.join(datadir, element), 'rw')
         pfits[0].write_key('RA', ra)
         pfits[0].write_key('DEC', dec)
