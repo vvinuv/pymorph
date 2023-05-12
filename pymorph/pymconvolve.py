@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import fft
 
-def Convolve(image, kernal, zeropad=True):
+def pConvolve(image, kernal, zeropad=True):
     """ Convolution using numpy fft2. zeropad=True always in this function"""
 
     kernal = np.asarray(kernal)

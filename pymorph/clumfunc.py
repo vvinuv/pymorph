@@ -44,7 +44,7 @@ class Clumpness:
         ty = (cut_xcntr - x) * si + (y - cut_ycntr) * co
         R = np.sqrt(tx**2.0 + ty**2.0 / one_minus_eg_sq)
         boxcar = np.reshape(np.ones(sigma * sigma), (sigma, sigma)) 
-        I_sigma = pymconvolve.Convolve(CutImDa, boxcar)
+        I_sigma = pymconvolve.pConvolve(CutImDa, boxcar)
         res = CutImDa - I_sigma #the residual image
         if(flag_image):
             # the below will find the image portion which is an anulus of inner 

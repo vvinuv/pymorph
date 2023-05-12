@@ -1,7 +1,7 @@
 import os
 import fitsio
 import numpy as np
-from .pymconvolve import Convolve
+from .pymconvolve import pConvolve
 from .mask_or_fit import GetSExObj
 
 
@@ -40,7 +40,7 @@ class MaskFunc:
 
         #print('MMMMMM')
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-        seg_mask = Convolve(seg_mask, boxcar)
+        seg_mask = pConvolve(seg_mask, boxcar)
         #print('2, seg_mask')
         #print(seg_mask)
         #sys.exit()
@@ -108,7 +108,7 @@ class MaskFunc_tmp:
 
         print('MMMMMM')
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
-        seg_mask = Convolve(seg_mask, boxcar)
+        seg_mask = pConvolve(seg_mask, boxcar)
         #print('2, seg_mask')
         #print(seg_mask)
         #sys.exit()

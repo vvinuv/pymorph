@@ -77,7 +77,7 @@ class Gini:
         ry = (xcntr - x) * si + (y - ycntr) * co
         R = np.sqrt(rx**2.0 + ry**2.0 / one_minus_eg_sq)
         boxcar = np.reshape(np.ones(sigma * sigma), (sigma, sigma))    
-        I_sigma = pymconvolve.Convolve(zextract, boxcar) 
+        I_sigma = pymconvolve.pConvolve(zextract, boxcar) 
         lower_thre = (I_sigma[R <= ext_rad / 1.5].sum() - \
                       I_sigma[R <= ext_rad / 1.5 - 1].sum()) / \
                      (3.14 * ((ext_rad / 1.5)**2. - (ext_rad / 1.5 - 1)**2.))
