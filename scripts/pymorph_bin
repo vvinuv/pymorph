@@ -2,31 +2,21 @@
 import sys
 import pymorph
 
-def parse_args():
-    """Handle the command line arguments to corr2 executable.
+def get_args():
+    """Handle the command line arguments
     """
-    import argparse
 
-    version_str = "PyMorph version"
-    description = "Efficient code for computing 2-point correlation functions.\n"
+    name = f'PyMorph {pymorph.version}'
+    description = "2D dimensional decomposition of galaxy image"
+    
+    print(f'{name}: {description}')
 
-    parser = argparse.ArgumentParser(description=description, 
-                                     add_help=True, epilog=version_str)
-    parser.add_argument('config_file', type=str, nargs='?',
-                        help='the configuration file')
-    parser.add_argument('variables', type=str, nargs='*',
-                        help='Additional the config file. ')
-
-    args = parser.parse_args()
-
-
-    return args
 
 
 def main():
-    args = parse_args()
+    args = get_args()
+ 
 
-    # Read the config file
     p = pymorph.PyMorph()
     p.set_sexparams()
     p.pymorph()

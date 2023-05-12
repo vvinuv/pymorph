@@ -1,2 +1,17 @@
 *.pyc
 *~
+galfit/*
+examples/*
+galfit/Makefile
+galfit/cfitsio/group.c
+galfit/galfit
+galfit/getline.c
+galfit/mrqmin.c
+galfit/read_input.c
+.ipynb_checkpoints/
+back__init__.py
+build
+dist
+pymorph.egg-info
+pymorph/.ipynb_checkpoints/
+pymorph_oldest_version
