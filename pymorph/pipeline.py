@@ -276,7 +276,7 @@ class ReturnClass(object):
 
 class Pipeline(ReturnClass):
     
-    __version__ = 3.0
+    #__version__ = 3.0
 
     def __init__(self, config_file='config.ini'):
 
