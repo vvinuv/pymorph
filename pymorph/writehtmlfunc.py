@@ -7,7 +7,10 @@ from .cosmocal import CosmoCal
 import traceback
 from .flagfunc import *
 from .pymorphutils import RaDegToHMS, DecDegToDMS, output_params
-from .writedbfunc import WriteDB
+try:
+    from .writedbfunc import WriteDB
+except:
+    print('No mysql database or python mysql.connector module')
 
 class WriteHtmlCSV(object):
     """The class which will write html and csv output. This class will also 
