@@ -20,6 +20,12 @@ Current version is buggy and not recommended to use this version.
 
 ### If you want to really use this
 
+You can either run  
+
+```pymorph_bin``` 
+
+or 
+
 ```
 >>> import pymorph
 >>> p = pymorph.PyMorph()
