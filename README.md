@@ -2,6 +2,19 @@ PyMorph
 =======
 This pipeline was written as a part of some projects on galaxy morphology by Vinu Vikraman and Alan Meert. Yogesh Wadadekar, Ajit Kembhavi, G V Vijayagovidan and  Mariangela Bernardi were working on those projects. It REQUIRES SExtractor and GALFIT.  
 
+### INSTALLATION
+1. Download pymorph either by zip or by
+
+```
+https://github.com/vvinuv/pymorph.git
+```
+
+2. In the pymorph folder 
+
+```
+pip install .
+``` 
+
 ### BUGS
 Current version is buggy and not recommended to use this version.
 
