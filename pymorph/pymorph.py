@@ -545,7 +545,7 @@ class PyMorph(InitializeParams):
 
         #print(self.pixelscale, self.ReSize, self.FixSize)
 
-        print('PSF 2', self.psflist)
+        #print('PSF 2', self.psflist)
         self._indexfile()
         
 
@@ -554,7 +554,7 @@ class PyMorph(InitializeParams):
         print('Image done')
         print(self.whtfile)
         print('Weight done')
-        print('PSF 1', self.psflist)
+        #print('PSF 1', self.psflist)
         #Initializing psf array. ie. creating psflist from file 
         self.psflist = PSFArr(self.psflist)
         #if self.decompose:
@@ -805,7 +805,7 @@ class PyMorph(InitializeParams):
                 fimg.close()
                 self.NXPTS = self.imagedata.shape[1]
                 self.NYPTS = self.imagedata.shape[0]
-                print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
+                #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
                 #sys.exit()
                 gheader = CheckHeader(self.header0)
                 self.EXPTIME = gheader[0]
