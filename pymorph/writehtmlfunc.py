@@ -182,7 +182,7 @@ class WriteHtmlCSV(object):
                 goodness_lower = float(f'{goodness_lower:.2E}')
             except:
                 goodness_upper = 9999
-                goodness_lower
+                goodness_lower = 9999
         else:
             goodness_upper = 9999
             goodness_lower = 9999

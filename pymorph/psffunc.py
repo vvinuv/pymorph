@@ -70,7 +70,7 @@ def PSFArr(psflist):
     """Return psf list if the given input is a file"""
     #print('P1', psflist)
     if psflist.startswith('@'):
-        psffile = self.psflist.split('@')[1]
+        psffile = psflist.split('@')[1]
         psffile = open(psflist.split('@')[1], 'r')
         psflist = [pline for pline in psffile]
     elif isinstance(psflist, str):
