@@ -66,22 +66,35 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     return psffile, distance
 
 
-def PSFArr(datadir, psflist):
+def PSFArr(psflist):
     """Return psf list if the given input is a file"""
     print('P1', psflist)
     if psflist.startswith('@'):
-        #if isinstance(psflist, str):
-        print('P2', psflist.split('@')[1])
-        psffile = open(os.path.join(datadir, psflist.split('@')[1]), 'r')
-        psflist = []
-        for pline in psffile:
-            psflist.append(pline.split()[0])
-    if isinstance(psflist, str):
+        psffile = self.psflist.split('@')[1]
+        psffile = open(psflist.split('@')[1], 'r')
+        psflist = [pline for pline in psffile]
+    elif isinstance(psflist, str):
         psflist = psflist.split(',')
+        psflist = [pf for pf in psflist]
     else:
         print("The psf list is not understood. Please use either \
              @filename or a list of psfs")
     print('P3', psflist)
+    for pf in psflist:
+        ra1 = float(str(pf)[4:6]) 
+        ra2 = float(str(pf)[6:8])
+        ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
+        dec1 = float(str(pf)[11:-10])
+        dec2 = float(str(pf)[-10:-8])
+        dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
+        ra = HMSToDeg(ra1, ra2, ra3)
+        dec = DMSToDeg(dec1, dec2, dec3)
+
+        pfits = fitsio.FITS(pf, 'rw')
+        pfits[0].write_key('RA', ra)
+        pfits[0].write_key('DEC', dec)
+        pfits.close()
+ 
     return psflist
 
 
@@ -90,6 +103,7 @@ def UpdatePsfRaDec(datadir, element):
     """The function which will update the psf header if the psf files
        are in the specified format"""
     print('U1', os.path.join(datadir, element))
+    print(element, str(element)[4:6])
     if 1:
         ra1 = float(str(element)[4:6])
         ra2 = float(str(element)[6:8])

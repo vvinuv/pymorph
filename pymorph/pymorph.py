@@ -296,7 +296,9 @@ class InitializeParams(object):
         self.psfselect = c.getint('psf', 'psfselect')
         self.stargal_prob = c.getfloat('psf', 'stargal_prob')
         self.star_size = c.getint('psf', 'star_size')
+        #Read PSF 
         self.psflist = c.get('psf', 'psflist')
+        print('1', self.psflist)
         self.which_psf = c.getint('psf', 'which_psf')
         self.area_obj = c.getint('psf', 'which_psf')
 
@@ -401,6 +403,7 @@ class InitializeParams(object):
         pymorph_config['psfselect'] = self.psfselect
         pymorph_config['stargal_prob'] = self.stargal_prob
         pymorph_config['star_size'] = self.star_size
+        print('self.psflist', self.psflist)
         pymorph_config['psflist'] = self.psflist
         pymorph_config['which_psf'] = self.which_psf
         pymorph_config['area_obj'] = self.area_obj
@@ -542,11 +545,7 @@ class PyMorph(InitializeParams):
 
         #print(self.pixelscale, self.ReSize, self.FixSize)
 
-        #try:
-        os.system('rm -f TmpElliMask.fits TmpElliMask1.fits')
-        #except:
-        #    pass
-
+        print('PSF 2', self.psflist)
         self._indexfile()
         
 
@@ -555,12 +554,13 @@ class PyMorph(InitializeParams):
         print('Image done')
         print(self.whtfile)
         print('Weight done')
+        print('PSF 1', self.psflist)
         #Initializing psf array. ie. creating psflist from file 
-        self.psflist = PSFArr(self.DATADIR, self.psflist)
-        if self.decompose:
-            for p in self.psflist:
-                print('psf', self.DATADIR, p)
-                UpdatePsfRaDec(self.DATADIR, p)
+        self.psflist = PSFArr(self.psflist)
+        #if self.decompose:
+        #    for p in self.psflist:
+        #        print('psf', self.DATADIR, p)
+        #        UpdatePsfRaDec(self.DATADIR, p)
 
         #XXX
         #self.P.psflist = self.psflist
@@ -752,7 +752,12 @@ class PyMorph(InitializeParams):
 
         #print(values.shape)
         con_remove = (values[:, 1] > self.remove_obj_boundary) & (values[:, 2] > self.remove_obj_boundary) & (values[:, 1] < self.NXPTS - self.remove_obj_boundary) & (values[:, 2] < self.NYPTS - self.remove_obj_boundary) 
-        con = (values[:, 17] > self.maglim[1]) & (values[:, 17] < self.maglim[0]) & (values[:, 16] < self.stargal_prob_lim) & con_remove  & (values[:, 1] > 1839) & (values[:, 1] < 1840) & (values[:, 2] > 1101) & (values[:, 2] < 1102) 
+        con = (values[:, 17] > self.maglim[1]) & (values[:, 17] < self.maglim[0]) & (values[:, 16] < self.stargal_prob_lim) & con_remove  
+
+        #If we want only a few objects then you can use the below line by
+        #changing the coordinate of objects
+        #con = con & (values[:, 1] > 1839) & (values[:, 1] < 1840) & (values[:, 2] > 1101) & (values[:, 2] < 1102) 
+
         #con = (values[:, 16] < 0.8) #& (values[:, 16] > 0.65)
         #con = (values[:, 16] < 0.8) #& (values[:, 17] < 23)
          
@@ -830,11 +835,11 @@ class PyMorph(InitializeParams):
                           'the word weight/rms to the weight file name. ' + \
                           'If it is weight the rms will be found by 1/sqrt(w)')
                 wht.close()
-                print('No weight image found\n')
 
 
             else:
                 self.weightexists = False
+                print('No weight image found\n')
             
         #except IOError as e:
         #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
