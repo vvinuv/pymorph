@@ -298,7 +298,6 @@ class InitializeParams(object):
         self.star_size = c.getint('psf', 'star_size')
         #Read PSF 
         self.psflist = c.get('psf', 'psflist')
-        print('1', self.psflist)
         self.which_psf = c.getint('psf', 'which_psf')
         self.area_obj = c.getint('psf', 'which_psf')
 
@@ -403,7 +402,6 @@ class InitializeParams(object):
         pymorph_config['psfselect'] = self.psfselect
         pymorph_config['stargal_prob'] = self.stargal_prob
         pymorph_config['star_size'] = self.star_size
-        print('self.psflist', self.psflist)
         pymorph_config['psflist'] = self.psflist
         pymorph_config['which_psf'] = self.which_psf
         pymorph_config['area_obj'] = self.area_obj

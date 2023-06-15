@@ -29,6 +29,7 @@ or
 ```
 >>> import pymorph
 >>> p = pymorph.PyMorph()
+>>> p.set_sexparams()
 >>> p.pymorph()
 ```
 
