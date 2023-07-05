@@ -147,6 +147,7 @@ class ReturnClass(object):
 
         """Determine the psf used for fitting"""
 
+        print('psflist', self.psflist)
         if self.repeat:
             if np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 distance = 9999
@@ -172,6 +173,7 @@ class ReturnClass(object):
                                               self.psflist, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
+        print('psf ', psffile)
         #print('U2')
         return psffile, round(distance_psf_gal, 1)
 

@@ -133,7 +133,14 @@ class InitializeParams(object):
         self.stargal_prob = c.getfloat('psf', 'stargal_prob')
         self.star_size = c.getint('psf', 'star_size')
         #Read PSF 
-        self.psflist = c.get('psf', 'psflist')
+        psflist = c.get('psf', 'psflist')
+        if psflist.startswith('@'):
+            with open(psflist[1: ], 'r') as fpsf:
+                dpsf = fpsf.read()
+            self.psflist = [tdpsf.strip() for tdpsf in dpsf.split('\n')[:-1]]
+        else:
+            self.psflist = [fpsf.strip() for fpsf in psflist.split(',')]
+        
         self.which_psf = c.getint('psf', 'which_psf')
         self.area_obj = c.getint('psf', 'which_psf')
 
@@ -246,8 +253,8 @@ class InitializeParams(object):
         pymorph_config['galfit'] = self.galfit
         pymorph_config['cas'] = self.cas
         pymorph_config['crashhandler'] = self.crashhandler
+        pymorph_config['components'] = self.components
         pymorph_config['devauc'] = self.devauc
-        pymorph_config['fitting'] = self.fitting
         pymorph_config['fitting'] = self.fitting
         pymorph_config['chi2nu_limit'] = self.chi2nu_limit
         pymorph_config['goodness_limit'] = self.goodness_limit
@@ -255,6 +262,12 @@ class InitializeParams(object):
         pymorph_config['center_constrain'] = self.center_constrain
         pymorph_config['remove_obj_boundary'] = self.remove_obj_boundary
         pymorph_config['do_plot'] = self.do_plot
+        pymorph_config['ReSize'] = self.ReSize
+        pymorph_config['VarSize'] = self.VarSize
+        pymorph_config['FracRad'] = self.FracRad
+        pymorph_config['Square'] = self.Square
+        pymorph_config['FixSize'] = self.FixSize
+        pymorph_config['searchrad'] = self.searchrad
         pymorph_config['pixelscale'] = self.pixelscale
         pymorph_config['H0'] = self.H0
         pymorph_config['WM'] = self.WM
@@ -272,7 +285,6 @@ class InitializeParams(object):
         pymorph_config['threshold'] = self.threshold
         pymorph_config['mag_zero'] = self.mag_zero
         pymorph_config['maglim'] = self.maglim
-        pymorph_config['maglim'] = self.maglim
         pymorph_config['host'] = self.host
         pymorph_config['database'] = self.database
         pymorph_config['table'] = self.table
@@ -281,19 +293,17 @@ class InitializeParams(object):
         pymorph_config['dbparams'] = self.dbparams
         pymorph_config['galfitv'] = self.galfitv
         pymorph_config['FirstCreateDB'] = self.FirstCreateDB
+        pymorph_config['FILTER']  = self.FILTER
+        pymorph_config['NMag'] = self.NMag
+        pymorph_config['NRadius']  = self.NRadius
+        pymorph_config['LN'] = self.LN
+        pymorph_config['UN'] = self.UN
         pymorph_config['bdbox'] = self.bdbox
         pymorph_config['bbox'] = self.bbox
         pymorph_config['dbox'] = self.dbox
-        pymorph_config['FILTER'] = self.FILTER
+        pymorph_config['avoidme']  = self.avoidme
         pymorph_config['no_mask'] = self.no_mask
         pymorph_config['norm_mask'] = self.norm_mask
-        pymorph_config['components'] = self.components
-        pymorph_config['ReSize'] = self.ReSize
-        pymorph_config['VarSize'] = self.VarSize
-        pymorph_config['FracRad'] = self.FracRad
-        pymorph_config['Square'] = self.Square
-        pymorph_config['FixSize'] = self.FixSize
-        pymorph_config['searchrad'] = self.searchrad
 
         return pymorph_config
 
@@ -444,7 +454,6 @@ class PyMorph(InitializeParams):
         P.pymorph_config = self.pymorph_config
         P.sex_config = self.sex_config
 
-            
         P.imagedata = self.imagedata
         P.weightdata = self.weightdata
         P.NXPTS = self.imagedata.shape[1]
@@ -458,77 +467,11 @@ class PyMorph(InitializeParams):
         P.NCOMBINE = self.NCOMBINE
         P.center_deviated = self.center_deviated
 
-        P.DATADIR  = self.DATADIR
-        P.OUTDIR = self.OUTDIR
-        P.imagefile = self.imagefile
-        P.whtfile  = self.whtfile
-        P.sex_cata = self.sex_cata
-        P.obj_cata  = self.obj_cata
-        P.out_cata = self.out_cata
         P.final_result_file = self.final_result_file
-        P.restart_file = self.restart_file 
-        P.rootname = self.rootname
-        P.GALFIT_PATH = self.GALFIT_PATH
-        P.SEX_PATH = self.SEX_PATH
-        #print('Repeat', self.repeat)
-        P.repeat = self.repeat
-        P.galcut  = self.galcut
-        P.decompose  = self.decompose
-        P.detail = self.detail
-        P.galfit  = self.galfit
-        P.cas  = self.cas
-        P.crashhandler = self.crashhandler
-        P.components  = self.components
-        P.devauc = self.devauc
-        P.fitting  = self.fitting
-        P.chi2nu_limit  = self.chi2nu_limit
-        P.goodness_limit = self.goodness_limit
-        P.center_deviation_limit = self.center_deviation_limit
-        P.center_constrain = self.center_constrain
-        P.do_plot = self.do_plot
-        P.ReSize  = self.ReSize
-        P.VarSize  = self.VarSize
-        P.FracRad  = self.FracRad
-        P.Square  = self.Square
-        P.FixSize = self.FixSize
-        P.searchrad  = self.searchrad
-        P.pixelscale = self.pixelscale
-        P.H0 = self.H0
-        P.WM = self.WM
-        P.WV = self.WV
-        P.redshift = self.redshift
-        P.psfselect = self.psfselect
-        P.stargal_prob= self.stargal_prob
-        P.star_size  = self.star_size
-        P.psflist  = self.psflist
-        P.which_psf = self.which_psf
-        P.area_obj = self.area_obj
-        P.manual_mask  = self.manual_mask
-        P.mask_reg  = self.mask_reg
-        P.thresh_area  = self.thresh_area
-        P.threshold  = self.threshold
-        P.mag_zero  = self.mag_zero
-        P.maglim = self.maglim
-        P.host = self.host
-        P.database = self.database
-        P.table = self.table
-        P.user  = self.user
-        P.password  = self.password
-        P.dbparams = self.dbparams
-        P.galfitv = self.galfitv
-        P.FirstCreateDB= self.FirstCreateDB
-        P.FILTER  = self.FILTER
-        P.NMag = self.NMag
-        P.NRadius  = self.NRadius
-        P.LN = self.LN
-        P.UN = self.UN
-        P.bdbox  = self.bdbox
-        P.bbox = self.bbox
-        P.dbox = self.dbox
-        P.devauc  = self.devauc
-        P.avoidme  = self.avoidme
-        P.no_mask  = self.no_mask
-        P.norm_mask  = self.norm_mask
+        P.restart_file = self.restart_file
+
+        for k, v in self.pymorph_config.items():
+            setattr(P, k, v)
 
         P.sex_params = self.sex_params
 
@@ -539,7 +482,8 @@ class PyMorph(InitializeParams):
         for obj_value in obj_values:
             P.main(obj_value)
 
-
+        print(123)
+        sys.exit()
         #print(results)
 
     def find_and_fit(self):
@@ -756,7 +700,7 @@ class PyMorph(InitializeParams):
 
 if __name__ == '__main__':
     p = PyMorph()
-    p.set_sexparams()
+    #p.set_sexparams()
     #p.set_limits()
     p.pymorph()
     #p.main()

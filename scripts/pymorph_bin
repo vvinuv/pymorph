@@ -18,7 +18,7 @@ def main():
  
 
     p = pymorph.PyMorph()
-    p.set_sexparams()
+    #p.set_sexparams()
     p.pymorph()
 
 if __name__ == '__main__':
