@@ -173,7 +173,7 @@ def SExtractorConfDefault():
     SEx_BACK_FILTERSIZE = 3
     SEx_BACKPHOTO_TYPE = 'GLOBAL'
     SEx_BACKPHOTO_THICK = 24
-    SEx_WEIGHT_TYPE = 'MAP_RMS'
+    SEx_WEIGHT_TYPE = 'MAP_VAR' #'MAP_RMS'
 
     return [SEx_DETECT_MINAREA, SEx_DETECT_THRESH, SEx_ANALYSIS_THRESH, SEx_FILTER, SEx_FILTER_NAME, SEx_DEBLEND_NTHRESH, SEx_DEBLEND_MINCONT, SEx_PHOT_FLUXFRAC, SEx_BACK_SIZE, SEx_BACK_FILTERSIZE, SEx_BACKPHOTO_TYPE, SEx_BACKPHOTO_THICK, SEx_WEIGHT_TYPE]
 
@@ -339,28 +339,53 @@ class InitializeParams(object):
         self.no_mask = c.get('mask', 'no_mask')
         self.norm_mask = c.get('mask', 'norm_mask')
 
-        #Sextractor configuration
         self.SEx_PIXEL_SCALE = self.pixelscale
         self.SEx_SEEING_FWHM = self.pixelscale * 3.37
         self.SEx_MAG_ZEROPOINT = self.mag_zero
-        self.SEx_DETECT_MINAREA = 6
-        self.SEx_DETECT_THRESH = 1.5
-        self.SEx_ANALYSIS_THRESH =1.5
-        self.SEx_FILTER = 'Y'
-        self.SEx_FILTER_NAME = 'default.conv'
-        self.SEx_DEBLEND_NTHRESH = 32
-        self.SEx_DEBLEND_MINCONT = 0.005
-        self.SEx_PHOT_FLUXFRAC = 0.5
-        self.SEx_BACK_SIZE = 64
-        self.SEx_BACK_FILTERSIZE = 3
-        self.SEx_BACKPHOTO_TYPE = 'GLOBAL'
-        self.SEx_BACKPHOTO_THICK = 24
-        self.SEx_WEIGHT_TYPE = 'MAP_RMS'
+
+        if c.has_section('sextractor'):
+            self.SEx_DETECT_MINAREA = c.DETECT_MINAREA 
+            self.SEx_DETECT_THRESH =  c.DETECT_THRESH 
+            self.SEx_ANALYSIS_THRESH = c.ANALYSIS_THRESH  
+            self.SEx_FILTER =         c.FILTER  
+            self.SEx_FILTER_NAME =    c.FILTER_NAME  
+            self.SEx_DEBLEND_NTHRESH = c.DEBLEND_NTHRESH 
+            self.SEx_DEBLEND_MINCONT = c.DEBLEND_MINCONT 
+            self.SEx_PHOT_FLUXFRAC =  c.PHOT_FLUXFRAC 
+            self.SEx_BACK_SIZE =      c.BACK_SIZE 
+            self.SEx_BACK_FILTERSIZE = c.BACK_FILTERSIZE 
+            self.SEx_BACKPHOTO_TYPE = c.BACKPHOTO_TYPE 
+            self.SEx_BACKPHOTO_THICK = c.BACKPHOTO_THICK 
+            self.SEx_WEIGHT_TYPE =    c.WEIGHT_TYPE 
+        else:
+            #Sextractor configuration
+            self.SEx_DETECT_MINAREA = 6
+            self.SEx_DETECT_THRESH = 1.5
+            self.SEx_ANALYSIS_THRESH =1.5
+            self.SEx_FILTER = 'Y'
+            self.SEx_FILTER_NAME = 'default.conv'
+            self.SEx_DEBLEND_NTHRESH = 32
+            self.SEx_DEBLEND_MINCONT = 0.005
+            self.SEx_PHOT_FLUXFRAC = 0.5
+            self.SEx_BACK_SIZE = 64
+            self.SEx_BACK_FILTERSIZE = 3
+            self.SEx_BACKPHOTO_TYPE = 'GLOBAL'
+            self.SEx_BACKPHOTO_THICK = 24
+            self.SEx_WEIGHT_TYPE = 'MAP_RMS'
 
 
         self.pymorph_config = self.get_pymorph_config_dict()
-        self.sex_config = self.get_sex_config_dict()
+        
+        self.sex_params = [self.SEx_DETECT_MINAREA, self.SEx_DETECT_THRESH,
+                           self.SEx_ANALYSIS_THRESH, self.SEx_FILTER,
+                           self.SEx_FILTER_NAME, self.SEx_DEBLEND_NTHRESH,
+                           self.SEx_DEBLEND_MINCONT, self.SEx_PHOT_FLUXFRAC,
+                           self.SEx_BACK_SIZE, self.SEx_BACK_FILTERSIZE,
+                           self.SEx_BACKPHOTO_TYPE, self.SEx_BACKPHOTO_THICK,
+                           self.SEx_WEIGHT_TYPE, self.SEx_PIXEL_SCALE,
+                           self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
 
+        self.sex_config = self.get_sex_config_dict()
 
 
     def get_pymorph_config_dict(self):
@@ -459,57 +484,6 @@ class InitializeParams(object):
         sex_config['SEx_WEIGHT_TYPE'] = self.SEx_WEIGHT_TYPE
 
         return sex_config
-
-
-    def set_sexparams(self,
-                      SEx_DETECT_MINAREA = 6,
-                      SEx_DETECT_THRESH = 1.5,
-                      SEx_ANALYSIS_THRESH =1.5,
-                      SEx_FILTER = 'Y',
-                      SEx_FILTER_NAME = 'default.conv',
-                      SEx_DEBLEND_NTHRESH = 32,
-                      SEx_DEBLEND_MINCONT = 0.005,
-                      SEx_PHOT_FLUXFRAC = 0.5,
-                      SEx_BACK_SIZE = 64,
-                      SEx_BACK_FILTERSIZE = 3,
-                      SEx_BACKPHOTO_TYPE = 'GLOBAL',
-                      SEx_BACKPHOTO_THICK = 24,
-                      SEx_WEIGHT_TYPE = 'MAP_RMS',
-                      ):
-        '''
-
-        Setting SExtractor default.sex
-
-        FHWH is 3.37 * SEx_PIXEL_SCALE
-
-        '''
-
-
-        self.SEx_DETECT_MINAREA =  SEx_DETECT_MINAREA
-        self.SEx_DETECT_THRESH =   SEx_DETECT_THRESH
-        self.SEx_ANALYSIS_THRESH = SEx_ANALYSIS_THRESH
-        self.SEx_FILTER =          SEx_FILTER
-        self.SEx_FILTER_NAME =     SEx_FILTER_NAME
-        self.SEx_DEBLEND_NTHRESH = SEx_DEBLEND_NTHRESH
-        self.SEx_DEBLEND_MINCONT = SEx_DEBLEND_MINCONT
-        self.SEx_PHOT_FLUXFRAC =   SEx_PHOT_FLUXFRAC
-        self.SEx_BACK_SIZE =       SEx_BACK_SIZE
-        self.SEx_BACK_FILTERSIZE = SEx_BACK_FILTERSIZE
-        self.SEx_BACKPHOTO_TYPE =  SEx_BACKPHOTO_TYPE
-        self.SEx_BACKPHOTO_THICK = SEx_BACKPHOTO_THICK
-        self.SEx_WEIGHT_TYPE =     SEx_WEIGHT_TYPE
-
-        self.sex_params = [SEx_DETECT_MINAREA, SEx_DETECT_THRESH,
-                           SEx_ANALYSIS_THRESH, SEx_FILTER,
-                           SEx_FILTER_NAME, SEx_DEBLEND_NTHRESH,
-                           SEx_DEBLEND_MINCONT, SEx_PHOT_FLUXFRAC,
-                           SEx_BACK_SIZE, SEx_BACK_FILTERSIZE,
-                           SEx_BACKPHOTO_TYPE, SEx_BACKPHOTO_THICK,
-                           SEx_WEIGHT_TYPE, self.SEx_PIXEL_SCALE,
-                           self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
-
-        self.sex_config = self.get_sex_config_dict()
-
 
 
 
@@ -820,9 +794,14 @@ class PyMorph(InitializeParams):
             if self.repeat == False & self.galcut == False & os.path.exists(self.whtfile):
                 self.weightexists = True
                 
+                #XXX
                 wht = fitsio.FITS(self.whtfile)
+                #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
 
                 if re.search("rms", self.whtfile.lower()):
+                    self.weightdata = wht[0].read()
+                    print("whtfile >>> {}".format(self.whtfile))
+                elif re.search("var", self.whtfile.lower()):
                     self.weightdata = wht[0].read()
                     print("whtfile >>> {}".format(self.whtfile))
                 elif re.search("weight", self.whtfile.lower()):
@@ -832,6 +811,9 @@ class PyMorph(InitializeParams):
                     print('Weight file is not understood. Please include ' + \
                           'the word weight/rms to the weight file name. ' + \
                           'If it is weight the rms will be found by 1/sqrt(w)')
+
+                #XXX
+                #self.weightdata = wht[0].read()
                 wht.close()
 
 
