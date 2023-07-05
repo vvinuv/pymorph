@@ -767,3 +767,130 @@ def returnthenames(gal_id, cutimage, wimg):
         whtimage = 'W' + wimg
     return gimg, wimg
 
+
+
+def run_test(option, opt, value, parser):
+    print("Using directory {} for output\n".format(value))
+    center_deviated = 0
+    starthandle = 0
+    find_and_fit()
+    main()
+    if crashhandler:
+        starthandle = 1
+        os.system(f'mv {self.restart_file} CRASH.CAT')
+        self.obj_cata = os.path.join(self.OUTDIR, 'CRASH.CAT')
+        main()
+
+    sys.exit(0)
+    return
+
+
+def SExtractorConfEdit():
+    SEx_DETECT_MINAREA = input("DETECT_MINAREA (6) >>> ")
+    try:
+        SEx_DETECT_MINAREA = float(SEx_DETECT_MINAREA)
+        SEx_DETECT_MINAREA = int(SEx_DETECT_MINAREA)
+    except:
+        SEx_DETECT_MINAREA = 6
+    SEx_DETECT_THRESH = input('DETECT_THRESH (1.5) >>> ')
+    try:
+        SEx_DETECT_THRESH = float(SEx_DETECT_THRESH)
+    except:
+        SEx_DETECT_THRESH = 1.5
+    SEx_ANALYSIS_THRESH = input('ANALYSIS_THRESH (1.5) >>> ')
+    try:
+        SEx_ANALYSIS_THRESH = float(SEx_ANALYSIS_THRESH)
+    except:
+        SEx_ANALYSIS_THRESH = 1.5
+    SEx_FILTER = input('FILTER (Y/N) >>> ')
+    while SEx_FILTER != 'Y' and SEx_FILTER != 'N' and SEx_FILTER != '':
+        SEx_FILTER = input('FILTER (Y/N) >>> ')
+    if len(SEx_FILTER) == 0:
+        SEx_FILTER = 'Y'
+    else:
+        SEx_FILTER = SEx_FILTER
+    print('Available options for convolve filter are gauss_1.5_3x3.conv(1) '\
+          'gauss_2.0_3x3.conv(2) gauss_2.0_5x5.conv(3) gauss_2.5_5x5.conv(4) '\
+          'gauss_3.0_5x5.conv(5) gauss_3.0_7x7.conv(6) gauss_4.0_7x7.conv(7) '\
+          'gauss_5.0_9x9.conv(8) default(0)')
+    SEx_FILTER_NAME  = input('FILTER_NAME (default.conv) >>> ')
+    if len(SEx_FILTER_NAME) == 0 or SEx_FILTER_NAME == '0':
+        SEx_FILTER_NAME = 'default.conv'
+    elif SEx_FILTER_NAME == '1':
+        SEx_FILTER_NAME = 'gauss_1.5_3x3.conv'
+    elif SEx_FILTER_NAME == '2':
+        SEx_FILTER_NAME = 'gauss_2.0_3x3.conv'
+    elif SEx_FILTER_NAME == '3':
+        SEx_FILTER_NAME = 'gauss_2.0_5x5.conv'
+    elif SEx_FILTER_NAME == '4':
+        SEx_FILTER_NAME = 'gauss_2.5_5x5.conv'
+    elif SEx_FILTER_NAME == '5':
+        SEx_FILTER_NAME = 'gauss_3.0_5x5.conv'
+    elif SEx_FILTER_NAME == '6':
+        SEx_FILTER_NAME = 'gauss_3.0_7x7.conv'
+    elif SEx_FILTER_NAME == '7':
+        SEx_FILTER_NAME = 'gauss_4.0_7x7.conv'
+    elif SEx_FILTER_NAME == '8':
+        SEx_FILTER_NAME = 'gauss_5.0_9x9.conv'
+    SEx_DEBLEND_NTHRESH = input('DEBLEND_NTHRESH (32) >>> ')
+    try:
+        SEx_DEBLEND_NTHRESH = float(SEx_DEBLEND_NTHRESH)
+        SEx_DEBLEND_NTHRESH = int(SEx_DEBLEND_NTHRESH)
+    except:
+        SEx_DEBLEND_NTHRESH = 32
+    SEx_DEBLEND_MINCONT = input('DEBLEND_MINCONT (0.005) >>> ')
+    try:
+        SEx_DEBLEND_MINCONT = float(SEx_DEBLEND_MINCONT)
+    except:
+        SEx_DEBLEND_MINCONT = 0.005
+    SEx_PHOT_FLUXFRAC = input('PHOT_FLUXFRAC (0.5) >>> ')
+    try:
+        SEx_PHOT_FLUXFRAC = float(SEx_PHOT_FLUXFRAC)
+    except:
+        SEx_PHOT_FLUXFRAC = 0.5
+    SEx_pix_scale_disp = 'PIXEL_SCALE (' + str(SEx_PIXEL_SCALE) + ') >>> '
+    SEx_PIXEL_SCALE = input(SEx_pix_scale_disp)
+    try:
+        SEx_PIXEL_SCALE = float(SEx_PIXEL_SCALE)
+    except:
+        SEx_PIXEL_SCALE = pixelscale
+    SEx_SEEING_FWHM = input('SEEING_FWHM (0.11) >>> ')
+    try:
+        SEx_SEEING_FWHM = float(SEx_SEEING_FWHM )
+    except:
+        SEx_SEEING_FWHM = pixelscale * 3.37
+    SEx_BACK_SIZE = input('BACK_SIZE (64) >>> ')
+    try:
+        SEx_BACK_SIZE = float(SEx_BACK_SIZE)
+        SEx_BACK_SIZE = int(SEx_BACK_SIZE)
+    except:
+        SEx_BACK_SIZE = 64
+    SEx_BACK_FILTERSIZE = input('BACK_FILTERSIZE (3) >>> ')
+    try:
+        SEx_BACK_FILTERSIZE = float(SEx_BACK_FILTERSIZE)
+        SEx_BACK_FILTERSIZE = int(SEx_BACK_FILTERSIZE)
+    except:
+        SEx_BACK_FILTERSIZE = 3
+    SEx_BACKPHOTO_TYPE = input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
+    while SEx_BACKPHOTO_TYPE != 'G' and SEx_BACKPHOTO_TYPE != 'L' \
+          and SEx_BACKPHOTO_TYPE != '':
+        SEx_BACKPHOTO_TYPE = input('BACKPHOTO_TYPE (G)LOBAL/(L)OCAL) >>> ')
+    if len(SEx_BACKPHOTO_TYPE) == 0:
+        SEx_BACKPHOTO_TYPE = 'GLOBAL'
+    elif SEx_BACKPHOTO_TYPE == 'G':
+        SEx_BACKPHOTO_TYPE = 'GLOBAL'
+    elif SEx_BACKPHOTO_TYPE == 'L':
+        SEx_BACKPHOTO_TYPE = 'LOCAL'
+    if SEx_BACKPHOTO_TYPE == 'LOCAL':
+        SEx_BACKPHOTO_THICK = input('BACKPHOTO_THICK (24) >>> ')
+    try:
+        SEx_BACKPHOTO_THICK = float(SEx_BACKPHOTO_THICK)
+        SEx_BACKPHOTO_THICK = int(SEx_BACKPHOTO_THICK)
+    except:
+        SEx_BACKPHOTO_THICK = 24
+    SEx_WEIGHT_TYPE = input('WEIGHT_TYPE (MAP_RMS) >>> ')
+    SEx_WEIGHT_TYPE = SEx_WEIGHT_TYPE
+
+    return [SEx_DETECT_MINAREA, SEx_DETECT_THRESH, SEx_ANALYSIS_THRESH, SEx_FILTER, SEx_FILTER_NAME, SEx_DEBLEND_NTHRESH, SEx_DEBLEND_MINCONT, SEx_PHOT_FLUXFRAC, SEx_BACK_SIZE, SEx_BACK_FILTERSIZE, SEx_BACKPHOTO_TYPE, SEx_BACKPHOTO_THICK, SEx_WEIGHT_TYPE, SEx_PIXEL_SCALE, SEx_SEEING_FWHM]
+
+
