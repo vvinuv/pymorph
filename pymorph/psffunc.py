@@ -69,17 +69,6 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
 def PSFArr(psflist):
     """Return psf list if the given input is a file"""
     #print('P1', psflist)
-    if psflist.startswith('@'):
-        psffile = psflist.split('@')[1]
-        psffile = open(psflist.split('@')[1], 'r')
-        psflist = [pline for pline in psffile]
-    elif isinstance(psflist, str):
-        psflist = psflist.split(',')
-        psflist = [pf for pf in psflist]
-    else:
-        print("The psf list is not understood. Please use either \
-             @filename or a list of psfs")
-    #print('P3', psflist)
     for pf in psflist:
         ra1 = float(str(pf)[4:6]) 
         ra2 = float(str(pf)[6:8])

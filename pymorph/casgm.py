@@ -40,7 +40,7 @@ class CasGm:
         else:
             dectThre = 12.0
         while FoundNewCntr == 0:
-            RunSex(sex_params, SEX_PATH, 
+            RunSex(sex_config, SEX_PATH, 
                    os.path.join(c.datadir, self.cutimage), 'None', 
                    'CaSsEx.cat', dectThre, dectThre, 1)
 

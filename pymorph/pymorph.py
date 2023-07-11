@@ -187,19 +187,19 @@ class InitializeParams(object):
         self.SEx_MAG_ZEROPOINT = self.mag_zero
 
         if c.has_section('sextractor'):
-            self.SEx_DETECT_MINAREA = c.DETECT_MINAREA 
-            self.SEx_DETECT_THRESH =  c.DETECT_THRESH 
-            self.SEx_ANALYSIS_THRESH = c.ANALYSIS_THRESH  
-            self.SEx_FILTER =         c.FILTER  
-            self.SEx_FILTER_NAME =    c.FILTER_NAME  
-            self.SEx_DEBLEND_NTHRESH = c.DEBLEND_NTHRESH 
-            self.SEx_DEBLEND_MINCONT = c.DEBLEND_MINCONT 
-            self.SEx_PHOT_FLUXFRAC =  c.PHOT_FLUXFRAC 
-            self.SEx_BACK_SIZE =      c.BACK_SIZE 
-            self.SEx_BACK_FILTERSIZE = c.BACK_FILTERSIZE 
-            self.SEx_BACKPHOTO_TYPE = c.BACKPHOTO_TYPE 
-            self.SEx_BACKPHOTO_THICK = c.BACKPHOTO_THICK 
-            self.SEx_WEIGHT_TYPE =    c.WEIGHT_TYPE 
+            self.SEx_DETECT_MINAREA = c.get('sextractor', 'DETECT_MINAREA') 
+            self.SEx_DETECT_THRESH =  c.get('sextractor', 'DETECT_THRESH')
+            self.SEx_ANALYSIS_THRESH = c.get('sextractor', 'ANALYSIS_THRESH')
+            self.SEx_FILTER = c.get('sextractor', 'FILTER')
+            self.SEx_FILTER_NAME = c.get('sextractor', 'FILTER_NAME') 
+            self.SEx_DEBLEND_NTHRESH = c.get('sextractor', 'DEBLEND_NTHRESH') 
+            self.SEx_DEBLEND_MINCONT = c.get('sextractor', 'DEBLEND_MINCONT')
+            self.SEx_PHOT_FLUXFRAC = c.get('sextractor', 'PHOT_FLUXFRAC') 
+            self.SEx_BACK_SIZE = c.get('sextractor', 'BACK_SIZE')
+            self.SEx_BACK_FILTERSIZE = c.get('sextractor', 'BACK_FILTERSIZE') 
+            self.SEx_BACKPHOTO_TYPE = c.get('sextractor', 'BACKPHOTO_TYPE')
+            self.SEx_BACKPHOTO_THICK = c.get('sextractor', 'BACKPHOTO_THICK')
+            self.SEx_WEIGHT_TYPE = c.get('sextractor', 'WEIGHT_TYPE')
         else:
             #Sextractor configuration
             self.SEx_DETECT_MINAREA = 6
@@ -219,15 +219,6 @@ class InitializeParams(object):
 
         self.pymorph_config = self.get_pymorph_config_dict()
         
-        self.sex_params = [self.SEx_DETECT_MINAREA, self.SEx_DETECT_THRESH,
-                           self.SEx_ANALYSIS_THRESH, self.SEx_FILTER,
-                           self.SEx_FILTER_NAME, self.SEx_DEBLEND_NTHRESH,
-                           self.SEx_DEBLEND_MINCONT, self.SEx_PHOT_FLUXFRAC,
-                           self.SEx_BACK_SIZE, self.SEx_BACK_FILTERSIZE,
-                           self.SEx_BACKPHOTO_TYPE, self.SEx_BACKPHOTO_THICK,
-                           self.SEx_WEIGHT_TYPE, self.SEx_PIXEL_SCALE,
-                           self.SEx_SEEING_FWHM, self.SEx_MAG_ZEROPOINT]
-
         self.sex_config = self.get_sex_config_dict()
 
 
@@ -472,8 +463,6 @@ class PyMorph(InitializeParams):
 
         for k, v in self.pymorph_config.items():
             setattr(P, k, v)
-
-        P.sex_params = self.sex_params
 
         P.pnames = pnames
         P.params_to_write = params_to_write
