@@ -16,6 +16,10 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     (dec_a - dec_b))^2.0 )
 
     """
+    if isinstance(psflist, list):
+        pass
+    else:
+        psflist = [psflist]
 
     psf_distance_dict = {}
     psffile = 'test.fits'
@@ -66,7 +70,7 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     return psffile, distance
 
 
-def PSFArr(psflist):
+def psfarr(psflist):
     """Return psf list if the given input is a file"""
     #print('P1', psflist)
     for pf in psflist:
@@ -88,9 +92,10 @@ def PSFArr(psflist):
 
 
 
-def UpdatePsfRaDec(datadir, element):
+def update_psf_ra_dec(datadir, element):
     """The function which will update the psf header if the psf files
        are in the specified format"""
+    print(datadir, element)
     print('U1', os.path.join(datadir, element))
     print(element, str(element)[4:6])
     if 1:

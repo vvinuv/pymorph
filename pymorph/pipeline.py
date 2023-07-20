@@ -30,7 +30,7 @@ from .yetbackfunc import FindYetSky
 from .plotfunc import PlotFunc
 from .runsexfunc import PySex
 from .writehtmlfunc import WriteHtmlCSV
-from .psffunc import UpdatePsfRaDec, getpsf
+from .psffunc import update_psf_ra_dec, getpsf
 from .mask_or_fit import GetSExObj
        
         
@@ -147,25 +147,31 @@ class ReturnClass(object):
 
         """Determine the psf used for fitting"""
 
-        print('psflist', self.psflist)
+        #print('psflist', self.psflist)
         if self.repeat:
             if np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 distance = 9999
                 psffile = c.pfile
             else:
                 psffile = c.pfile
-                UpdatePsfRaDec(c.pfile)
+                update_psf_ra_dec(c.pfile)
                 distance_psf_gal = super()._distance_psf_obj(c.pfile, ra, dec)
 
         else:
             if UserGivenPsf != 'None':
                 psffile = UserGivenPsf
-                UpdatePsfRaDec(self.DATADIR, psffile)
+                #print('UserGivenPsf', UserGivenPsf)
+                update_psf_ra_dec(self.DATADIR, psffile)
                 #print('U2')
-                distance_psf_gal = super()._distance_psf_obj(psffile, ra, dec)
+                #sys.exit()
+                psffile, distance_psf_gal = getpsf(self.DATADIR,
+                                              UserGivenPsf, self.which_psf,
+                                              ra, dec)
+                distance_psf_gal = distance_psf_gal * 60. * 60.
+                #distance_psf_gal = super()._distance_psf_obj(psffile, ra, dec)
             elif np.abs(ra) == 9999 or np.abs(dec) == 9999:
                 psffile = self.psflist[self.psfcounter]
-                UpdatePsfRaDec(self.DATADIR, psffile)
+                update_psf_ra_dec(self.DATADIR, psffile)
                 distance_psf_gal = 9999
                 self.psfcounter += 1
             else:
@@ -173,7 +179,7 @@ class ReturnClass(object):
                                               self.psflist, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
-        print('psf ', psffile)
+        #print(f'psf {psffile} dis {distance_psf_gal}')
         #print('U2')
         return psffile, round(distance_psf_gal, 1)
 
@@ -290,8 +296,9 @@ class Pipeline(ReturnClass):
 
 
         k = 0
+        print(obj_value)
         for pname in pnames:
-            #print(pname)
+            print(pname)
             pdb[pname] = obj_value[k]
             k += 1
 
@@ -747,6 +754,7 @@ class Pipeline(ReturnClass):
         # declare the flag
         self.flag = 0
 
+        #print('pnames', self.pnames)
         #print(11)
         self._target_initialize(obj_value, pdb, self.pnames)
         #print(22)
@@ -769,12 +777,14 @@ class Pipeline(ReturnClass):
         except:
             self.mag_zero = self.mag_zero
 
+        #print('pnames', self.pnames)
         try:
+            print(pdb["star"])
             self.UserGivenPsf = pdb["star"]
             print('PSF is assigned individually to galaxies')
         except:
             self.UserGivenPsf = 'None'
-
+        #print(self.UserGivenPsf)
         try:
             self.UserGivenSky = float(pdb['sky'])
             print('Sky is assigned individually to galaxies')
@@ -850,7 +860,7 @@ class Pipeline(ReturnClass):
 
             print('psffile: {}, distance: {}'.format(psffile, distance_psf_gal))
 
-            
+            #sys.exit() 
             run = 1 #run =1 if pipeline runs sucessfuly
 
             WriteError('\n\n###########   {} ###########\n'.format(self.gal_id))

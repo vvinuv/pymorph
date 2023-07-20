@@ -9,7 +9,7 @@ from .maskfunc_easy import MaskFunc
 from .configfunc import GalfitConfigFunc
 from .yetbackfunc import FindYetSky
 from .runsexfunc import PySex
-from .psffunc import PSFArr, UpdatePsfRaDec
+from .psffunc import psfarr, update_psf_ra_dec
 from .pipeline import Pipeline
 from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, RaDegToHMS, DecDegToDMS, CheckHeader, output_params, WriteError, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
 #from .writedbfunc import WriteDB
@@ -32,8 +32,8 @@ __all__ = ['PyMorph',
            'GalfitConfigFunc',
            'FindYetSky',
            'PySex',
-           'PSFArr',
-           'UpdatePsfRaDec',
+           'psfarr',
+           'update_psf_ra_dec',
            'Pipeline',
            'Get_R',
            'HMSToDeg',

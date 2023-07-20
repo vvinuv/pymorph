@@ -27,7 +27,7 @@ from .yetbackfunc import FindYetSky
 #from plotfunc import PlotFunc
 from .runsexfunc import PySex
 #from writehtmlfunc import WriteParams
-from .psffunc import PSFArr, UpdatePsfRaDec  
+from .psffunc import psfarr, update_psf_ra_dec  
 #import mask_or_fit as mf
 from .pipeline import Pipeline
        
@@ -365,11 +365,11 @@ class PyMorph(InitializeParams):
         print('Weight done')
         #print('PSF 1', self.psflist)
         #Initializing psf array. ie. creating psflist from file 
-        self.psflist = PSFArr(self.psflist)
+        self.psflist = psfarr(self.psflist)
         #if self.decompose:
         #    for p in self.psflist:
         #        print('psf', self.DATADIR, p)
-        #        UpdatePsfRaDec(self.DATADIR, p)
+        #        update_psf_ra_dec(self.DATADIR, p)
 
         #XXX
         #self.P.psflist = self.psflist
@@ -412,17 +412,38 @@ class PyMorph(InitializeParams):
         #pnames = obj_file.readline().split() #The names of the parameters given 
                                              #in the first line in the obj_cata
         #self.obj_cata = obj_cata
-        obj_values = np.genfromtxt(self.obj_cata, names=True)
 
-        pnames = obj_values.dtype.names
-        obj_values = list(obj_values[i] for i in pnames)
-        obj_values = np.column_stack(obj_values)                              
+        with open(self.obj_cata, 'r') as f_objs:
+            obj_lines = f_objs.readlines()
+
+        pnames = obj_lines[0].strip().split(' ')
+        obj_values = []
+        for oval in obj_lines[1:]:
+            if len(oval) == 1:
+                continue
+            oval2 = []
+            for i in oval.strip().split(' '):
+                try:
+                    oval2.append(float(i))
+                except:
+                    oval2.append(i)
+        
+            obj_values.append(oval2)
+
+        #print(pnames)
+        #print(obj_values)
+        #obj_values = np.genfromtxt(self.obj_cata, names=True)
+
+        #pnames = obj_values.dtype.names
+        #obj_values = list(obj_values[i] for i in pnames)
+        #obj_values = np.column_stack(obj_values)                              
+        #print(obj_values)
 
         #print('pnames', pnames)
         #print(obj_values)
         #print(obj_values.size)
 
-        if obj_values.size == 0:
+        if len(obj_values) == 0:
             print('No lines in {}'.format(self.obj_cata))
             print('Exiting PyMorph')
             sys.exit()
@@ -503,10 +524,10 @@ class PyMorph(InitializeParams):
         #con = (values[:, 16] < 0.8) #& (values[:, 17] < 23)
          
         values = values[con]
-        print(values.shape)
+        #print(values.shape)
         values = values[:, [0, 3, 4, 17]]
         values[:, 0] = values[:, 0].astype(int)
-        print(1, values)
+        #print(1, values)
         #values[:, 3] = values[:, 3] / 15.0
 
         if self.redshift != 9999:

@@ -1,4 +1,5 @@
 import os
+import sys
 import fitsio
 import numpy as np
 from .pymconvolve import pConvolve
@@ -64,8 +65,11 @@ class ElliMaskFunc:
             id_n = id_n[np.argmin(dist_neigh_obj)]
             
         #print('id_n', id_n)
+        print('seg_file', seg_file)
+        print('id_n', id_n)    
         seg[np.where(seg == id_n)] = 0
-
+        
+        #sys.exit()
         boxcar = np.reshape(np.ones(3 * 3), (3, 3))
         seg = pConvolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
