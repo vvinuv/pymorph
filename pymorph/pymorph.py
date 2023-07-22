@@ -481,7 +481,8 @@ class PyMorph(InitializeParams):
 
         P.final_result_file = self.final_result_file
         P.restart_file = self.restart_file
-
+        
+        #It is to give all the parameter values to the instance P
         for k, v in self.pymorph_config.items():
             setattr(P, k, v)
 
@@ -496,7 +497,7 @@ class PyMorph(InitializeParams):
         sys.exit()
         #print(results)
 
-    def find_and_fit(self):
+    def find_and_fit_obj_cata(self):
         '''
         Find all the sextractor objects and find fits. It rewrites the
         obj_cata in config.ini
@@ -544,81 +545,65 @@ class PyMorph(InitializeParams):
 
         #print('find_and_fit 2')
 
-    def pymorph(self):
 
+    def full_image():
+        fimg = fitsio.FITS(self.imagefile)
+        self.imagedata = fimg[0].read()
+        self.header0 = fimg[0].read_header()
+        fimg.close()
+        self.NXPTS = self.imagedata.shape[1]
+        self.NYPTS = self.imagedata.shape[0]
+        #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
+        #sys.exit()
+        gheader = CheckHeader(self.header0)
+        self.EXPTIME = gheader[0]
+        self.RDNOISE = gheader[1],
+        self.GAIN = gheader[2]
+        self.SEx_GAIN = gheader[3]
+        self.NCOMBINE = gheader[4]
 
-        # now change dir to the 
-        thisdir = os.getcwd()
-        print("Current directory is ", thisdir)
-        print("Output directory is ", self.OUTDIR)
+        print("Using large image. imagefile >>> {}".format(self.imagefile))
 
-        os.chdir(self.DATADIR)
-
-
-
-        if 1:
-            #print(1)
+        if os.path.exists(self.whtfile):
+            self.weightexists = True
             
-            if self.repeat == False & self.galcut == False:
-                #print(2)
-                fimg = fitsio.FITS(self.imagefile)
-                self.imagedata = fimg[0].read()
-                self.header0 = fimg[0].read_header()
-                fimg.close()
-                self.NXPTS = self.imagedata.shape[1]
-                self.NYPTS = self.imagedata.shape[0]
-                #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
-                #sys.exit()
-                gheader = CheckHeader(self.header0)
-                self.EXPTIME = gheader[0]
-                self.RDNOISE = gheader[1],
-                self.GAIN = gheader[2]
-                self.SEx_GAIN = gheader[3]
-                self.NCOMBINE = gheader[4]
+            #XXX
+            wht = fitsio.FITS(self.whtfile)
+            #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
 
-                print("Using large image. imagefile >>> {}".format(self.imagefile))
-
-                if os.path.exists(self.whtfile):
-                    self.weightexists = True
-                    
-                    #XXX
-                    wht = fitsio.FITS(self.whtfile)
-                    #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
-
-                    if re.search("rms", self.whtfile.lower()):
-                        self.weightdata = wht[0].read()
-                        print("whtfile >>> {}".format(self.whtfile))
-                    elif re.search("var", self.whtfile.lower()):
-                        self.weightdata = wht[0].read()
-                        self.weightdata = np.sqrt(self.weightdata)
-                        print("whtfile >>> {}".format(self.whtfile))
-                    elif re.search("weight", self.whtfile.lower()):
-                        self.weightdata = 1 / np.sqrt(wht[0].read())
-                        print("whtfile >>> {}".format(self.whtfile))
-                    else:
-                        print('Weight file is not understood. Please include ' + \
-                              'the word weight/rms to the weight file name. ' + \
-                              'If it is weight the rms will be found by 1/sqrt(w)')
-
-                    #XXX
-                    #self.weightdata = wht[0].read()
-                    wht.close()
-
+            if re.search("rms", self.whtfile.lower()):
+                self.weightdata = wht[0].read()
+                print("whtfile >>> {}".format(self.whtfile))
+            elif re.search("var", self.whtfile.lower()):
+                self.weightdata = wht[0].read()
+                self.weightdata = np.sqrt(self.weightdata)
+                print("whtfile >>> {}".format(self.whtfile))
+            elif re.search("weight", self.whtfile.lower()):
+                self.weightdata = 1 / np.sqrt(wht[0].read())
+                print("whtfile >>> {}".format(self.whtfile))
             else:
-                #print(4)
-                self.SEx_GAIN = 1.
-                self.weightexists = False
-                print('No weight image found\n')
-            
+                print('Weight file is not understood. Please include ' + \
+                      'the word weight/rms to the weight file name. ' + \
+                      'If it is weight the rms will be found by 1/sqrt(w)')
+
+            #XXX
+            #self.weightdata = wht[0].read()
+            wht.close()
+
+        else:
+            #print(4)
+            self.SEx_GAIN = 1.
+            self.weightexists = False
+            print('No weight image found\n')
+        
         #except IOError as e:
         #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
         #    os._exit(0)
-        
+
         #print(self.sex_cata)
         if os.path.exists(self.sex_cata):
             pass
-            #print(5)
-        elif self.galcut == False:
+        else:
             print('The SExtractor catalogue for your frame is NOT found. ' \
                   'One is being made using the default values. It is always '\
                   'recommended to make SExtractor catalogue by YOURSELF as '\
@@ -651,6 +636,19 @@ class PyMorph(InitializeParams):
     #New function for psfselect=2 non-interactive for webservice
         #print(self.psfselect)
         #print(self.obj_cata)
+    def pymorph(self):
+
+
+        # now change dir to the 
+        thisdir = os.getcwd()
+        print("Current directory is ", thisdir)
+        print("Output directory is ", self.OUTDIR)
+
+        os.chdir(self.DATADIR)
+
+        if self.repeat == False & self.galcut == False:
+            full_image()
+
         if self.psfselect == 2:
             self.Interactive = 0
             self.center_deviated = 0
@@ -691,7 +689,7 @@ class PyMorph(InitializeParams):
             self.starthandle = 0
             #print(111)
             if self.findandfit == True:
-                self.find_and_fit()
+                self.find_and_fit_obj_cata()
             #print(111)
             #print(self.sex_cata)
             self.main_thread()
