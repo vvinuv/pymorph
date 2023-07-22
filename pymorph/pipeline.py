@@ -1143,8 +1143,8 @@ class Pipeline(ReturnClass):
             t2 = time.time()
             #print('PF time >>> ', t2 - t1)
             #FIX
-            #f_cat.writelines(['{} '.format(gal_id)])
-            #f_cat.write(good_object)
+            #fout.writelines(['{} '.format(gal_id)])
+            #fout.write(good_object)
 
 
             #sys.exit()
@@ -1251,7 +1251,7 @@ class Pipeline(ReturnClass):
     #    print("something bad happened (general object search)!!!!\n\n")
     #    print(traceback.print_exc())
     #XXX
-    #f_cat.close()
+    #fout.close()
     #f_failed.close()
 
 

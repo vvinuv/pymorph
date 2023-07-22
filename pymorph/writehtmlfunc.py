@@ -330,6 +330,7 @@ class WriteHtmlCSV(object):
                     all_params['Pfwhm_kpc'] = 0.5 * phy_parms[3]
             # Finding derived parameters
             if 'bulge' in comp and 'disk' in comp:
+                print(all_params['Ie'] , all_params['Id'], all_params['Ibar'])
                 fb = 10**(-0.4 * (all_params['Ie'] - self.mag_zero))
                 fd = 10**(-0.4 * (all_params['Id'] - self.mag_zero))
                 if 'point' in comp:
@@ -337,6 +338,7 @@ class WriteHtmlCSV(object):
                 else:
                     fp = 0.0
                 if 'bar' in comp:
+                    print(all_params['Ibar'])
                     fbar = 10**(-0.4 * (all_params['Ibar'] - self.mag_zero)) 
                 else:
                     fbar = 0.0

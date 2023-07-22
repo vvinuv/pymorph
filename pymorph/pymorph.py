@@ -394,7 +394,7 @@ class PyMorph(InitializeParams):
 
         #print(self.out_cata)
 
-        f_cat = open(self.out_cata, 'w')
+        fout = open(self.out_cata, 'w')
         #obj_cata = open(self.obj_cata, 'r')  # The file contains the 
                                                      # objects of interest
         #pnames = obj_cata.readline().split() #The names of the parameters given 
@@ -577,37 +577,36 @@ class PyMorph(InitializeParams):
                 self.NCOMBINE = gheader[4]
 
                 print("Using large image. imagefile >>> {}".format(self.imagefile))
+
+                if os.path.exists(self.whtfile):
+                    self.weightexists = True
+                    
+                    #XXX
+                    wht = fitsio.FITS(self.whtfile)
+                    #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
+
+                    if re.search("rms", self.whtfile.lower()):
+                        self.weightdata = wht[0].read()
+                        print("whtfile >>> {}".format(self.whtfile))
+                    elif re.search("var", self.whtfile.lower()):
+                        self.weightdata = wht[0].read()
+                        self.weightdata = np.sqrt(self.weightdata)
+                        print("whtfile >>> {}".format(self.whtfile))
+                    elif re.search("weight", self.whtfile.lower()):
+                        self.weightdata = 1 / np.sqrt(wht[0].read())
+                        print("whtfile >>> {}".format(self.whtfile))
+                    else:
+                        print('Weight file is not understood. Please include ' + \
+                              'the word weight/rms to the weight file name. ' + \
+                              'If it is weight the rms will be found by 1/sqrt(w)')
+
+                    #XXX
+                    #self.weightdata = wht[0].read()
+                    wht.close()
+
             else:
                 #print(4)
                 self.SEx_GAIN = 1.
-
-            if self.repeat == False & self.galcut == False & os.path.exists(self.whtfile):
-                self.weightexists = True
-                
-                #XXX
-                wht = fitsio.FITS(self.whtfile)
-                #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
-
-                if re.search("rms", self.whtfile.lower()):
-                    self.weightdata = wht[0].read()
-                    print("whtfile >>> {}".format(self.whtfile))
-                elif re.search("var", self.whtfile.lower()):
-                    self.weightdata = wht[0].read()
-                    print("whtfile >>> {}".format(self.whtfile))
-                elif re.search("weight", self.whtfile.lower()):
-                    self.weightdata = 1 / np.sqrt(wht[0].read())
-                    print("whtfile >>> {}".format(self.whtfile))
-                else:
-                    print('Weight file is not understood. Please include ' + \
-                          'the word weight/rms to the weight file name. ' + \
-                          'If it is weight the rms will be found by 1/sqrt(w)')
-
-                #XXX
-                #self.weightdata = wht[0].read()
-                wht.close()
-
-
-            else:
                 self.weightexists = False
                 print('No weight image found\n')
             
