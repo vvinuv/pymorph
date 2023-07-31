@@ -265,7 +265,7 @@ def ReadGalfitConfig(cfile):
     #return (gimg, oimg, wimg, pfile, mimg, cofile) 
     return (cutimage, oimg, wimg, pfile, mimg, cofile) 
 
-def CheckHeader(header0):
+def check_header(header0):
     """Set the global keywords from the fits header"""
 
     if 'EXPTIME' in header0.keys(): # Old was 'if header0.has_key('EXPTIME'):
@@ -286,17 +286,17 @@ def CheckHeader(header0):
         NCOMBINE= header0['NCOMBINE']
     else:
         NCOMBINE = 1
-    if 'FILTER2' in header0.keys() or 'FILTER' in header0.keys():
-        try:
-            FILTER = header0['FILTER2']
-        except:
-            FILTER = header0['FILTER']
+    if 'FILTER2' in header0.keys():
+        PHOT_FILTER = header0['FILTER2']
+    elif 'FILTER' in header0.keys():
+        PHOT_FILTER = header0['FILTER']
+    else:
+        PHOT_FILTER = 'NONE'
+    return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE, PHOT_FILTER
 
-    return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE
 
 
-
-def WriteError(err):
+def write_error(err):
     """Write error.log file"""
     f_err = open('error.log', 'a')
     f_err.write(err) 
@@ -540,7 +540,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     except ImportError:
         use_pyraf = 0
         print('No pyraf installed!')
-        WriteError('Cannot find pyraf installation! Trying manual 1d ' + \
+        write_error('Cannot find pyraf installation! Trying manual 1d ' + \
                    'profile finder\n')
     if use_pyraf:
         if out:
@@ -570,7 +570,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
                 manual_profile = 1
         except:
             manual_profile = 1
-            WriteError('Error in ellipse task. Trying manual profile finder\n')
+            write_error('Error in ellipse task. Trying manual profile finder\n')
             try:
                 c.Flag = SetFlag(c.Flag, GetFlag('ELLIPSE_FAIL'))
             except badflag:
@@ -621,7 +621,7 @@ def OImgFindEllipse(oimg, xcntr, ycntr, SexHalfRad, SexPosAng, axis_rat,
             print('Failed to extract 1D profile from output image')
             print(e)
     else:
-        WriteError('The output image is not found ' + \
+        write_error('The output image is not found ' + \
                       'GALFIT MIGHT BE CRASHED\n')
         flag = SetFlag(flag, GetFlag('GALFIT_FAIL'))
         cutimage = 'I{}'.format(os.path.split(oimg)[-1][1:])
@@ -690,10 +690,10 @@ def HandleCASGMBack(cutimage, cut_xcntr, cut_ycntr, SizeX, SizeY, \
 #            print('Sky Sigma >>> ', c.skysig
             return bxcntr, bycntr         
         except:
-            WriteError('Could not find blank sky region for casgm\n')
+            write_error('Could not find blank sky region for casgm\n')
             return 9999, 9999
     except:
-        WriteError('Could not create mask for casgm to find the sky' +\
+        write_error('Could not create mask for casgm to find the sky' +\
                    ' sigma and mean \n')
         return 9999, 9999
 
@@ -730,14 +730,14 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         #                     c.SexMagAutoErr, C, C_err, A, A_err, S, \
         #                     S_err, G, M, c.Flag, c.SexHalfRad])
         #    f_res.close()
-        WriteError('(((((CASGM Successful)))))\n')
+        write_error('(((((CASGM Successful)))))\n')
         return C, C_err, A, A_err, S, S_err, G, M
     except:
-        WriteError('The CASGM module failed\n')
+        write_error('The CASGM module failed\n')
         c.Flag = SetFlag(c.Flag, GetFlag('CASGM_FAIL'))
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
 
-def returngimg():
+def return_gimg():
     print("No gimg given.")
     if exists(os.path.join(c.datadir, 'I' + c.fstring + '.fits')):
         #gimg = 'I' + c.fstring + '.fits'
@@ -752,7 +752,7 @@ def returngimg():
     #return gimg
     return cutimage
 
-def returnthenames(gal_id, cutimage, wimg):
+def return_the_names(gal_id, cutimage, wimg):
     """This function returns the names of cutout, weight \
        based on the parameters set in the config.py"""
     if c.galcut:
@@ -785,7 +785,7 @@ def run_test(option, opt, value, parser):
     return
 
 
-def SExtractorConfEdit():
+def sextractor_conf_edit():
     SEx_DETECT_MINAREA = input("DETECT_MINAREA (6) >>> ")
     try:
         SEx_DETECT_MINAREA = float(SEx_DETECT_MINAREA)
