@@ -14,7 +14,7 @@ import configparser
 import subprocess
 from multiprocessing import Pool
 #import pymorphutils as ut
-from .pymorphutils import CheckHeader, output_params
+from .pymorphutils import check_header, output_params
 from .flagfunc import GetFlag, isset, SetFlag
 
 from .ellimaskfunc_easy import ElliMaskFunc
@@ -555,12 +555,13 @@ class PyMorph(InitializeParams):
         self.NYPTS = self.imagedata.shape[0]
         #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
         #sys.exit()
-        gheader = CheckHeader(self.header0)
+        gheader = check_header(self.header0)
         self.EXPTIME = gheader[0]
         self.RDNOISE = gheader[1],
         self.GAIN = gheader[2]
         self.SEx_GAIN = gheader[3]
         self.NCOMBINE = gheader[4]
+        self.PHOT_FILTER = gheader[5]
 
         print("Using large image. imagefile >>> {}".format(self.imagefile))
 
@@ -590,9 +591,11 @@ class PyMorph(InitializeParams):
             #self.weightdata = wht[0].read()
             wht.close()
 
+        elif self.whtfile == 'default':
+            pass
         else:
             #print(4)
-            self.SEx_GAIN = 1.
+            #self.SEx_GAIN = 1.
             self.weightexists = False
             print('No weight image found\n')
         
