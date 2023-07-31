@@ -87,7 +87,7 @@ class CasGm:
             casgmrun = 1
         except:
             casgmrun = 0
-            ut.WriteError('Failed to find the background region!!!\n')
+            ut.write_error('Failed to find the background region!!!\n')
 
         z = z - sky
         f = pyfits.open(maskimage)
