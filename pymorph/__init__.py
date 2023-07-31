@@ -11,7 +11,7 @@ from .yetbackfunc import FindYetSky
 from .runsexfunc import PySex
 from .psffunc import psfarr, update_psf_ra_dec
 from .pipeline import Pipeline
-from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, RaDegToHMS, DecDegToDMS, CheckHeader, output_params, WriteError, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
+from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, RaDegToHMS, DecDegToDMS, check_header, output_params, write_error, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
 #from .writedbfunc import WriteDB
 from .pymconvolve import pConvolve
 
@@ -40,9 +40,9 @@ __all__ = ['PyMorph',
            'DMSToDeg',
            'RaDegToHMS',
            'DecDegToDMS',
-           'CheckHeader',
+           'check_header',
            'output_params',
-           'WriteError',
+           'write_error',
            'CrashHandlerToRemove',
            'FindEllipse',
            'HandleCasgm',
