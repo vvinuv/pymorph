@@ -28,6 +28,7 @@ from .yetbackfunc import FindYetSky
 from .runsexfunc import PySex
 #from writehtmlfunc import WriteParams
 from .psffunc import psfarr, update_psf_ra_dec  
+from .weightimage import return_sigma
 #import mask_or_fit as mf
 from .pipeline import Pipeline
        
@@ -546,7 +547,7 @@ class PyMorph(InitializeParams):
         #print('find_and_fit 2')
 
 
-    def full_image():
+    def full_image(self):
         fimg = fitsio.FITS(self.imagefile)
         self.imagedata = fimg[0].read()
         self.header0 = fimg[0].read_header()
@@ -591,8 +592,9 @@ class PyMorph(InitializeParams):
             #self.weightdata = wht[0].read()
             wht.close()
 
-        elif self.whtfile == 'default':
-            pass
+        elif self.whtfile == 'SDSS':
+            self.weightdata = return_sigma(self.imagedata,
+                                           gain=4.71, ncombine=1)  
         else:
             #print(4)
             #self.SEx_GAIN = 1.
@@ -650,7 +652,9 @@ class PyMorph(InitializeParams):
         os.chdir(self.DATADIR)
 
         if self.repeat == False & self.galcut == False:
-            full_image()
+            self.full_image()
+        elif self.galcut:
+            galcut_images()
 
         if self.psfselect == 2:
             self.Interactive = 0
