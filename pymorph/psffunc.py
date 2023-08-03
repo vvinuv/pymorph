@@ -6,6 +6,30 @@ from .pymorphutils import HMSToDeg, DMSToDeg
 
 verbose = False
 
+
+
+def psfarr(psflist):
+    """Return psf list if the given input is a file"""
+    #print('P1', psflist)
+    for pf in psflist:
+        ra1 = float(str(pf)[4:6]) 
+        ra2 = float(str(pf)[6:8])
+        ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
+        dec1 = float(str(pf)[11:-10])
+        dec2 = float(str(pf)[-10:-8])
+        dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
+        ra = HMSToDeg(ra1, ra2, ra3)
+        dec = DMSToDeg(dec1, dec2, dec3)
+
+        pfits = fitsio.FITS(pf, 'rw')
+        pfits[0].write_key('RA_PSF', ra)
+        pfits[0].write_key('DEC_PSF', dec)
+        pfits.close()
+ 
+    return psflist
+
+
+
 def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
 
     """
@@ -30,22 +54,33 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
         header = p[0].read_header()
         p.close()
         #print(header)
-        if 'RA_TARG' in header:
-            ra = header['RA_TARG']
-        elif 'RA' in header:
-            ra = header['RA']
-        elif 'CRVAL1' in header:
-            ra = header['CRVAL1']
+        if 0:
+            if 'RA_TARG' in header:
+                ra = header['RA_TARG']
+            elif 'RA' in header:
+                ra = header['RA']
+            elif 'CRVAL1' in header:
+                ra = header['CRVAL1']
+            else:
+                ra = 9999
+            if 'DEC_TARG' in header:
+                dec= header['DEC_TARG']
+            elif ('DEC' in header):
+                dec= header['DEC']
+            elif 'CRVAL2' in header:
+                dec = header['CRVAL2']
+            else:
+                dec= 9999
+
+        if 'RA_PSF' in header:
+            ra_psf = header['RA_PSF']
         else:
-            ra = 9999
-        if 'DEC_TARG' in header:
-            dec= header['DEC_TARG']
-        elif ('DEC' in header):
-            dec= header['DEC']
-        elif 'CRVAL2' in header:
-            dec = header['CRVAL2']
+            ra_psf = 9999
+        if 'DEC_PSF' in header:
+            dec_psf = header['DEC_PSF']
         else:
-            dec= 9999
+            dec_psf = 9999
+        
         #print(ra, dec)
         #print(alpha_j, delta_j)
 #       d = sqrt((ra - alpha_j) ** 2.0 + (dec - delta_j) ** 2.0)
@@ -54,7 +89,7 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
 #           np.cos((alpha_j - ra) * r))
 #       d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j-ra)*np.sin((0.5) *\
 #           (delta_j+dec)))**2.0)
-        d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
+        d = np.sqrt((delta_j - dec_psf)**2.0 + ((alpha_j - ra_psf) * \
             np.cos(delta_j * r))**2.0)
         if verbose:
             print('d', d)
@@ -68,28 +103,6 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     if verbose:
         print(psffile, distance)
     return psffile, distance
-
-
-def psfarr(psflist):
-    """Return psf list if the given input is a file"""
-    #print('P1', psflist)
-    for pf in psflist:
-        ra1 = float(str(pf)[4:6]) 
-        ra2 = float(str(pf)[6:8])
-        ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
-        dec1 = float(str(pf)[11:-10])
-        dec2 = float(str(pf)[-10:-8])
-        dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
-        ra = HMSToDeg(ra1, ra2, ra3)
-        dec = DMSToDeg(dec1, dec2, dec3)
-
-        pfits = fitsio.FITS(pf, 'rw')
-        pfits[0].write_key('RA', ra)
-        pfits[0].write_key('DEC', dec)
-        pfits.close()
- 
-    return psflist
-
 
 
 def update_psf_ra_dec(datadir, element):
