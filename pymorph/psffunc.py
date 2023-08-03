@@ -12,14 +12,31 @@ def psfarr(psflist):
     """Return psf list if the given input is a file"""
     #print('P1', psflist)
     for pf in psflist:
-        ra1 = float(str(pf)[4:6]) 
-        ra2 = float(str(pf)[6:8])
-        ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
-        dec1 = float(str(pf)[11:-10])
-        dec2 = float(str(pf)[-10:-8])
-        dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
-        ra = HMSToDeg(ra1, ra2, ra3)
-        dec = DMSToDeg(dec1, dec2, dec3)
+        if len(pf) == 24:
+            ra1 = float(str(pf)[4:6]) 
+            ra2 = float(str(pf)[6:8])
+            ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
+            dec1 = float(str(pf)[11:-10])
+            dec2 = float(str(pf)[-10:-8])
+            dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
+            ra = HMSToDeg(ra1, ra2, ra3)
+            dec = DMSToDeg(dec1, dec2, dec3)
+        else:
+            header = fitsio.read_header(pf)    
+            if 'RA' in header:
+                ra = header['RA']
+            elif 'CRVAL1' in header:
+                ra = header['CRVAL1']
+            else:
+                ra = 9999
+            if ('DEC' in header):
+                dec= header['DEC']
+            elif 'CRVAL2' in header:
+                dec = header['CRVAL2']
+            else:
+                dec= 9999
+            if ra == 9999 or dec == 9999:
+                print('No RA and DEC for PSF file found')
 
         pfits = fitsio.FITS(pf, 'rw')
         pfits[0].write_key('RA_PSF', ra)
