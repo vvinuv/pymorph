@@ -193,14 +193,14 @@ class ReturnClass(object):
         half_size, y_half_size are half size
 
         """
-        #print(9, self.sex_xcntr, self.sex_ycntr, half_size)
+        print(9, self.sex_xcntr, self.sex_ycntr, half_size)
         ExceedSize = 0
         #All are floor to make the size even number
         xmin = np.floor(self.sex_xcntr - half_size)
         xmax = np.floor(self.sex_xcntr + half_size)
         ymin = np.floor(self.sex_ycntr - half_size)
         ymax = np.floor(self.sex_ycntr + half_size)
-        #print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
+        print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
         #print(10, xmin, xmax, self.NXPTS - xmax, ymin, ymax, self.NYPTS - ymax, half_size * 2 - 1)
         #print(11, xmin < 0, xmax > (self.NXPTS - 2), ymin < 0, ymax > (self.NYPTS - 2))
         if xmin < 0 or xmax > (self.NXPTS - 2) or ymin < 0 or ymax > (self.NYPTS - 2):
@@ -208,6 +208,7 @@ class ReturnClass(object):
             con = (max_diff < 0)
             max_diff = abs(max_diff[con]).max() + 1
             half_size = half_size - max_diff #np.max([abs(xmin), abs(ymin), xmax, ymax])
+            print('half_size - max_diff', half_size, max_diff)
             xcntr_img = half_size + np.modf(self.sex_xcntr)[0]
             ycntr_img = half_size + np.modf(self.sex_ycntr)[0]
             ExceedSize = 1
@@ -231,40 +232,25 @@ class ReturnClass(object):
             data = self.imagedata[ymin:ymax, xmin:xmax]
             #print(100, self.imagedata.shape)
             # END
+        #print('imagedata, data', self.imagedata, data)
         self.img_NPTS = data.shape[0]
-
+        print('1 xmin, etc ', xmin, ymin, xmax, ymax, self.sex_xcntr, self.sex_ycntr, half_size)
         print('2 xcntr_img ', xcntr_img, ycntr_img)
         #print('half_size', half_size)
-        hdict = {}
-        try:
-            hdict['RA_TARG'] = self.alpha_j
-            hdict['DEC_TARG'] = self.delta_j
-        except:
-            print('Problem updating the Ra and Dec in cutout image')
-        if self.EXPTIME != -9999:
-            hdict['EXPTIME'] = self.EXPTIME
-        else:
-            print('EXPTIME have value -9999. Something wrong?')
-        if self.RDNOISE != -9999:
-            hdict['RDNOISE'] = self.RDNOISE
-        else:
-            print('RDNOISE have value -9999. Something wrong?')
-        if self.GAIN != -9999:
-            hdict['GAIN'] = self.GAIN
-        else:
-            print('GAIN have value -9999. Something wrong?')
-        if self.NCOMBINE != -9999:
-            hdict['NCOMBINE'] = self.NCOMBINE
-        else:
-            print('NCOMBINE have value -9999. Something wrong?')
-
         #print(13, self.gimg)
         print(13, self.DATADIR, self.cutimage_file)
         #print(14, data)
         print(14)
+        print(int(xcntr_img))
+        print(self.IMG_HEADER)
+        self.IMG_HEADER['CRPIX1'] = int(xcntr_img)
+        self.IMG_HEADER['CRPIX2'] = int(ycntr_img)
+        self.IMG_HEADER['CRVAL1'] = self.alpha_j
+        self.IMG_HEADER['CRVAL2'] = self.delta_j
+
         #fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
         fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'rw')
-        fits.write(data, header=hdict)
+        fits.write(data, header=self.IMG_HEADER)
         fits.close()
         print(15)
         #sys.exit()
@@ -298,6 +284,10 @@ class Pipeline(ReturnClass):
 
 
     def _target_initialize(self, pdb):
+
+        '''
+        Initializing the target ID, RA, DEC, fstring, gimg, wimg
+        '''
 
         if "gal_id" in pdb.keys():
             self.gal_id = int(pdb["gal_id"])
@@ -360,6 +350,10 @@ class Pipeline(ReturnClass):
             print("No dec is given")
             self.delta_j = -9999
 
+        if self.alpha_j == -9999: 
+            self.position = False
+        else:
+            self.position = True
         #print(self.alpha_j, self.delta_j)
         if "z" in pdb.keys():
             self.z = float(pdb["z"])
@@ -440,12 +434,12 @@ class Pipeline(ReturnClass):
         self.header0 = gfits[0].read_header()
         gfits.close()
 
-        gheader = check_header(self.header0) #Will set up global header parameters
-        self.EXPTIME = gheader[0]
-        self.RDNOISE = gheader[1], 
-        self.GAIN = gheader[2]
-        self.SEx_GAIN = gheader[3]
-        self.NCOMBINE = gheader[4]
+         
+        self.IMG_HEADER, self.SEx_GAIN = check_header(self.header0) #Will set up global header parameters
+
+        #if self.position == 1:
+        #    self.alpha_j = gheader[6]
+        #    self.delta_j = gheader[7]
 
         if os.path.exists(os.path.join(self.DATADIR, self.wimg_file)):
             wfits = fitsio.FITS(os.path.join(self.DATADIR, self.wimg_file))
@@ -473,7 +467,7 @@ class Pipeline(ReturnClass):
     ##if self.galcut == True:   
         #Given galaxy cutouts if the user provides sextractor catalogue
         #then it will not run SExtractor else do!
-        PS = PySex(c.SEX_PATH)
+        PS = PySex(self.SEX_PATH)
         if not os.path.exists(self.sex_cata):
             if 1:
 
@@ -487,8 +481,7 @@ class Pipeline(ReturnClass):
                 PS.RunSex(self.sex_config,
                           os.path.join(self.DATADIR, self.cutimage_file),
                           os.path.join(self.DATADIR, self.wimg_file),
-                          os.path.join(self.DATADIR, 
-                                      '.Shallow'.format(self.sex_cata)),
+                          os.path.join(self.DATADIR, self.sex_cata), 
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='shallow')
 #             except Exception as e:
@@ -502,7 +495,7 @@ class Pipeline(ReturnClass):
 #         sys.exit() 
     
     def _galcut_cutout(self, half_size):
-        
+        print('half_size', half_size) 
         if self.ReSize: 
             #Can take a function
             #Can check whether a decorator can be used
@@ -512,16 +505,17 @@ class Pipeline(ReturnClass):
                 write_error('The file {} exists\n'.format(self.cutimage_file))
                 run = 0
                 #break #Breaking the sextractor loop
-            try:
+            if 1:
+                print('half_size', half_size)
                 cntr_half = self._make_cutout(half_size)
-            except  Exception as e:
-                print(type(e))     # the exception instance
-                print(e.args)      # arguments stored in\
-                                     # .args
-                print(e)           # __str__ allows args\
-                                     # to printed directly
-                write_error('Cutout exists!')
-                print(traceback.print_exc())
+            #except  Exception as e:
+            #    print(type(e))     # the exception instance
+            #    print(e.args)      # arguments stored in\
+            #                         # .args
+            #    print(e)           # __str__ allows args\
+            #                         # to printed directly
+            #    write_error('Cutout exists!')
+            #    print(traceback.print_exc())
                 #break
         else:
             xcntr_img = sex_xcntr
@@ -529,8 +523,6 @@ class Pipeline(ReturnClass):
             ExceedSize = 0
             cntr_half = [xcntr_img, ycntr_img, ExceedSize, half_size]
 
-        cntr_half.append(self.cutimage_file)
-        cntr_half.append(self.wimg_file) 
         return cntr_half
         ##return run
                             
@@ -540,8 +532,8 @@ class Pipeline(ReturnClass):
         #print(11, self.gimg)
         #print('self.cutimage_file', self.cutimage_file)
         #self.gimg = 'I{}.fits'.format(self.fstring)
-        cutimage_file = 'I{}.fits'.format(self.fstring)
-        wimg_file = 'W{}.fits'.format(self.fstring)
+        self.cutimage_file = 'I{}.fits'.format(self.fstring)
+        self.wimg_file = 'W{}.fits'.format(self.fstring)
         #Can take a function
         #if os.path.exists(self.gimg):
         if os.path.exists(self.cutimage_file):
@@ -568,8 +560,6 @@ class Pipeline(ReturnClass):
             print(traceback.print_exc())
             #break
 
-        cntr_half.append(cutimage_file)
-        cntr_half.append(wimg_file)
         print('cntr_half ', cntr_half)
         return cntr_half
  
@@ -646,25 +636,29 @@ class Pipeline(ReturnClass):
         #print(2, self.cutimage_file)
 
         values_sex = np.genfromtxt(self.sex_cata)
-        sex_id = values_sex[0]
+        if values_sex.ndim == 1:
+            values_sex = np.expand_dims(values_sex, axis=0)
+        print(self.sex_cata)
         sex_xcntr  = values_sex[:, 1]
         sex_ycntr  = values_sex[:, 2]
         #print(self.sex_cata)
+        print('alj delj', self.alpha_j, self.delta_j)
         if self.position == 0:
             alpha_s = np.full_like(values_sex.shape[0], 9999)
             delta_s = np.full_like(values_sex.shape[0], 9999)
             con = (abs(sex_xcntr - self.ximg) < self.SeaPix) & (abs(sex_ycntr - self.yimg) < self.SeaPix)
             curr_distance = np.sqrt((sex_xcntr - self.ximg)**2 + (sex_ycntr - self.yimg)**2)
-
+            print('position', 0)
         else:
             alpha_s = values_sex[:, 3]
             delta_s = values_sex[:, 4]
             con = (abs(self.alpha_j - alpha_s) < self.SeaDeg) & \
             (abs(delta_s - self.delta_j) < self.SeaDeg)
             curr_distance = np.sqrt((self.alpha_j - alpha_s)**2 + (delta_s - self.delta_j)**2)
-         
-        
-        #print(self.alpha_j, alpha_s)
+            print('position', 1)
+            print('als dels', alpha_s, delta_s)
+
+        print('curr_distance', curr_distance) 
         #print(self.SeaDeg, self.SeaPix)
         
         curr_distance = curr_distance[con]
@@ -703,12 +697,13 @@ class Pipeline(ReturnClass):
         sex_id = target.sex_num
         print("SExtractor ID >>> {}".format(sex_id))
 
-
+        self.alpha_s, self.delta_s = target.center_world
         self.sex_xcntr, self.sex_ycntr = target.sex_center
         #print('sex_xcntr', self.sex_xcntr)
         self.SexHalfRad = target.radius #Sex halfrad 
         self.SexPosAng = target.pos_ang
         self.SexAxisRatio = target.bbya #axis ration b/a
+        self.SexSky = target.sky #sextractor sky value
         self.eg = target.eg
         if self.eg <= 0.05:
             self.eg = 0.05
@@ -740,21 +735,20 @@ class Pipeline(ReturnClass):
         # declare the flag
         self.flag = 0
         
-        
         #print('pnames', self.pnames)
         #print(11)
+
+        #Initializing the target ID, RA (self.alpha_j), DEC (self.delta_j), 
+        #fstring, gimg, wimg, position
         self._target_initialize(pdb)
+
+        # Determine Search Radius from input position to sextractor position 
+        self._search_radius()
+
         #print(22)
         #print(2, self.alpha_j, self.delta_j)
-        if self.alpha_j == -9999 or self.delta_j == -9999:
-            self.position = 0
-        else:
-            self.position = 1 #Understood position is given
-        
         #print(3)
        
-        #XXX Need to check whether we use this anywhere 
-        self.ximg, self.yimg = self._get_ximg_yimg(pdb)
         
         #print(self.ximg, self.yimg)
         self.bxcntr, self.bycntr = self._get_bkg_center(pdb)
@@ -789,9 +783,7 @@ class Pipeline(ReturnClass):
 
             self._crash_handler(pdb)
 
-        # Determine Search Radius 
-        self._search_radius()
-        
+                
         #print(5)
         
                 #print(6)
@@ -817,6 +809,7 @@ class Pipeline(ReturnClass):
             #print(0, self.gimg)
             #print(0, self.cutimage_file)
 
+            #What are the components for the fitting
             self._flags_initialization()
             
             
@@ -834,7 +827,12 @@ class Pipeline(ReturnClass):
                 #Handling image cutout names
                 #XXX
                 self._galcut_images()
+                #XXX Need to check whether we use this anywhere 
+                #If there is no ra, dec is given then it will return 
+                #the image center coordinates
+                self.ximg, self.yimg = self._get_ximg_yimg(pdb)
 
+            print('alpha, delta', self.alpha_j, self.delta_j)
             good_object, SexTargets = self._potential_target()
             #print('good_object', good_object)
 
@@ -844,7 +842,6 @@ class Pipeline(ReturnClass):
                                   good_object[10])
 
             # Calculating the cutout size (half size).
-            # half_size, y_half_size return from make_cutout are full sizes
             self.half_size = super()._find_cutout_size()
  
             #sys.exit() 
@@ -871,16 +868,16 @@ class Pipeline(ReturnClass):
                 if self.galcut:
                     #Handling image cutout names
                     #XXX
-                    #self._galcut_images()
-                    xcntr_img, ycntr_img = self._galcut_cutout(self.half_size)
+                    #Also, set self.cutimage_file and self.wimg_file
+                    cntr_half = self._galcut_cutout(self.half_size)
                 else:
+                    #Also, set self.cutimage_file and self.wimg_file
                     cntr_half = self._not_galcut_cutout(self.half_size)
-                    xcntr_img = cntr_half[0] 
-                    ycntr_img = cntr_half[1]
-                    ExceedSize = cntr_half[2]
-                    self.half_size = cntr_half[3]
-                    self.cutimage_file = cntr_half[4]
-                    self.wimg_file = cntr_half[5]
+                
+                xcntr_img = cntr_half[0]
+                ycntr_img = cntr_half[1]
+                ExceedSize = cntr_half[2]
+                self.half_size = cntr_half[3]
                 #print(2, self.gimg)
                 #print(2, self.cutimage_file)
 
@@ -896,7 +893,7 @@ class Pipeline(ReturnClass):
                 # first count the number of "potential" targets in the search radius
         
               
-                if self.Square:
+                if self.Square & 0:
                     self.half_size = self._make_img_square(self.half_size)
 
                 #print(self.half_size)
@@ -913,12 +910,12 @@ class Pipeline(ReturnClass):
 
                 
                 #self.gimg = os.path.join(self.DATADIR, self.gimg)
-                self.cutimage_file = os.path.join(self.DATADIR, 
-                                                  self.cutimage_file)
-                self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
+                #self.cutimage_file = os.path.join(self.DATADIR, 
+                #                                  self.cutimage_file)
+                #self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
                 
                 #seg_fits is used to generate elliptical mask and galfit mask 
-                seg_fits = os.path.join(self.OUTDIR, 'check.fits')
+                seg_fits = os.path.join(self.DATADIR, '2check.fits')
 
                 #if os.path.exists(seg_fits):
                 #    os.remove(seg_fits)
@@ -937,6 +934,8 @@ class Pipeline(ReturnClass):
                 #sys.exit()
                 EM = ElliMaskFunc(self.DATADIR, xcntr_img, ycntr_img,
                                   center_limit=5., seg_limit=1e-5)
+                print(seg_fits)
+                
                 EM.emask(seg_fits, seg_cata, self.fstring)
 
                 #print(11)

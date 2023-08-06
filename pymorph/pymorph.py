@@ -467,22 +467,11 @@ class PyMorph(InitializeParams):
         P.pymorph_config = self.pymorph_config
         P.sex_config = self.sex_config
 
-        P.imagedata = self.imagedata
-        P.weightdata = self.weightdata
-        P.NXPTS = self.imagedata.shape[1]
-        P.NYPTS = self.imagedata.shape[0]
-        P.weightexists = self.weightexists
-
-        P.EXPTIME = self.EXPTIME
-        P.RDNOISE = self.RDNOISE
-        P.GAIN = self.GAIN
-        P.SEx_GAIN = self.SEx_GAIN
-        P.NCOMBINE = self.NCOMBINE
         P.center_deviated = self.center_deviated
 
         P.final_result_file = self.final_result_file
         P.restart_file = self.restart_file
-        
+
         #It is to give all the parameter values to the instance P
         for k, v in self.pymorph_config.items():
             setattr(P, k, v)
@@ -490,7 +479,88 @@ class PyMorph(InitializeParams):
         P.pnames = pnames
         P.params_to_write = params_to_write
 
-        pdb = {}                        #The parameter dictionary
+        
+        #If galcut then it passes to pipeline otherwise it reads the image
+        if self.galcut:
+            pass 
+        else:
+            fimg = fitsio.FITS(self.imagefile)
+            self.imagedata = fimg[0].read()
+            self.header0 = fimg[0].read_header()
+            fimg.close()
+            self.NXPTS = self.imagedata.shape[1]
+            self.NYPTS = self.imagedata.shape[0]
+            #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
+            #sys.exit()
+            print(self.header0)
+            P.IMG_HEADER, P.SEx_GAIN = check_header(self.header0)
+            print(P.IMG_HEADER) 
+            print("Using large image. imagefile >>> {}".format(self.imagefile))
+
+            if os.path.exists(self.whtfile):
+                self.weightexists = True
+                
+                #XXX
+                wht = fitsio.FITS(self.whtfile)
+                #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
+
+                if re.search("rms", self.whtfile.lower()):
+                    self.weightdata = wht[0].read()
+                    print("whtfile >>> {}".format(self.whtfile))
+                elif re.search("var", self.whtfile.lower()):
+                    self.weightdata = wht[0].read()
+                    self.weightdata = np.sqrt(self.weightdata)
+                    print("whtfile >>> {}".format(self.whtfile))
+                elif re.search("weight", self.whtfile.lower()):
+                    self.weightdata = 1 / np.sqrt(wht[0].read())
+                    print("whtfile >>> {}".format(self.whtfile))
+                else:
+                    print('Weight file is not understood. Please include ' + \
+                          'the word weight/rms to the weight file name. ' + \
+                          'If it is weight the rms will be found by 1/sqrt(w)')
+
+                #XXX
+                #self.weightdata = wht[0].read()
+                wht.close()
+
+            elif self.whtfile == 'SDSS':
+                self.weightdata = return_sigma(self.imagedata,
+                                               gain=4.71, ncombine=1)  
+            else:
+                #print(4)
+                #self.SEx_GAIN = 1.
+                self.weightexists = False
+                print('No weight image found\n')
+            
+            #except IOError as e:
+            #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
+            #    os._exit(0)
+
+            #print(self.sex_cata)
+
+
+            P.imagedata = self.imagedata
+            P.weightdata = self.weightdata
+            P.weightexists = self.weightexists
+            P.NXPTS = self.NXPTS
+            P.NYPTS = self.NYPTS
+
+            if os.path.exists(self.sex_cata):
+                pass
+            else:
+                print('The SExtractor catalogue for your frame is NOT found. ' \
+                      'One is being made using the default values. It is always '\
+                      'recommended to make SExtractor catalogue by YOURSELF as '\
+                      'the pipeline keeps the sky value at the SExtractor value '\
+                      'during the decomposition.')
+                #print(6)
+                PS = PySex(self.SEX_PATH)
+                PS.RunSex(self.sex_config,  
+                       self.imagefile, self.whtfile,
+                       self.sex_cata, P.SEx_GAIN,
+                       check_fits=None, sconfig='default')
+
+        #Go to pipeline
         for obj_value in obj_values:
             P.main(obj_value)
 
@@ -547,80 +617,6 @@ class PyMorph(InitializeParams):
         #print('find_and_fit 2')
 
 
-    def full_image(self):
-        fimg = fitsio.FITS(self.imagefile)
-        self.imagedata = fimg[0].read()
-        self.header0 = fimg[0].read_header()
-        fimg.close()
-        self.NXPTS = self.imagedata.shape[1]
-        self.NYPTS = self.imagedata.shape[0]
-        #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
-        #sys.exit()
-        gheader = check_header(self.header0)
-        self.EXPTIME = gheader[0]
-        self.RDNOISE = gheader[1],
-        self.GAIN = gheader[2]
-        self.SEx_GAIN = gheader[3]
-        self.NCOMBINE = gheader[4]
-        self.PHOT_FILTER = gheader[5]
-
-        print("Using large image. imagefile >>> {}".format(self.imagefile))
-
-        if os.path.exists(self.whtfile):
-            self.weightexists = True
-            
-            #XXX
-            wht = fitsio.FITS(self.whtfile)
-            #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
-
-            if re.search("rms", self.whtfile.lower()):
-                self.weightdata = wht[0].read()
-                print("whtfile >>> {}".format(self.whtfile))
-            elif re.search("var", self.whtfile.lower()):
-                self.weightdata = wht[0].read()
-                self.weightdata = np.sqrt(self.weightdata)
-                print("whtfile >>> {}".format(self.whtfile))
-            elif re.search("weight", self.whtfile.lower()):
-                self.weightdata = 1 / np.sqrt(wht[0].read())
-                print("whtfile >>> {}".format(self.whtfile))
-            else:
-                print('Weight file is not understood. Please include ' + \
-                      'the word weight/rms to the weight file name. ' + \
-                      'If it is weight the rms will be found by 1/sqrt(w)')
-
-            #XXX
-            #self.weightdata = wht[0].read()
-            wht.close()
-
-        elif self.whtfile == 'SDSS':
-            self.weightdata = return_sigma(self.imagedata,
-                                           gain=4.71, ncombine=1)  
-        else:
-            #print(4)
-            #self.SEx_GAIN = 1.
-            self.weightexists = False
-            print('No weight image found\n')
-        
-        #except IOError as e:
-        #    print(self.imagefile, "I/O error ({}): {}".format(e.args[0], e.args[1]))
-        #    os._exit(0)
-
-        #print(self.sex_cata)
-        if os.path.exists(self.sex_cata):
-            pass
-        else:
-            print('The SExtractor catalogue for your frame is NOT found. ' \
-                  'One is being made using the default values. It is always '\
-                  'recommended to make SExtractor catalogue by YOURSELF as '\
-                  'the pipeline keeps the sky value at the SExtractor value '\
-                  'during the decomposition.')
-            #print(6)
-            PS = PySex(self.SEX_PATH)
-            PS.RunSex(self.sex_config,  
-                   self.imagefile, self.whtfile,
-                   self.sex_cata, self.SEx_GAIN,
-                   check_fits=None, sconfig='default')
-
         #sys.exit()
     #The old function for psfselect = 2
     #    if psfselect == 2:
@@ -651,10 +647,7 @@ class PyMorph(InitializeParams):
 
         os.chdir(self.DATADIR)
 
-        if self.repeat == False & self.galcut == False:
-            self.full_image()
-        elif self.galcut:
-            galcut_images()
+        #if self.repeat == False & self.galcut == False:
 
         if self.psfselect == 2:
             self.Interactive = 0
