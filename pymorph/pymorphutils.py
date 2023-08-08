@@ -268,31 +268,91 @@ def ReadGalfitConfig(cfile):
 def check_header(header0):
     """Set the global keywords from the fits header"""
 
-    if 'EXPTIME' in header0.keys(): # Old was 'if header0.has_key('EXPTIME'):
-        EXPTIME = header0['EXPTIME']
-    else:
-        EXPTIME = 1.0
-    if 'RDNOISE' in header0.keys():
-        RDNOISE= header0['RDNOISE']
-    else:
-        RDNOISE = 0.0
-    if 'GAIN' in header0.keys():
-        GAIN = header0['GAIN']
-        SEx_GAIN = header0['GAIN']
-    else:
-        GAIN = 1.0
-        SEx_GAIN = 1.0
-    if 'NCOMBINE' in header0.keys():
-        NCOMBINE= header0['NCOMBINE']
-    else:
-        NCOMBINE = 1
     if 'FILTER2' in header0.keys():
         PHOT_FILTER = header0['FILTER2']
     elif 'FILTER' in header0.keys():
         PHOT_FILTER = header0['FILTER']
     else:
         PHOT_FILTER = 'NONE'
-    return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE, PHOT_FILTER
+
+    if 'RA_PYMORPH' in header0.keys():
+        RA_PYMORPH = header0['RA_PYMORPH']
+        DEC_PYMORPH = header0['DEC_PYMORPH']
+    else:
+        RA_PYMORPH = None
+        DEC_PYMORPH = None
+        print('Problem updating the Ra and Dec in cutout image')
+
+    if 'EXPTIME' in header0.keys():
+        EXPTIME = header0['EXPTIME']
+    else:
+        EXPTIME = 1
+        print('No EXPTIME found. Setting it to 1')
+
+    if 'RDNOISE' in header0.keys():
+        RDNOISE = header0['RDNOISE']
+    else:
+        RDNOISE = 0
+        print('No RDNOISE found. Setting it to 0')
+
+    if 'GAIN' in header0.keys():
+        GAIN = header0['GAIN']
+        SEx_GAIN = header0['GAIN']
+    else:
+        GAIN = 1
+        SEx_GAIN = 1
+        print('No GAIN found. Setting it to 1')
+
+    if 'NCOMBINE' in header0.keys():
+        NCOMBINE = header0['NCOMBINE']
+    else:
+        NCOMBINE = 1
+        print('No NCOMBINE found. Setting it to 1')
+
+    header0.add_record({'name': 'RA_PYMORPH', 'value': RA_PYMORPH,
+                       'comment': 'RA of the target object'})
+    header0.add_record({'name': 'DEC_PYMORPH', 'value': DEC_PYMORPH,
+                       'comment': 'DEC of the target object'})
+    header0.add_record({'name': 'EXPTIME', 'value': EXPTIME,
+                       'comment': 'Exposure time'})
+    header0.add_record({'name': 'RDNOISE', 'value': RDNOISE,
+                       'comment': 'Read noise'})
+    header0.add_record({'name': 'GAIN', 'value': GAIN,
+                       'comment': 'Gain'})
+    header0.add_record({'name': 'NCOMBINE',  'value': NCOMBINE,
+                       'comment': 'NCOMBINE'})
+    header0.add_record({'name': 'PHOT_FILTER', 'value': PHOT_FILTER,
+                        'comment': 'Photometric filter'})
+    header0.add_record({'name':'CTYPE1', 'value':header0.get('CTYPE1'),
+                'comment': header0.get_comment('CTYPE1')})
+    header0.add_record({'name':'CTYPE2', 'value':header0.get('CTYPE2'),
+                'comment': header0.get_comment('CTYPE2')})
+    header0.add_record({'name':'CUNIT1', 'value':header0.get('CUNIT1'),
+                'comment': header0.get_comment('CUNIT1')})
+    header0.add_record({'name':'CUNIT2', 'value':header0.get('CUNIT2'),
+                'comment': header0.get_comment('CUNIT2')})
+    header0.add_record({'name':'CRPIX1', 'value':header0.get('CRPIX1'),
+               'comment': header0.get_comment('CRPIX1')})
+    header0.add_record({'name':'CRPIX2', 'value':header0.get('CRPIX2'),
+                'comment': header0.get_comment('CRPIX2')})
+    header0.add_record({'name':'CRVAL1', 'value':header0.get('CRVAL1'),
+                'comment': header0.get_comment('CRVAL1')})
+    header0.add_record({'name':'CRVAL2', 'value':header0.get('CRVAL2'),
+                'comment': header0.get_comment('CRVAL2')})
+    header0.add_record({'name':'CD1_1', 'value':header0.get('CD1_1'),
+                'comment': header0.get_comment('CD1_1')})
+    header0.add_record({'name':'CD1_2', 'value':header0.get('CD1_2'),
+                'comment': header0.get_comment('CD1_2')})
+    header0.add_record({'name':'CD2_1', 'value':header0.get('CD2_1'),
+                'comment': header0.get_comment('CD2_1')})
+    header0.add_record({'name':'CD2_2', 'value':header0.get('CD2_2'),
+                'comment': header0.get_comment('CD2_2')})
+    
+
+    return header0
+
+    return header0, SEx_GAIN
+    #return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE, PHOT_FILTER, RA, DEC, header_astrometry 
 
 
 
