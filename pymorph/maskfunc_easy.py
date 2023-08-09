@@ -4,7 +4,6 @@ import numpy as np
 from .pymconvolve import pConvolve
 from .mask_or_fit import GetSExObj
 
-
 class MaskFunc:
     """
 
@@ -13,17 +12,16 @@ class MaskFunc:
     M_string(galid).fits 
 
     """
-    def __init__(self, mimg):
-        self.mimg = mimg
+    def __init__(self, DATADIR, fstring):
+        mimg = 'M_{}.fits'.format(fstring)
+        self.mimg = os.path.join(DATADIR, mimg)
 
     def gmask(self, threshold, thresh_area, seg_fits, fit_neighbor_cutimage, 
               avoidme=0, NoMask=False, seg_limit=1e-5, verbose=False):
         
-        if verbose:
-            print('Maskfunc: mimg ', mimg)
-        fseg = fitsio.FITS(seg_fits, 'r')
-        seg_mask = fseg[0].read()
-        fseg.close()
+        if 1:#verbose:
+            print('Maskfunc: mimg ', self.mimg)
+        seg_mask = fitsio.read(seg_fits)
 
         #fit_neighbor_cutimage from configfunc.py. It has coordinates of neighbors and the target to be fitted. Then we need to remove the corresponind IDs of those objects 
         neighbor_id = seg_mask[fit_neighbor_cutimage[:, 1], fit_neighbor_cutimage[:, 0]]
@@ -49,9 +47,7 @@ class MaskFunc:
 
         #seg_mask = np.where(seg_mask > seg_limit, 1, 0)
 
-        fseg = fitsio.FITS(self.mimg, 'rw')
-        fseg.write(seg_mask, clobber=True)
-        fseg.close()
+        fitsio.write(self.mimg, seg_mask, clobber=True)
 
 
 
@@ -81,10 +77,8 @@ class MaskFunc_tmp:
         print(self.values)
         if verbose:
             print('Maskfunc: mimg ', mimg)
-        print(seg_fits, seg_cat)
-        fseg = fitsio.FITS(seg_fits, 'r')
-        seg_mask = fseg[0].read()
-        fseg.close()
+        print('seg_fits', seg_fits, seg_cat)
+        seg_mask = fitsio.read(seg_fits)
 
         #print('1, seg_mask')
         #print(seg_mask)
@@ -117,8 +111,6 @@ class MaskFunc_tmp:
 
         #seg_mask = np.where(seg_mask > seg_limit, 1, 0)
 
-        fseg = fitsio.FITS(self.mimg, 'rw')
-        fseg.write(seg_mask, clobber=True)
-        fseg.close()
+        fitsio.write(self.mimg, seg_mask, clobber=True)
 
 
