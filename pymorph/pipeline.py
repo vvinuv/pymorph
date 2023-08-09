@@ -50,9 +50,7 @@ class ReturnClass(object):
         """
         
         try:
-            p = fitsio.FITS(psffile, 'r')
-            header = p[0].read_header()
-            p.close()
+            header = fitsio.read_header(psffile)
 
             if ('RA_TARG' in header):
                 ra_p = header['RA_TARG']
@@ -121,7 +119,8 @@ class ReturnClass(object):
         self.SexPosAng = self.SexPosAng * np.pi / 180. #pa in radian
         half1 = self.SexHalfRad * self.FracRad * np.abs(np.cos(self.SexPosAng))
         half2 = self.SexAxisRatio * self.SexHalfRad * self.FracRad * np.abs(np.sin(self.SexPosAng))
-        half_size = half1 + half2
+        half_size = np.max([half1, half2])
+        print('half1, half2, half_size', half1, half2, half_size)
         #y_half_size = self.SexHalfRad * self.FracRad * np.abs(np.sin(self.SexPosAng)) + \
         #        self.SexAxisRatio * self.SexHalfRad * self.FracRad * np.abs(np.cos(self.SexPosAng))
         half_size = int(half_size)
@@ -195,6 +194,8 @@ class ReturnClass(object):
         """
         print(9, self.sex_xcntr, self.sex_ycntr, half_size)
         ExceedSize = 0
+        d_xcntr = abs(self.sex_xcntr - half_size)
+        d_ycntr = abs(self.sex_ycntr - half_size)
         #All are floor to make the size even number
         xmin = np.floor(self.sex_xcntr - half_size)
         xmax = np.floor(self.sex_xcntr + half_size)
@@ -203,7 +204,19 @@ class ReturnClass(object):
         print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
         #print(10, xmin, xmax, self.NXPTS - xmax, ymin, ymax, self.NYPTS - ymax, half_size * 2 - 1)
         #print(11, xmin < 0, xmax > (self.NXPTS - 2), ymin < 0, ymax > (self.NYPTS - 2))
-        if xmin < 0 or xmax > (self.NXPTS - 2) or ymin < 0 or ymax > (self.NYPTS - 2):
+        if d_xcntr < 4 and d_ycntr < 4:
+            xcntr_img = half_size + np.modf(self.sex_xcntr)[0]
+            ycntr_img = half_size + np.modf(self.sex_ycntr)[0]
+            print('outside', ymin, ymax, xmin, xmax)
+            xmin = int(xmin)
+            xmax = int(xmax)
+            ymin = int(ymin)
+            ymax = int(ymax)
+            # FIX check c.imagedata or c.ggimage
+            #print(10, xmin, xmax, ymin, ymax)
+            data = self.imagedata.copy()#[ymin:ymax, xmin:xmax]
+ 
+        elif xmin < 0 or xmax > (self.NXPTS - 2) or ymin < 0 or ymax > (self.NYPTS - 2):
             max_diff = np.array([xmin, self.NXPTS - 2 - xmax, ymin, self.NYPTS - 2 - ymax])
             con = (max_diff < 0)
             max_diff = abs(max_diff[con]).max() + 1
@@ -242,27 +255,38 @@ class ReturnClass(object):
         #print(14, data)
         print(14)
         print(int(xcntr_img))
-        print(self.IMG_HEADER)
-        self.IMG_HEADER['CRPIX1'] = int(xcntr_img)
-        self.IMG_HEADER['CRPIX2'] = int(ycntr_img)
-        self.IMG_HEADER['CRVAL1'] = self.alpha_j
-        self.IMG_HEADER['CRVAL2'] = self.delta_j
+        #print(self.IMG_HEADER)
+
+        self.IMG_HEADER.add_record({'name': 'CRPIX1', 'value': int(xcntr_img),
+                                    'comment': 'Starting pixel of RA'})
+        self.IMG_HEADER.add_record({'name': 'CRPIX2', 'value': int(ycntr_img),
+                                    'comment': 'Starting pixel of DEC'})
+        self.IMG_HEADER.add_record({'name': 'CRVAL1', 'value': self.alpha_j,
+                                    'comment': 'Starting RA value'})
+        self.IMG_HEADER.add_record({'name': 'CRVAL2', 'value': self.delta_j,
+                                    'comment': 'Starting DEC value'})
 
         #fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
-        fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'rw')
-        fits.write(data, header=self.IMG_HEADER)
-        fits.close()
+        #fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'rw')
+        self.cutimage_file = os.path.join(self.DATADIR, self.cutimage_file)
+        fitsio.write(self.cutimage_file, data, header=self.IMG_HEADER, 
+                     clobber=True)
+        #fits.close()
         print(15)
         #sys.exit()
 
         # FIX
         #Making weight image cut
         if self.weightexists:
-            data_wht = self.weightdata[ymin:ymax,xmin:xmax].copy()
+            if d_xcntr < 4 and d_ycntr < 4:
+                data_wht = self.weightdata.copy()
+            else:
+                data_wht = self.weightdata[ymin:ymax,xmin:xmax].copy()
 
-            fits = fitsio.FITS(os.path.join(self.DATADIR, self.wimg_file), 'rw')
-            fits.write(data_wht)
-            fits.close()
+            #fits = fitsio.FITS(os.path.join(self.DATADIR, self.wimg_file), 'rw')
+            self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
+            fitsio.write(self.wimg_file, data_wht, clobber=True)
+            #fits.close()
         else:
             print('Cannot creat weight image. If you supply weight image \
                    please check whether it exists or report a bug')
@@ -360,6 +384,27 @@ class Pipeline(ReturnClass):
         else:
             print("No z is given")
             self.z = 9999
+
+        if "mzero" in pdb.keys():
+            self.mag_zero = float(pdb["mzero"])
+        else:
+            self.mag_zero = self.mag_zero
+
+        #print('pnames', self.pnames)
+        if "star" in pdb.keys():
+            print(pdb["star"])
+            self.UserGivenPsf = pdb["star"]
+            print('PSF is assigned individually to galaxies')
+        else:
+            self.UserGivenPsf = 'None'
+        #print(self.UserGivenPsf)
+        if "sky" in pdb.keys():
+            self.UserGivenSky = float(pdb['sky'])
+            print('Sky is assigned individually to galaxies')
+        else:
+            self.UserGivenSky = None
+        #print(4)
+
         
     def _search_radius(self):
         
@@ -428,11 +473,9 @@ class Pipeline(ReturnClass):
         #print('Image is >>> {}'.format(self.gimg))
         print('Image is >>> {}'.format(self.cutimage_file))
 
-        #gfits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'r')
-        gfits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'r')
-        self.imagedata = gfits[0].read()
-        self.header0 = gfits[0].read_header()
-        gfits.close()
+        self.cutimage_file = os.path.join(self.DATADIR, self.cutimage_file)
+        self.imagedata, self.header0 = fitsio.read(self.cutimage_file, 
+                                                   header=True)
 
          
         self.IMG_HEADER, self.SEx_GAIN = check_header(self.header0) #Will set up global header parameters
@@ -440,11 +483,9 @@ class Pipeline(ReturnClass):
         #if self.position == 1:
         #    self.alpha_j = gheader[6]
         #    self.delta_j = gheader[7]
-
-        if os.path.exists(os.path.join(self.DATADIR, self.wimg_file)):
-            wfits = fitsio.FITS(os.path.join(self.DATADIR, self.wimg_file))
-            self.weightdata = wfits[0].read()
-            wfits.close()
+        self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
+        if os.path.exists(self.wimg_file):
+            self.weightdata = fitsio.read(self.wimg_file)
             self.weightexists = True
         else:
             self.wimg_file = None
@@ -642,7 +683,7 @@ class Pipeline(ReturnClass):
         sex_xcntr  = values_sex[:, 1]
         sex_ycntr  = values_sex[:, 2]
         #print(self.sex_cata)
-        print('alj delj', self.alpha_j, self.delta_j)
+        #print('alj delj', self.alpha_j, self.delta_j)
         if self.position == 0:
             alpha_s = np.full_like(values_sex.shape[0], 9999)
             delta_s = np.full_like(values_sex.shape[0], 9999)
@@ -656,9 +697,9 @@ class Pipeline(ReturnClass):
             (abs(delta_s - self.delta_j) < self.SeaDeg)
             curr_distance = np.sqrt((self.alpha_j - alpha_s)**2 + (delta_s - self.delta_j)**2)
             print('position', 1)
-            print('als dels', alpha_s, delta_s)
+            #print('als dels', alpha_s, delta_s)
 
-        print('curr_distance', curr_distance) 
+        #print('curr_distance', curr_distance) 
         #print(self.SeaDeg, self.SeaPix)
         
         curr_distance = curr_distance[con]
@@ -752,27 +793,6 @@ class Pipeline(ReturnClass):
         
         #print(self.ximg, self.yimg)
         self.bxcntr, self.bycntr = self._get_bkg_center(pdb)
-
-        if "mzero" in pdb.keys():
-            self.mag_zero = float(pdb["mzero"])
-        else:
-            self.mag_zero = self.mag_zero
-
-        #print('pnames', self.pnames)
-        if "star" in pdb.keys():
-            print(pdb["star"])
-            self.UserGivenPsf = pdb["star"]
-            print('PSF is assigned individually to galaxies')
-        else:
-            self.UserGivenPsf = 'None'
-        #print(self.UserGivenPsf)
-        if "sky" in pdb.keys():
-            self.UserGivenSky = float(pdb['sky'])
-            print('Sky is assigned individually to galaxies')
-        else:
-            self.UserGivenSky = None
-        #print(4)
-
         
         
         # Crashhandling starts
@@ -854,13 +874,10 @@ class Pipeline(ReturnClass):
             if self.repeat:
                 xcntr_img = self.NXPTS / 2.0
                 ycntr_img = self.NYPTS / 2.0
-                if os.path.exists(mimg):
+                if os.path.exists(MaskF.mimg):
                     pass
                 else:
-                    MaskF = MaskFunc(mimg, 
-                                     xcntr_img, ycntr_img, 
-                                     self.NXPTS, self.NYPTS, 
-                                     good_object)
+                    MaskF = MaskFunc()
                     MaskF.gmask(self.threshold, self.thresh_area,
                              0, NoMask=False)
 
@@ -915,7 +932,7 @@ class Pipeline(ReturnClass):
                 #self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
                 
                 #seg_fits is used to generate elliptical mask and galfit mask 
-                seg_fits = os.path.join(self.DATADIR, '2check.fits')
+                seg_fits = os.path.join(self.DATADIR, 'check.fits')
 
                 #if os.path.exists(seg_fits):
                 #    os.remove(seg_fits)
@@ -931,18 +948,18 @@ class Pipeline(ReturnClass):
                 PS.RunSex(self.sex_config, self.cutimage_file, self.wimg_file, 
                           seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
                           sconfig='seg')
+                #time.sleep(10)                
                 #sys.exit()
-                EM = ElliMaskFunc(self.DATADIR, xcntr_img, ycntr_img,
-                                  center_limit=5., seg_limit=1e-5)
+                EM = ElliMaskFunc(self.DATADIR, self.fstring)
+                
                 print(seg_fits)
                 
-                EM.emask(seg_fits, seg_cata, self.fstring)
+                EM.emask(seg_fits, seg_cata, xcntr_img, ycntr_img, 
+                         center_limit=5., seg_limit=1e-5)
 
                 #print(11)
                 #sys.exit()
                 # Fitting ellipse task or the manual 1d finder
-                mimg = 'M_{}.fits'.format(self.fstring)
-                mimg = os.path.join(self.DATADIR, mimg)
                 #print(sex_xcntr, xcntr_img, sex_ycntr, ycntr_img)
                 #sys.exit()
                 #print(3, self.gimg)
@@ -959,7 +976,7 @@ class Pipeline(ReturnClass):
                     #FE_gimg.profile(self.gimg, output=False)
                     FE_gimg.profile(self.cutimage_file, output=False)
                     #print('Pipeline repeat', self.repeat)
-                    #MaskF = MaskFunc(mimg, xcntr_img, ycntr_img, self.NXPTS, self.NYPTS, good_object)
+                    #MaskF = MaskFunc()
                     #MaskF.gmask(self.threshold, self.thresh_area, seg_fits, seg_cata,         self.avoidme, NoMask=False)
                     #print(4, self.gimg)
                     #print(4, self.cutimage_file)
@@ -995,7 +1012,7 @@ class Pipeline(ReturnClass):
                     oimg = CF.oimg
                     #continue
                     
-                    MaskF = MaskFunc(mimg) 
+                    MaskF = MaskFunc(self.DATADIR, self.fstring) 
                     #print('seg_fits', seg_fits)
                     MaskF.gmask(self.threshold, self.thresh_area, 
                                 seg_fits, CF.fit_neighbor_cutimage,         
@@ -1128,12 +1145,12 @@ class Pipeline(ReturnClass):
                     print('Exiting plotting')
                 else:
                     try:
-                        PlotF = PlotFunc(oimg, mimg, self.fstring, 
+                        PlotF = PlotFunc(oimg, MaskF.mimg, self.fstring, 
                                             self.SexSky, SkySig, self.mag_zero)
                         PlotF.plot_profile()
                     except: 
                         write_error('Error in plotting \n')
-                        if mimg == 'None':
+                        if MaskF.mimg == 'None':
                             write_error('Could not find Mask image for plottong \n')
                         run = 0	
                         self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
