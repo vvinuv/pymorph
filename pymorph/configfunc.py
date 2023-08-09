@@ -523,7 +523,8 @@ class GalfitConfigFunc:
             make_constrain = 1
 
         if os.path.exists(self.config_file):
-            pass
+            self.fit_neighbor_cutimage = np.array([[self.xcntr_img, 
+                                              self.ycntr_img]]).astype(int)
         else:
             fcon = open(self.config_file, 'w')
 
