@@ -3,7 +3,6 @@ import sys
 import fitsio
 import numpy as np
 from .pymconvolve import pConvolve
-#from astropy.io import fits
 
 class ElliMaskFunc:
 
@@ -14,26 +13,23 @@ class ElliMaskFunc:
 
     """
 
-    def __init__(self, DATADIR, xcntr_o, ycntr_o, 
-                 center_limit=5., seg_limit=1e-5):
+    def __init__(self, DATADIR, fstring):
 
-        self.DATADIR = DATADIR
-        self.xcntr_o = xcntr_o
-        self.ycntr_o = ycntr_o
+        mimg = 'EM_{}.fits'.format(fstring)
+        self.mimg = os.path.join(DATADIR, mimg) 
 
-    def emask(self, seg_file, seg_cata, fstring, 
+    def emask(self, seg_file, seg_cata, xcntr_o, ycntr_o, 
               center_limit=5, seg_limit=1e-5):
 
         #from astropy.io import fits
-        mask_file = 'EM_{}.fits'.format(fstring)
-        mask_file = os.path.join(self.DATADIR, mask_file) 
-        #print('seg file', seg_file)
+        print('seg file', seg_file)
         #print('seg_cata', seg_cata)
+       
         
-        f = fitsio.FITS(seg_file, 'r')
-        seg = f[0].read()
-        f.close()
-               
+        #XXX fitsio has some issues. I reported. Till that time I am using
+        #astropy.io 
+        seg = fitsio.read(seg_file)
+        #print('seg', seg)               
         #print(type(seg))
         
         #fseg = fits.open(seg_file)
@@ -59,14 +55,16 @@ class ElliMaskFunc:
             
         #Find distance to all objects wrt target and get the minimum distance
         #to find the target 
-        dist_neigh_obj = np.sqrt((xcntr_n - self.xcntr_o)**2. + (ycntr_n - self.ycntr_o)**2)
+        dist_neigh_obj = np.sqrt((xcntr_n - xcntr_o)**2. + (ycntr_n - ycntr_o)**2)
         #print(dist_neigh_obj)
         if values.ndim > 1:
             id_n = id_n[np.argmin(dist_neigh_obj)]
             
         #print('id_n', id_n)
-        print('seg_file', seg_file)
-        print('id_n', id_n)    
+        #print('seg_file', seg_file)
+        #print(seg)
+        #print('id_n', id_n)    
+        
         seg[np.where(seg == id_n)] = 0
         
         #sys.exit()
@@ -74,11 +72,10 @@ class ElliMaskFunc:
         seg = pConvolve(seg, boxcar)
         mask = np.where(seg > seg_limit, 1., 0.)
 
-        #print(mask.shape, type(mask), mask_file)
+        #print(mask.shape, type(mask), self.mimg)
 
         
-        f = fitsio.FITS(mask_file, 'rw')
-        f.write(mask, overwrite=True)
+        fitsio.write(self.mimg, mask, clobber=True)
         
     def emask_tmp(self, seg_file, seg_cata, fstring, 
               center_limit=5, seg_limit=1e-5):
@@ -110,8 +107,8 @@ class ElliMaskFunc:
             xcntr_n  = float(values[1]) #x center of the neighbour
             ycntr_n  = float(values[2]) #y center of the neighbour
 
-            if np.abs(xcntr_n - self.xcntr_o) < center_limit and \
-               np.abs(ycntr_n - self.ycntr_o) < center_limit and \
+            if np.abs(xcntr_n - xcntr_o) < center_limit and \
+               np.abs(ycntr_n - ycntr_o) < center_limit and \
                self.galflag == 1:
                 seg[np.where(seg == id_n)] = 0
                 print("Mask")
