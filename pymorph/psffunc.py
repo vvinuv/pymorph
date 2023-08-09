@@ -67,9 +67,7 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     r = np.pi / 180.
 
     for element in psflist:
-        p = fitsio.FITS(os.path.join(datadir, element))
-        header = p[0].read_header()
-        p.close()
+        header = fitsio.read_header(os.path.join(datadir, element))
         #print(header)
         if 0:
             if 'RA_TARG' in header:
@@ -138,8 +136,8 @@ def update_psf_ra_dec(datadir, element):
         ra = HMSToDeg(ra1, ra2, ra3)
         dec = DMSToDeg(dec1, dec2, dec3)
         pfits = fitsio.FITS(os.path.join(datadir, element), 'rw')
-        pfits[0].write_key('RA', ra)
-        pfits[0].write_key('DEC', dec)
+        pfits[0].write_key('RA_PSF', ra)
+        pfits[0].write_key('DEC_PSF', dec)
         pfits.close()
     #except:
     #    print('Problem updating PSF coordinates')
