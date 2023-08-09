@@ -37,21 +37,20 @@ def return_sigma(image_data, gain=4.71, ncombine=1):
     #Here varp is the variance as it is the squre of sqrt(count * effgain).
     #i.e. count * gain
     varp = (image_data_smooth - avg) * effgain
+    #Below varp is rms
     varp[varp >= 0] = np.sqrt(varp[varp >= 0] / effgain / effgain + 1 * std_sky2 * std_sky2)
     varp[varp < 0] = std_sky2
-
-    return varp
+    std = varp.copy()
+    return std
 
 if __name__  == '__main__':
     root = '../examples/small_image/data'
     header = fitsio.read_header(f'{root}/I.fits')
     gain = header['GAIN']
     ncombine = header['NCOMBINE']
-    image_data = fitsio.FITS(f'{root}/I.fits')[0].read()
+    image_data = fitsio.read(f'{root}/I.fits')
     varp = return_sigma(image_data, gain=gain, ncombine=ncombine)
 
     os.system(f'/bin/rm -f {root}/Isigma.fits')
-    f = fitsio.FITS(f'{rmroot}/Isigma.fits', 'rw')
-    f.write(varp)
-    f.close()
+    fitsio.write(f'{rmroot}/Isigma.fits', varp, clobber=True)
 
