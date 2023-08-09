@@ -349,8 +349,6 @@ def check_header(header0):
                 'comment': header0.get_comment('CD2_2')})
     
 
-    return header0
-
     return header0, SEx_GAIN
     #return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE, PHOT_FILTER, RA, DEC, header_astrometry 
 
@@ -410,7 +408,7 @@ class FindEllipse(object):
             mask = nd.zeros_like(img)
 
 
-        
+        print('galaxy, mash shape', galaxy.shape, mask.shape) 
         galaxy = galaxy - self.sky
 
        
