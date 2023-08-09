@@ -484,35 +484,32 @@ class PyMorph(InitializeParams):
         if self.galcut:
             pass 
         else:
-            fimg = fitsio.FITS(self.imagefile)
-            self.imagedata = fimg[0].read()
-            self.header0 = fimg[0].read_header()
-            fimg.close()
+            self.imagedata, self.header0 = fitsio.read(self.imagefile, 
+                                                       header=True)
             self.NXPTS = self.imagedata.shape[1]
             self.NYPTS = self.imagedata.shape[0]
             #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
             #sys.exit()
-            print(self.header0)
+            #print(self.header0)
             P.IMG_HEADER, P.SEx_GAIN = check_header(self.header0)
-            print(P.IMG_HEADER) 
+            #print(P.IMG_HEADER) 
             print("Using large image. imagefile >>> {}".format(self.imagefile))
 
             if os.path.exists(self.whtfile):
                 self.weightexists = True
                 
                 #XXX
-                wht = fitsio.FITS(self.whtfile)
-                #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
 
                 if re.search("rms", self.whtfile.lower()):
-                    self.weightdata = wht[0].read()
+                    self.weightdata = fitsio.read(self.whtfile)
                     print("whtfile >>> {}".format(self.whtfile))
                 elif re.search("var", self.whtfile.lower()):
-                    self.weightdata = wht[0].read()
+                    self.weightdata = fitsio.read(self.whtfile)
                     self.weightdata = np.sqrt(self.weightdata)
                     print("whtfile >>> {}".format(self.whtfile))
                 elif re.search("weight", self.whtfile.lower()):
-                    self.weightdata = 1 / np.sqrt(wht[0].read())
+                    self.weightdata = fitsio.read(self.whtfile)
+                    self.weightdata = 1 / self.weightdata
                     print("whtfile >>> {}".format(self.whtfile))
                 else:
                     print('Weight file is not understood. Please include ' + \
@@ -521,7 +518,6 @@ class PyMorph(InitializeParams):
 
                 #XXX
                 #self.weightdata = wht[0].read()
-                wht.close()
 
             elif self.whtfile == 'SDSS':
                 self.weightdata = return_sigma(self.imagedata,
