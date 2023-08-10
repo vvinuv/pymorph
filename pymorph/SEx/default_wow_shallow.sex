@@ -4,13 +4,13 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     %(sex_cata)s       # name of the output catalog
+CATALOG_NAME     %(shallow_cata)s       # name of the output catalog
 CATALOG_TYPE     ASCII     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
 PARAMETERS_NAME  %(PYMORPH_PATH)s/SEx/default.shallow.param  # name of the file containing catalog contents
 
 #-------------------------------ASSOC--------------------------
-ASSOC_NAME       %(DeepCata)s
+ASSOC_NAME       %(sex_cata)s
 ASSOC_PARAMS     2,3,18
 ASSOC_RADIUS     6
 ASSOC_TYPE       MAX
@@ -73,10 +73,3 @@ VERBOSE_TYPE     NORMAL         # can be QUIET, NORMAL or FULL
 WRITE_XML        N              # Write XML file (Y/N)?
 XML_NAME         sex.xml        # Filename for XML output
 
-#------------------------------ Check Image ----------------------------------
-
-CHECKIMAGE_TYPE  APERTURES           # can be NONE, BACKGROUND, BACKGROUND_RMS,
-                                # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
-                                # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
-                                # or APERTURES
-CHECKIMAGE_NAME  %(check_fits)s     # Filename for the check-image

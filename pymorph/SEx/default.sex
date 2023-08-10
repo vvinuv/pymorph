@@ -66,17 +66,9 @@ VERBOSE_TYPE     NORMAL         # can be QUIET, NORMAL or FULL
 WRITE_XML        N              # Write XML file (Y/N)?
 XML_NAME         sex.xml        # Filename for XML output
 
-#------------------------------ Check Image ----------------------------------
-
-CHECKIMAGE_TYPE  APERTURES           # can be NONE, BACKGROUND, BACKGROUND_RMS,
-                                # MINIBACKGROUND, MINIBACK_RMS, -BACKGROUND,
-                                # FILTERED, OBJECTS, -OBJECTS, SEGMENTATION,
-                                # or APERTURES
-CHECKIMAGE_NAME  %(check_fits)s     # Filename for the check-image
-
 #-------------------------------- WEIGHTing ----------------------------------
 
 WEIGHT_TYPE      %(SEx_WEIGHT_TYPE)s           # type of WEIGHTing: NONE, BACKGROUND,
                                 # MAP_RMS, MAP_VAR or MAP_WEIGHT
-WEIGHT_IMAGE     %(wimg)s    # weight-map filename
+WEIGHT_IMAGE     %(whtfile)s    # weight-map filename
 WEIGHT_GAIN      N              # modulate gain (E/ADU) with weights? (Y/N)
