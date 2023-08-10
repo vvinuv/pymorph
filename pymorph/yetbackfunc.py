@@ -42,29 +42,25 @@ def QuarterMask(z, zm, xcntr, ycntr, bbya, pa, quarter):
 
 #XXX gimg was here instead of cutimage
 def FindYetSky(sex_config, SEX_PATH, cutimage, wimg, seg_file, 
-               X0, Y0, scat, SEx_GAIN,
+               X0, Y0, seg_cata, SEx_GAIN,
                center_err=5., median_std=1.3, sconfig='seg'):
 
     #from astropy.io import fits
 
     ##XXX
-    #print('scat', scat)
-    PS = PySex(SEX_PATH)
-    #PS.RunSex(sex_config, gimg, wimg, scat, SEx_GAIN, sconfig='seg')
-    PS.RunSex(sex_config, cutimage, wimg, scat, SEx_GAIN, sconfig='seg')
-
+    #print('seg_cata', seg_cata)
+    #PS = PySex(SEX_PATH)
+    #PS.RunSex(sex_config, gimg, wimg, seg_cata, SEx_GAIN, sconfig='seg')
+    #PS.RunSex(sex_config, cutimage, wimg, seg_cata, SEx_GAIN, sconfig='seg')
+    #print('sky PS', os.path.isfile('None'))
     #f = fitsio.FITS(gimg)
-    f = fitsio.FITS(cutimage)
-    z = f[0].read()
-    f.close()
+    z = fitsio.read(cutimage)
 
     #print(z.shape)
     #print(gimg)
     #print(cutimage)
-
-    fseg = fitsio.FITS(seg_file)
-    zm = fseg[0].read()
-    fseg.close()
+    print(f'seg_file {seg_file}')
+    zm = fitsio.read(seg_file)
 
     #f = fits.open(gimg)
     #z = f[0].data
@@ -81,7 +77,7 @@ def FindYetSky(sex_config, SEX_PATH, cutimage, wimg, seg_file,
     SkyQua, SkySig = 9999, 9999
 
     
-    sex_values = np.genfromtxt(scat, skip_header=0)
+    sex_values = np.genfromtxt(seg_cata, skip_header=0)
     #print(sex_values)
     if sex_values.ndim == 1:
         sex_values = np.expand_dims(sex_values, axis=0)
