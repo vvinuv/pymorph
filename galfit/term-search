@@ -1,6 +1,0 @@
-  PID TTY      STAT   TIME COMMAND
-  439 pts/55   S+     0:00 sh -c \ps -x > term-search
-  440 pts/55   R+     0:00 ps -x
-32622 ?        S      0:00 sshd: ameert@pts/55
-32623 pts/55   Ss     0:00 -bash
-32711 pts/55   S+     0:00 ./galfit --version

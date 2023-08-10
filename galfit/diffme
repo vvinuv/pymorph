@@ -1,4 +1,0 @@
-ls *.c | awk '{print "echo " $1"; diff " $1 " /home/cyp/src/galfit1.10a/"$1}' > tdiff
-chmod u+x tdiff
-tdiff | less
-rm tdiff
