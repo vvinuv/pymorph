@@ -9,12 +9,14 @@ class PySex(object):
 
 
 
-    #def RunSex(self, sex_config, gimg, wimg, sex_cata, 
+    #def RunSex(self, sex_config, gimg, whtfile, sex_cata, 
     #           SEx_GAIN, check_fits=None, sconfig='default'):
-    def RunSex(self, sex_config, cutimage, wimg, sex_cata, 
+    def RunSex(self, sex_config, imagefile, whtfile, sex_cata, 
                SEx_GAIN, check_fits=None, sconfig='default'):
-        print('cutimage', cutimage)   
-        print('sex_cata', sex_cata)
+        #print('imagefile', imagefile)   
+        #print('sex_cata', sex_cata)
+        #print('sconfig', sconfig)
+
         SEx_DETECT_MINAREA= sex_config['SEx_DETECT_MINAREA']
         SEx_DETECT_THRESH = sex_config['SEx_DETECT_THRESH']
         SEx_ANALYSIS_THRESH = sex_config['SEx_ANALYSIS_THRESH']
@@ -37,28 +39,28 @@ class PySex(object):
         #print('Sex 1')
 
         if sconfig == 'default':
-            if wimg is None:
+            if whtfile is None:
                 fsex = 'default_wow.sex'
             else:
                 fsex = 'default.sex'
             print('SExtractor Detecting Objects (Deep)')
         elif sconfig == 'seg':
-            if wimg is None:
+            if whtfile is None:
                 fsex = 'default_seg_wow.sex'
             else:
                 fsex = 'default_seg.sex'
             print('SExtractor Detecting segmentation')
         elif sconfig == 'shallow':
             shallow_cata = f'{sex_cata}.Shallow'
-            if wimg is None:
+            if whtfile is None:
                 fsex = 'default_wow_shallow.sex'
             else:
                 fsex = 'default_shallow.sex'
             print('SExtractor Detecting Objects (Shallow)')
             print(shallow_cata, sex_cata)
-        print('fsex', fsex)
+        #print('fsex', fsex)
         sconfig = os.path.join(PYMORPH_PATH, 'SEx', fsex)
-
+        #print('check_fits', check_fits)
         #print(vars())
         f_tpl = open(sconfig, 'r')
         template = f_tpl.read()
@@ -70,9 +72,9 @@ class PySex(object):
      
         #print('Sex 2')
 
-        d, h = fitsio.read(cutimage, header=True)
-        #print('Header cutimage', h)
-        cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, cutimage, fsex)
+        d, h = fitsio.read(imagefile, header=True)
+        #print('Header imagefile', h)
+        cmd = '{} {} -c {} > /dev/null'.format(self.SEX_PATH, imagefile, fsex)
         #print(cmd)
         os.system(cmd)
         #print('Sex 2')
