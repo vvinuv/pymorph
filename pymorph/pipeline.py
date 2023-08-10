@@ -85,7 +85,7 @@ class ReturnClass(object):
                 distance_psf_gal = super()._distance_psf_obj(c.pfile, ra, dec)
 
         else:
-            if UserGivenPsf != 'None':
+            if UserGivenPsf is not None:
                 psffile = UserGivenPsf
                 #print('UserGivenPsf', UserGivenPsf)
                 update_psf_ra_dec(self.DATADIR, psffile)
@@ -343,7 +343,7 @@ class Pipeline(ReturnClass):
                 self.cutimage_file = '{}.fits'.format(self.gal_id)
             else:
                 print("No gimg key is given. No possible gimg found")
-                self.cutimage_file = 'None'
+                self.cutimage_file = 'NONE'
                 #sys.exit()
 
             if "wimg" in pdb.keys():
@@ -352,7 +352,7 @@ class Pipeline(ReturnClass):
                              'W{}.fits'.format(self.fstring))):
                 self.wimg_file = 'W{}.fits'.format(self.fstring)
             else:
-                self.wimg_file = 'None'
+                self.wimg_file = None
                 print('Search for weight image (wimg) in galfit config')
 
 
@@ -396,7 +396,7 @@ class Pipeline(ReturnClass):
             self.UserGivenPsf = pdb["star"]
             print('PSF is assigned individually to galaxies')
         else:
-            self.UserGivenPsf = 'None'
+            self.UserGivenPsf = None
         #print(self.UserGivenPsf)
         if "sky" in pdb.keys():
             self.UserGivenSky = float(pdb['sky'])
@@ -472,8 +472,9 @@ class Pipeline(ReturnClass):
 
         #print('Image is >>> {}'.format(self.gimg))
         print('Image is >>> {}'.format(self.cutimage_file))
-
+        print(f'Weight is {self.wimg_file}')
         self.cutimage_file = os.path.join(self.DATADIR, self.cutimage_file)
+
         self.imagedata, self.header0 = fitsio.read(self.cutimage_file, 
                                                    header=True)
 
@@ -483,12 +484,13 @@ class Pipeline(ReturnClass):
         #if self.position == 1:
         #    self.alpha_j = gheader[6]
         #    self.delta_j = gheader[7]
-        self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
-        if os.path.exists(self.wimg_file):
-            self.weightdata = fitsio.read(self.wimg_file)
-            self.weightexists = True
+
+        if self.wimg_file is not None:
+            if os.path.exists(self.wimg_file):
+                self.wimg_file = os.path.join(self.DATADIR, self.wimg_file)
+                self.weightdata = fitsio.read(self.wimg_file)
+                self.weightexists = True
         else:
-            self.wimg_file = None
             self.weightexists = False
 
         print('Using cutouts')
@@ -497,11 +499,6 @@ class Pipeline(ReturnClass):
         #print(1, self.cutimage_file)
         self.NXPTS = self.imagedata.shape[1]
         self.NYPTS = self.imagedata.shape[0]
-
-        if self.ReSize:
-            #self.gimg = 'I{}.fits'.format(self.fstring)
-            self.cutimage_file = 'I{}.fits'.format(self.fstring)
-            self.wimg_file = 'W{}.fits'.format(self.fstring)
 
         #The sextractor runs on the cutout before resizing to estimate 
         #shallow sky
@@ -513,15 +510,15 @@ class Pipeline(ReturnClass):
             if 1:
 
                 PS.RunSex(self.sex_config, 
-                          os.path.join(self.DATADIR, self.cutimage_file),
-                          os.path.join(self.DATADIR, self.wimg_file),
+                          self.cutimage_file,
+                          self.wimg_file,
                           os.path.join(self.DATADIR, self.sex_cata),
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='default')
-
+                time.sleep(0)
                 PS.RunSex(self.sex_config,
-                          os.path.join(self.DATADIR, self.cutimage_file),
-                          os.path.join(self.DATADIR, self.wimg_file),
+                          self.cutimage_file,
+                          self.wimg_file,
                           os.path.join(self.DATADIR, self.sex_cata), 
                           self.SEx_GAIN, check_fits=None, 
                           sconfig='shallow')
@@ -534,7 +531,13 @@ class Pipeline(ReturnClass):
 #                 print("Something bad happened (Sextractor)!!!!\n\n")
 #                 print(traceback.print_exc())
 #         sys.exit() 
-    
+
+        if self.ReSize:
+            #self.gimg = 'I{}.fits'.format(self.fstring)
+            self.cutimage_file = 'I{}.fits'.format(self.fstring)
+            self.wimg_file = 'W{}.fits'.format(self.fstring)
+
+   
     def _galcut_cutout(self, half_size):
         print('half_size', half_size) 
         if self.ReSize: 
@@ -839,10 +842,10 @@ class Pipeline(ReturnClass):
                 psffile, distance_psf_gal = super()._handle_psf(self.UserGivenPsf, 
                                                    self.alpha_j, self.delta_j)
             else:
-                psffile, distance_psf_gal = 'None', 9999
+                psffile, distance_psf_gal = None, 9999
 
             print('psffile: {}, distance: {}'.format(psffile, distance_psf_gal))
-
+            time.sleep(0)
             if self.galcut:
                 #Handling image cutout names
                 #XXX
@@ -868,6 +871,7 @@ class Pipeline(ReturnClass):
             run = 1 #run =1 if pipeline runs sucessfuly
 
             write_error('\n\n###########   {} ###########\n'.format(self.gal_id))
+            time.sleep(0)
 
             #print(3, imgsize, whtsize)
             # For the new run
@@ -890,6 +894,8 @@ class Pipeline(ReturnClass):
                 else:
                     #Also, set self.cutimage_file and self.wimg_file
                     cntr_half = self._not_galcut_cutout(self.half_size)
+
+                time.sleep(0)
                 
                 xcntr_img = cntr_half[0]
                 ycntr_img = cntr_half[1]
@@ -909,6 +915,7 @@ class Pipeline(ReturnClass):
 
                 # first count the number of "potential" targets in the search radius
         
+                time.sleep(0)
               
                 if self.Square & 0:
                     self.half_size = self._make_img_square(self.half_size)
@@ -933,6 +940,7 @@ class Pipeline(ReturnClass):
                 
                 #seg_fits is used to generate elliptical mask and galfit mask 
                 seg_fits = os.path.join(self.DATADIR, 'check.fits')
+                time.sleep(0)
 
                 #if os.path.exists(seg_fits):
                 #    os.remove(seg_fits)
@@ -948,14 +956,17 @@ class Pipeline(ReturnClass):
                 PS.RunSex(self.sex_config, self.cutimage_file, self.wimg_file, 
                           seg_cata, self.SEx_GAIN, check_fits=seg_fits, 
                           sconfig='seg')
-                #time.sleep(10)                
+                #time.sleep(0)                
                 #sys.exit()
+                time.sleep(0)
+
                 EM = ElliMaskFunc(self.DATADIR, self.fstring)
                 
                 print(seg_fits)
                 
                 EM.emask(seg_fits, seg_cata, xcntr_img, ycntr_img, 
                          center_limit=5., seg_limit=1e-5)
+                time.sleep(0)
 
                 #print(11)
                 #sys.exit()
@@ -973,8 +984,10 @@ class Pipeline(ReturnClass):
                                              self.SexHalfRad, self.SexPosAng, 
                                              self.SexAxisRatio, self.SexSky, 
                                              self.fstring)
+                    time.sleep(0)
                     #FE_gimg.profile(self.gimg, output=False)
                     FE_gimg.profile(self.cutimage_file, output=False)
+                    time.sleep(0)
                     #print('Pipeline repeat', self.repeat)
                     #MaskF = MaskFunc()
                     #MaskF.gmask(self.threshold, self.thresh_area, seg_fits, seg_cata,         self.avoidme, NoMask=False)
@@ -1006,6 +1019,7 @@ class Pipeline(ReturnClass):
                                           self.galfitv, 
                                           self.mag_zero, self.flag)
                     CF.write_config()
+                    #print('config', os.path.isfile('None'))
                     #print('CF done')
                     galfit_conf = CF.config_file
                     self.flag = CF.flag
@@ -1017,7 +1031,7 @@ class Pipeline(ReturnClass):
                     MaskF.gmask(self.threshold, self.thresh_area, 
                                 seg_fits, CF.fit_neighbor_cutimage,         
                                 self.avoidme, NoMask=False)
-
+                    #print('maskf', os.path.isfile('None'))
 
 
             # Estimates sky parameters
@@ -1039,7 +1053,8 @@ class Pipeline(ReturnClass):
                 SkyMin = sky_values[3]
                 SkyQua = sky_values[4]
                 SkySig = sky_values[5]
-
+                #print('sky', os.path.isfile('None'))
+                time.sleep(0)
                 print('SexySky, self.SexSky', SexySky, self.SexSky)
                 #sys.exit()
                 if SkyMin != 9999:
@@ -1059,7 +1074,7 @@ class Pipeline(ReturnClass):
                                      # to printed directly
                 write_error('YetSky estimation failed\n')
                 print(traceback.print_exc())
-
+            #sys.exit()
             # Estimate CASGM  
             if self.cas:
                 #XXX self.gimg was instead of self.cutimage_file
@@ -1150,7 +1165,7 @@ class Pipeline(ReturnClass):
                         PlotF.plot_profile()
                     except: 
                         write_error('Error in plotting \n')
-                        if MaskF.mimg == 'None':
+                        if MaskF.mimg is None:
                             write_error('Could not find Mask image for plottong \n')
                         run = 0	
                         self.flag = SetFlag(self.flag, GetFlag('PLOT_FAIL'))
