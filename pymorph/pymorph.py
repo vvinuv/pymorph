@@ -14,7 +14,7 @@ import configparser
 import subprocess
 from multiprocessing import Pool
 #import pymorphutils as ut
-from .pymorphutils import check_header, output_params
+from .pymorphutils import get_header, output_params
 from .flagfunc import GetFlag, isset, SetFlag
 
 from .ellimaskfunc_easy import ElliMaskFunc
@@ -366,7 +366,7 @@ class PyMorph(InitializeParams):
         print('Weight done')
         #print('PSF 1', self.psflist)
         #Initializing psf array. ie. creating psflist from file 
-        self.psflist = psfarr(self.psflist)
+        self.psflist = psfarr(self.DATADIR, self.psflist)
         #if self.decompose:
         #    for p in self.psflist:
         #        print('psf', self.DATADIR, p)
@@ -491,7 +491,7 @@ class PyMorph(InitializeParams):
             #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
             #sys.exit()
             #print(self.header0)
-            P.IMG_HEADER, P.SEx_GAIN = check_header(self.header0)
+            P.IMG_HEADER, P.SEx_GAIN = get_header(self.header0)
             #print(P.IMG_HEADER) 
             print("Using large image. imagefile >>> {}".format(self.imagefile))
 

@@ -15,7 +15,7 @@ import subprocess
 from multiprocessing import Pool
 
 #import config as c
-from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, check_header, write_error, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
+from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, get_header, write_error, CrashHandlerToRemove, FindEllipse, HandleCasgm, OImgFindEllipse
 from .flagfunc import GetFlag, Get_FitFlag, isset, SetFlag
 
 from .ellimaskfunc_easy import ElliMaskFunc
@@ -30,7 +30,7 @@ from .yetbackfunc import FindYetSky
 from .plotfunc import PlotFunc
 from .runsexfunc import PySex
 from .writehtmlfunc import WriteHtmlCSV
-from .psffunc import update_psf_ra_dec, getpsf
+from .psffunc import update_psf_ra_dec, get_psf
 from .mask_or_fit import GetSExObj
        
         
@@ -91,7 +91,7 @@ class ReturnClass(object):
                 update_psf_ra_dec(self.DATADIR, psffile)
                 #print('U2')
                 #sys.exit()
-                psffile, distance_psf_gal = getpsf(self.DATADIR,
+                psffile, distance_psf_gal = get_psf(self.DATADIR,
                                               UserGivenPsf, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
@@ -102,7 +102,7 @@ class ReturnClass(object):
                 distance_psf_gal = 9999
                 self.psfcounter += 1
             else:
-                psffile, distance_psf_gal = getpsf(self.DATADIR,
+                psffile, distance_psf_gal = get_psf(self.DATADIR,
                                               self.psflist, self.which_psf,
                                               ra, dec)
                 distance_psf_gal = distance_psf_gal * 60. * 60.
@@ -479,7 +479,7 @@ class Pipeline(ReturnClass):
                                                    header=True)
 
          
-        self.IMG_HEADER, self.SEx_GAIN = check_header(self.header0) #Will set up global header parameters
+        self.IMG_HEADER, self.SEx_GAIN = get_header(self.header0) #Will set up global header parameters
 
         #if self.position == 1:
         #    self.alpha_j = gheader[6]
