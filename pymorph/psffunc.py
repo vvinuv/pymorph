@@ -7,47 +7,64 @@ from .pymorphutils import HMSToDeg, DMSToDeg
 verbose = False
 
 
+def update_psf_ra_dec(datadir, pf):
+    """The function which will update the psf header if the psf files
+       are in the specified format"""
+    print(datadir, pf)
+    print('U1', os.path.join(datadir, pf))
+    print(pf, str(pf)[4:6])
+    if len(pf) == 24:
+        ra1 = float(str(pf)[4:6]) 
+        ra2 = float(str(pf)[6:8])
+        ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
+        dec1 = float(str(pf)[11:-10])
+        dec2 = float(str(pf)[-10:-8])
+        dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
+        ra = HMSToDeg(ra1, ra2, ra3)
+        dec = DMSToDeg(dec1, dec2, dec3)
+    else:
+        header = fitsio.read_header(pf)    
+        if 'RA_PSF' in header:
+            ra = header['RA_PSF']
+        elif 'RA' in header:
+            ra = header['RA']
+        elif 'CRVAL1' in header:
+            ra = header['CRVAL1']
+        else:
+            ra = 9999
 
-def psfarr(psflist):
+        if 'DEC_PSF' in header:
+            dec= header['DEC_PSF']
+        elif ('DEC' in header):
+            dec= header['DEC']
+        elif 'CRVAL2' in header:
+            dec = header['CRVAL2']
+        else:
+            dec= 9999
+        if ra == 9999 or dec == 9999:
+            print('No RA and DEC for PSF file found')
+
+    
+    pfits = fitsio.FITS(pf, 'rw')
+    pfits[0].write_key('RA_PSF', ra)
+    pfits[0].write_key('DEC_PSF', dec)
+    pfits.close()
+    #except:
+    #    print('Problem updating PSF coordinates')
+    #    pass
+
+
+def psfarr(datadir, psflist):
     """Return psf list if the given input is a file"""
     #print('P1', psflist)
     for pf in psflist:
-        if len(pf) == 24:
-            ra1 = float(str(pf)[4:6]) 
-            ra2 = float(str(pf)[6:8])
-            ra3 = float(str(pf)[8:10]) + float(str(pf)[10]) / 10.0
-            dec1 = float(str(pf)[11:-10])
-            dec2 = float(str(pf)[-10:-8])
-            dec3 = float(str(pf)[-8:-6]) + float(str(pf)[-6]) / 10.0
-            ra = HMSToDeg(ra1, ra2, ra3)
-            dec = DMSToDeg(dec1, dec2, dec3)
-        else:
-            header = fitsio.read_header(pf)    
-            if 'RA' in header:
-                ra = header['RA']
-            elif 'CRVAL1' in header:
-                ra = header['CRVAL1']
-            else:
-                ra = 9999
-            if ('DEC' in header):
-                dec= header['DEC']
-            elif 'CRVAL2' in header:
-                dec = header['CRVAL2']
-            else:
-                dec= 9999
-            if ra == 9999 or dec == 9999:
-                print('No RA and DEC for PSF file found')
-
-        pfits = fitsio.FITS(pf, 'rw')
-        pfits[0].write_key('RA_PSF', ra)
-        pfits[0].write_key('DEC_PSF', dec)
-        pfits.close()
+        update_psf_ra_dec(datadir, pf)
  
     return psflist
 
 
 
-def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
+def get_psf(datadir, psflist, which_psf, alpha_j, delta_j):
 
     """
 
@@ -118,30 +135,6 @@ def getpsf(datadir, psflist, which_psf, alpha_j, delta_j):
     if verbose:
         print(psffile, distance)
     return psffile, distance
-
-
-def update_psf_ra_dec(datadir, element):
-    """The function which will update the psf header if the psf files
-       are in the specified format"""
-    print(datadir, element)
-    print('U1', os.path.join(datadir, element))
-    print(element, str(element)[4:6])
-    if 1:
-        ra1 = float(str(element)[4:6])
-        ra2 = float(str(element)[6:8])
-        ra3 = float(str(element)[8:10]) + float(str(element)[10]) / 10.0
-        dec1 = float(str(element)[11:-10])
-        dec2 = float(str(element)[-10:-8])
-        dec3 = float(str(element)[-8:-6]) + float(str(element)[-6]) / 10.0
-        ra = HMSToDeg(ra1, ra2, ra3)
-        dec = DMSToDeg(dec1, dec2, dec3)
-        pfits = fitsio.FITS(os.path.join(datadir, element), 'rw')
-        pfits[0].write_key('RA_PSF', ra)
-        pfits[0].write_key('DEC_PSF', dec)
-        pfits.close()
-    #except:
-    #    print('Problem updating PSF coordinates')
-    #    pass
 
 
 
