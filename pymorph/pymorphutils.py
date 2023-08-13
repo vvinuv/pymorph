@@ -265,7 +265,7 @@ def ReadGalfitConfig(cfile):
     #return (gimg, oimg, wimg, pfile, mimg, cofile) 
     return (cutimage, oimg, wimg, pfile, mimg, cofile) 
 
-def check_header(header0):
+def get_header(header0):
     """Set the global keywords from the fits header"""
 
     if 'FILTER2' in header0.keys():
@@ -281,7 +281,7 @@ def check_header(header0):
     else:
         RA_PYMORPH = None
         DEC_PYMORPH = None
-        print('Problem updating the Ra and Dec in cutout image')
+        print('Problem finding the Ra and Dec in cutout image')
 
     if 'EXPTIME' in header0.keys():
         EXPTIME = header0['EXPTIME']
