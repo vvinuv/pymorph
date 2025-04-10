@@ -279,8 +279,8 @@ def get_header(header0):
         RA_PYMORPH = header0['RA_PYMORPH']
         DEC_PYMORPH = header0['DEC_PYMORPH']
     else:
-        RA_PYMORPH = None
-        DEC_PYMORPH = None
+        RA_PYMORPH = -9999
+        DEC_PYMORPH = -9999
         print('Problem finding the Ra and Dec in cutout image')
 
     if 'EXPTIME' in header0.keys():
