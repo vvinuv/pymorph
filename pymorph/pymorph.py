@@ -417,13 +417,13 @@ class PyMorph(InitializeParams):
         with open(self.obj_cata, 'r') as f_objs:
             obj_lines = f_objs.readlines()
 
-        pnames = obj_lines[0].strip().split(' ')
+        pnames = obj_lines[0].strip().split()
         obj_values = []
         for oval in obj_lines[1:]:
             if len(oval) == 1:
                 continue
             oval2 = []
-            for i in oval.strip().split(' '):
+            for i in oval.strip().split():
                 try:
                     oval2.append(float(i))
                 except:
@@ -431,7 +431,7 @@ class PyMorph(InitializeParams):
         
             obj_values.append(oval2)
 
-        #print(pnames)
+        print('pnames', pnames)
         #print(obj_values)
         #obj_values = np.genfromtxt(self.obj_cata, names=True)
 
