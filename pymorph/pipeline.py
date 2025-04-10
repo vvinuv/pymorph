@@ -196,6 +196,7 @@ class ReturnClass(object):
         ExceedSize = 0
         d_xcntr = abs(self.sex_xcntr - half_size)
         d_ycntr = abs(self.sex_ycntr - half_size)
+        print('d_xcntr d_ycntr', d_xcntr, d_ycntr)
         #All are floor to make the size even number
         xmin = np.floor(self.sex_xcntr - half_size)
         xmax = np.floor(self.sex_xcntr + half_size)
@@ -257,18 +258,28 @@ class ReturnClass(object):
         print(int(xcntr_img))
         #print(self.IMG_HEADER)
 
-        self.IMG_HEADER.add_record({'name': 'CRPIX1', 'value': int(xcntr_img),
-                                    'comment': 'Starting pixel of RA'})
-        self.IMG_HEADER.add_record({'name': 'CRPIX2', 'value': int(ycntr_img),
-                                    'comment': 'Starting pixel of DEC'})
-        self.IMG_HEADER.add_record({'name': 'CRVAL1', 'value': self.alpha_j,
-                                    'comment': 'Starting RA value'})
-        self.IMG_HEADER.add_record({'name': 'CRVAL2', 'value': self.delta_j,
-                                    'comment': 'Starting DEC value'})
+        if xcntr_img < 0:
+            pass
+        else:
+            self.IMG_HEADER.add_record({'name': 'CRPIX1', 
+                                        'value': int(xcntr_img),
+                                        'comment': 'Starting pixel of RA'})
+            self.IMG_HEADER.add_record({'name': 'CRPIX2', 
+                                        'value': int(ycntr_img),
+                                        'comment': 'Starting pixel of DEC'})
+        if abs(self.alpha_j) > 360: 
+            pass
+        else:
+            self.IMG_HEADER.add_record({'name': 'CRVAL1', 'value': self.alpha_j,
+                                        'comment': 'Starting RA value'})
+            self.IMG_HEADER.add_record({'name': 'CRVAL2', 'value': self.delta_j,
+                                        'comment': 'Starting DEC value'})
 
         #fits = fitsio.FITS(os.path.join(self.DATADIR, self.gimg), 'rw')
         #fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'rw')
+        #print('IMG_HEADER', self.IMG_HEADER)
         self.cutimage_file = os.path.join(self.DATADIR, self.cutimage_file)
+        print('data', data)
         fitsio.write(self.cutimage_file, data, header=self.IMG_HEADER, 
                      clobber=True)
         #fits.close()
@@ -355,25 +366,24 @@ class Pipeline(ReturnClass):
                 self.wimg_file = None
                 print('Search for weight image (wimg) in galfit config')
 
-        print('pdb ra', pdb["ra"])
-        if isinstance(pdb["ra"], float): 
-            self.alpha_j = pdb["ra"]     
-        elif isinstance(pdb["ra"], str):
-            h, m, s = pdb["ra"].split(':')
-            self.alpha_j = HMSToDeg(int(h), int(m), float(s)) 
-        else:
-            print("No ra is given")
-            self.alpha_j = -9999
+        #print('pdb ra', pdb["ra"])
+        if "ra" in pdb.keys():
+            if isinstance(pdb["ra"], float): 
+                self.alpha_j = pdb["ra"]     
+            elif isinstance(pdb["ra"], str):
+                h, m, s = pdb["ra"].split(':')
+                self.alpha_j = HMSToDeg(int(h), int(m), float(s)) 
 
-        print('pdb dec', pdb["dec"])
-        if isinstance(pdb["dec"], float):
-            self.delta_j = pdb["dec"]
-        elif isinstance(pdb["dec"], str):
-            d, m, s = pdb["dec"].split(':')
-            self.delta_j = DMSToDeg(int(d), int(m), float(s))
+            print('pdb dec', pdb["dec"])
+            if isinstance(pdb["dec"], float):
+                self.delta_j = pdb["dec"]
+            elif isinstance(pdb["dec"], str):
+                d, m, s = pdb["dec"].split(':')
+                self.delta_j = DMSToDeg(int(d), int(m), float(s))
         else:
-            print("No dec is given")
+            self.alpha_j = -9999
             self.delta_j = -9999
+            print("No RA and DEC are given")
         print('alpha_j, delta_j', self.alpha_j, self.delta_j)
         if self.alpha_j == -9999: 
             self.position = False
@@ -423,7 +433,7 @@ class Pipeline(ReturnClass):
             print('Arcsec')
         elif self.searchrad.endswith('pix'):
             self.SeaPix = float(self.searchrad[:-3])
-            self.SeaDeg = pixelscale * self.SeaPix  / (60.0 * 60.0)
+            self.SeaDeg = self.pixelscale * self.SeaPix  / (60.0 * 60.0)
             
         #print('self.SeaPix, self.SeaDeg', self.SeaPix, self.SeaDeg)
 
@@ -478,9 +488,9 @@ class Pipeline(ReturnClass):
 
         self.imagedata, self.header0 = fitsio.read(self.cutimage_file, 
                                                    header=True)
-
-         
-        self.IMG_HEADER, self.SEx_GAIN = get_header(self.header0) #Will set up global header parameters
+        #self.header0.delete('NAXIS3')
+        self.imagedata = self.imagedata[0] 
+        self.IMG_HEADER, self.SEx_GAIN, self.no_wcs = get_header(self.header0) #Will set up global header parameters
 
         #if self.position == 1:
         #    self.alpha_j = gheader[6]
