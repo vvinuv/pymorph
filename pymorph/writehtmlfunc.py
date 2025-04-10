@@ -302,8 +302,8 @@ class WriteHtmlCSV(object):
 
             # Converting fitted params to physical params
             if(z != 9999 and z > 0):
-                phy_parms = CosmoCal.cal(z, self.H0, 
-                                         self.WM, self.WV, self.pixelscale)
+                print('cosmo', z, self.H0, self.WM, self.WV, self.pixelscale)
+                phy_parms = CosmoCal(z, self.H0, self.WM, self.WV, self.pixelscale).cal()
                 all_params['dis_modu'] = phy_parms[2]
                 if 'bulge' in comp:
                     if all_params['re_pix'] != 9999:
