@@ -73,24 +73,24 @@ class WriteHtmlCSV(object):
         all_params['Date'] = f'{x.year}-{x.month}-{x.day}' 
         # load some of the passed in parameters
         all_params['Name'] = self.fstring
-        all_params['ra_gal'] = self.alpha_j
-        all_params['dec_gal'] = self.delta_j
+        all_params['ra_gal'] = round(self.alpha_j, 6)
+        all_params['dec_gal'] = round(self.delta_j, 6)
         all_params['z'] = z
-        all_params['C'] = self.C
-        all_params['C_err'] = self.C_err 
-        all_params['A'] = self.A
-        all_params['A_err'] = self.A_err
-        all_params['S'] = self.S
-        all_params['S_err'] = self.S_err
-        all_params['G'] = self.G
-        all_params['M'] = self.M
+        all_params['C'] = round(self.C, 2)
+        all_params['C_err'] = round(self.C_err, 2)
+        all_params['A'] = round(self.A, 2)
+        all_params['A_err'] = round(self.A_err, 2)
+        all_params['S'] = round(self.S, 2)
+        all_params['S_err'] = round(self.S_err, 2)
+        all_params['G'] = round(self.G, 2)
+        all_params['M'] = round(self.M, 2)
         all_params['distance_psf_gal'] = round(distance_psf_gal, 3)
-        all_params['mag_auto'] = self.SexMagAuto
-        all_params['magerr_auto'] = self.SexMagAutoErr
-        all_params['num_targets'] = self.SexTargets
-        all_params['SexSky'] = self.SexSky
+        all_params['mag_auto'] = round(self.SexMagAuto, 2)
+        all_params['magerr_auto'] = round(self.SexMagAutoErr, 2)
+        all_params['num_targets'] = round(self.SexTargets, 2)
+        all_params['SexSky'] = round(self.SexSky, 2)
         all_params['flag'] = self.flag
-        all_params['SexHalfRad'] = self.SexHalfRad
+        all_params['SexHalfRad'] = round(self.SexHalfRad, 2)
         all_params['magzp'] = self.mag_zero
 
         #print(all_params['C'])
@@ -304,25 +304,25 @@ class WriteHtmlCSV(object):
             if(z != 9999 and z > 0):
                 print('cosmo', z, self.H0, self.WM, self.WV, self.pixelscale)
                 phy_parms = CosmoCal(z, self.H0, self.WM, self.WV, self.pixelscale).cal()
-                all_params['dis_modu'] = phy_parms[2]
+                all_params['dis_modu'] = round(phy_parms[2], 2)
                 if 'bulge' in comp:
                     if all_params['re_pix'] != 9999:
-                        all_params['re_kpc'] = phy_parms[3] * all_params['re_pix']
-                        all_params['re_kpc_err'] = phy_parms[3] * all_params['re_pix_err']
+                        all_params['re_kpc'] = round(phy_parms[3] * all_params['re_pix'], 2)
+                        all_params['re_kpc_err'] = round(phy_parms[3] * all_params['re_pix_err'], 2)
                     else:
                         all_params['re_kpc'] = 9999
                         all_params['re_kpc_err'] = 9999
                 if 'disk' in comp:
                     if all_params['rd_pix'] != 9999:
-                        all_params['rd_kpc'] = phy_parms[3] * all_params['rd_pix']
-                        all_params['rd_kpc_err'] = phy_parms[3] * all_params['rd_pix_err']
+                        all_params['rd_kpc'] = round(phy_parms[3] * all_params['rd_pix'], 2)
+                        all_params['rd_kpc_err'] = round(phy_parms[3] * all_params['rd_pix_err'], 2)
                     else:
                         all_params['rd_kpc'] = 9999
                         all_params['rd_kpc_err'] = 9999
                 if 'bar' in comp:
                     if all_params['rbar_pix'] != 9999:
-                        all_params['rbar_kpc'] = phy_parms[3] * all_params['rbar_pix']
-                        all_params['rbar_kpc_err'] = phy_parms[3] * all_params['rbar_pix_err']
+                        all_params['rbar_kpc'] = round(phy_parms[3] * all_params['rbar_pix'], 2)
+                        all_params['rbar_kpc_err'] = round(phy_parms[3] * all_params['rbar_pix_err'], 2)
                     else:
                         all_params['rbar_kpc'] = 9999
                         all_params['rbar_kpc_err'] = 9999
