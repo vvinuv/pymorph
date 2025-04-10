@@ -355,7 +355,7 @@ class Pipeline(ReturnClass):
                 self.wimg_file = None
                 print('Search for weight image (wimg) in galfit config')
 
-
+        print('pdb ra', pdb["ra"])
         if isinstance(pdb["ra"], float): 
             self.alpha_j = pdb["ra"]     
         elif isinstance(pdb["ra"], str):
@@ -365,15 +365,16 @@ class Pipeline(ReturnClass):
             print("No ra is given")
             self.alpha_j = -9999
 
+        print('pdb dec', pdb["dec"])
         if isinstance(pdb["dec"], float):
             self.delta_j = pdb["dec"]
         elif isinstance(pdb["dec"], str):
-            d, m, s = delta.split(':')
+            d, m, s = pdb["dec"].split(':')
             self.delta_j = DMSToDeg(int(d), int(m), float(s))
         else:
             print("No dec is given")
             self.delta_j = -9999
-
+        print('alpha_j, delta_j', self.alpha_j, self.delta_j)
         if self.alpha_j == -9999: 
             self.position = False
         else:
