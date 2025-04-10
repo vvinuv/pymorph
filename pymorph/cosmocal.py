@@ -47,11 +47,11 @@ class CosmoCal:
         n=1000         # number of points in integrals
         for i in range(n):
             a = az * (i + 0.5) / n
-            adot = sqrt(WK + (WM / a) + (WR / (a * a)) + (WV * a * a))
+            adot = sqrt(WK + (self.WM / a) + (WR / (a * a)) + (self.WV * a * a))
             age = age + 1. / adot
 
         zage = az * age / n
-        zage_Gyr = (Tyr / H0) * zage
+        zage_Gyr = (Tyr / self.H0) * zage
         DTT = 0.0
         DCMR = 0.0
 
@@ -115,6 +115,6 @@ class CosmoCal:
             dismod = (5 * log10(DL_Mpc * 1e6) - 5)
         except:
             dismod = -9999
-        return zage_Gyr, DCMR_Mpc, dismod, kpc_DA * pixelscale
+        return zage_Gyr, DCMR_Mpc, dismod, kpc_DA * self.pixelscale
 #tt = cal(-.1, c.H0, c.WM, c.WV, c.pixelscale)
 #print tt[0], tt[1], tt[2], tt[3]
