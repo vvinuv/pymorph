@@ -525,6 +525,7 @@ class PyMorph(InitializeParams):
             else:
                 #print(4)
                 #self.SEx_GAIN = 1.
+                self.weightdata = np.ones(self.imagedata.shape)
                 self.weightexists = False
                 print('No weight image found\n')
             
