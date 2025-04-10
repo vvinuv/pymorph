@@ -323,33 +323,43 @@ def get_header(header0):
                        'comment': 'NCOMBINE'})
     header0.add_record({'name': 'PHOT_FILTER', 'value': PHOT_FILTER,
                         'comment': 'Photometric filter'})
-    header0.add_record({'name':'CTYPE1', 'value':header0.get('CTYPE1'),
-                'comment': header0.get_comment('CTYPE1')})
-    header0.add_record({'name':'CTYPE2', 'value':header0.get('CTYPE2'),
-                'comment': header0.get_comment('CTYPE2')})
-    header0.add_record({'name':'CUNIT1', 'value':header0.get('CUNIT1'),
-                'comment': header0.get_comment('CUNIT1')})
-    header0.add_record({'name':'CUNIT2', 'value':header0.get('CUNIT2'),
-                'comment': header0.get_comment('CUNIT2')})
-    header0.add_record({'name':'CRPIX1', 'value':header0.get('CRPIX1'),
-               'comment': header0.get_comment('CRPIX1')})
-    header0.add_record({'name':'CRPIX2', 'value':header0.get('CRPIX2'),
-                'comment': header0.get_comment('CRPIX2')})
-    header0.add_record({'name':'CRVAL1', 'value':header0.get('CRVAL1'),
-                'comment': header0.get_comment('CRVAL1')})
-    header0.add_record({'name':'CRVAL2', 'value':header0.get('CRVAL2'),
-                'comment': header0.get_comment('CRVAL2')})
-    header0.add_record({'name':'CD1_1', 'value':header0.get('CD1_1'),
-                'comment': header0.get_comment('CD1_1')})
-    header0.add_record({'name':'CD1_2', 'value':header0.get('CD1_2'),
-                'comment': header0.get_comment('CD1_2')})
-    header0.add_record({'name':'CD2_1', 'value':header0.get('CD2_1'),
-                'comment': header0.get_comment('CD2_1')})
-    header0.add_record({'name':'CD2_2', 'value':header0.get('CD2_2'),
-                'comment': header0.get_comment('CD2_2')})
-    
 
-    return header0, SEx_GAIN
+    con = 'CTYPE1' and 'CTYPE2' and 'CUNIT1' and 'CUNIT2'
+    
+    con = con and 'CRPIX1' and 'CRPIX2' and 'CRVAL1' and 'CRVAL2'
+    
+    con = con and 'CD1_1' and 'CD1_2' and 'CD2_1' and 'CD2_2'
+
+    if con in header0.keys():
+        header0.add_record({'name':'CTYPE1', 'value':header0.get('CTYPE1'),
+                    'comment': header0.get_comment('CTYPE1')})
+        header0.add_record({'name':'CTYPE2', 'value':header0.get('CTYPE2'),
+                    'comment': header0.get_comment('CTYPE2')})
+        header0.add_record({'name':'CUNIT1', 'value':header0.get('CUNIT1'),
+                    'comment': header0.get_comment('CUNIT1')})
+        header0.add_record({'name':'CUNIT2', 'value':header0.get('CUNIT2'),
+                    'comment': header0.get_comment('CUNIT2')})
+        header0.add_record({'name':'CRPIX1', 'value':header0.get('CRPIX1'),
+                   'comment': header0.get_comment('CRPIX1')})
+        header0.add_record({'name':'CRPIX2', 'value':header0.get('CRPIX2'),
+                    'comment': header0.get_comment('CRPIX2')})
+        header0.add_record({'name':'CRVAL1', 'value':header0.get('CRVAL1'),
+                    'comment': header0.get_comment('CRVAL1')})
+        header0.add_record({'name':'CRVAL2', 'value':header0.get('CRVAL2'),
+                    'comment': header0.get_comment('CRVAL2')})
+        header0.add_record({'name':'CD1_1', 'value':header0.get('CD1_1'),
+                    'comment': header0.get_comment('CD1_1')})
+        header0.add_record({'name':'CD1_2', 'value':header0.get('CD1_2'),
+                    'comment': header0.get_comment('CD1_2')})
+        header0.add_record({'name':'CD2_1', 'value':header0.get('CD2_1'),
+                    'comment': header0.get_comment('CD2_1')})
+        header0.add_record({'name':'CD2_2', 'value':header0.get('CD2_2'),
+                    'comment': header0.get_comment('CD2_2')})
+        no_wcs = False
+    else:
+        no_wcs = True 
+
+    return header0, SEx_GAIN, no_wcs
     #return EXPTIME, RDNOISE, GAIN, SEx_GAIN, NCOMBINE, PHOT_FILTER, RA, DEC, header_astrometry 
 
 
