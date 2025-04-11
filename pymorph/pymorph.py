@@ -90,7 +90,7 @@ class InitializeParams(object):
             print("components undefined. Asuming bulge+disk model")
             self.components = ['bulge', 'disk']
 
-        self.devauc = c.get('galfit', 'devauc')
+        self.devauc = c.getboolean('galfit', 'devauc')
         self.fitting = c.get('galfit', 'fitting')
         self.fitting = [int(tf) for tf in self.fitting.split(',')]
 
