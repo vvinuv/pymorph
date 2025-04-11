@@ -104,19 +104,15 @@ class InitializeParams(object):
             size = c.get('size', 'size_list')
             size = [int(s) for s in size.split(',')]
             self.ReSize = size[0]
-            self.VarSize = size[1]
+            self.ImSize = size[1]
             self.FracRad = size[2]
             self.Square = size[3]
             self.FixSize = size[4]
         except:
             self.ReSize = c.getint('size', 'size_list')
-
-            if self.ReSize:
-                self.VarSize = 1
-            else:
-                self.VarSize = 0
+            self.ImSize = 0
             self.Square = 1
-            self.FracRad = 20
+            self.FracRad = 10
             self.FixSize = 120
         try:
             self.searchrad = c.get('size', 'searchrad')
@@ -255,7 +251,7 @@ class InitializeParams(object):
         pymorph_config['remove_obj_boundary'] = self.remove_obj_boundary
         pymorph_config['do_plot'] = self.do_plot
         pymorph_config['ReSize'] = self.ReSize
-        pymorph_config['VarSize'] = self.VarSize
+        pymorph_config['ImSize'] = self.ImSize
         pymorph_config['FracRad'] = self.FracRad
         pymorph_config['Square'] = self.Square
         pymorph_config['FixSize'] = self.FixSize
@@ -562,7 +558,7 @@ class PyMorph(InitializeParams):
             P.main(obj_value)
 
         print(123)
-        sys.exit()
+        #sys.exit()
         #print(results)
 
     def find_and_fit_obj_cata(self):
