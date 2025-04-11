@@ -555,8 +555,10 @@ class PyMorph(InitializeParams):
 
         #Go to pipeline
         for obj_value in obj_values:
-            P.main(obj_value)
-
+            try:
+                P.main(obj_value)
+            except:
+                pass
         print(123)
         #sys.exit()
         #print(results)
