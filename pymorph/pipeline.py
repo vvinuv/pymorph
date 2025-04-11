@@ -279,7 +279,7 @@ class ReturnClass(object):
         #fits = fitsio.FITS(os.path.join(self.DATADIR, self.cutimage_file), 'rw')
         #print('IMG_HEADER', self.IMG_HEADER)
         self.cutimage_file = os.path.join(self.DATADIR, self.cutimage_file)
-        print('data', data)
+        #print('data', data)
         fitsio.write(self.cutimage_file, data, header=self.IMG_HEADER, 
                      clobber=True)
         #fits.close()
@@ -489,7 +489,7 @@ class Pipeline(ReturnClass):
         self.imagedata, self.header0 = fitsio.read(self.cutimage_file, 
                                                    header=True)
         #self.header0.delete('NAXIS3')
-        self.imagedata = self.imagedata[0] 
+        #self.imagedata = self.imagedata[0] 
         self.IMG_HEADER, self.SEx_GAIN, self.no_wcs = get_header(self.header0) #Will set up global header parameters
 
         #if self.position == 1:
