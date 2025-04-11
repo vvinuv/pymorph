@@ -222,6 +222,8 @@ class GalfitConfigFunc:
         fcon.writelines([' 4) {:.2f} 1 # {}'.format(target.radius, comment)])
 
         comment = 'Sersic exponent (deVauc=4, expdisk=1)\n'
+        print('devauc', self.devauc)
+        print('devauc', self.devauc, int(self.devauc * 1), int(not self.devauc)) 
         fcon.writelines([' 5) 4.0 {} # {}'.format(int(not self.devauc),
                                                      comment)])
 
