@@ -130,8 +130,8 @@ class ReturnClass(object):
         #    y_half_size = half_size
         if self.galcut:
             if self.ReSize:
-                if self.VarSize:
-                    pass
+                if self.ImSize:
+                    half_size = int(np.min([self.NXPTS / 2, self.NYPTS / 2])) 
                 else:
                     half_size = self.FixSize
             else:
@@ -139,7 +139,7 @@ class ReturnClass(object):
                 pass
                 # END
         else:
-            if self.VarSize:
+            if self.ImSize:
                 pass
             else:
                 half_size = self.FixSize
@@ -876,8 +876,10 @@ class Pipeline(ReturnClass):
                                   good_object[10])
 
             # Calculating the cutout size (half size).
-            self.half_size = super()._find_cutout_size()
- 
+            if 1:
+                self.half_size = super()._find_cutout_size()
+            else:
+                self.half_size = np.min([self.NXPTS / 2.0, self.NYPTS / 2.0])
             #sys.exit() 
             run = 1 #run =1 if pipeline runs sucessfuly
 
