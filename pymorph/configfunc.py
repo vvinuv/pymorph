@@ -559,8 +559,8 @@ class GalfitConfigFunc:
 
 
             comment = 'Image region to fit (xmin xmax ymin ymax)\n'
-            fcon.writelines(['H) 1 {} 1 {} # {}'.format(self.half_size * 2, 
-                                                        self.half_size * 2,
+            fcon.writelines(['H) 1 {} 1 {} # {}'.format(int(self.half_size) * 2, 
+                                                        int(self.half_size) * 2,
                                                                comment)])
             #comment = 'Size of convolution box (x y)\n'
             #fcon.writelines(['I) {} {} # {}'.format(self.NXPTS, 
