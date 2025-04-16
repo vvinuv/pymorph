@@ -187,6 +187,7 @@ def output_params(dbparams=None, decompose=False):
                         ['dpa', 'float'], [ 'dpa_err', 'float'],
                         ['dboxy', 'float'], [ 'dboxy_err', 'float'],
                         ['BD', 'float'], [ 'BT', 'float'],
+                        ['BarT', 'float'],
                         ['p_xctr', 'float'], ['p_xctr_err', 'float'],
                         ['p_yctr', 'float'], ['p_yctr_err', 'float'],
                         [ 'Ip', 'float'], ['Ip_err', 'float'],
