@@ -130,8 +130,8 @@ class ReturnClass(object):
         #    y_half_size = half_size
         if self.galcut:
             if self.ReSize:
-                if self.VarSize:
-                    pass
+                if self.ImSize:
+                    half_size = int(np.min([self.NXPTS / 2, self.NYPTS / 2])) 
                 else:
                     half_size = self.FixSize
             else:
@@ -139,11 +139,11 @@ class ReturnClass(object):
                 pass
                 # END
         else:
-            if self.VarSize:
+            if self.ImSize:
                 pass
             else:
                 half_size = self.FixSize
-        #print('half_size', half_size)
+        print('half_size', half_size)
         return half_size
 
 
@@ -205,7 +205,12 @@ class ReturnClass(object):
         print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
         #print(10, xmin, xmax, self.NXPTS - xmax, ymin, ymax, self.NYPTS - ymax, half_size * 2 - 1)
         #print(11, xmin < 0, xmax > (self.NXPTS - 2), ymin < 0, ymax > (self.NYPTS - 2))
-        if d_xcntr < 4 and d_ycntr < 4:
+        if self.ImSize:
+            xcntr_img = self.ximg 
+            ycntr_img = self.yimg
+            data = self.imagedata.copy()
+ 
+        elif d_xcntr < 4 and d_ycntr < 4:
             xcntr_img = half_size + np.modf(self.sex_xcntr)[0]
             ycntr_img = half_size + np.modf(self.sex_ycntr)[0]
             print('outside', ymin, ymax, xmin, xmax)
@@ -489,7 +494,7 @@ class Pipeline(ReturnClass):
         self.imagedata, self.header0 = fitsio.read(self.cutimage_file, 
                                                    header=True)
         #self.header0.delete('NAXIS3')
-        self.imagedata = self.imagedata[0] 
+        #self.imagedata = self.imagedata[0] 
         self.IMG_HEADER, self.SEx_GAIN, self.no_wcs = get_header(self.header0) #Will set up global header parameters
 
         #if self.position == 1:
@@ -716,10 +721,13 @@ class Pipeline(ReturnClass):
         #print('curr_distance', curr_distance) 
         #print(self.SeaDeg, self.SeaPix)
         
+        curr_distance_temp = curr_distance
+        values_sex_temp = values_sex
+
         curr_distance = curr_distance[con]
         values_sex = values_sex[con] 
-        
-        #print(curr_distance)
+ 
+            #sys.exit()
         #print(values_sex)
         
 #         print(curr_distance_img, curr_distance_sky)
@@ -729,8 +737,11 @@ class Pipeline(ReturnClass):
         for cud in curr_distance:
             print("Candidate distance: {:3f}".format(cud)) 
         SexTargets = curr_distance.shape[0]
-
-        if SexTargets > 0:
+        print('SexTargets', SexTargets)
+        if self.nearest_neighbor and 1:
+            center_distance = np.min(curr_distance_temp)
+            good_object = values_sex_temp[np.argmin(curr_distance_temp)]
+        elif SexTargets > 0:
             center_distance = np.min(curr_distance)
             print("New Preferred target!!")
             good_object = values_sex[np.argmin(curr_distance)]
@@ -744,7 +755,7 @@ class Pipeline(ReturnClass):
             good_object[11] = 0
             self.flag = SetFlag(self.flag, GetFlag('NO_TARGET'))                 #except:
 
-        #print(good_object)
+        print('good_object', good_object)
 
         
         target = GetSExObj(values=good_object)
@@ -808,7 +819,8 @@ class Pipeline(ReturnClass):
         #print(self.ximg, self.yimg)
         self.bxcntr, self.bycntr = self._get_bkg_center(pdb)
         
-        
+        self.ximg, self.yimg = self._get_ximg_yimg(pdb)
+ 
         # Crashhandling starts
         if self.crashhandler:# & starthandle:
             print("CrashHandler is invoked")
@@ -864,7 +876,7 @@ class Pipeline(ReturnClass):
                 #XXX Need to check whether we use this anywhere 
                 #If there is no ra, dec is given then it will return 
                 #the image center coordinates
-                self.ximg, self.yimg = self._get_ximg_yimg(pdb)
+                #self.ximg, self.yimg = self._get_ximg_yimg(pdb)
 
             print('alpha, delta', self.alpha_j, self.delta_j)
             good_object, SexTargets = self._potential_target()
@@ -876,8 +888,10 @@ class Pipeline(ReturnClass):
                                   good_object[10])
 
             # Calculating the cutout size (half size).
-            self.half_size = super()._find_cutout_size()
- 
+            if 1:
+                self.half_size = super()._find_cutout_size()
+            else:
+                self.half_size = np.min([self.NXPTS / 2.0, self.NYPTS / 2.0])
             #sys.exit() 
             run = 1 #run =1 if pipeline runs sucessfuly
 
@@ -907,14 +921,17 @@ class Pipeline(ReturnClass):
                     cntr_half = self._not_galcut_cutout(self.half_size)
 
                 time.sleep(0)
-                
+
                 xcntr_img = cntr_half[0]
                 ycntr_img = cntr_half[1]
                 ExceedSize = cntr_half[2]
                 self.half_size = cntr_half[3]
                 #print(2, self.gimg)
                 #print(2, self.cutimage_file)
-
+                if self.nearest_neighbor and 1:
+                    xcntr_img = good_object[1]
+                    ycntr_img = good_object[2]
+ 
                 print('Center of cutimage and exceed size ', \
                       xcntr_img, ycntr_img, ExceedSize)
                 #print('Full Sizes ', self.half_size)

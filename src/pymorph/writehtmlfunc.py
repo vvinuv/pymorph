@@ -346,15 +346,20 @@ class WriteHtmlCSV(object):
                 try:
                     all_params['BD'] = round(fb / fd, 2)
                     all_params['BT'] = round(fb / (fb + fd + fp + fbar), 2)
+                    all_params['BarT'] = round(fbar / (fb + fd + fp + fbar), 2)
                 except:
                     all_params['BD'] = 9999
                     all_params['BT'] = 9999
+                    all_params['BarT'] = 9999
 
             elif 'bulge' in comp:
                 all_params['BT'] = 1.0
+                all_params['BD'] = 0.0
+                all_params['BarT'] = 0.0
             elif 'disk' in comp:
                 all_params['BD'] = 0.0
                 all_params['BT'] = 0.0
+                all_params['BarT'] = 0.0
             # Start writing html file. Now the template keywords will get values
             pngfile = 'P_{}.png'.format(self.fstring)
             Neighbour_Sersic = ''
@@ -519,6 +524,7 @@ class WriteHtmlCSV(object):
             wM = str(all_params['M'])[:5]
             wBD = str(all_params['BD'])[:5]
             wBT = str(all_params['BT'])[:5]
+            wBarT = str(all_params['BarT'])[:5]
             wAvgMagInsideRe = str( all_params['AvgIe'])[:5]
             error_mesg1 = ''
             error_mesg2 = ''

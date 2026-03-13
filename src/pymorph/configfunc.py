@@ -193,7 +193,6 @@ class GalfitConfigFunc:
             fcon.writelines([' 5) {} 1 # {}'.format(self.detailed[2], comment)])
         else:
             fcon.writelines([' 5) 4.0 {} # {}'.format(int(not self.devauc),
-                                                     comment)])
 
         if self.galfitv >= 3.0:
             comment1 = 'axis ratio (b/a)\n'
@@ -546,8 +545,8 @@ class GalfitConfigFunc:
 
 
             comment = 'Image region to fit (xmin xmax ymin ymax)\n'
-            fcon.writelines(['H) 1 {} 1 {} # {}'.format(self.half_size * 2, 
-                                                        self.half_size * 2,
+            fcon.writelines(['H) 1 {} 1 {} # {}'.format(int(self.half_size) * 2, 
+                                                        int(self.half_size) * 2,
                                                                comment)])
             #comment = 'Size of convolution box (x y)\n'
             #fcon.writelines(['I) {} {} # {}'.format(self.NXPTS, 

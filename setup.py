@@ -60,6 +60,6 @@ setup(
         "Topic :: Scientific/Engineering :: Galaxy Analysis",
         'Programming Language :: Python :: 3.6',
     ],
-    python_requires='>=3.6.*',
+    python_requires='==3.12.2',
 )
 
