@@ -14,7 +14,7 @@ import configparser
 import subprocess
 from multiprocessing import Pool
 #import pymorphutils as ut
-from .pymorphutils import get_header, output_params
+from .pymorphutils import check_header, output_params
 from .flagfunc import GetFlag, isset, SetFlag
 
 from .ellimaskfunc_easy import ElliMaskFunc
@@ -31,9 +31,9 @@ from .psffunc import psfarr, update_psf_ra_dec
 from .weightimage import return_sigma
 #import mask_or_fit as mf
 from .pipeline import Pipeline
+       
         
-from .detailedfunc import Teach       
-print(Teach())
+
 
 class InitializeParams(object):
 
@@ -366,7 +366,7 @@ class PyMorph(InitializeParams):
         print('Weight done')
         #print('PSF 1', self.psflist)
         #Initializing psf array. ie. creating psflist from file 
-        self.psflist = psfarr(self.DATADIR, self.psflist)
+        self.psflist = psfarr(self.psflist)
         #if self.decompose:
         #    for p in self.psflist:
         #        print('psf', self.DATADIR, p)
@@ -417,13 +417,13 @@ class PyMorph(InitializeParams):
         with open(self.obj_cata, 'r') as f_objs:
             obj_lines = f_objs.readlines()
 
-        pnames = obj_lines[0].strip().split()
+        pnames = obj_lines[0].strip().split(' ')
         obj_values = []
         for oval in obj_lines[1:]:
             if len(oval) == 1:
                 continue
             oval2 = []
-            for i in oval.strip().split():
+            for i in oval.strip().split(' '):
                 try:
                     oval2.append(float(i))
                 except:
@@ -431,7 +431,7 @@ class PyMorph(InitializeParams):
         
             obj_values.append(oval2)
 
-        print('pnames', pnames)
+        #print(pnames)
         #print(obj_values)
         #obj_values = np.genfromtxt(self.obj_cata, names=True)
 
@@ -472,44 +472,38 @@ class PyMorph(InitializeParams):
         P.final_result_file = self.final_result_file
         P.restart_file = self.restart_file
 
-        #It is to give all the parameter values to the instance P
-        for k, v in self.pymorph_config.items():
-            setattr(P, k, v)
-
-        P.pnames = pnames
-        P.params_to_write = params_to_write
-
-        
-        #If galcut then it passes to pipeline otherwise it reads the image
         if self.galcut:
             pass 
         else:
-            self.imagedata, self.header0 = fitsio.read(self.imagefile, 
-                                                       header=True)
+            fimg = fitsio.FITS(self.imagefile)
+            self.imagedata = fimg[0].read()
+            self.header0 = fimg[0].read_header()
+            fimg.close()
             self.NXPTS = self.imagedata.shape[1]
             self.NYPTS = self.imagedata.shape[0]
             #print(1, 'self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS) 
             #sys.exit()
-            #print(self.header0)
-            P.IMG_HEADER, P.SEx_GAIN, no_wcs = get_header(self.header0)
-            #print(P.IMG_HEADER) 
+            print(self.header0)
+            P.IMG_HEADER, SEx_GAIN = check_header(self.header0)
+            print(P.IMG_HEADER) 
             print("Using large image. imagefile >>> {}".format(self.imagefile))
 
             if os.path.exists(self.whtfile):
                 self.weightexists = True
                 
                 #XXX
+                wht = fitsio.FITS(self.whtfile)
+                #wht = fitsio.FITS('frame-r-005376-5-0029.fits')
 
                 if re.search("rms", self.whtfile.lower()):
-                    self.weightdata = fitsio.read(self.whtfile)
+                    self.weightdata = wht[0].read()
                     print("whtfile >>> {}".format(self.whtfile))
                 elif re.search("var", self.whtfile.lower()):
-                    self.weightdata = fitsio.read(self.whtfile)
+                    self.weightdata = wht[0].read()
                     self.weightdata = np.sqrt(self.weightdata)
                     print("whtfile >>> {}".format(self.whtfile))
                 elif re.search("weight", self.whtfile.lower()):
-                    self.weightdata = fitsio.read(self.whtfile)
-                    self.weightdata = 1 / self.weightdata
+                    self.weightdata = 1 / np.sqrt(wht[0].read())
                     print("whtfile >>> {}".format(self.whtfile))
                 else:
                     print('Weight file is not understood. Please include ' + \
@@ -518,6 +512,7 @@ class PyMorph(InitializeParams):
 
                 #XXX
                 #self.weightdata = wht[0].read()
+                wht.close()
 
             elif self.whtfile == 'SDSS':
                 self.weightdata = return_sigma(self.imagedata,
@@ -525,7 +520,6 @@ class PyMorph(InitializeParams):
             else:
                 #print(4)
                 #self.SEx_GAIN = 1.
-                self.weightdata = np.ones(self.imagedata.shape)
                 self.weightexists = False
                 print('No weight image found\n')
             
@@ -538,9 +532,9 @@ class PyMorph(InitializeParams):
 
             P.imagedata = self.imagedata
             P.weightdata = self.weightdata
+            P.NXPTS = self.imagedata.shape[1]
+            P.NYPTS = self.imagedata.shape[0]
             P.weightexists = self.weightexists
-            P.NXPTS = self.NXPTS
-            P.NYPTS = self.NYPTS
 
             if os.path.exists(self.sex_cata):
                 pass
@@ -554,10 +548,19 @@ class PyMorph(InitializeParams):
                 PS = PySex(self.SEX_PATH)
                 PS.RunSex(self.sex_config,  
                        self.imagefile, self.whtfile,
-                       self.sex_cata, P.SEx_GAIN,
+                       self.sex_cata, SEx_GAIN,
                        check_fits=None, sconfig='default')
 
-        #Go to pipeline
+
+       
+        #It is to give all the parameter values to the instance P
+        for k, v in self.pymorph_config.items():
+            setattr(P, k, v)
+
+        P.pnames = pnames
+        P.params_to_write = params_to_write
+
+        pdb = {}                        #The parameter dictionary
         for obj_value in obj_values:
             P.main(obj_value)
 
