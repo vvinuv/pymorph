@@ -16,9 +16,6 @@ from .pymorphutils import Get_R, HMSToDeg, DMSToDeg, RaDegToHMS, DecDegToDMS, ge
 #from .writedbfunc import WriteDB
 from .pymconvolve import pConvolve
 
-from ._version import __version__
-version = __version__
-
 __all__ = ['PyMorph',
            'GetFlag',
            'isset',
