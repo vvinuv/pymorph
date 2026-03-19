@@ -26,6 +26,16 @@ class GalaxyPipeline:
         self.whtfile = os.path.join(self.datadir, self.whtfile)
         self.obj_cata = os.path.join(self.datadir, self.obj_cata)
 
+
+        self.mask_reg = config.getfloat('mask', 'mask_reg')
+        self.thresh_area = config.getfloat('mask', 'thresh_area')
+        self.threshold = config.getfloat('mask', 'threshold')
+
+        self.mag_zero = config.getfloat('mag', 'mag_zero')
+        self.maglim = config.get('mag', 'maglim').split(',')
+        self.maglim = [float(mlim) for mlim in self.maglim]
+
+
         self.sex_catalog = None
         self.obj_catalog = None
 
@@ -285,8 +295,10 @@ class GalaxyPipeline:
             target_sex, neighbours = self.neighbours_xy(x, y)
 
         #print(target_sex)
-        target.loc["position"] = position
         target = target.to_dict()
+        target["position"] = position
+        target["rootname"] = self.rootname
+        target["NAME"] = f'{self.rootname}_{target['gal_id']}'
         target.update(target_sex)
         galaxies = dict()
         galaxies['target'] = target
@@ -350,41 +362,26 @@ class GalaxyPipeline:
             overwrite=True
         )
 
-
-    def generate_elliptical_mask(df, x0=1000, y0=1000, size=200):
-
-        half = size // 2
+    def masked(self, mask_file, neighbours, size):
 
         # create empty mask
         mask = np.zeros((size, size), dtype=np.uint8)
 
         # grid of pixel coordinates
         yy, xx = np.indices((size, size))
-
-        # origin of cutout in global coordinates
-        x_origin = x0 - half
-        y_origin = y0 - half
-
-        for _, obj in df.iterrows():
-
-            # global coordinates
-            xg = obj["X_IMAGE"]
-            yg = obj["Y_IMAGE"]
-
-            # convert to local (cutout) coordinates
-            xc = xg - x_origin
-            yc = yg - y_origin
+       
+        for _, neigh in neighbours.iterrows():
 
             # ellipse parameters
-            a = obj["A_IMAGE"]
-            elong = obj["ELONGATION"]
+            a = neigh["A_IMAGE"]
+            elong = neigh["ELONGATION"]
             b = a / elong
 
-            theta = np.deg2rad(obj["THETA_IMAGE"])
+            theta = np.deg2rad(neigh["THETA_IMAGE"])
 
             # shift grid
-            x_shift = xx - xc
-            y_shift = yy - yc
+            x_shift = xx - neigh["X_IMAGE"]
+            y_shift = yy - neigh["Y_IMAGE"]
 
             # rotate coordinates
             cos_t = np.cos(theta)
@@ -399,7 +396,49 @@ class GalaxyPipeline:
             # set mask pixels
             mask[ellipse] = 1
 
-        return mask
+        fits.writeto(mask_file, mask.astype(np.float32), overwrite=True)
+
+    def generate_elliptical_mask(self, galaxies, x0=1000, y0=1000, size=200):
+
+        half = size // 2
+
+        target = galaxies['target']
+        neighbours = galaxies['neighbours']
+
+        target_x = target["X_IMAGE"]
+        target_y = target["Y_IMAGE"]
+
+        con1 = (neighbours["ISO0"] < target["ISO0"] * self.thresh_area)
+        
+        xsq = (target_x - neighbours["X_IMAGE"])**2 
+        ysq = (target_y - neighbours["Y_IMAGE"])**2
+        dist_target_neigh = np.sqrt(xsq + ysq)
+        add_major = self.threshold * (target["A_IMAGE"] + neighbours["A_IMAGE"])
+        con2 = (dist_target_neigh > add_major)
+
+        # origin of cutout in global coordinates
+        x_origin = target_x - half
+        y_origin = target_y - half
+
+        target["X_IMAGE"] = half + target_x - int(target_x)
+        target["Y_IMAGE"] = half + target_y - int(target_y)
+
+        # convert to local (cutout) coordinates
+        neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - x_origin
+        neighbours["Y_IMAGE"] = neighbours["Y_IMAGE"] - y_origin
+
+        print(neighbours["X_IMAGE"], neighbours["Y_IMAGE"])
+
+        neighbours_mask = neighbours.loc[con1 | con2]
+        neighbours = neighbours.loc[~con1 | ~con2]
+
+        print(neighbours_mask.shape, neighbours.shape)
+
+
+        mask_file = f'M_{target['NAME']}.fits'
+        self.masked(mask_file, neighbours, size)
+
+
 if __name__ == '__main__':
     pipe = GalaxyPipeline("config.ini")
 
@@ -413,6 +452,10 @@ if __name__ == '__main__':
     print(obj_catalog.iloc[0])
     galaxies = pipe.process_target(obj_catalog.iloc[0])
 
-    print('galaxies', galaxies)
+    #print('galaxies', galaxies)
+    
+    pipe.generate_elliptical_mask(galaxies)
+    sys.exit()
+
 
     pipe.generate_target_images(galaxies, size=150)
