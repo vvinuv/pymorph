@@ -187,83 +187,89 @@ class GalaxyPipeline:
     # ------------------------------------------------
     # Find neighbours in SExtractor catalog using RA DEC
     # ------------------------------------------------
+
     def neighbours_radec(self, ra, dec, radius_arcmic=1):
 
         radius_arcsec = radius_arcmic * 60
+
         sex_coords = SkyCoord(
             self.sex_catalog["ALPHA_J2000"].values * u.deg,
             self.sex_catalog["DELTA_J2000"].values * u.deg
         )
 
-        target = SkyCoord(ra*u.deg, dec*u.deg)
+        target = SkyCoord(ra * u.deg, dec * u.deg)
 
         sep = target.separation(sex_coords)
 
+        # mask within radius
         mask = sep.arcsec < radius_arcsec
 
-        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols]
+        # subset dataframe
+        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols].copy()
 
-        return neighbours.reset_index(drop=True)
+        # corresponding separations
+        sep_subset = sep.arcsec[mask]
+
+        if len(neighbours) == 0:
+            return None, neighbours
+
+        # find closest object (object1)
+        min_idx = sep_subset.argmin()
+
+        target_sex = neighbours.iloc[min_idx]
+
+        # remove object1 from neighbours
+        neighbours = neighbours.drop(neighbours.index[min_idx])
+
+        return target_sex, neighbours.reset_index(drop=True)
 
 
     # ------------------------------------------------
     # Find neighbours in SExtractor catalog using X/Y
     # ------------------------------------------------
+
     def neighbours_xy(self, x, y, dx=50, dy=50):
 
+        # select objects inside box
         mask = (
             (np.abs(self.sex_catalog["X_IMAGE"] - x) < dx) &
             (np.abs(self.sex_catalog["Y_IMAGE"] - y) < dy)
         )
 
-        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols]
+        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols].copy()
 
-        return neighbours.reset_index(drop=True)
+        if len(neighbours) == 0:
+            return None, neighbours
+
+        # compute distance (Euclidean)
+        dx_arr = neighbours["X_IMAGE"].values - x
+        dy_arr = neighbours["Y_IMAGE"].values - y
+
+        dist = np.sqrt(dx_arr**2 + dy_arr**2)
+
+        # find closest object
+        min_idx = np.argmin(dist)
+
+        target_sex = neighbours.iloc[min_idx]
+
+        # remove closest object from neighbours
+        neighbours = neighbours.drop(neighbours.index[min_idx])
+
+        return target_sex.to_dict(), neighbours.reset_index(drop=True)
 
 
     # ------------------------------------------------
-    # Process all target objects
+    # Process one target object and its neighbours
     # ------------------------------------------------
-    def process_target_all(self):
 
 
-        for _, gal in self.obj_catalog.iterrows():
+    def process_target(self, target, radius_arcmic=0.5):
 
-            ra = gal.get("ra", np.nan)
-            dec = gal.get("dec", np.nan)
+        ra = target.get("ra", np.nan)
+        dec = target.get("dec", np.nan)
 
-            x = gal.get("ximg", np.nan)
-            y = gal.get("yimg", np.nan)
-
-            position = False
-
-            if not pd.isna(ra) and not pd.isna(dec):
-
-                position = self.position_in_sexcat(ra, dec)
-
-                neighbours = self.neighbours_radec(ra, dec, radius_arcmic=0.5)
-
-            else:
-
-                neighbours = self.neighbours_xy(x, y)
-
-            results.append({
-                "gal_id": gal.get("gal_id"),
-                "position": position,
-                "target": gal.to_dict(),
-                "neighbours": neighbours.to_dict("records")
-            })
-
-        return results
-
-
-    def process_target(self):
-
-        ra = gal.get("ra", np.nan)
-        dec = gal.get("dec", np.nan)
-
-        x = gal.get("ximg", np.nan)
-        y = gal.get("yimg", np.nan)
+        x = target.get("ximg", np.nan)
+        y = target.get("yimg", np.nan)
 
         position = False
 
@@ -271,23 +277,25 @@ class GalaxyPipeline:
 
             position = self.position_in_sexcat(ra, dec)
 
-            neighbours = self.neighbours_radec(ra, dec, radius_arcmic=0.5)
+            target_sex, neighbours = self.neighbours_radec(ra, dec, 
+                                                           radius_arcmic=0.5)
 
         else:
 
-            neighbours = self.neighbours_xy(x, y)
+            target_sex, neighbours = self.neighbours_xy(x, y)
 
-        results.append({
-            "gal_id": gal.get("gal_id"),
-            "position": position,
-            "target": gal.to_dict(),
-            "neighbours": neighbours.to_dict("records")
-        })
+        #print(target_sex)
+        target.loc["position"] = position
+        target = target.to_dict()
+        target.update(target_sex)
+        galaxies = dict()
+        galaxies['target'] = target
+        galaxies['neighbours'] = neighbours
 
-        return results
+        return galaxies
 
 
-    def generate_target_images(self, results, size=120):
+    def generate_target_images(self, galaxies, size=120):
 
         img = fits.open(self.imagefile)
         img_data = img[0].data
@@ -296,55 +304,102 @@ class GalaxyPipeline:
         wht = fits.open(self.whtfile)
         wht_data = wht[0].data
 
-        for res in results:
+        target = galaxies.get("target")
+        gal_id = target.get("gal_id")
 
-            target = res["target"]
-            gal_id = target.get("gal_id")
+        ra = target.get("ra")
+        dec = target.get("dec")
 
-            ra = target.get("ra")
-            dec = target.get("dec")
+        x = target.get("ximg") or target.get("X_IMAGE")
+        y = target.get("yimg") or target.get("Y_IMAGE")
 
-            x = target.get("ximg") or target.get("X_IMAGE")
-            y = target.get("yimg") or target.get("Y_IMAGE")
+        # determine pixel position
+        if ra is not None and dec is not None:
+            x, y = wcs.world_to_pixel_values(ra, dec)
 
-            # determine pixel position
-            if ra is not None and dec is not None:
-                x, y = wcs.world_to_pixel_values(ra, dec)
+        position = (x, y)
 
-            position = (x, y)
+        cutout_img = Cutout2D(
+            img_data,
+            position,
+            (size, size),
+            wcs=wcs
+        )
 
-            cutout_img = Cutout2D(
-                img_data,
-                position,
-                (size, size),
-                wcs=wcs
-            )
+        cutout_wht = Cutout2D(
+            wht_data,
+            position,
+            (size, size),
+            wcs=wcs
+        )
 
-            cutout_wht = Cutout2D(
-                wht_data,
-                position,
-                (size, size),
-                wcs=wcs
-            )
+        img_name = f"I_{self.rootname}_{gal_id}.fits"
+        wht_name = f"W_{self.rootname}_{gal_id}.fits"
 
-            img_name = f"{self.rootname}_{gal_id}_object.fits"
-            wht_name = f"{self.rootname}_{gal_id}_weight.fits"
+        fits.writeto(
+            img_name,
+            cutout_img.data,
+            header=cutout_img.wcs.to_header(),
+            overwrite=True
+        )
 
-            fits.writeto(
-                img_name,
-                cutout_img.data,
-                header=cutout_img.wcs.to_header(),
-                overwrite=True
-            )
-
-            fits.writeto(
-                wht_name,
-                cutout_wht.data,
-                header=cutout_wht.wcs.to_header(),
-                overwrite=True
-            )
+        fits.writeto(
+            wht_name,
+            cutout_wht.data,
+            header=cutout_wht.wcs.to_header(),
+            overwrite=True
+        )
 
 
+    def generate_elliptical_mask(df, x0=1000, y0=1000, size=200):
+
+        half = size // 2
+
+        # create empty mask
+        mask = np.zeros((size, size), dtype=np.uint8)
+
+        # grid of pixel coordinates
+        yy, xx = np.indices((size, size))
+
+        # origin of cutout in global coordinates
+        x_origin = x0 - half
+        y_origin = y0 - half
+
+        for _, obj in df.iterrows():
+
+            # global coordinates
+            xg = obj["X_IMAGE"]
+            yg = obj["Y_IMAGE"]
+
+            # convert to local (cutout) coordinates
+            xc = xg - x_origin
+            yc = yg - y_origin
+
+            # ellipse parameters
+            a = obj["A_IMAGE"]
+            elong = obj["ELONGATION"]
+            b = a / elong
+
+            theta = np.deg2rad(obj["THETA_IMAGE"])
+
+            # shift grid
+            x_shift = xx - xc
+            y_shift = yy - yc
+
+            # rotate coordinates
+            cos_t = np.cos(theta)
+            sin_t = np.sin(theta)
+
+            x_rot = x_shift * cos_t + y_shift * sin_t
+            y_rot = -x_shift * sin_t + y_shift * cos_t
+
+            # ellipse equation
+            ellipse = (x_rot / a) ** 2 + (y_rot / b) ** 2 <= 1
+
+            # set mask pixels
+            mask[ellipse] = 1
+
+        return mask
 if __name__ == '__main__':
     pipe = GalaxyPipeline("config.ini")
 
@@ -354,8 +409,10 @@ if __name__ == '__main__':
 
     pipe.load_obj_catalog()
 
-    results = pipe.process_target()
+    obj_catalog = pipe.obj_catalog
+    print(obj_catalog.iloc[0])
+    galaxies = pipe.process_target(obj_catalog.iloc[0])
 
-    print(results)
+    print('galaxies', galaxies)
 
-    pipe.generate_target_images(results, size=150)
+    pipe.generate_target_images(galaxies, size=150)
