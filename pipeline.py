@@ -216,16 +216,14 @@ class GalaxyPipeline:
         mask = sep.arcsec < radius_arcsec
 
         # subset dataframe
-        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols].copy()
-
+        neighbours = self.sex_catalog[self.neighbour_cols].copy()
         # corresponding separations
-        sep_subset = sep.arcsec[mask]
 
         if len(neighbours) == 0:
             return None, neighbours
 
         # find closest object (target)
-        min_idx = sep_subset.argmin()
+        min_idx = sep.arcsec.argmin()
 
         target_sex = neighbours.iloc[min_idx]
 
@@ -274,7 +272,7 @@ class GalaxyPipeline:
     # ------------------------------------------------
 
 
-    def process_target(self, target, radius_arcmic=0.5):
+    def process_target(self, target, size, radius_arcmic=0.5):
 
         ra = target.get("ra", np.nan)
         dec = target.get("dec", np.nan)
@@ -288,7 +286,7 @@ class GalaxyPipeline:
 
             position = self.position_in_sexcat(ra, dec)
 
-            target_sex, neighbours = self.neighbours_radec(ra, dec, 
+            target_sex, neighbours = self.neighbours_radec(ra, dec,
                                                            radius_arcmic=0.5)
 
         else:
@@ -387,6 +385,16 @@ class GalaxyPipeline:
         neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - dx
         neighbours["Y_IMAGE"] = neighbours["Y_IMAGE"] - dy
 
+        # --- Keep only neighbours inside cutout ---
+        mask = (
+                (neighbours["X_IMAGE"] >= 0) &
+                (neighbours["X_IMAGE"] < size) &
+                (neighbours["Y_IMAGE"] >= 0) &
+                (neighbours["Y_IMAGE"] < size)
+            )
+
+        neighbours = neighbours.loc[mask].reset_index(drop=True)
+
         return target, neighbours
 
 
@@ -403,7 +411,7 @@ if __name__ == '__main__':
 
     obj_catalog = pipe.obj_catalog
     print(obj_catalog.iloc[0])
-    galaxies = pipe.process_target(obj_catalog.iloc[0])
+    galaxies = pipe.process_target(obj_catalog.iloc[0], size)
 
     target = galaxies['target']
     neighbours = galaxies['neighbours']
