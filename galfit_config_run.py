@@ -351,29 +351,29 @@ class GalfitConfigRunFunc:
         
         return neigh_conf
 
-    def write_config(self, galaxies):
+    def write_config(self, target, neighbours):
         
         new = '\n'
 
 
-        self.xcntr_img = galaxies.get('target')["X_IMAGE"]
-        self.ycntr_img = galaxies.get("target")["Y_IMAGE"]
-        self.mag_auto = galaxies.get("target")["MAG_AUTO"]
-        self.flux_radius = galaxies.get("target")["FLUX_RADIUS"]
-        self.axis_ratio = 1 / galaxies.get("target")["ELONGATION"]
-        self.pos_ang = galaxies.get("target")["GALFIT_ANGLE"]
-        self.SexSky = galaxies.get("target")["BACKGROUND"]
+        self.xcntr_img = target["X_IMAGE"]
+        self.ycntr_img = target["Y_IMAGE"]
+        self.mag_auto = target["MAG_AUTO"]
+        self.flux_radius = target["FLUX_RADIUS"]
+        self.axis_ratio = 1 / target["ELONGATION"]
+        self.pos_ang = target["GALFIT_ANGLE"]
+        self.SexSky = target["BACKGROUND"]
 
         self.barmag = self.mag_auto + 0.5
         self.barn = 1.0
         self.bar_radius = self.flux_radius 
 
-        self.size = galaxies.get("target")["IMG_SIZE"]
-        self.psffile = galaxies.get("target")["psf_file"]
-        self.mag_zero = galaxies.get("target")["mag_zero"]
+        self.size = target["IMG_SIZE"]
+        self.psffile = target["star"]
+        self.mag_zero = target["mag_zero"]
 
-        rootname = galaxies.get("target")["rootname"]
-        gal_id = galaxies.get("target")["gal_id"]
+        rootname = target["rootname"]
+        gal_id = target["gal_id"]
         self.fstring = f"{rootname}_{gal_id}"
 
         self.galfit_file = f'G_{self.fstring}.in' #GALFIT configuration file
@@ -469,11 +469,10 @@ class GalfitConfigRunFunc:
                     #self.flag = SetFlag(self.flag, GetFlag('FIT_BAR'))
             galfit_config += self._write_sky()
             
-            galaxies.get('target')['YES_BAR'] = yes_bar
+            target['YES_BAR'] = yes_bar
 
             isneighbour = 0
 
-            neighbours = galaxies.get('neighbours')
             for _, neigh in neighbours.iterrows():
                 galfit_config += self._write_neighbor(neigh)
                 isneighbour += 1

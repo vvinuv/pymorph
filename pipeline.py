@@ -50,7 +50,8 @@ class GalaxyPipeline:
             "ELONGATION",
             "A_IMAGE",
             "MAG_AUTO",
-            "ISO0"
+            "ISO0",
+            "BACKGROUND"
         ]
 
     # ---------------------------------------------------------
@@ -245,7 +246,7 @@ class GalaxyPipeline:
             (np.abs(self.sex_catalog["Y_IMAGE"] - y) < dy)
         )
 
-        neighbours = self.sex_catalog.loc[mask, self.neighbour_cols].copy()
+        neighbours = self.sex_catalog[self.neighbour_cols].copy()
 
         if len(neighbours) == 0:
             return None, neighbours
@@ -427,6 +428,9 @@ if __name__ == '__main__':
 
     mask_gen = MaskGenerator("config.ini", target, neighbours)
     mask_gen.run()
+
+    gcr = GalfitConfigRunFunc("config.ini")
+    gcr.write_config(target, neighbours)
     sys.exit()
 
 
