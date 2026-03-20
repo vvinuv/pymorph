@@ -1,4 +1,5 @@
 import os
+import sys
 import configparser
 import subprocess
 import numpy as np
@@ -8,7 +9,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-
+from maskfunc import MaskGenerator
 
 class GalaxyPipeline:
 
@@ -223,12 +224,12 @@ class GalaxyPipeline:
         if len(neighbours) == 0:
             return None, neighbours
 
-        # find closest object (object1)
+        # find closest object (target)
         min_idx = sep_subset.argmin()
 
         target_sex = neighbours.iloc[min_idx]
 
-        # remove object1 from neighbours
+        # remove target from neighbours
         neighbours = neighbours.drop(neighbours.index[min_idx])
 
         return target_sex, neighbours.reset_index(drop=True)
@@ -307,7 +308,7 @@ class GalaxyPipeline:
         return galaxies
 
 
-    def generate_target_images(self, galaxies, size=120):
+    def generate_target_images(self, galaxies, size):
 
         img = fits.open(self.imagefile)
         img_data = img[0].data
@@ -398,7 +399,32 @@ class GalaxyPipeline:
 
         fits.writeto(mask_file, mask.astype(np.float32), overwrite=True)
 
-    def generate_elliptical_mask(self, galaxies, x0=1000, y0=1000, size=200):
+    def transform_to_cutout(self, target, neighbours):
+
+        size = target['IMAGE_SIZE']
+        half = size // 2
+
+        # Target center
+        x0 = target["X_IMAGE"]
+        y0 = target["Y_IMAGE"]
+
+        print(x0)
+        # Shift
+        dx = x0 - half
+        dy = y0 - half
+        print(dx)
+        
+        # --- Transform target ---
+        target["X_IMAGE"] = target["X_IMAGE"] - dx
+        target["Y_IMAGE"] = target["Y_IMAGE"] - dy
+
+        # --- Transform neighbours ---
+        neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - dx
+        neighbours["Y_IMAGE"] = neighbours["Y_IMAGE"] - dy
+
+        return target, neighbours
+
+    def generate_elliptical_mask(self, galaxies, size):
 
         half = size // 2
 
@@ -440,6 +466,7 @@ class GalaxyPipeline:
 
 
 if __name__ == '__main__':
+    size = 200
     pipe = GalaxyPipeline("config.ini")
 
     pipe.run_sextractor()          # run once
@@ -452,10 +479,22 @@ if __name__ == '__main__':
     print(obj_catalog.iloc[0])
     galaxies = pipe.process_target(obj_catalog.iloc[0])
 
+    target = galaxies['target']
+    neighbours = galaxies['neighbours']
+    target['IMAGE_SIZE'] = size
+
+    #print(galaxies)
+    target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
+                                                  galaxies['neighbours'])
+    print(target, neighbours)
     #print('galaxies', galaxies)
     
-    pipe.generate_elliptical_mask(galaxies)
+    pipe.generate_target_images(galaxies, size)
+
+    generate_mask_image(target, neighbours)
     sys.exit()
 
 
-    pipe.generate_target_images(galaxies, size=150)
+    mask_gen = MaskGenerator(target, neighbours)
+    mask_file = mask_gen.run()
+
