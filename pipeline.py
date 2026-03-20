@@ -363,41 +363,6 @@ class GalaxyPipeline:
             overwrite=True
         )
 
-    def masked(self, mask_file, neighbours, size):
-
-        # create empty mask
-        mask = np.zeros((size, size), dtype=np.uint8)
-
-        # grid of pixel coordinates
-        yy, xx = np.indices((size, size))
-       
-        for _, neigh in neighbours.iterrows():
-
-            # ellipse parameters
-            a = neigh["A_IMAGE"]
-            elong = neigh["ELONGATION"]
-            b = a / elong
-
-            theta = np.deg2rad(neigh["THETA_IMAGE"])
-
-            # shift grid
-            x_shift = xx - neigh["X_IMAGE"]
-            y_shift = yy - neigh["Y_IMAGE"]
-
-            # rotate coordinates
-            cos_t = np.cos(theta)
-            sin_t = np.sin(theta)
-
-            x_rot = x_shift * cos_t + y_shift * sin_t
-            y_rot = -x_shift * sin_t + y_shift * cos_t
-
-            # ellipse equation
-            ellipse = (x_rot / a) ** 2 + (y_rot / b) ** 2 <= 1
-
-            # set mask pixels
-            mask[ellipse] = 1
-
-        fits.writeto(mask_file, mask.astype(np.float32), overwrite=True)
 
     def transform_to_cutout(self, target, neighbours):
 
@@ -424,45 +389,6 @@ class GalaxyPipeline:
 
         return target, neighbours
 
-    def generate_elliptical_mask(self, galaxies, size):
-
-        half = size // 2
-
-        target = galaxies['target']
-        neighbours = galaxies['neighbours']
-
-        target_x = target["X_IMAGE"]
-        target_y = target["Y_IMAGE"]
-
-        con1 = (neighbours["ISO0"] < target["ISO0"] * self.thresh_area)
-        
-        xsq = (target_x - neighbours["X_IMAGE"])**2 
-        ysq = (target_y - neighbours["Y_IMAGE"])**2
-        dist_target_neigh = np.sqrt(xsq + ysq)
-        add_major = self.threshold * (target["A_IMAGE"] + neighbours["A_IMAGE"])
-        con2 = (dist_target_neigh > add_major)
-
-        # origin of cutout in global coordinates
-        x_origin = target_x - half
-        y_origin = target_y - half
-
-        target["X_IMAGE"] = half + target_x - int(target_x)
-        target["Y_IMAGE"] = half + target_y - int(target_y)
-
-        # convert to local (cutout) coordinates
-        neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - x_origin
-        neighbours["Y_IMAGE"] = neighbours["Y_IMAGE"] - y_origin
-
-        print(neighbours["X_IMAGE"], neighbours["Y_IMAGE"])
-
-        neighbours_mask = neighbours.loc[con1 | con2]
-        neighbours = neighbours.loc[~con1 | ~con2]
-
-        print(neighbours_mask.shape, neighbours.shape)
-
-
-        mask_file = f'M_{target['NAME']}.fits'
-        self.masked(mask_file, neighbours, size)
 
 
 if __name__ == '__main__':
@@ -491,10 +417,9 @@ if __name__ == '__main__':
     
     pipe.generate_target_images(galaxies, size)
 
-    generate_mask_image(target, neighbours)
+    mask_gen = MaskGenerator("config.ini", target, neighbours)
+    mask_gen.run()
     sys.exit()
 
 
-    mask_gen = MaskGenerator(target, neighbours)
-    mask_file = mask_gen.run()
 

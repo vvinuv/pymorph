@@ -5,7 +5,7 @@ import configparser
 
 class MaskGenerator:
 
-    def __init__(self, target, neighbours):
+    def __init__(self, config_file, target, neighbours):
 
         config = configparser.ConfigParser()
         config.read(config_file)
@@ -21,6 +21,7 @@ class MaskGenerator:
             (self.image_size, self.image_size), dtype=np.uint8
         )
         self.mask_file = f"M_{target['NAME']}.fits"
+        self.elli_mask_file = f"EM_{target['NAME']}.fits"
 
 
     # ---------- ELLIPSE ----------
@@ -47,12 +48,18 @@ class MaskGenerator:
         return (x_rot**2 / a**2 + y_rot**2 / b**2) <= 1
 
 
-    # ---------- GENERATE MASK ----------
     def generate(self):
         """
-        Generate mask image from neighbours
+        Generate two masks:
+        1. conditional_mask → based on conditions
+        2. full_mask → all neighbours
         """
+
         target = self.target
+
+        # --- initialize two masks ---
+        conditional_mask = np.zeros_like(self.mask_image)
+        full_mask = np.zeros_like(self.mask_image)
 
         a_t = target["A_IMAGE"]
         b_t = a_t / target["ELONGATION"]
@@ -70,25 +77,31 @@ class MaskGenerator:
                 (target["Y_IMAGE"] - neigh["Y_IMAGE"])**2
             )
 
-            cond1 = area_n < 0.3 * area_t
-            cond2 = d > 2 * (a_t + a_n)
+            cond1 = area_n < self.thresh_area * area_t
+            cond2 = d > self.threshold * (a_t + a_n)
 
+            # --- scale ellipse ---
+            a = self.mask_reg * a_n
+            b = self.mask_reg * b_n
+
+            ellipse = self.create_ellipse_mask(
+                neigh["X_IMAGE"],
+                neigh["Y_IMAGE"],
+                a,
+                b,
+                neigh["THETA_IMAGE"]
+            )
+
+            # --- FULL MASK (no condition) ---
+            full_mask[ellipse] = 1
+
+            # --- CONDITIONAL MASK ---
             if cond1 or cond2:
-                # scale mask
-                a = 3 * a_n
-                b = 3 * b_n
+                conditional_mask[ellipse] = 1
 
-                ellipse = self.create_ellipse_mask(
-                    neigh["X_IMAGE"],
-                    neigh["Y_IMAGE"],
-                    a,
-                    b,
-                    neigh["THETA_IMAGE"]
-                )
-
-                self.mask_image[ellipse] = 1
-
-        return self.mask_image
+        # store in class
+        self.mask_image = conditional_mask
+        self.full_mask = full_mask
 
 
     # ---------- SAVE ----------
@@ -99,6 +112,8 @@ class MaskGenerator:
         hdu = fits.PrimaryHDU(self.mask_image)
         hdu.writeto(self.mask_file, overwrite=True)
 
+        hdu = fits.PrimaryHDU(self.full_mask) 
+        hdu.writeto(self.elli_mask_file, overwrite=True)
 
     # ---------- FULL PIPELINE ----------
     def run(self):
