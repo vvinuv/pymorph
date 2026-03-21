@@ -51,10 +51,13 @@ class GalfitConfigRunFunc:
 
         self.make_constrain = 1
 
-    def _write_sersic_bar_constrain(self, component, cnum):
+    def _write_sersic_bar_constrain(self, component, cnum, eb, pa):
 
         new = '\n'
 
+        eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
+        eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
+       
         if component == 'sersic_main':
             constraints = f'{cnum} n {self.LN} to {self.UN}' 
         elif component == 'bar':
@@ -70,16 +73,19 @@ class GalfitConfigRunFunc:
         constraints += f'{new} {cnum} y {ly:.2f} to {uy:.2f}'
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
         constraints += f'{new} {cnum} re 0.2 to {ure:.2f}'
-        constraints += f'{new} {cnum} q 0.1 to 0.9'
-        constraints += f'{new} {cnum} pa {0} to {360}'
+        constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
+        constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
 
         f_constrain = open(self.constrain_file, 'a')
         f_constrain.write(constraints)
         f_constrain.close()
 
-    def _expdisk_constrain(self, cnum):
+    def _expdisk_constrain(self, cnum, eb, pa):
 
         new = '\n'
+
+        eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
+        eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
 
         lx = self.xcntr_img - 5
         ux = self.xcntr_img + 5
@@ -92,22 +98,25 @@ class GalfitConfigRunFunc:
         constraints += f'{new} {cnum} y {ly:.2f} to {uy:.2f}'
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
         constraints += f'{new} {cnum} re 0.2 to {ure:.2f}'
-        constraints += f'{new} {cnum} q 0.1 to 0.9'
-        constraints += f'{new} {cnum} pa {0} to {360}'
+        constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
+        constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
         
         f_constrain = open(self.constrain_file, 'a')
         f_constrain.write(constraints)
         f_constrain.close()
 
-    def _sersic_neighbor_constrain(self, cnum):
+    def _sersic_neighbor_constrain(self, cnum, eb, pa):
 
         new = '\n'
 
+        eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
+        eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
+
         constraints = f'{new} {cnum} n 0.2 to 10'
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
-        constraints += f'{new} {cnum} re 0.1 to 500'
-        constraints += f'{new} {cnum} q 0.1 to 0.9'
-        constraints += f'{new} {cnum} pa {0} to {360}'
+        constraints += f'{new} {cnum} re 1 to 100'
+        constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
+        constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
 
         f_constrain = open(self.constrain_file, 'a')
         f_constrain.write(constraints)
@@ -121,7 +130,10 @@ class GalfitConfigRunFunc:
         self.obj_counter += 1
 
         if 1: #self.make_constrain == 1:
-            self._write_sersic_bar_constrain('sersic_main', self.obj_counter)            
+            self._write_sersic_bar_constrain('sersic_main', 
+                                             self.obj_counter,
+                                             self.axis_ratio, 
+                                             self.pos_ang)            
 
         # write config file
         bulge_conf = f'# Sersic function {new}{new}'
@@ -160,7 +172,7 @@ class GalfitConfigRunFunc:
         self.obj_counter += 1
 
         if 1:#self.make_constrain == 1:
-            self._expdisk_constrain(2)
+            self._expdisk_constrain(2, self.axis_ratio, self.pos_ang)
 
         # write config file
         disk_conf = f'# Exponential function {new}{new}'
@@ -195,15 +207,15 @@ class GalfitConfigRunFunc:
             f_constrain.close()
  
         # write config
-        pmag = target.mag + 2.5 * np.log10(6.0)
+        pmag = target["MAG"] + 2.5 * np.log10(6.0)
         fcon.writelines(['#point source\n\n'])
         comment = 'Object type\n'
         fcon.writelines([' 0) psf # {}'.format(comment)])
 
         comment = 'position x, y [pixel]\n'
         #print('Point', target.xcntr, target.ycntr, self.fitting[4], self.fitting[4])
-        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target.xcntr, 
-                                                           target.ycntr,
+        fcon.writelines([' 1) {:.2f} {:.2f} {} {} # {}'.format(target["xcntr"], 
+                                                           target["ycntr"],
                                                            self.fitting[4],
                                                            self.fitting[4],
                                                            comment)])
@@ -269,7 +281,9 @@ class GalfitConfigRunFunc:
         self.obj_counter += 1
         
         if 1:#self.make_constrain == 1:
-            self._write_sersic_bar_constrain('bar', self.obj_counter)
+            self._write_sersic_bar_constrain('bar', self.obj_counter,
+                                             self.axis_ratio,
+                                             self.pos_ang)
 
         
         # write config file
@@ -327,7 +341,10 @@ class GalfitConfigRunFunc:
         new = '\n'
 
         self.obj_counter += 1
-        self._sersic_neighbor_constrain(self.obj_counter)
+        
+        self._sersic_neighbor_constrain(self.obj_counter, 
+                                        1/neigh["ELONGATION"],
+                                        neigh["GALFIT_ANGLE"])
 
         # write config file
         neigh_conf = f'# Neighbor Sersic function {new}{new}'
@@ -344,7 +361,7 @@ class GalfitConfigRunFunc:
         neigh_conf += f' 5) 4.0 1 #Sersic exponent {new}'
 
         neigh_conf += f' 9) {1/neigh["ELONGATION"]:.2f} 1 # axis ratio (b/a) {new}'
-        neigh_conf += f' 10) {neigh["THETA_IMAGE"] - 90:.2f} 1 '
+        neigh_conf += f' 10) {neigh["GALFIT_ANGLE"]:.2f} 1 '
         neigh_conf += f'# position angle (PA) [Degrees: Up=0, Left=90] {new}'
 
         neigh_conf += f' Z) 0 # output image (see above) {new}{new}'
@@ -368,12 +385,12 @@ class GalfitConfigRunFunc:
         self.barn = 1.0
         self.bar_radius = self.flux_radius 
 
-        self.size = target["IMG_SIZE"]
-        self.psffile = target["star"]
-        self.mag_zero = target["mag_zero"]
+        self.size = target["IMAGE_SIZE"]
+        self.psffile = target["STAR"]
+        self.mag_zero = target["MAG_ZERO"]
 
-        rootname = target["rootname"]
-        gal_id = target["gal_id"]
+        rootname = target["ROOTNAME"]
+        gal_id = target["GAL_ID"]
         self.fstring = f"{rootname}_{gal_id}"
 
         self.galfit_file = f'G_{self.fstring}.in' #GALFIT configuration file

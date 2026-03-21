@@ -10,6 +10,9 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from maskfunc import MaskGenerator
+from galfit_config_run import GalfitConfigRunFunc
+from casgm import compute_CASGM
+
 
 class GalaxyPipeline:
 
@@ -261,7 +264,7 @@ class GalaxyPipeline:
         min_idx = np.argmin(dist)
 
         target_sex = neighbours.iloc[min_idx]
-
+        
         # remove closest object from neighbours
         neighbours = neighbours.drop(neighbours.index[min_idx])
 
@@ -275,11 +278,11 @@ class GalaxyPipeline:
 
     def process_target(self, target, size, radius_arcmic=0.5):
 
-        ra = target.get("ra", np.nan)
-        dec = target.get("dec", np.nan)
+        ra = target.get("RA", np.nan)
+        dec = target.get("DEC", np.nan)
 
-        x = target.get("ximg", np.nan)
-        y = target.get("yimg", np.nan)
+        x = target.get("XIMG", np.nan)
+        y = target.get("YIMG", np.nan)
 
         position = False
 
@@ -294,12 +297,20 @@ class GalaxyPipeline:
 
             target_sex, neighbours = self.neighbours_xy(x, y)
 
+
+
         #print(target_sex)
         target = target.to_dict()
-        target["position"] = position
-        target["rootname"] = self.rootname
-        target["NAME"] = f'{self.rootname}_{target['gal_id']}'
+        target['IMAGE_SIZE'] = size
+        target['GALFIT_ANGLE'] = target_sex["THETA_IMAGE"] - 90 
+        target["POSITION"] = position
+        target["ROOTNAME"] = self.rootname
+        target["NAME"] = f'{self.rootname}_{target['GAL_ID']}'
+        target["MAG_ZERO"] = self.mag_zero
         target.update(target_sex)
+
+        neighbours['GALFIT_ANGLE'] = neighbours["THETA_IMAGE"] - 90
+
         galaxies = dict()
         galaxies['target'] = target
         galaxies['neighbours'] = neighbours
@@ -317,13 +328,13 @@ class GalaxyPipeline:
         wht_data = wht[0].data
 
         target = galaxies.get("target")
-        gal_id = target.get("gal_id")
+        gal_id = target.get("GAL_ID")
 
-        ra = target.get("ra")
-        dec = target.get("dec")
+        ra = target.get("RA")
+        dec = target.get("DEC")
 
-        x = target.get("ximg") or target.get("X_IMAGE")
-        y = target.get("yimg") or target.get("Y_IMAGE")
+        x = target.get("XIMG") or target.get("X_IMAGE")
+        y = target.get("YIMG") or target.get("Y_IMAGE")
 
         # determine pixel position
         if ra is not None and dec is not None:
@@ -411,12 +422,12 @@ if __name__ == '__main__':
     pipe.load_obj_catalog()
 
     obj_catalog = pipe.obj_catalog
+
     print(obj_catalog.iloc[0])
     galaxies = pipe.process_target(obj_catalog.iloc[0], size)
 
     target = galaxies['target']
     neighbours = galaxies['neighbours']
-    target['IMAGE_SIZE'] = size
 
     #print(galaxies)
     target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
@@ -431,6 +442,9 @@ if __name__ == '__main__':
 
     gcr = GalfitConfigRunFunc("config.ini")
     gcr.write_config(target, neighbours)
+
+    gcr.GalfitRun()
+
     sys.exit()
 
 
