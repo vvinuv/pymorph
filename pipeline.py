@@ -11,7 +11,7 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from maskfunc import MaskGenerator
 from galfit_config_run import GalfitConfigRunFunc
-from casgm import compute_CASGM
+from casgm import CASGMPipeline
 
 
 class GalaxyPipeline:
@@ -443,8 +443,18 @@ if __name__ == '__main__':
     gcr = GalfitConfigRunFunc("config.ini")
     gcr.write_config(target, neighbours)
 
-    gcr.GalfitRun()
+    #gcr.GalfitRun()
 
+    casgm_pipe = CASGMPipeline()
+
+    casgm_result = casgm_pipe.compute_CASGM(
+                                     target['NAME'],
+                                     target['X_IMAGE'],
+                                     target['Y_IMAGE'],
+                                     target['FLUX_RADIUS'],
+                                     target['ELONGATION'],
+                                     target['THETA_IMAGE'])
+    print(result)
     sys.exit()
 
 

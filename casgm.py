@@ -1,379 +1,253 @@
 import numpy as np
-import numpy.ma as ma
-from scipy.ndimage import rotate, shift, gaussian_filter
 from astropy.io import fits
-from matplotlib.pylab import plt
-
-def rotate_numpy_bilinear(image, x_shift, y_shift, angle_deg):
-
-    
-    angle = np.deg2rad(angle_deg)
-
-    ny, nx = image.shape
-    cy, cx = ny // 2, nx // 2
-
-    y, x = np.mgrid[0:ny, 0:nx]
-
-    x_shift = x - cx - x_shift
-    y_shift = y - cy - y_shift
-
-    cos_t = np.cos(angle)
-    sin_t = np.sin(angle)
-
-    x_rot = cos_t * x_shift + sin_t * y_shift + cx
-    y_rot = -sin_t * x_shift + cos_t * y_shift + cy
-
-    x0 = np.floor(x_rot).astype(int)
-    x1 = x0 + 1
-    y0 = np.floor(y_rot).astype(int)
-    y1 = y0 + 1
-
-    x0 = np.clip(x0, 0, nx-1)
-    x1 = np.clip(x1, 0, nx-1)
-    y0 = np.clip(y0, 0, ny-1)
-    y1 = np.clip(y1, 0, ny-1)
-
-    Ia = image[y0, x0]
-    Ib = image[y1, x0]
-    Ic = image[y0, x1]
-    Id = image[y1, x1]
-
-    wa = (x1 - x_rot) * (y1 - y_rot)
-    wb = (x1 - x_rot) * (y_rot - y0)
-    wc = (x_rot - x0) * (y1 - y_rot)
-    wd = (x_rot - x0) * (y_rot - y0)
-
-    return wa*Ia + wb*Ib + wc*Ic + wd*Id
+from scipy.ndimage import gaussian_filter, rotate, shift
 
 
-def compute_CASGM(fstring, x0, y0, flux_radius, elongation, theta_image,
-                r_frac=2.0, smooth_sigma=2.0, n_iter=100):
-    """
-    Compute Concentration (C), Asymmetry (A), Smoothness (S)
+class CASGMPipeline:
 
-    Parameters
-    ----------
-    image : 2D array
-    x0, y0 : center
-    elongation : a/b
-    theta_deg : position angle SExtractor THETA_IMAGE
-    r_pet_frac : aperture scaling (Petrosian-like)
-    smooth_sigma : Gaussian smoothing for S
-    n_iter : Monte Carlo for error
+    # ------------------------------------------------
+    # MAIN FUNCTION (UNCHANGED NAME)
+    # ------------------------------------------------
+    def compute_CASGM(self, fstring, x0, y0, flux_radius, elongation, theta_image,
+                     r_frac=2.0, smooth_sigma=2.0, n_iter=100):
 
-    Returns
-    -------
-    dict with C, A, S and errors
-    """
+        hdul = fits.open(f'I_{fstring}.fits')
+        image = hdul[0].data
+        hdul.close()
 
-    hdul = fits.open(f'I_{fstring}.fits')
-    image = hdul[0].data 
-    hdul.close()
+        hdul = fits.open(f'M_{fstring}.fits')
+        mask = hdul[0].data
+        hdul.close()
 
-    hdul = fits.open(f'M_{fstring}.fits')
-    mask = hdul[0].data
-    hdul.close()
+        q = 1.0 / elongation
 
+        # ---------- ELLIPTICAL RADIUS ----------
+        def elliptical_radius():
+            y, x = np.indices(image.shape)
+            x = x - x0
+            y = y - y0
 
+            theta = np.deg2rad(theta_image)
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
 
-    q = 1.0 / elongation
+            x_rot = x * cos_t + y * sin_t
+            y_rot = -x * sin_t + y * cos_t
 
+            return np.sqrt(x_rot**2 + (y_rot**2) / (q**2))
 
-    # ---------- ELLIPTICAL RADIUS ----------
-    def elliptical_radius():
-        y, x = np.indices(image.shape)
-        x = x - x0
-        y = y - y0
+        r_ell = elliptical_radius()
 
-        theta = np.deg2rad(theta_image)
-        cos_t, sin_t = np.cos(theta), np.sin(theta)
+        mask[r_ell > r_frac * flux_radius] = 1
+        image = image * (~mask.astype(bool))
 
-        x_rot = x * cos_t + y * sin_t
-        y_rot = -x * sin_t + y * cos_t
+        # ---------- C ----------
+        def compute_radii(img):
+            r_flat = r_ell.flatten()
+            flux = img.flatten()
 
-        return np.sqrt(x_rot**2 + (y_rot**2) / (q**2))
+            valid = np.isfinite(flux) & (flux > 0)
+            r_flat = r_flat[valid]
+            flux = flux[valid]
 
-    r_ell = elliptical_radius()
-    
-    mask[r_ell > r_frac * flux_radius] = 1
-    image *= ~mask #ma.array(image, mask=mask)
+            idx = np.argsort(r_flat)
+            r_sorted = r_flat[idx]
+            flux_sorted = flux[idx]
 
+            cumflux = np.cumsum(flux_sorted)
+            frac = cumflux / cumflux[-1]
 
-    #plt.imshow(image)
-    #plt.show()
-    # ---------- C (Concentration) ----------
-    def compute_radii(img):
-        r_flat = r_ell.flatten()
-        flux = img.flatten()
-        #print(r_flat)
-        mask = np.isfinite(flux) & (flux > 0)
-        r_flat = r_flat[mask]
-        flux = flux[mask]
-        #print(r_flat, flux)
-        idx = np.argsort(r_flat)
-        r_sorted = r_flat[idx]
-        #print(r_sorted)
-        flux_sorted = flux[idx]
-        #print(flux_sorted.shape, flux_sorted[np.isfinite(flux_sorted)].shape)
-        #print(flux_sorted)
-        cumflux = np.cumsum(flux_sorted)
-        frac = cumflux / cumflux[-1]
-        
-        #print(cumflux)
-        def get_r(f):
-            i = np.searchsorted(frac, f)
-            return r_sorted[i]
+            def get_r(f):
+                i = np.searchsorted(frac, f)
+                return r_sorted[i]
 
-        return get_r(0.2), get_r(0.5), get_r(0.8), get_r(0.9)
+            return get_r(0.2), get_r(0.5), get_r(0.8), get_r(0.9)
 
-    def compute_radii_myown(img, mask):
-        r_flat = r_ell.flatten()
-        flux = img.flatten()
-        mask = mask.flatten().astype(bool)
-        r_flat = r_flat[~mask]
-        flux = flux[~mask]
-        idx = np.argsort(r_flat)
-        r_sorted = r_flat[idx]
-        flux_sorted = flux[idx]
-        cumflux = np.cumsum(flux_sorted)
-        frac = cumflux / cumflux[-1]
+        R20, R50, R80, R90 = compute_radii(image)
+        C = R80 / R20
 
-        def get_r(f):
-            i = np.searchsorted(frac, f)
-            return r_sorted[i]
+        # ---------- A ----------
+        def rotate_about_center(image, x0, y0):
+            ny, nx = image.shape
+            cx, cy = nx / 2, ny / 2
 
-        return get_r(0.2), get_r(0.5), get_r(0.8), get_r(0.9)
+            shift_x = cx - x0
+            shift_y = cy - y0
 
-    R20, R50, R80, R90 = compute_radii(image)
-    C = R80 / R20
-    
+            shifted = shift(image, (shift_y, shift_x), order=1)
+            rotated = rotate(shifted, 180, reshape=False, order=1)
+            unshifted = shift(rotated, (-shift_y, -shift_x), order=1)
 
-    # ---------- A (Asymmetry) ----------
+            return unshifted
 
-    def rotate_about_center(image, x0, y0):
-        ny, nx = image.shape
-        cx, cy = nx / 2, ny / 2
+        def asymmetry(image, x0, y0):
+            rot = rotate_about_center(image, x0, y0)
+            num = np.sum(np.abs(image - rot))
+            den = np.sum(np.abs(image))
+            return num / den if den != 0 else np.nan
 
-        shift_x = cx - x0
-        shift_y = cy - y0
+        def asymmetry_minimization(image, x0, y0, R50):
+            delta = 0.01 * R50
 
-        shifted = shift(image, (shift_y, shift_x), order=1, mode='nearest')
-        rotated = rotate(shifted, 180, reshape=False, order=1)
-        unshifted = shift(rotated, (-shift_y, -shift_x), order=1, mode='nearest')
+            points = [
+                (x0, y0),
+                (x0 - delta, y0 - delta),
+                (x0 - delta, y0 + delta),
+                (x0 + delta, y0 - delta),
+                (x0 + delta, y0 + delta),
+                (x0 - delta, y0),
+                (x0 + delta, y0),
+                (x0, y0 - delta),
+                (x0, y0 + delta),
+            ]
 
-        return unshifted
+            A_values = []
 
+            for (x, y) in points:
+                try:
+                    A_values.append(asymmetry(image, x, y))
+                except:
+                    A_values.append(np.nan)
 
-    def asymmetry(image, x0, y0):
-        rot = rotate_about_center(image, x0, y0)
-        num = np.sum(np.abs(image - rot))
-        den = np.sum(np.abs(image))
+            A_values = np.array(A_values)
 
-        return num / den if den != 0 else np.nan
+            A_min = np.nanmin(A_values)
+            best_idx = np.nanargmin(A_values)
 
+            return A_min, points[best_idx]
 
-    def asymmetry_minimization(image, x0, y0, R50):
-        """
-        Compute asymmetry at 9 positions and return minimum
-        """
+        A, best_center = asymmetry_minimization(image, x0, y0, R50)
 
-        delta = 0.01 * R50
+        # ---------- S ----------
+        smooth = gaussian_filter(image, sigma=smooth_sigma)
+        residual = image - smooth
 
-        # 9 test points
-        points = [
-            (x0, y0),  # center
+        inner_mask = r_ell < (0.3 * R50)
+        residual[inner_mask] = 0
 
-            # corners
-            (x0 - delta, y0 - delta),
-            (x0 - delta, y0 + delta),
-            (x0 + delta, y0 - delta),
-            (x0 + delta, y0 + delta),
+        S = np.sum(np.abs(residual)) / np.sum(np.abs(image))
 
-            # edge midpoints
-            (x0 - delta, y0),
-            (x0 + delta, y0),
-            (x0, y0 - delta),
-            (x0, y0 + delta),
-        ]
+        # ---------- ERRORS ----------
+        noise = np.std(image[mask == 0])
 
-        A_values = []
+        C_list, A_list, S_list = [], [], []
 
-        for (x, y) in points:
+        for _ in range(n_iter):
+
+            noisy = image + np.random.normal(0, noise, image.shape)
+
             try:
-                A = asymmetry(image, x, y)
-                A_values.append(A)
+                r20, r50, r80, r90 = compute_radii(noisy)
+                C_list.append(r80 / r20)
+
+                rot = rotate_about_center(noisy, best_center[0], best_center[1])
+                A_list.append(np.sum(np.abs(noisy - rot)) / np.sum(np.abs(noisy)))
+
+                sm = gaussian_filter(noisy, sigma=smooth_sigma)
+                res = noisy - sm
+                res[inner_mask] = 0
+                S_list.append(np.sum(np.abs(res)) / np.sum(np.abs(noisy)))
+
             except:
-                A_values.append(np.nan)
+                continue
 
-        A_values = np.array(A_values)
-
-        # minimum asymmetry
-        A_min = np.nanmin(A_values)
-
-        # best center
-        best_idx = np.nanargmin(A_values)
-        best_center = points[best_idx]
-
-        return {
-            "A_min": A_min,
-            "A_all": A_values,
-            "best_center": best_center,
-            "points": points
+        result_CAS = {
+            "R20": R20, "R50": R50, "R80": R80, "R90": R90,
+            "C": C, "A": A, "S": S,
+            "C_err": np.std(C_list),
+            "A_err": np.std(A_list),
+            "S_err": np.std(S_list),
         }
 
-    result = asymmetry_minimization(
-        image,
-        x0, y0, R50
-    )
+        result_GM = self.compute_gini_m20_with_error(image)
 
-    A = result["A_min"]
-    best_center = result["best_center"]
+        result = {}
+        result.update(result_CAS)
+        result.update(result_GM)
 
-    # ---------- S (Smoothness) ----------
-    smooth = gaussian_filter(image, sigma=smooth_sigma)
-    residual = image - smooth
+        return result
 
-    # ignore central region (important!)
-    inner_mask = r_ell < (0.3 * R50)
-    residual[inner_mask] = 0
+    # ------------------------------------------------
+    def compute_gini(self, image):
 
-    S_num = np.sum(np.abs(residual))
-    S_den = np.sum(np.abs(image))
-    S = S_num / S_den
+        pixels = image.flatten()
+        pixels = pixels[pixels > 0]
 
-    # ---------- ERRORS (Monte Carlo) ----------
-    noise = np.std(image[mask == 0])
-    #print('noise', noise)
-    C_list, A_list, S_list = [], [], []
+        if len(pixels) < 2:
+            return np.nan
 
-    for _ in range(n_iter):
-        noisy = image + np.random.normal(0, noise, image.shape)
+        pixels = np.sort(pixels)
+        n = len(pixels)
 
-        try:
-            r20, r50, r80, r90 = compute_radii(noisy, mask)
-            C_list.append(r80 / r20)
-            #print(C_list)
+        index = np.arange(1, n + 1)
+        mean_flux = np.mean(pixels)
 
-            rot = rotate_about_center(image, best_center[0], best_center[1])
-            A_list.append(np.sum(np.abs(noisy - rot)) / np.sum(np.abs(noisy)))
+        return (1 / (mean_flux * n * (n - 1))) * \
+               np.sum((2 * index - n - 1) * pixels)
 
-            sm = gaussian_filter(noisy, sigma=smooth_sigma)
-            res = noisy - sm
-            res[inner_mask] = 0
-            S_list.append(np.sum(np.abs(res)) / np.sum(np.abs(noisy)))
+    # ------------------------------------------------
+    def compute_m20(self, image):
 
-        except:
-            continue
+        ny, nx = image.shape
+        y, x = np.mgrid[0:ny, 0:nx]
 
-    result_CAS = {
-        "R20": R20,
-        "R50": R50,
-        "R80": R80,
-        "R90": R90,
-        "C": C,
-        "A": A,
-        "S": S,
-        "C_err": np.std(C_list),
-        "A_err": np.std(A_list),
-        "S_err": np.std(S_list),
-    }
-    result_GM = compute_gini_m20_with_error(image)
-    result_CASGM = {}
-    result_CASGM.update(result_CAS)
-    result_CASGM.update(result_GM)
+        flux = image.copy()
+        flux[flux < 0] = 0
 
-    return result_CASGM
+        total_flux = np.sum(flux)
+        if total_flux <= 0:
+            return np.nan
 
+        x_c = np.sum(x * flux) / total_flux
+        y_c = np.sum(y * flux) / total_flux
 
-def compute_gini(image):
+        r2 = (x - x_c)**2 + (y - y_c)**2
+        M_tot = np.sum(flux * r2)
 
-    pixels = image.flatten()
-    pixels = pixels[pixels > 0]
+        pixels = flux.flatten()
+        r2_flat = r2.flatten()
 
-    if len(pixels) < 2:
-        return np.nan
+        order = np.argsort(pixels)[::-1]
 
-    pixels = np.sort(pixels)
-    n = len(pixels)
+        pixels_sorted = pixels[order]
+        r2_sorted = r2_flat[order]
 
-    index = np.arange(1, n + 1)
-    mean_flux = np.mean(pixels)
+        flux_cumsum = np.cumsum(pixels_sorted)
 
-    gini = (1 / (mean_flux * n * (n - 1))) * \
-           np.sum((2 * index - n - 1) * pixels)
+        threshold = 0.2 * total_flux
 
-    return gini
+        idx = np.where(flux_cumsum <= threshold)[0]
 
-def compute_m20(image):
+        if len(idx) < len(pixels_sorted):
+            idx = np.append(idx, len(idx))
 
-    ny, nx = image.shape
-    y, x = np.mgrid[0:ny, 0:nx]
+        M20 = np.sum(pixels_sorted[idx] * r2_sorted[idx])
 
-    flux = image.copy()
-    flux[flux < 0] = 0
+        return np.log10(M20 / M_tot)
 
-    total_flux = np.sum(flux)
-    if total_flux <= 0:
-        return np.nan
+    # ------------------------------------------------
+    def compute_gini_m20_with_error(self, image, n_iter=100):
 
-    # centroid
-    x_c = np.sum(x * flux) / total_flux
-    y_c = np.sum(y * flux) / total_flux
+        noise_sigma = np.std(image[image != 0])
 
-    r2 = (x - x_c)**2 + (y - y_c)**2
-    M_tot = np.sum(flux * r2)
+        gini_vals, m20_vals = [], []
 
-    pixels = flux.flatten()
-    r2_flat = r2.flatten()
+        for _ in range(n_iter):
 
-    order = np.argsort(pixels)[::-1]
+            noisy = image + np.random.normal(0, noise_sigma, image.shape)
+            noisy[noisy < 0] = 0
 
-    pixels_sorted = pixels[order]
-    r2_sorted = r2_flat[order]
+            g = self.compute_gini(noisy)
+            m = self.compute_m20(noisy)
 
-    flux_cumsum = np.cumsum(pixels_sorted)
+            if not np.isnan(g):
+                gini_vals.append(g)
 
-    threshold = 0.2 * total_flux
+            if not np.isnan(m):
+                m20_vals.append(m)
 
-    idx = np.where(flux_cumsum <= threshold)[0]
-
-    # important: include boundary pixel
-    if len(idx) < len(pixels_sorted):
-        idx = np.append(idx, len(idx))
-
-    M20 = np.sum(pixels_sorted[idx] * r2_sorted[idx])
-
-    return np.log10(M20 / M_tot)
-
-def compute_gini_m20_with_error(image, noise_sigma=0.1, n_iter=100):
-
-    noise_sigma = np.std(image[image != 0])
-
-    gini_vals = []
-    m20_vals = []
-
-    for _ in range(n_iter):
-
-        noise = np.random.normal(0, noise_sigma, image.shape)
-        img_noisy = image + noise
-
-        img_noisy[img_noisy < 0] = 0
-
-        g = compute_gini(img_noisy)
-        m = compute_m20(img_noisy)
-
-        if not np.isnan(g):
-            gini_vals.append(g)
-
-        if not np.isnan(m):
-            m20_vals.append(m)
-
-    gini_vals = np.array(gini_vals)
-    m20_vals = np.array(m20_vals)
-
-    return {
-        "G": np.mean(gini_vals),
-        "G_err": np.std(gini_vals),
-        "M20": np.mean(m20_vals),
-        "M20_err": np.std(m20_vals)
-    }
+        return {
+            "gini": np.mean(gini_vals),
+            "gini_err": np.std(gini_vals),
+            "m20": np.mean(m20_vals),
+            "m20_err": np.std(m20_vals)
+        }
