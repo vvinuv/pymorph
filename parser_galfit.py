@@ -130,7 +130,7 @@ class GalfitUtils:
             # -------------------------------
             elif line.startswith("sky"):
                 section = "neighbors"
-               current_comp_id = None
+                current_comp_id = None
 
                 brackets = re.findall(r"\[([^\]]+)\]", line)
 
@@ -206,10 +206,13 @@ class GalfitUtils:
 
                 flat[f"{prefix}_{new_k}"] = v
 
-        return flat
+        
+        self.result["target"] = flat
+        self.result.pop('meta', None)
 
 
-g = GalfitUtils()
+if __name__=='__main__':
+    g = GalfitUtils()
 
-result = g.parse_galfit_final("fit.log")
-flat = g.flatten()
+    result = g.parse_galfit_final("fit.log")
+    flat = g.flatten()

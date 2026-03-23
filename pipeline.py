@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 import configparser
 import subprocess
 import numpy as np
@@ -344,6 +345,12 @@ class GalaxyPipeline:
         target = target.to_dict()
         target.setdefault("z", -999)
         target.setdefault("sky", -999)
+        if "sky" in target:
+            sky_value = target.pop("sky", None)
+            target["UserGivenSky"] = sky_value if sky_value is not None else -999
+        else:
+            target["UserGivenSky"] = -999
+
         target['GALFIT_ANGLE'] = target_sex["THETA_IMAGE"] - 90 
         target["POSITION"] = position
         target["ROOTNAME"] = self.rootname
@@ -351,6 +358,9 @@ class GalaxyPipeline:
         target["MAG_ZERO"] = self.mag_zero
         target["FILTER"] = self.photo_filter
         
+        day = datetime.date.today()
+        target['DATE'] = f"{day.year}-{day.month}-{day.day}"
+
         target.update(target_sex)
 
         print(target["ALPHA_J2000"])
@@ -360,10 +370,10 @@ class GalaxyPipeline:
         target["RA_HMS"] = ra_hms
         target["DEC_DMS"] = dec_dms
 
-        if target['sky'] == -999:
+        if target['UserGivenSky'] == -999:
             pass
         else:
-            target['BACKGROUND'] = target['sky']
+            target['BACKGROUND'] = target['UserGivenSky']
 
         if self.ReSize:
             size = self.FracRad * target['FLUX_RADIUS']
@@ -513,12 +523,20 @@ if __name__ == '__main__':
 
     target = casgm_pipe.compute_CASGM(target)
 
+
     g = GalfitUtils()
     g.parse_galfit_final("fit.log")
-    flat = g.flatten()
+    g.flatten()
 
-    target.update(flat)
-    print(target)
+    #print(g.result)
+    target.update(g.result["target"])
+
+    #print(target)
+    galaxies = {}
+    galaxies["target"] = target
+    galaxies["neighbors"] = g.result["neighbors"]
+
+    print(galaxies)
     #wcsv = WriteCSV("config.ini")
     #wcsv.writeparams(target)
     sys.exit()
