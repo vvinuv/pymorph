@@ -358,8 +358,7 @@ class GalaxyPipeline:
         target["MAG_ZERO"] = self.mag_zero
         target["FILTER"] = self.photo_filter
         
-        day = datetime.date.today()
-        target['DATE'] = f"{day.year}-{day.month}-{day.day}"
+        target['DATE'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         target.update(target_sex)
 
@@ -536,6 +535,10 @@ if __name__ == '__main__':
     galaxies["target"] = target
     galaxies["neighbors"] = g.result["neighbors"]
 
+    print(galaxies["target"])
+
+    target = pd.DataFrame(target)
+    target.to_csv('target.csv', index=False)
     print(galaxies)
     #wcsv = WriteCSV("config.ini")
     #wcsv.writeparams(target)

@@ -209,7 +209,32 @@ class GalfitUtils:
         
         self.result["target"] = flat
         self.result.pop('meta', None)
+        self.get_bt()
 
+    def get_bt(self):
+        comp = ['bulge', 'disk', 'bar']
+        if 'bulge' in comp and 'disk' in comp:
+            fb = 10**(-0.4 * self.result["target"]['bulge_mag'])
+            fd = 10**(-0.4 * self.result["target"]['disk_mag'])
+            ft = fb + fd
+        if 'bar' in comp:
+            fbar = 10**(-0.4 * self.result["target"]['bar_mag'])
+            ft += fbar
+            self.result["target"]['BarT'] = round(fbar / ft, 2)
+        else:
+            self.result["target"]['BarT'] = 9999
+
+        self.result["target"]['BD'] = round(fb / fd, 2)
+        self.result["target"]['BT'] = round(fb / ft, 2)
+
+        if 'bulge' in comp and "disk" not in comp:
+            self.result["target"]['BT'] = 1.0
+            self.result["target"]['BD'] = 0.0
+            self.result["target"]['BarT'] = 0.0
+        if 'disk' in comp and 'bulge' not in comp:
+            self.result["target"]['BD'] = 0.0
+            self.result["target"]['BT'] = 0.0
+            self.result["target"]['BarT'] = 0.0
 
 if __name__=='__main__':
     g = GalfitUtils()
