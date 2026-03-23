@@ -12,7 +12,8 @@ from astropy.wcs import WCS
 from maskfunc import MaskGenerator
 from galfit_config_run import GalfitConfigRunFunc
 from casgm import CASGMPipeline
-from writecsv import WriteCSV
+#from writecsv import WriteCSV
+from parser_galfit import GalfitUtils
 
 class GalaxyPipeline:
 
@@ -47,6 +48,7 @@ class GalaxyPipeline:
         self.searchrad = config.get('size', 'searchrad')
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
+        self.photo_filter = config.get('mag', 'photo_filter')
         self.maglim = config.get('mag', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
@@ -147,6 +149,34 @@ class GalaxyPipeline:
         dec = sign * (abs(dec1) + dec2/60 + dec3/3600)
 
         return ra, dec
+
+
+    # ------------------------------------------------
+    # Convert degrees -> HMS/DMS
+    # ------------------------------------------------
+
+    def deg_to_hms_dms(self, ra_deg, dec_deg):
+        """
+        Convert Right Ascension from degrees to HH:MM:SS and
+        Convert Declination from degrees to DD:MM:SS
+        """
+        ra_hours = ra_deg / 15.0
+
+        h = int(ra_hours)
+        m = int((ra_hours - h) * 60)
+        s = (ra_hours - h - m/60) * 3600
+
+        sign = "+" if dec_deg >= 0 else "-"
+        dec_deg = abs(dec_deg)
+
+        d = int(dec_deg)
+        m = int((dec_deg - d) * 60)
+        s = (dec_deg - d - m/60) * 3600
+
+        ra_hms = f"{h:02d}:{m:02d}:{s:04.1f}"
+        dec_dms = f"{sign}{d:02d}:{m:02d}:{s:04.1f}"
+
+        return ra_hms, dec_dms
 
 
     # ------------------------------------------------
@@ -319,8 +349,17 @@ class GalaxyPipeline:
         target["ROOTNAME"] = self.rootname
         target["NAME"] = f'{self.rootname}_{target['GAL_ID']}'
         target["MAG_ZERO"] = self.mag_zero
-
+        target["FILTER"] = self.photo_filter
+        
         target.update(target_sex)
+
+        print(target["ALPHA_J2000"])
+        ra_hms, dec_dms = self.deg_to_hms_dms(target["ALPHA_J2000"], 
+                                              target["DELTA_J2000"])
+
+        target["RA_HMS"] = ra_hms
+        target["DEC_DMS"] = dec_dms
+
         if target['sky'] == -999:
             pass
         else:
@@ -472,17 +511,16 @@ if __name__ == '__main__':
 
     casgm_pipe = CASGMPipeline()
 
-    casgm_result = casgm_pipe.compute_CASGM(
-                                     target['NAME'],
-                                     target['X_IMAGE'],
-                                     target['Y_IMAGE'],
-                                     target['FLUX_RADIUS'],
-                                     target['ELONGATION'],
-                                     target['THETA_IMAGE'])
-    print(casgm_result)
+    target = casgm_pipe.compute_CASGM(target)
 
-    wcsv = WriteCSV("config.ini")
-    wcsv.writeparams(target)
+    g = GalfitUtils()
+    g.parse_galfit_final("fit.log")
+    flat = g.flatten()
+
+    target.update(flat)
+    print(target)
+    #wcsv = WriteCSV("config.ini")
+    #wcsv.writeparams(target)
     sys.exit()
 
 

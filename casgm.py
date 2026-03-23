@@ -8,8 +8,15 @@ class CASGMPipeline:
     # ------------------------------------------------
     # MAIN FUNCTION (UNCHANGED NAME)
     # ------------------------------------------------
-    def compute_CASGM(self, fstring, x0, y0, flux_radius, elongation, theta_image,
+    def compute_CASGM(self, target,
                      r_frac=2.0, smooth_sigma=2.0, n_iter=100):
+
+        fstring = target['NAME']
+        x0 = target['X_IMAGE']
+        y0 =target['Y_IMAGE']
+        flux_radius = target['FLUX_RADIUS']
+        elongation = target['ELONGATION']
+        theta_image = target['THETA_IMAGE']
 
         hdul = fits.open(f'I_{fstring}.fits')
         image = hdul[0].data
@@ -63,7 +70,11 @@ class CASGMPipeline:
             return get_r(0.2), get_r(0.5), get_r(0.8), get_r(0.9)
 
         R20, R50, R80, R90 = compute_radii(image)
-        C = R80 / R20
+        R20 = round(R20, 2)
+        R50 = round(R20, 2)
+        R80 = round(R20, 2)
+        R90 = round(R20, 2)
+        C = round(R80 / R20, 2)
 
         # ---------- A ----------
         def rotate_about_center(image, x0, y0):
@@ -117,6 +128,7 @@ class CASGMPipeline:
 
         A, best_center = asymmetry_minimization(image, x0, y0, R50)
 
+        A = round(A, 5)
         # ---------- S ----------
         smooth = gaussian_filter(image, sigma=smooth_sigma)
         residual = image - smooth
@@ -125,7 +137,8 @@ class CASGMPipeline:
         residual[inner_mask] = 0
 
         S = np.sum(np.abs(residual)) / np.sum(np.abs(image))
-
+        
+        S = round(S, 5)
         # ---------- ERRORS ----------
         noise = np.std(image[mask == 0])
 
@@ -153,9 +166,9 @@ class CASGMPipeline:
         result_CAS = {
             "R20": R20, "R50": R50, "R80": R80, "R90": R90,
             "C": C, "A": A, "S": S,
-            "C_err": np.std(C_list),
-            "A_err": np.std(A_list),
-            "S_err": np.std(S_list),
+            "C_err": round(np.std(C_list), 4),
+            "A_err": round(np.std(A_list), 4),
+            "S_err": round(np.std(S_list), 4)
         }
 
         result_GM = self.compute_gini_m20_with_error(image)
@@ -163,8 +176,9 @@ class CASGMPipeline:
         result = {}
         result.update(result_CAS)
         result.update(result_GM)
+        target.update(result)
 
-        return result
+        return target
 
     # ------------------------------------------------
     def compute_gini(self, image):
@@ -246,8 +260,8 @@ class CASGMPipeline:
                 m20_vals.append(m)
 
         return {
-            "gini": np.mean(gini_vals),
-            "gini_err": np.std(gini_vals),
-            "m20": np.mean(m20_vals),
-            "m20_err": np.std(m20_vals)
+            "gini": round(np.mean(gini_vals), 4),
+            "gini_err": round(np.std(gini_vals), 4),
+            "m20": round(np.mean(m20_vals), 4),
+            "m20_err": round(np.std(m20_vals), 4)
         }
