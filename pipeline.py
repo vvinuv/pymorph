@@ -12,7 +12,7 @@ from astropy.wcs import WCS
 from maskfunc import MaskGenerator
 from galfit_config_run import GalfitConfigRunFunc
 from casgm import CASGMPipeline
-
+from writecsv import WriteCSV
 
 class GalaxyPipeline:
 
@@ -34,6 +34,17 @@ class GalaxyPipeline:
         self.mask_reg = config.getfloat('mask', 'mask_reg')
         self.thresh_area = config.getfloat('mask', 'thresh_area')
         self.threshold = config.getfloat('mask', 'threshold')
+
+
+        size = config.get('size', 'size_list')
+        size = [int(s) for s in size.split(',')]
+        self.ReSize = size[0]
+        self.ImSize = size[1]
+        self.FracRad = size[2]
+        self.Square = size[3]
+        self.FixSize = size[4]
+
+        self.searchrad = config.get('size', 'searchrad')
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.maglim = config.get('mag', 'maglim').split(',')
@@ -216,8 +227,8 @@ class GalaxyPipeline:
 
         sep = target.separation(sex_coords)
 
-        # mask within radius
-        mask = sep.arcsec < radius_arcsec
+        if sep.arcsec < self.searchrad:
+            target_found = True
 
         # subset dataframe
         neighbours = self.sex_catalog[self.neighbour_cols].copy()
@@ -270,19 +281,19 @@ class GalaxyPipeline:
 
         return target_sex.to_dict(), neighbours.reset_index(drop=True)
 
-
     # ------------------------------------------------
     # Process one target object and its neighbours
     # ------------------------------------------------
 
 
-    def process_target(self, target, size, radius_arcmic=0.5):
+    def process_target(self, target, radius_arcmic=0.5):
 
         ra = target.get("RA", np.nan)
         dec = target.get("DEC", np.nan)
 
         x = target.get("XIMG", np.nan)
         y = target.get("YIMG", np.nan)
+
 
         position = False
 
@@ -301,13 +312,27 @@ class GalaxyPipeline:
 
         #print(target_sex)
         target = target.to_dict()
-        target['IMAGE_SIZE'] = size
+        target.setdefault("z", -999)
+        target.setdefault("sky", -999)
         target['GALFIT_ANGLE'] = target_sex["THETA_IMAGE"] - 90 
         target["POSITION"] = position
         target["ROOTNAME"] = self.rootname
         target["NAME"] = f'{self.rootname}_{target['GAL_ID']}'
         target["MAG_ZERO"] = self.mag_zero
+
         target.update(target_sex)
+        if target['sky'] == -999:
+            pass
+        else:
+            target['BACKGROUND'] = target['sky']
+
+        if self.ReSize:
+            size = self.FracRad * target['FLUX_RADIUS']
+        else:
+            size = self.FixSize 
+
+        target['IMAGE_SIZE'] = int(size)
+
 
         neighbours['GALFIT_ANGLE'] = neighbours["THETA_IMAGE"] - 90
 
@@ -318,7 +343,7 @@ class GalaxyPipeline:
         return galaxies
 
 
-    def generate_target_images(self, galaxies, size):
+    def generate_target_images(self, galaxies):
 
         img = fits.open(self.imagefile)
         img_data = img[0].data
@@ -329,7 +354,8 @@ class GalaxyPipeline:
 
         target = galaxies.get("target")
         gal_id = target.get("GAL_ID")
-
+        size = target.get("IMAGE_SIZE") 
+        
         ra = target.get("RA")
         dec = target.get("DEC")
 
@@ -412,7 +438,6 @@ class GalaxyPipeline:
 
 
 if __name__ == '__main__':
-    size = 200
     pipe = GalaxyPipeline("config.ini")
 
     pipe.run_sextractor()          # run once
@@ -424,7 +449,7 @@ if __name__ == '__main__':
     obj_catalog = pipe.obj_catalog
 
     print(obj_catalog.iloc[0])
-    galaxies = pipe.process_target(obj_catalog.iloc[0], size)
+    galaxies = pipe.process_target(obj_catalog.iloc[0])
 
     target = galaxies['target']
     neighbours = galaxies['neighbours']
@@ -435,7 +460,7 @@ if __name__ == '__main__':
     print(target, neighbours)
     #print('galaxies', galaxies)
     
-    pipe.generate_target_images(galaxies, size)
+    pipe.generate_target_images(galaxies)
 
     mask_gen = MaskGenerator("config.ini", target, neighbours)
     mask_gen.run()
@@ -454,7 +479,10 @@ if __name__ == '__main__':
                                      target['FLUX_RADIUS'],
                                      target['ELONGATION'],
                                      target['THETA_IMAGE'])
-    print(result)
+    print(casgm_result)
+
+    wcsv = WriteCSV("config.ini")
+    wcsv.writeparams(target)
     sys.exit()
 
 
