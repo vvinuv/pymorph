@@ -1,14 +1,29 @@
 import re
+import configparser
+from astropy.cosmology import Planck18 as cosmo
+
+class GetOutputParams:
+
+    def __init__(self, config_file):
+
+        config = configparser.ConfigParser()
+        config.read(config_file)
 
 
-class GalfitUtils:
+        self.pixelscale = config.getfloat('cosmology', 'pixelscale')
+        #self.H0 = config.getfloat('cosmology', 'H0')
+        #self.WM = config.getfloat('cosmology', 'WM')
+        #self.WV = config.getfloat('cosmology', 'WV')
+        #self.redshift = config.getfloat('cosmology', 'redshift')
+
 
     # =========================================================
     # PARSE GALFIT OUTPUT
     # =========================================================
-    def parse_galfit_final(self, filename, components):
+    def parse_galfit_final(self, filename, components, z):
 
         self.components = components
+        self.z = z
 
         self.result = {
             "meta": {},
@@ -155,7 +170,7 @@ class GalfitUtils:
                     r"Chi\^2\s*=\s*([\d\.eE+-]+),\s*ndof\s*=\s*(\d+)", line
                 )
                 if match:
-                    self.result["meta"]["chi2"] = float(match.group(1))
+                    self.result["meta"]["chi2"] = int(float(match.group(1))) 
                     self.result["meta"]["ndof"] = int(match.group(2))
 
             elif "Chi^2/nu" in line:
@@ -218,7 +233,29 @@ class GalfitUtils:
         self.result["target"].pop("ALPHA_J2000", None)
         self.result["target"].pop("DELTA_J2000", None)
 
+        
+        
+
+        for comp in components:
+            out_key = f"{comp}_Re_kpc"
+            out_key_e = f"{comp}_Re_kpc_err"
+            rad = self.result["target"][f"{comp}_Re"]
+            rad_e = self.result["target"][f"{comp}_Re_err"]
+
+            if self.z <= 0:
+                self.result["target"][out_key] = -9999
+                self.result["target"][out_key_e]= -9999
+            else:
+                self.result["target"][out_key] = self.radius_pix_to_kpc(rad, 
+                                                              self.pixelscale,
+                                                              self.z)
+
+                self.result["target"][out_key_e] = self.radius_pix_to_kpc(rad_e,
+                                                             self.pixelscale,
+                                                             self.z)
+
         self.result = self.result["target"]
+
 
     def get_bt(self, components):
         if 'bulge' in components and 'disk' in components:
@@ -244,8 +281,20 @@ class GalfitUtils:
             self.result["target"]['BT'] = 0.0
             self.result["target"]['BarT'] = 0.0
 
+
+
+    def radius_pix_to_kpc(self, r_pix, pixel_scale, z):
+
+        kpc_per_arcsec = cosmo.kpc_proper_per_arcmin(z).value / 60.0
+       
+        r_kpc = r_pix * pixel_scale * kpc_per_arcsec 
+        
+        return round(r_kpc, 2)
+
+
+
 if __name__=='__main__':
-    g = GalfitUtils()
+    g = GetOutputParams()
 
     result = g.parse_galfit_final("fit.log")
     flat = g.flatten()

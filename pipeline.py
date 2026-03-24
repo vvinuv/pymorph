@@ -14,7 +14,7 @@ from maskfunc import MaskGenerator
 from galfit_config_run import GalfitConfigRunFunc
 from casgm import CASGMPipeline
 #from writecsv import WriteCSV
-from parser_galfit import GalfitUtils
+from get_params import GetOutputParams
 from psffunc import PSFPipeline
 
 class GalaxyPipeline:
@@ -535,8 +535,8 @@ if __name__ == '__main__':
     target.update(casgm_pipe.result)
     
     #PARSE GALFIT OUTPUT FILE
-    g = GalfitUtils()
-    g.parse_galfit_final("fit.log", gcr.components)
+    g = GetOutputParams("config.ini")
+    g.parse_galfit_final("fit.log", gcr.components, target['Z'])
     g.flatten()
 
     target.update(g.result)
@@ -553,7 +553,6 @@ if __name__ == '__main__':
                                   mode="a",
                                   header=not os.path.exists("target.csv"),
                                   index=False)
-    #target.to_csv('target.csv', index=False)
     print(galaxies)
     #wcsv = WriteCSV("config.ini")
     #wcsv.writeparams(target)
