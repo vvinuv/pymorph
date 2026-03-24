@@ -13,7 +13,7 @@ class CASGMPipeline:
 
         fstring = target['NAME']
         x0 = target['X_IMAGE']
-        y0 =target['Y_IMAGE']
+        y0 = target['Y_IMAGE']
         flux_radius = target['FLUX_RADIUS']
         elongation = target['ELONGATION']
         theta_image = target['THETA_IMAGE']
@@ -173,12 +173,9 @@ class CASGMPipeline:
 
         result_GM = self.compute_gini_m20_with_error(image)
 
-        result = {}
-        result.update(result_CAS)
-        result.update(result_GM)
-        target.update(result)
-
-        return target
+        self.result = {}
+        self.result.update(result_CAS)
+        self.result.update(result_GM)
 
     # ------------------------------------------------
     def compute_gini(self, image):

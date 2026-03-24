@@ -386,7 +386,7 @@ class GalfitConfigRunFunc:
         self.bar_radius = self.flux_radius 
 
         self.size = target["IMAGE_SIZE"]
-        self.psffile = target["STAR"]
+        self.psffile = target["PSF"]
         self.mag_zero = target["MAG_ZERO"]
 
         rootname = target["ROOTNAME"]

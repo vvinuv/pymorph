@@ -43,7 +43,7 @@ class PSFPipeline:
         # Case 1: @filelist
         if self.psflist.startswith("@"):
 
-            fname = self.psflist[1:]
+            fname = os.path.join(self.DATADIR, self.psflist[1:])
 
             with open(fname) as f:
                 psf_files = [line.strip() for line in f if line.strip()]
@@ -52,6 +52,7 @@ class PSFPipeline:
         else:
             psf_files = [p.strip() for p in self.psflist.split(",")]
 
+        print(psf_files)
         return psf_files
 
 
@@ -82,6 +83,7 @@ class PSFPipeline:
     # --------------------------------------------
     def find_nearest_psf(self, ra, dec):
 
+        
         psf_files = self.get_psf_list()
 
         if len(psf_files) == 0:
@@ -92,10 +94,10 @@ class PSFPipeline:
         min_dist = np.inf
         best_psf = None
         best_coord = None
-
+        #print(ra, dec)
         for psf in psf_files:
-            psf = os.path.join(self.DATADIR, psf)
             try:
+                psf = os.path.join(self.DATADIR, psf)
                 psf_ra, psf_dec = self.parse_psf_filename(psf)
 
                 psf_coord = SkyCoord(psf_ra*u.deg, psf_dec*u.deg)
@@ -133,42 +135,42 @@ class PSFPipeline:
     # --------------------------------------------
     def process_target(self, target):
 
-        # Case 1: star column exists → direct PSF
-        star_psf = target.get("star", None)
+        # Case 1: PSF column exists → direct PSF
+        psf_file = target.get("PSF", None)
 
-        if star_psf and isinstance(star_psf, str):
+        ra = target.get("RA")
+        dec = target.get("DEC")
+        if (psf_file and isinstance(psf_file, str)) or ra is None:
 
-            #ra_psf, dec_psf = self.parse_psf_filename(star_psf)
+            #ra_psf, dec_psf = self.parse_psf_filename(psf_file)
 
             #output = self.update_psf_header(
-            #    star_psf,
+            #    psf_file,
             #    ra_psf,
             #    dec_psf,
-            #    f"updated_{star_psf}"
+            #    f"updated_{psf_file}"
             #)
 
-            return {
-                "psf_file": star_psf,
-                "distance_arcsec": 0.0,
-            }
+            self.result = {
+                           "PSF": psf_file,
+                           "distance_psf_arcsec": 0.0
+                           }
 
-        # Case 2: find nearest PSF
-        ra = target.get("ra")
-        dec = target.get("dec")
+        else:
+            # Case 2: find nearest PSF
+            #ra = target.get("RA")
+            #dec = target.get("DEC")
+            psf_file, dist, (ra_psf, dec_psf) = self.find_nearest_psf(ra, dec)
 
-        psf_file, dist, (ra_psf, dec_psf) = self.find_nearest_psf(ra, dec)
-
-        print(psf_file, dist, ra_psf, dec_psf)
-        self.update_psf_header(
-            psf_file,
-            ra_psf,
-            dec_psf
-        )
-
-        return {
-            "psf_file": psf_file,
-            "distance_arcsec": dist
-        }
+            #print(psf_file, dist, ra_psf, dec_psf)
+            self.update_psf_header(
+                psf_file,
+                ra_psf,
+                dec_psf
+            )
+            
+            self.result = {"PSF": psf_file,
+                           "distance_psf_arcsec": int(dist)}
 
 if __name__=='__main__':
     psf_pipe = PSFPipeline("config.ini")

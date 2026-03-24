@@ -6,12 +6,14 @@ class GalfitUtils:
     # =========================================================
     # PARSE GALFIT OUTPUT
     # =========================================================
-    def parse_galfit_final(self, filename):
+    def parse_galfit_final(self, filename, components):
+
+        self.components = components
 
         self.result = {
             "meta": {},
             "target": {},
-            "neighbors": {}
+            "neighbours": {}
         }
 
         with open(filename, "r") as f:
@@ -98,7 +100,7 @@ class GalfitUtils:
                 if section == "target":
                     self.result["target"][comp_id] = comp_dict
                 else:
-                    self.result["neighbors"][comp_id] = comp_dict
+                    self.result["neighbours"][comp_id] = comp_dict
 
                 i += 2
                 continue
@@ -119,8 +121,8 @@ class GalfitUtils:
                         self.result["target"][current_comp_id]["c0"] = c0_val
                         self.result["target"][current_comp_id]["c0_err"] = c0_err
                     else:
-                        self.result["neighbors"][current_comp_id]["c0"] = c0_val
-                        self.result["neighbors"][current_comp_id]["c0_err"] = c0_err
+                        self.result["neighbours"][current_comp_id]["c0"] = c0_val
+                        self.result["neighbours"][current_comp_id]["c0_err"] = c0_err
 
                 i += 2
                 continue
@@ -129,7 +131,7 @@ class GalfitUtils:
             # SKY
             # -------------------------------
             elif line.startswith("sky"):
-                section = "neighbors"
+                section = "neighbours"
                 current_comp_id = None
 
                 brackets = re.findall(r"\[([^\]]+)\]", line)
@@ -169,10 +171,10 @@ class GalfitUtils:
     # =========================================================
     # FLATTEN RESULT
     # =========================================================
-    def flatten(self, name_map=["bulge", "disk", "bar"]):
+    def flatten(self, components=["bulge", "disk", "bar"]):
 
-        flat = {}
-        flat.update(self.result["meta"])
+        self.flat = {}
+        self.flat.update(self.result["meta"])
 
         param_map = {
             "x": "xctr",
@@ -204,20 +206,26 @@ class GalfitUtils:
                 else:
                     new_k = param_map.get(k, k)
 
-                flat[f"{prefix}_{new_k}"] = v
+                self.flat[f"{prefix}_{new_k}"] = v
 
         
-        self.result["target"] = flat
+        self.result["target"] = self.flat
         self.result.pop('meta', None)
-        self.get_bt()
+        self.get_bt(components)
 
-    def get_bt(self):
-        comp = ['bulge', 'disk', 'bar']
-        if 'bulge' in comp and 'disk' in comp:
+
+        self.neighbours = self.result["neighbours"] 
+        self.result["target"].pop("ALPHA_J2000", None)
+        self.result["target"].pop("DELTA_J2000", None)
+
+        self.result = self.result["target"]
+
+    def get_bt(self, components):
+        if 'bulge' in components and 'disk' in components:
             fb = 10**(-0.4 * self.result["target"]['bulge_mag'])
             fd = 10**(-0.4 * self.result["target"]['disk_mag'])
             ft = fb + fd
-        if 'bar' in comp:
+        if 'bar' in components:
             fbar = 10**(-0.4 * self.result["target"]['bar_mag'])
             ft += fbar
             self.result["target"]['BarT'] = round(fbar / ft, 2)
@@ -227,11 +235,11 @@ class GalfitUtils:
         self.result["target"]['BD'] = round(fb / fd, 2)
         self.result["target"]['BT'] = round(fb / ft, 2)
 
-        if 'bulge' in comp and "disk" not in comp:
+        if 'bulge' in components and "disk" not in components:
             self.result["target"]['BT'] = 1.0
             self.result["target"]['BD'] = 0.0
             self.result["target"]['BarT'] = 0.0
-        if 'disk' in comp and 'bulge' not in comp:
+        if 'disk' in components and 'bulge' not in components:
             self.result["target"]['BD'] = 0.0
             self.result["target"]['BT'] = 0.0
             self.result["target"]['BarT'] = 0.0

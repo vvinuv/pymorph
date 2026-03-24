@@ -11,7 +11,7 @@ class GalfitParser:
         self.result = {
             "meta": {},
             "target": {},
-            "neighbors": {}
+            "neighbours": {}
         }
 
     # =========================================================
@@ -102,7 +102,7 @@ class GalfitParser:
                 if section == "target":
                     self.result["target"][comp_id] = comp_dict
                 else:
-                    self.result["neighbors"][comp_id] = comp_dict
+                    self.result["neighbours"][comp_id] = comp_dict
 
                 i += 2
                 continue
@@ -122,8 +122,8 @@ class GalfitParser:
                         self.result["target"][current_comp_id]["c0"] = c0_val
                         self.result["target"][current_comp_id]["c0_err"] = c0_err
                     else:
-                        self.result["neighbors"][current_comp_id]["c0"] = c0_val
-                        self.result["neighbors"][current_comp_id]["c0_err"] = c0_err
+                        self.result["neighbours"][current_comp_id]["c0"] = c0_val
+                        self.result["neighbours"][current_comp_id]["c0_err"] = c0_err
 
                 i += 2
                 continue
@@ -132,7 +132,7 @@ class GalfitParser:
             # SKY
             # -------------------------------
             elif line.startswith("sky"):
-                section = "neighbors"
+                section = "neighbours"
                 current_comp_id = None
 
                 brackets = re.findall(r"\[([^\]]+)\]", line)

@@ -15,6 +15,7 @@ from galfit_config_run import GalfitConfigRunFunc
 from casgm import CASGMPipeline
 #from writecsv import WriteCSV
 from parser_galfit import GalfitUtils
+from psffunc import PSFPipeline
 
 class GalaxyPipeline:
 
@@ -46,7 +47,7 @@ class GalaxyPipeline:
         self.Square = size[3]
         self.FixSize = size[4]
 
-        self.searchrad = config.get('size', 'searchrad')
+        self.searchrad = config.getfloat('size', 'searchrad')
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
@@ -258,7 +259,7 @@ class GalaxyPipeline:
 
         sep = target.separation(sex_coords)
 
-        if sep.arcsec < self.searchrad:
+        if sep.arcsec.any() < self.searchrad:
             target_found = True
 
         # subset dataframe
@@ -343,18 +344,16 @@ class GalaxyPipeline:
 
         #print(target_sex)
         target = target.to_dict()
-        target.setdefault("z", -999)
-        target.setdefault("sky", -999)
-        if "sky" in target:
-            sky_value = target.pop("sky", None)
-            target["UserGivenSky"] = sky_value if sky_value is not None else -999
-        else:
-            target["UserGivenSky"] = -999
-
+        target.setdefault("Z", -999)
+        target.setdefault("SKY", -999)
+        if "SKY" in target:
+            target["SKY"] = target["SKY"] if target["SKY"] is not None else -999
+            #print('target["SKY"]', target["SKY"])
         target['GALFIT_ANGLE'] = target_sex["THETA_IMAGE"] - 90 
         target["POSITION"] = position
         target["ROOTNAME"] = self.rootname
-        target["NAME"] = f'{self.rootname}_{target['GAL_ID']}'
+        NAME = f'{self.rootname}_{target['GAL_ID']}'
+        target = {"NAME": NAME, **target}
         target["MAG_ZERO"] = self.mag_zero
         target["FILTER"] = self.photo_filter
         
@@ -362,17 +361,18 @@ class GalaxyPipeline:
 
         target.update(target_sex)
 
-        print(target["ALPHA_J2000"])
+        #print(target["ALPHA_J2000"])
         ra_hms, dec_dms = self.deg_to_hms_dms(target["ALPHA_J2000"], 
                                               target["DELTA_J2000"])
 
         target["RA_HMS"] = ra_hms
         target["DEC_DMS"] = dec_dms
 
-        if target['UserGivenSky'] == -999:
-            pass
+        if target['SKY'] == -999:
+            target.pop('SKY', None)
         else:
-            target['BACKGROUND'] = target['UserGivenSky']
+            target['BACKGROUND'] = target.pop('SKY', None)
+
 
         if self.ReSize:
             size = self.FracRad * target['FLUX_RADIUS']
@@ -505,40 +505,55 @@ if __name__ == '__main__':
     #print(galaxies)
     target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
                                                   galaxies['neighbours'])
-    print(target, neighbours)
+    #print('target', target)
+    #print('neighbours', neighbours)
     #print('galaxies', galaxies)
     
     pipe.generate_target_images(galaxies)
 
+    #PSF CLASS
+    psf_pipe = PSFPipeline("config.ini")
+    psf_pipe.process_target(target)
+    target.update(psf_pipe.result) 
+    
+    #print('target', target)
+
+    #MASK CLASS
     mask_gen = MaskGenerator("config.ini", target, neighbours)
     mask_gen.run()
 
+    #GALFIT CONFIG and RUN CLASS
     gcr = GalfitConfigRunFunc("config.ini")
     gcr.write_config(target, neighbours)
 
     #gcr.GalfitRun()
 
+    #CASGM CLASSS
     casgm_pipe = CASGMPipeline()
-
-    target = casgm_pipe.compute_CASGM(target)
-
-
+    casgm_pipe.compute_CASGM(target)
+    
+    target.update(casgm_pipe.result)
+    
+    #PARSE GALFIT OUTPUT FILE
     g = GalfitUtils()
-    g.parse_galfit_final("fit.log")
+    g.parse_galfit_final("fit.log", gcr.components)
     g.flatten()
 
-    #print(g.result)
-    target.update(g.result["target"])
+    target.update(g.result)
 
-    #print(target)
+    #SAVE CSV FORMAT
     galaxies = {}
     galaxies["target"] = target
-    galaxies["neighbors"] = g.result["neighbors"]
+    galaxies["neighbours"] = g.neighbours
 
-    print(galaxies["target"])
-
-    target = pd.DataFrame(target)
-    target.to_csv('target.csv', index=False)
+    #print(galaxies["target"])
+    
+    pd.DataFrame([target]).to_csv(
+                                  "target.csv",
+                                  mode="a",
+                                  header=not os.path.exists("target.csv"),
+                                  index=False)
+    #target.to_csv('target.csv', index=False)
     print(galaxies)
     #wcsv = WriteCSV("config.ini")
     #wcsv.writeparams(target)
