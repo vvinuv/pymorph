@@ -16,6 +16,8 @@ from casgm import CASGMPipeline
 #from writecsv import WriteCSV
 from get_params import GetOutputParams
 from psffunc import PSFPipeline
+from writehtml import generate_galaxy_report
+from plotfunc import FitsPlotter
 
 class GalaxyPipeline:
 
@@ -32,7 +34,6 @@ class GalaxyPipeline:
         self.imagefile = os.path.join(self.datadir, self.imagefile)
         self.whtfile = os.path.join(self.datadir, self.whtfile)
         self.obj_cata = os.path.join(self.datadir, self.obj_cata)
-
 
         self.mask_reg = config.getfloat('mask', 'mask_reg')
         self.thresh_area = config.getfloat('mask', 'thresh_area')
@@ -191,7 +192,6 @@ class GalaxyPipeline:
             sep=r"\s+",
             comment="#",
         )
-
         self.prepare_radec()
 
 
@@ -344,6 +344,7 @@ class GalaxyPipeline:
 
         #print(target_sex)
         target = target.to_dict()
+        target["GAL_ID"] = int(target["GAL_ID"])
         target.setdefault("Z", -999)
         target.setdefault("SKY", -999)
         if "SKY" in target:
@@ -367,6 +368,9 @@ class GalaxyPipeline:
 
         target["RA_HMS"] = ra_hms
         target["DEC_DMS"] = dec_dms
+
+        target.pop("ALPHA_J2000", None)
+        target.pop("DELTA_J2000", None)
 
         if target['SKY'] == -999:
             target.pop('SKY', None)
@@ -484,24 +488,11 @@ class GalaxyPipeline:
         return target, neighbours
 
 
-
-if __name__ == '__main__':
-    pipe = GalaxyPipeline("config.ini")
-
-    pipe.run_sextractor()          # run once
-
-    pipe.read_sex_catalog()
-
-    pipe.load_obj_catalog()
-
-    obj_catalog = pipe.obj_catalog
-
-    print(obj_catalog.iloc[0])
-    galaxies = pipe.process_target(obj_catalog.iloc[0])
+def pymorph(target):
+    galaxies = pipe.process_target(target)
 
     target = galaxies['target']
     neighbours = galaxies['neighbours']
-
     #print(galaxies)
     target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
                                                   galaxies['neighbours'])
@@ -536,27 +527,50 @@ if __name__ == '__main__':
     
     #PARSE GALFIT OUTPUT FILE
     g = GetOutputParams("config.ini")
-    g.parse_galfit_final("fit.log", gcr.components, target['Z'])
+    g.parse_galfit("fit.log", gcr.components, target['Z'])
     g.flatten()
 
     target.update(g.result)
 
+    #print(target)
     #SAVE CSV FORMAT
     galaxies = {}
     galaxies["target"] = target
     galaxies["neighbours"] = g.neighbours
 
-    #print(galaxies["target"])
+    print(galaxies["target"])
     
     pd.DataFrame([target]).to_csv(
                                   "target.csv",
                                   mode="a",
                                   header=not os.path.exists("target.csv"),
                                   index=False)
-    print(galaxies)
+   
+    #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+
+    plotter = FitsPlotter(f"O_{target["NAME"]}.fits", 
+                          f"EM_{target["NAME"]}.fits")
+    plotter.plot_summary(f"P_{target["NAME"]}.png")
+
+    generate_galaxy_report(galaxies, output_file=f"R_{target["NAME"]}.html",
+                           image_path=f"P_{target["NAME"]}.png")
     #wcsv = WriteCSV("config.ini")
     #wcsv.writeparams(target)
-    sys.exit()
+    #sys.exit()
 
 
 
+if __name__ == '__main__':
+    pipe = GalaxyPipeline("config.ini")
+
+    pipe.run_sextractor()          # run once
+
+    pipe.read_sex_catalog()
+
+    pipe.load_obj_catalog()
+
+    obj_catalog = pipe.obj_catalog
+
+    for i, obj in obj_catalog.iterrows():
+        print(obj)
+        pymorph(obj)

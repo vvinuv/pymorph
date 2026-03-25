@@ -1,6 +1,8 @@
+import os
 import re
 import configparser
 from astropy.cosmology import Planck18 as cosmo
+import numpy as np
 
 class GetOutputParams:
 
@@ -16,11 +18,39 @@ class GetOutputParams:
         #self.WV = config.getfloat('cosmology', 'WV')
         #self.redshift = config.getfloat('cosmology', 'redshift')
 
+    # ====================
+    # SAFELY RETURN VALUES
+    # ====================
+    def get_safe(self, arr):
+        arr = np.asarray(arr)
+
+        result = []
+        for val in arr:
+            try:
+                if val is None or (isinstance(val, float) and np.isnan(val)):
+                    result.append(9999)
+                else:
+                    result.append(val)
+            except Exception:
+                result.append(9999)
+
+        return np.array(result)
+
+
+    def append_and_remove(self, source_file, target_file):
+        if os.path.exists(source_file):
+            with open(source_file, 'r') as src, open(target_file, 'a') as tgt:
+                tgt.write(src.read())
+
+            os.remove(source_file)
+            #print(f"{source_file} appended and deleted.")
+        else:
+            print(f"{source_file} not found.")
 
     # =========================================================
     # PARSE GALFIT OUTPUT
     # =========================================================
-    def parse_galfit_final(self, filename, components, z):
+    def parse_galfit(self, filename, components, z):
 
         self.components = components
         self.z = z
@@ -33,6 +63,8 @@ class GetOutputParams:
 
         with open(filename, "r") as f:
             lines = f.readlines()
+
+        #self.append_and_remove("fit.log", "fit2.log")
 
         i = 0
         comp_id = 0
@@ -68,13 +100,17 @@ class GetOutputParams:
 
                 nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", line)
                 nums = list(map(float, nums))
-
+                
+                
                 x, y = nums[0], nums[1]
 
                 # errors
                 err_line = lines[i + 1]
                 err_nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", err_line)
                 err_nums = list(map(float, err_nums))
+
+                result = self.get_safe(err_nums)
+                print(result)
 
                 comp_dict = {
                     "type": comp_type,
@@ -230,9 +266,6 @@ class GetOutputParams:
 
 
         self.neighbours = self.result["neighbours"] 
-        self.result["target"].pop("ALPHA_J2000", None)
-        self.result["target"].pop("DELTA_J2000", None)
-
         
         
 
@@ -253,6 +286,7 @@ class GetOutputParams:
                 self.result["target"][out_key_e] = self.radius_pix_to_kpc(rad_e,
                                                              self.pixelscale,
                                                              self.z)
+
 
         self.result = self.result["target"]
 
@@ -296,5 +330,5 @@ class GetOutputParams:
 if __name__=='__main__':
     g = GetOutputParams()
 
-    result = g.parse_galfit_final("fit.log")
+    result = g.parse_galfit("fit.log")
     flat = g.flatten()
