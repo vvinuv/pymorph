@@ -33,7 +33,7 @@ from .weightimage import return_sigma
 from .pipeline import Pipeline
         
 from .detailedfunc import Teach       
-print(Teach())
+#print(Teach())
 
 class InitializeParams(object):
 
@@ -555,10 +555,10 @@ class PyMorph(InitializeParams):
 
         #Go to pipeline
         for obj_value in obj_values:
-            try:
-                P.main(obj_value)
-            except:
-                pass
+            #try:
+            P.main(obj_value)
+            #except:
+            #    pass
         print(123)
         #sys.exit()
         #print(results)

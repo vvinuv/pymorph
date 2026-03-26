@@ -22,13 +22,17 @@ class GalfitConfigFunc:
 
     def __init__(self,
                  xcntr_img, ycntr_img,
-                 good_object, 
-                 psffile, detailed=[]):
+                 good_object, half_size, 
+                 psffile, fstring, flag, mag_zero, detailed=[]):
 
         self.xcntr_img = xcntr_img
         self.ycntr_img = ycntr_img
         self.psffile = psffile
         self.good_object  = good_object
+        self.half_size = half_size
+        self.fstring = fstring
+        self.flag = flag
+        self.mag_zero = mag_zero
         self.detailed = detailed
         #print(self.good_object.shape)
 
@@ -192,7 +196,7 @@ class GalfitConfigFunc:
         if self.detail == True:
             fcon.writelines([' 5) {} 1 # {}'.format(self.detailed[2], comment)])
         else:
-            fcon.writelines([' 5) 4.0 {} # {}'.format(int(not self.devauc),
+            fcon.writelines([' 5) 4.0 {} # {}'.format(int(not self.devauc), comment)])
 
         if self.galfitv >= 3.0:
             comment1 = 'axis ratio (b/a)\n'
@@ -504,33 +508,35 @@ class GalfitConfigFunc:
         self.constrain_file = '{}.con'.format(self.fstring)
         self.mask_file = 'M_{}.fits'.format(self.fstring) 
         self.oimg   = 'O_{}.fits'.format(self.fstring)
+        self.cutimage   = 'I_{}.fits'.format(self.fstring)
+        self.whtimage   = 'W_{}.fits'.format(self.fstring)
 
         if os.path.exists(self.constrain_file):
             make_constrain = 0
         else:
             make_constrain = 1
 
-        if os.path.exists(self.galfit_file):
+        if os.path.exists(self.galfit_conf):
             self.fit_neighbor_cutimage = np.array([[self.xcntr_img, 
                                               self.ycntr_img]]).astype(int)
         else:
-            fcon = open(self.galfit_file, 'w')
+            fcon = open(self.galfit_conf, 'w')
 
             #Write configuration file
             fcon.write('# IMAGE PARAMETERS\n')
 
-            self.cutimage = os.path.split(self.cutimage)[-1]
+            #self.cutimage = os.path.split(self.cutimage)[-1]
             comment = 'Input data image(FITS file)\n'
             fcon.writelines(['A) {} # {}'.format(self.cutimage, comment)])
 
             comment = 'Name of the output image\n'
             fcon.writelines(['B) {} # {}'.format(self.oimg, comment)])
 
-            self.whtimage = os.path.split(self.whtimage)[-1]
+            #self.whtimage = os.path.split(self.whtimage)[-1]
             comment = 'Noise image name (made from data if blank or "none")\n'
             fcon.writelines(['C) {} # {}'.format(self.whtimage, comment)])
 
-            cpsf = os.path.join(self.datadir, self.psffile)
+            #cpsf = os.path.join(self.DATADIR, self.psffile)
             comment = 'Input PSF image for convolution (FITS file)\n'
             fcon.writelines(['D) {} # {}'.format(self.psffile, comment)])
 
@@ -569,6 +575,7 @@ class GalfitConfigFunc:
             fcon.writelines(['S) 0 # {}'.format(comment)]) 
 
 
+            self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             #print('self.components', self.components)
             for comp in self.components:
                 if comp == 'bulge':
@@ -621,7 +628,7 @@ class GalfitConfigFunc:
             #print(isneighbour)
             #print(2, self.flag) 
             #print('CCCC')
-            if isneighbour > 0:
+            if 1:#isneighbour > 0:
                 self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             
             #print(3, self.flag) 

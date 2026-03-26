@@ -153,10 +153,10 @@ class ReturnClass(object):
         #print(9, self.NXPTS, self.sex_xcntr, self.sex_ycntr, self.half_size)
         ExceedSize = 0
         #All are floor to make the size even number
-        xmin = np.floor(self.sex_xcntr - half_size)
-        ymin = np.floor(self.sex_ycntr - half_size)
-        xmax = np.floor(self.sex_xcntr + half_size)
-        ymax = np.floor(self.sex_ycntr + half_size)
+        xmin = int(np.floor(self.sex_xcntr - half_size))
+        ymin = int(np.floor(self.sex_ycntr - half_size))
+        xmax = int(np.floor(self.sex_xcntr + half_size))
+        ymax = int(np.floor(self.sex_ycntr + half_size))
         if xmin < 0:
             xmin = 0
             xcntr_img = self.sex_xcntr
@@ -198,10 +198,10 @@ class ReturnClass(object):
         d_ycntr = abs(self.sex_ycntr - half_size)
         print('d_xcntr d_ycntr', d_xcntr, d_ycntr)
         #All are floor to make the size even number
-        xmin = np.floor(self.sex_xcntr - half_size)
-        xmax = np.floor(self.sex_xcntr + half_size)
-        ymin = np.floor(self.sex_ycntr - half_size)
-        ymax = np.floor(self.sex_ycntr + half_size)
+        xmin = int(np.floor(self.sex_xcntr - half_size))
+        xmax = int(np.floor(self.sex_xcntr + half_size))
+        ymin = int(np.floor(self.sex_ycntr - half_size))
+        ymax = int(np.floor(self.sex_ycntr + half_size))
         print('self.NXPTS, self.NYPTS', self.NXPTS, self.NYPTS)
         #print(10, xmin, xmax, self.NXPTS - xmax, ymin, ymax, self.NYPTS - ymax, half_size * 2 - 1)
         #print(11, xmin < 0, xmax > (self.NXPTS - 2), ymin < 0, ymax > (self.NYPTS - 2))
@@ -293,6 +293,8 @@ class ReturnClass(object):
 
         # FIX
         #Making weight image cut
+        print(ymin, ymax, xmin, xmax)
+        
         if self.weightexists:
             if d_xcntr < 4 and d_ycntr < 4:
                 data_wht = self.weightdata.copy()
@@ -390,7 +392,7 @@ class Pipeline(ReturnClass):
             self.delta_j = -9999
             print("No RA and DEC are given")
         print('alpha_j, delta_j', self.alpha_j, self.delta_j)
-        if self.alpha_j == -9999: 
+        if self.alpha_j == -9999:  #self.position is defined here
             self.position = False
         else:
             self.position = True
@@ -721,39 +723,46 @@ class Pipeline(ReturnClass):
         #print('curr_distance', curr_distance) 
         #print(self.SeaDeg, self.SeaPix)
         
-        curr_distance_temp = curr_distance
-        values_sex_temp = values_sex
+        #curr_distance_temp = curr_distance
+        #values_sex_temp = values_sex
 
-        curr_distance = curr_distance[con]
-        values_sex = values_sex[con] 
- 
-            #sys.exit()
-        #print(values_sex)
+        #curr_distance = curr_distance[con]
+        #values_sex = values_sex[con] 
+        center_distance = np.min(curr_distance)
+        good_object = values_sex[np.argmin(curr_distance)]
         
-#         print(curr_distance_img, curr_distance_sky)
-#         curr_distance = np.min(curr_distance_img, curr_distance_sky)
-#         print(curr_distance.shape)
-#         curr_distance = curr_distance[con]
-        for cud in curr_distance:
-            print("Candidate distance: {:3f}".format(cud)) 
-        SexTargets = curr_distance.shape[0]
-        print('SexTargets', SexTargets)
-        if self.nearest_neighbor and 1:
-            center_distance = np.min(curr_distance_temp)
-            good_object = values_sex_temp[np.argmin(curr_distance_temp)]
-        elif SexTargets > 0:
-            center_distance = np.min(curr_distance)
-            print("New Preferred target!!")
-            good_object = values_sex[np.argmin(curr_distance)]
-            #print('good_object', good_object.shape)
+        print(f'Candidate at {center_distance:.2f}') 
 
-            print("Target distance: {:.3f}".format(center_distance))
-        else:
+        if good_object.shape[0] == 0:
             # No suitable target found
             print("No Target Found!!!!")
             good_object = np.full(19, 9999)
             good_object[11] = 0
-            self.flag = SetFlag(self.flag, GetFlag('NO_TARGET'))                 #except:
+            self.flag = SetFlag(self.flag, GetFlag('NO_TARGET'))    
+
+            #sys.exit()
+        #print(values_sex)
+        
+        #for cud in curr_distance:
+        #    print("Candidate distance: {:3f}".format(cud)) 
+        ##SexTargets = curr_distance.shape[0]
+        #print('SexTargets', SexTargets)
+        #if 1: #self.nearest_neighbor and 1:
+        #    center_distance = np.min(curr_distance_temp)
+        #    good_object = values_sex_temp[np.argmin(curr_distance_temp)]
+        #elif SexTargets > 0:
+        #    center_distance = np.min(curr_distance)
+        #    print("New Preferred target!!")
+        #    good_object = values_sex[np.argmin(curr_distance)]
+        #    #print('good_object', good_object.shape)
+
+        #    print("Target distance: {:.3f}".format(center_distance))
+        #else:
+        #    # No suitable target found
+        #    print("No Target Found!!!!")
+        #    good_object = np.full(19, 9999)
+        #    good_object[11] = 0
+        #    self.flag = SetFlag(self.flag, GetFlag('NO_TARGET'))                 #except:
 
         print('good_object', good_object)
 
@@ -791,7 +800,7 @@ class Pipeline(ReturnClass):
     def main(self, obj_value):
         
         pdb = {}                        #The parameter dictionary
-        print(obj_value)
+        print('obj_value', obj_value)
         for k, pname in enumerate(self.pnames):
             print(pname)
             pdb[pname] = obj_value[k]
@@ -880,7 +889,7 @@ class Pipeline(ReturnClass):
 
             print('alpha, delta', self.alpha_j, self.delta_j)
             good_object, SexTargets = self._potential_target()
-            #print('good_object', good_object)
+            print('good_object', good_object)
 
             print('Shallow', self.sex_cata)
             #good_object[10] is the sky value
@@ -928,7 +937,7 @@ class Pipeline(ReturnClass):
                 self.half_size = cntr_half[3]
                 #print(2, self.gimg)
                 #print(2, self.cutimage_file)
-                if self.nearest_neighbor and 1:
+                if 1:#self.nearest_neighbor and 1:
                     xcntr_img = good_object[1]
                     ycntr_img = good_object[2]
  
@@ -1102,8 +1111,8 @@ class Pipeline(ReturnClass):
                         Detailed.detailed(xcntr_img, ycntr_img, good_object, psffile)
                     elif self.galfit:
                         CF = GalfitConfigFunc(xcntr_img, ycntr_img,
-                                              good_object,
-                                              psffile)
+                                              good_object, self.half_size,
+                                              self.fstring, self.flag, psffile)
                         CF.write_config()
                         #print('config', os.path.isfile('None'))
                         #print('CF done')
