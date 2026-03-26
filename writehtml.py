@@ -7,10 +7,11 @@ from cosmocal import CosmoCal
 import traceback
 
 
-def generate_galaxy_report(d, output_file="report.html", image_path="image.png"):
+def generate_galaxy_report(galaxies, output_file="report.html", 
+                           image_path="image.png"):
 
-    target = d["target"]
-    neighbours = d.get("neighbours", {})
+    target = galaxies["target"]
+    neighbours = galaxies.get("neighbours", {})
 
     name = target.get("NAME", "Galaxy")
 
@@ -23,9 +24,25 @@ def generate_galaxy_report(d, output_file="report.html", image_path="image.png")
         table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
         th, td {{ border: 1px solid black; padding: 6px; text-align: center; }}
         th {{ background-color: #f2f2f2; }}
-        .flex {{ display: flex; }}
-        .left {{ width: 50%; }}
-        .right {{ width: 50%; }}
+        .flex {{display: flex;}}
+
+        .left {{
+            width: 75%;   /* more space for image */
+        }}
+
+        .right {{
+            width: 25%;   /* less space for table */
+        }}
+
+        .left img {{
+            width: 100%;  /* make image fill its container */
+        }}
+
+        table {{
+            width: 100%;
+            font-size: 14px;
+        }}
+
     </style>
     </head>
 
@@ -48,7 +65,7 @@ def generate_galaxy_report(d, output_file="report.html", image_path="image.png")
     </tr>
 
     <tr>
-        <th>Output Image</th><th>Number of DoF</th><th>Chi2nu</th>
+        <th>Output Image</th><th>Number of DoF</th><th>&chi;<sup>2</sup><sub>&nu;</sub></th>
         <th>B/T</th><th>Bar/T</th>
     </tr>
     <tr>
