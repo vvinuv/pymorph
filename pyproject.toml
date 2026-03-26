@@ -42,7 +42,7 @@ Homepage = "https://github.com/vvinuv/pymorph"
 Repository = "https://github.com/vvinuv/pymorph"
 
 [project.scripts]
-pymorph_bin = "pymorph.pymorph:pymorph"
+pymorph_bin = "pymorph.pymorph:PyMorph"
 
 [tool.setuptools.packages.find]
 where = ["src"]
