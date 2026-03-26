@@ -1,291 +1,160 @@
-import os
-import fitsio
 import numpy as np
-from matplotlib.colors import Normalize
-import matplotlib.pylab as plt
-import numpy.ma as ma
+import matplotlib.pyplot as plt
+from astropy.io import fits
 
 
-class PlotFunc:
+class FitsPlotter:
 
-    """
-        The class for plotting. It will plot the galaxy image, the model galaxy
-        and the residual image. It also plot the histogram of residual image
-        and compute the Goodness parameter out of it. It is defind as the ratio
-        of number pixels within n times sky sigma around zero value to the total
-        number of pixels. The writehtmlfunc.py will check whether the fit is
-        good or bad according to some conditions. This will also plot the 1D
-        profile of the galaxy and model galaxy from ellipse fitting. The other
-        plot it gives is the mask image. After plotting it saves the image
-        as png file with name P_string(galid).png
+    def __init__(self, output_file, mask_file):
+        self.output_file = output_file
+        self.mask_file = mask_file
 
-    """
+        self.image, self.model, self.residual = self.load_fits()
+        self.mask = fits.open(mask_file)[0].data
 
-    def __init__(self, oimg, mimg, fstring,     
-                 sky, skysig, mag_zero, save_name=None):
+        self.image_m, self.valid = self.apply_mask(self.image)
+        self.model_m, _ = self.apply_mask(self.model)
+        self.residual_m, _ = self.apply_mask(self.residual)
 
-        print('Plotting')
-        self.oimg = oimg
-        self.mimg = mimg
-        self.fstring = fstring
-        self.sky = sky
-        self.skysig = skysig
-        self.mag_zero = mag_zero
-        self.save_name = save_name
-        #print(oimg, mimg, fstring, sky, skysig)
-        if self.save_name is None:
-            self.save_name = 'P_{}.png'.format(self.fstring)
+    # -------- Load FITS --------
+    def load_fits(self):
+        hdul = fits.open(self.output_file)
+        return hdul[1].data, hdul[2].data, hdul[3].data
 
+    # -------- Apply Mask --------
+    def apply_mask(self, data):
+        valid = (self.mask == 0)
+        return np.where(valid, data, np.nan), valid
 
-    def plot_profile(self):
+    # -------- Plot Image --------
+    def plot_image(self, ax, data, title, cmap='gray'):
+        ny, nx = data.shape
+        x = np.arange(nx) - nx // 2
+        y = np.arange(ny) - ny // 2
 
-        #print('P0')
-        if not os.path.exists(self.oimg):
-            print('No output image exists. GALFIT might have been failed')
-            print('Exiting plotting')
-        else:
-            #print('P1')
-            # Read the GALFIT output
-            fits = fitsio.FITS(self.oimg)
-            galaxy = fits[1].read()
-            #print('P01')
-            model = fits[2].read()
-            #print('P02')
-            residual = fits[3].read()
-            #print('P03')
-            fits.close()
-            #Color normalization
-            anorm = Normalize(self.sky - 2 * self.skysig , self.sky + 12.0 * self.skysig)
+        vmin = np.nanpercentile(data, 1)
+        vmax = np.nanpercentile(data, 99)
 
-            #print('P2')
-            # Read mask
-            f_mask = fitsio.FITS(self.mimg)
-            mask = f_mask[0].read().astype(int)
-            f_mask.close()
-            #print('P3')
-            model = ma.array(model, mask=mask, fill_value=0)#9999)
-            model = model.filled()
+        ax.imshow(data, origin='lower',
+                  extent=[x.min(), x.max(), y.min(), y.max()],
+                  cmap=cmap, vmin=vmin, vmax=vmax)
 
-            #print('P4')
-            maskedresidual = ma.masked_array(residual, mask)
-            anormRes = Normalize(-2 * self.skysig, 3 * self.skysig)
-            residual = ma.filled(maskedresidual, 0)#9999)
+        ax.set_title(title, size=15)
+        ax.tick_params(axis='x', labelsize=15)
+        ax.tick_params(axis='y', labelsize=15)
+        ax.set_aspect('equal')
 
-            #print('P5')
-            #colorbar(shrink=0.90)
-            valid_pixels = ma.count(maskedresidual)
-            print('No of valid pixels >>> ', valid_pixels)
+    # -------- Residual --------
+    def plot_residual(self, ax, residual, title):
+        ny, nx = residual.shape
+        x = np.arange(nx) - nx // 2
+        y = np.arange(ny) - ny // 2
 
-            pixels_in_skysig = residual[np.where(abs(residual) <= self.skysig)].size
-            print('No of pixels within sky sigma >>> ', pixels_in_skysig)
+        vmax = np.nanpercentile(np.abs(residual), 99)
 
-            #goodness is the probability of the model being correct. It is identified using chi2 and dof. The probability is calculated using chisq distribution.
-            #print('P6')
-            NYPTS, NXPTS = galaxy.shape
-            hist_mask = np.zeros((NXPTS, NYPTS))
-            hist_mask[np.where(abs(residual) > 12 * self.skysig)] = 1
+        ax.imshow(residual, origin='lower',
+                  extent=[x.min(), x.max(), y.min(), y.max()],
+                  cmap='coolwarm', vmin=-vmax, vmax=vmax)
 
-            #print('P7')
-            hist_res = ma.masked_array(residual, mask=hist_mask)
+        ax.set_title(title, size=15)
+        ax.tick_params(axis='x', labelsize=15)
+        ax.tick_params(axis='y', labelsize=15)
 
-        #print('P8')
-        fell = 'E_{}.txt'.format(self.fstring)
-        if os.path.exists(fell):
-            data = np.genfromtxt(fell, delimiter=',', names=True)
-            sma = data['sma']           #sma from ellise fitting
-            flux = data['intensity'] #Flux at various sma
-            flux_err =data['intensity_err']     #Error in Flux
-            mag = data['mag'] + float(self.mag_zero) #Magnitude at various sma
-            mag_uerr = data['magu']     #Upper error in magnitude
-            mag_lerr = data['magl']     #lower error in Magnitude
-            GalEll = 1
-        else:
-            GalEll = 0
+        ax.set_aspect('equal')
 
-        #print('P9')
-        oell = 'OE_{}.txt'.format(self.fstring)
-        if os.path.exists(oell):
-            data_o = np.genfromtxt(oell, delimiter=',', names=True)
-            sma_o = data_o['sma']               #sma from ellise fitting
-            flux_o = data_o['intensity']     #Flux at various sma
-            flux_err_o =data_o['intensity_err'] #Error in Flux
-            mag_o = data_o['mag'] + float(self.mag_zero)#Magnitude at various sma
-            mag_uerr_o = data_o['magu'] #Upper error in magnitude
-            mag_lerr_o = data_o['magl'] #lower error in Magnitude
-            ModelEll = 1
-        else:
-            ModelEll = 0
+    # -------- Radial Profile --------
+    def radial_profile(self, center=None):
+        image = self.image_m
+        model = self.model_m
+        valid = self.valid
 
-        #print('P10')
-        if 1:
-            try:
-                MaxRad = sma.max()
-            except:
-                MaxRad = sma_o.max()
-            #print('P11')
-            NoOfPoints = int(30 * MaxRad / 50.)
-            SmaCommon = np.logspace(0, np.log10(MaxRad), \
-                                    NoOfPoints, endpoint=True)
-            #print('P12')
-            MagI = np.interp(SmaCommon, sma, mag)
-            #print('P13')
-            MagI_o = np.interp(SmaCommon, sma_o, mag_o)
-            FluxI = np.interp(SmaCommon, sma, flux)
-            FluxI_o = np.interp(SmaCommon, sma_o, flux_o)
-            FluxErrI = np.interp(SmaCommon, sma, flux_err)
-            FluxErrI_o = np.interp(SmaCommon, sma_o, flux_err_o)
-            MagDev = MagI - MagI_o
-            #print('P14')
-            FluxErr = np.sqrt((FluxErrI / FluxI)**2.0 + (FluxErrI_o / FluxI_o)**2.0)
-            #print('P15')
-            MagLErr = (np.log10(FluxI / FluxI_o) - \
-                            np.log10((FluxI / FluxI_o) - FluxErr)) * -2.5
-            #print('P16')
+        y, x = np.indices(image.shape)
 
-            MagUErr = (np.log10((FluxI / FluxI_o) + FluxErr) -\
-                           (np.log10(FluxI / FluxI_o))) * -2.5
-        #except Exception as e:
-        #    print(e)
+        if center is None:
+            center = np.array(image.shape) // 2
 
-        #Plotting Starts
-        FigSize = [8.0, 4.6]
-        MatPlotParams = {'axes.titlesize': 10,
-                         'axes.labelsize': 10,
-                         'xtick.labelsize': 5,
-                         'ytick.labelsize': 5,
-                         'figure.figsize': FigSize}
-        plt.rcParams.update(MatPlotParams)
+        r = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
 
-        rect1 = [0.125, 0.5, 0.225, 1.5 * 0.225]
-        rect2 = [3.25 * 0.125, 0.5, 0.225, 1.5 * 0.225]
-        rect3 = [5.5 * 0.125, 0.5, 0.225, 1.5 * 0.225]
-        rect4 = [5.5 * 0.125, 0.075, 0.225, 1.5 * 0.225]
-        rect5 = [3.25 * 0.125, 0.075, 0.225, 1.5 * 0.225]
-    #    rect6 = [0.125, 0.75*0.225 + 0.075, 0.225, 1.5*0.225]
-        rect7 = [0.125, 0.075, 0.225, 1.5 * 0.225]
+        r_flat = r[valid]
+        img_flat = image[valid]
+        mod_flat = model[valid]
 
-        if 1:
-            axUL = plt.axes(rect1)
-            im = plt.imshow(galaxy, extent=[0, NXPTS, 0, NYPTS], 
-                    cmap='Blues_r')#norm=anorm)
-            Dx = abs(axUL.get_xlim()[0]-axUL.get_xlim()[1])
-            Dy = abs(axUL.get_ylim()[0]-axUL.get_ylim()[1])
-            plt.colorbar(shrink=0.9, format='%.2f')
-            axUL.set_aspect(Dx/Dy)
-            plt.title('Original Galaxy')
+        r_max = r_flat.max()
+        bins = np.arange(1, r_max)
 
-            axUM = plt.axes(rect2)
-            im = plt.imshow(model, cmap='Blues_r',
-                            extent=[0, NXPTS, 0, NYPTS])# norm=anorm)
-            plt.colorbar(shrink=0.9, format='%.2f')
-            Dx = abs(axUM.get_xlim()[0]-axUM.get_xlim()[1])
-            Dy = abs(axUM.get_ylim()[0]-axUM.get_ylim()[1])
-            axUM.set_aspect(Dx/Dy)
-            plt.title('Model Galaxy + Mask')
+        img_prof, mod_prof, img_err = [], [], []
 
-            axUR = plt.axes(rect3)
-            im = plt.imshow(residual, cmap='Blues_r',
-                            extent=[0, NXPTS, 0, NYPTS])#, norm=anormRes)
-            plt.colorbar(shrink=0.9)
-            Dx = abs(axUR.get_xlim()[0]-axUR.get_xlim()[1])
-            Dy = abs(axUR.get_ylim()[0]-axUR.get_ylim()[1])
-            axUR.set_aspect(Dx/Dy)
-            plt.title('Residual')
+        for i in bins:
+            mask_bin = (r_flat == i)
+            values = img_flat[mask_bin]
 
-            axLR = plt.axes(rect4)
-            hist_res1d = hist_res.compressed()
-            nn, bins, patches = plt.hist(hist_res1d, 50, density=False)
-            if (nn.argmax() < 16):
-                arg_inc = nn.argmax()
+            if len(values) > 0:
+                mean = np.nanmean(values)
+                std = np.nanstd(values)
+                err = std / np.sqrt(len(values))
             else:
-                arg_inc = 16
-            # print trapz(bins, nn)
-            binmin = bins[nn.argmax() - arg_inc]
-            binmax = bins[nn.argmax() + arg_inc]
-            plt.axis([binmin, binmax, 0.0, max(nn)])
-            plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
-            plt.xticks((binmin, binmin /2.0, 0.0, binmax/2.0, binmax),\
-                    (str(binmin)[:5], str(binmin /2.0)[:5], str(0.0)[:3], \
-                     str(binmax/2.0)[:5], str(binmax)[:5]))
-            plt.grid(True)
-            plt.title('Difference Histogram')
-            Dx = abs(axLR.get_xlim()[0]-axLR.get_xlim()[1])
-            Dy = abs(axLR.get_ylim()[0]-axLR.get_ylim()[1])
-            axLR.set_aspect(Dx/Dy)
+                mean, err = np.nan, np.nan
 
-        #except Exception as e:
-        #    print(e)
+            img_prof.append(mean)
+            img_err.append(err)
+            mod_prof.append(np.nanmean(mod_flat[mask_bin]))
 
+        return bins, np.array(img_prof), np.array(mod_prof), np.array(img_err)
 
-        if GalEll and ModelEll:
+    # -------- Profile Plot --------
+    def plot_profile(self, ax, r, img_prof, mod_prof, img_err):
+        ax.errorbar(r, img_prof, yerr=img_err,
+                    fmt='o', markersize=6, label='Image', alpha=0.7)
 
-            axLL = plt.axes(rect7)
+        ax.plot(r, mod_prof, label='Model', lw=2)
 
-            ymin = min(min(mag), min(mag_o))
-            ymax = max(max(mag), max(mag_o))
-            xmax = max(max(sma), max(sma_o))
+        ax.set_yscale('log')
+        ax.set_xlabel("Radius (pixels)", size=15)
+        ax.set_ylabel("Surface Brightness", size=15)
+        ax.legend(fontsize=15)
 
-            plt.errorbar(sma, mag, [mag_uerr, mag_lerr], fmt='o',
-                         ecolor='r', ms=3)
-            plt.plot(sma_o, mag_o, color='g',lw=2)
-
-            axLL.set_ylim(ymax, ymin)
-            axLL.set_xlim(0, xmax)
-            plt.xlabel('Radius')
-            plt.ylabel('Surface Brightness')
-            plt.title('1-D Profile Comparison')
-            plt.grid(True)
-            Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
-            Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
-            axLL.set_aspect(Dx/Dy)
-
-            axLM = plt.axes(rect5)
-            try:
-                plt.errorbar(SmaCommon, MagDev, [MagUErr, MagLErr], 
-                             fmt='o', ecolor='r', ms=3)
-                plt.ylabel('Magnitude Deviation')
-                plt.xlabel('Radius')
-                plt.grid(True)
-                Dx = abs(axLM.get_xlim()[0]-axLM.get_xlim()[1])
-                Dy = abs(axLM.get_ylim()[0]-axLM.get_ylim()[1])
-                axLM.set_aspect(Dx/Dy)
-            except:
-                pass
-        elif GalEll:
-            ymin = min(mag)
-            ymax = max(mag)
-            xmax = max(sma)
-            axLL = plt.axes(rect7)
-            plt.errorbar(sma, mag, [mag_uerr,mag_lerr], fmt='o',
-                         ecolor='r', ms=3)
-            axLL.set_ylim(ymax, ymin)
-            axLL.set_xlim(0, xmax)
-            plt.xlabel(r'Radius')
-            plt.ylabel(r'Surface Brightness')
-            plt.title('1-D Profile Comparison')
-            plt.grid(True)
-            Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
-            Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
-            axLL.set_aspect(Dx/Dy)
-        elif ModelEll:
-            ymin = min(mag_o)
-            ymax = max(mag_o)
-            xmax = max(sma_o)
-            axLL = plt.axes(rect7)
-            plt.plot(sma_o, mag_o, color='g',lw=2)
-            axLL.set_ylim(ymax, ymin)
-            axLL.set_xlim(0, xmax)
-            plt.xlabel(r'Radius')
-            plt.ylabel(r'Surface Brightness')
-            plt.title('1-D Profile Comparison')
-            plt.grid(True)
-            Dx = abs(axLL.get_xlim()[0]-axLL.get_xlim()[1])
-            Dy = abs(axLL.get_ylim()[0]-axLL.get_ylim()[1])
-            axLL.set_aspect(Dx/Dy)
-
-        plt.savefig(self.save_name)
-#self.fstring = 'test_n5585_lR'
-#PlotFunc('O_test_n5585_lR.fits', 'M_test_n5585_lR.fits', 82, 82, 1434., 40.)
+        ax.tick_params(axis='x', labelsize=15)
+        ax.tick_params(axis='y', labelsize=15)
 
 
+    # -------- Histogram --------
+    def plot_histogram(self, ax, sigma=3):
+        res = self.residual_m[self.valid]
+        res = res[~np.isnan(res)]
 
+        mean = np.mean(res)
+        std = np.std(res)
+        clipped = res[np.abs(res - mean) < sigma * std]
+
+        ax.hist(clipped, bins=50)
+        ax.set_xlabel("Residual", size=15)
+        ax.set_ylabel("")
+
+        ax.tick_params(axis='x', labelsize=15)
+        ax.tick_params(axis='y', labelsize=15)
+
+    # -------- Main Plot --------
+    def plot_summary(self, save_name="output.png"):
+        fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+        # Top row
+        self.plot_image(axes[0, 0], self.image, "Image", cmap='viridis')
+        self.plot_image(axes[0, 1], self.model, "Model", cmap='viridis')
+        self.plot_residual(axes[0, 2], self.residual, "Residual")
+
+        # Bottom row
+        r, img_prof, mod_prof, img_err = self.radial_profile()
+        self.plot_profile(axes[1, 0], r, img_prof, mod_prof, img_err)
+
+        self.plot_histogram(axes[1, 1])
+
+        axes[1, 2].axis('off')
+
+        plt.tight_layout()
+        fig.savefig(save_name)
+        plt.close(fig)
+
+if __name__=='__main__':
+
+    plotter = FitsPlotter("O_cl1358_9.fits", "EM_cl1358_9.fits")
+    plotter.plot_summary("result.png")

@@ -1,310 +1,264 @@
-import os
-import csv
-from os.path import exists
-import pyfits
 import numpy as np
-import numpy.ma as ma
-from concfunc import concentration
-from asymfunc import asymmetry
-from clumfunc import clumpness 
-from ginifunc_modi import gini
-from runsexfunc import RunSex
-from flagfunc import GetFlag, SetFlag
-import pymorphutils as ut
-import config as c
+from astropy.io import fits
+from scipy.ndimage import gaussian_filter, rotate, shift
 
-class CasGm:
-    """The class which will find CASGM parameters. The algorithm for each 
-       parameters can be found in the corresponding class files. This will 
-       also write a file agm_result_with_radius.csv which gives the Asymmetry
-       Gini Coefficient and M20 parameters at different radius from the center
-       of the galaxy"""
-    def __init__(self, cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky, skysig):
-        self.cutimage   = cutimage
-        self.maskimage  = maskimage
-        self.xcntr = xcntr
-        self.ycntr = ycntr
-        self.bxcntr = bxcntr
-        self.bycntr = bycntr
-        self.eg = eg
-        self.pa = pa
-        self.sky = sky
-        self.skysig = skysig
-        self.casgm = casgm(cutimage, maskimage, xcntr, ycntr, bxcntr, bycntr, eg, pa, sky, skysig)
 
-    def casgm(self):
-        # following till END will find better center of image
-        FoundNewCntr = 0
-        if self.xcntr > 35.0 or self.ycntr > 35.0:
-            dectThre = 18.0
-        else:
-            dectThre = 12.0
-        while FoundNewCntr == 0:
-            RunSex(sex_config, SEX_PATH, 
-                   os.path.join(c.datadir, self.cutimage), 'None', 
-                   'CaSsEx.cat', dectThre, dectThre, 1)
+class CASGMPipeline:
 
-            for line in open('CaSsEx.cat', 'r'):
+    # ------------------------------------------------
+    # MAIN FUNCTION (UNCHANGED NAME)
+    # ------------------------------------------------
+    def compute_CASGM(self, target,
+                     r_frac=2.0, smooth_sigma=2.0, n_iter=100):
+
+        fstring = target['NAME']
+        x0 = target['X_IMAGE']
+        y0 = target['Y_IMAGE']
+        flux_radius = target['FLUX_RADIUS']
+        elongation = target['ELONGATION']
+        theta_image = target['THETA_IMAGE']
+
+        hdul = fits.open(f'I_{fstring}.fits')
+        image = hdul[0].data
+        hdul.close()
+
+        hdul = fits.open(f'M_{fstring}.fits')
+        mask = hdul[0].data
+        hdul.close()
+
+        q = 1.0 / elongation
+
+        # ---------- ELLIPTICAL RADIUS ----------
+        def elliptical_radius():
+            y, x = np.indices(image.shape)
+            x = x - x0
+            y = y - y0
+
+            theta = np.deg2rad(theta_image)
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
+
+            x_rot = x * cos_t + y * sin_t
+            y_rot = -x * sin_t + y * cos_t
+
+            return np.sqrt(x_rot**2 + (y_rot**2) / (q**2))
+
+        r_ell = elliptical_radius()
+
+        mask[r_ell > r_frac * flux_radius] = 1
+        image = image * (~mask.astype(bool))
+
+        # ---------- C ----------
+        def compute_radii(img):
+            r_flat = r_ell.flatten()
+            flux = img.flatten()
+
+            valid = np.isfinite(flux) & (flux > 0)
+            r_flat = r_flat[valid]
+            flux = flux[valid]
+
+            idx = np.argsort(r_flat)
+            r_sorted = r_flat[idx]
+            flux_sorted = flux[idx]
+
+            cumflux = np.cumsum(flux_sorted)
+            frac = cumflux / cumflux[-1]
+
+            def get_r(f):
+                i = np.searchsorted(frac, f)
+                return r_sorted[i]
+
+            return get_r(0.2), get_r(0.5), get_r(0.8), get_r(0.9)
+
+        R20, R50, R80, R90 = compute_radii(image)
+        R20 = round(R20, 2)
+        R50 = round(R20, 2)
+        R80 = round(R20, 2)
+        R90 = round(R20, 2)
+        C = round(R80 / R20, 2)
+
+        # ---------- A ----------
+        def rotate_about_center(image, x0, y0):
+            ny, nx = image.shape
+            cx, cy = nx / 2, ny / 2
+
+            shift_x = cx - x0
+            shift_y = cy - y0
+
+            shifted = shift(image, (shift_y, shift_x), order=1)
+            rotated = rotate(shifted, 180, reshape=False, order=1)
+            unshifted = shift(rotated, (-shift_y, -shift_x), order=1)
+
+            return unshifted
+
+        def asymmetry(image, x0, y0):
+            rot = rotate_about_center(image, x0, y0)
+            num = np.sum(np.abs(image - rot))
+            den = np.sum(np.abs(image))
+            return num / den if den != 0 else np.nan
+
+        def asymmetry_minimization(image, x0, y0, R50):
+            delta = 0.01 * R50
+
+            points = [
+                (x0, y0),
+                (x0 - delta, y0 - delta),
+                (x0 - delta, y0 + delta),
+                (x0 + delta, y0 - delta),
+                (x0 + delta, y0 + delta),
+                (x0 - delta, y0),
+                (x0 + delta, y0),
+                (x0, y0 - delta),
+                (x0, y0 + delta),
+            ]
+
+            A_values = []
+
+            for (x, y) in points:
                 try:
-                    values = line.split()
-                    if abs(float(values[1]) - xcntr) < 4.001 and \
-                           abs(float(values[2]) - ycntr) < 4.001:
-                        xcntr = float(values[1]) - 1.0
-                        ycntr = float(values[2]) - 1.0
-                    FoundNewCntr = 1
+                    A_values.append(asymmetry(image, x, y))
                 except:
-                    pass
+                    A_values.append(np.nan)
 
-            for myfile in ['CaSsEx.cat', 'CaSsEx.cat.sex']:
-                if os.access(myfile, os.F_OK):
-                    os.remove(myfile)
+            A_values = np.array(A_values)
 
-            if dectThre < 2.0:
-                dectThre -= 0.5
-            else:
-                dectThre -= 2.0
+            A_min = np.nanmin(A_values)
+            best_idx = np.nanargmin(A_values)
 
-            if dectThre == 0:
-                xcntr = xcntr
-                ycntr = ycntr
-                FoundNewCntr = 1
-        # END
+            return A_min, points[best_idx]
 
-        angle = c.angle
-        back_extraction_radius = c.back_extraction_radius
-        # open cutimage
-        f = pyfits.open(os.path.join(c.datadir, self.cutimage))
-        z = f[0].data
-        header = f[0].header
-        if ('sky' in header):
-            #sky = header['sky']
-            print('Header has a sky value key. If you want to use that') 
-            print('uncomment line number 75 in casgm.py')
-        f.close()
+        A, best_center = asymmetry_minimization(image, x0, y0, R50)
 
-        try:
-            print("Initial background Center >>> ({}, {})".format( self.back_ini_xcntr, self.back_ini_ycntr))
-            casgmrun = 1
-        except:
-            casgmrun = 0
-            ut.write_error('Failed to find the background region!!!\n')
+        A = round(A, 5)
+        # ---------- S ----------
+        smooth = gaussian_filter(image, sigma=smooth_sigma)
+        residual = image - smooth
 
-        z = z - sky
-        f = pyfits.open(maskimage)
-        mask = f[0].data
-        f.close()
+        inner_mask = r_ell < (0.3 * R50)
+        residual[inner_mask] = 0
 
-        maskedgalaxy = ma.masked_array(z, mask)
-        z = ma.filled(maskedgalaxy, 0.0) # filling 0 in mask regions
+        S = np.sum(np.abs(residual)) / np.sum(np.abs(image))
+        
+        S = round(S, 5)
+        # ---------- ERRORS ----------
+        noise = np.std(image[mask == 0])
 
-        ########################
-        #   CONCENTRATION      #
-        ########################
-        if(casgmrun):
+        C_list, A_list, S_list = [], [], []
+
+        for _ in range(n_iter):
+
+            noisy = image + np.random.normal(0, noise, image.shape)
+
             try:
-                ApErTuRe = c.aperture
+                r20, r50, r80, r90 = compute_radii(noisy)
+                C_list.append(r80 / r20)
+
+                rot = rotate_about_center(noisy, best_center[0], best_center[1])
+                A_list.append(np.sum(np.abs(noisy - rot)) / np.sum(np.abs(noisy)))
+
+                sm = gaussian_filter(noisy, sigma=smooth_sigma)
+                res = noisy - sm
+                res[inner_mask] = 0
+                S_list.append(np.sum(np.abs(res)) / np.sum(np.abs(noisy)))
+
             except:
-                print('aperture keyword is not found in config.py. Setting '\
-                      'circular')
-                ApErTuRe = 1
-            if ApErTuRe:
-                con = concentration(z, mask, xcntr, ycntr, 0.0, 0.0, sky)
-            else:
-                con = concentration(z, mask, xcntr, ycntr, pa - 90.0, eg, sky)
-            extraction_radius = con.TotRad
-            r20 = con.r20
-            r50 = con.r50
-            r80 = con.r80
-            r90 = con.r90
-        else:
-            extraction_radius == 9999
-        if(extraction_radius == 9999):
-            return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
-        else:
-            sigma = 0.25 * extraction_radius / 1.5 # The kernal size for 
-                                                   # clumpiness
+                continue
 
-            print('R20: {}'.format(round(r20, 2)))
-            print('R50: {}'.format(round(r50, 2))) 
-            print('R80: {}'.format(round(r80, 2)))
-            print('R90: {}'.format(round(r90, 2)))
-            print('Total Radius: {}'.format(round(con.TotRad, 2)))
+        result_CAS = {
+            "R20": R20, "R50": R50, "R80": R80, "R90": R90,
+            "C": C, "A": A, "S": S,
+            "C_err": round(np.std(C_list), 4),
+            "A_err": round(np.std(A_list), 4),
+            "S_err": round(np.std(S_list), 4)
+        }
 
-            
-            ########################
-            #   ASYMMETRY          #
-            ########################
-            try:
-                asy = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0, r50,
-                                extraction_radius, sky, angle, 1, 0)
-                extraction_radius = asy.image_asymm[8]
-                ABS_ZSUM = asy.image_asymm[6] * (back_extraction_radius * \
-                           back_extraction_radius) / (extraction_radius * \
-                           extraction_radius * 1.0)
-                asy_r20 = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, 0, 
-                                    r50, r20, sky, angle, 1, 0)
-                ABS_ZSUM_r20 = asy.image_asymm[6] * (r20 * r20) / \
-                           (extraction_radius * extraction_radius * 1.0)
-                # asy_r20_zsum = asymmetry(cutimage, maskimage, xcntr, ycntr, 0, \
-                # 0, r50, r20, sky, angle, 0, ABS_ZSUM_r20) This was commented \
-                # on sep13 as i forgot what this is
-                asy_r20_zsum = 0 # This line is added to compensate the above
-                                 # commenting of line. I have replaced the 
-                                 # corresponding value to 0 at the line 239
-                back_asy = asymmetry(cutimage, maskimage, back_ini_xcntr, 
-                                     back_ini_ycntr, 0, 0, r50, 
-                                     back_extraction_radius, 
-                                     sky, angle, 0, ABS_ZSUM)
-                # asymmetry is not converging w. r. t. the center
-                if asy.image_asymm[4] > 20 or back_asy.image_asymm[4] > 20:
-                    c.Flag = SetFlag(c.Flag, GetFlag('ASYM_NOT_CONV'))
-                # the extraction radius is larger than the image size
-                if asy.image_asymm[5] == 1:
-                    c.Flag = SetFlag(c.Flag, GetFlag('ASYM_OUT_FRAME'))
-                try:
-                    back_asy1 = asymmetry(cutimage, maskimage, 
-                                          back_ini_xcntr1, back_ini_ycntr1, 
-                                          0, 0, r50, back_extraction_radius, 
-                                          sky, angle, 0, ABS_ZSUM)
-                    ASY = asy.image_asymm[0] - (back_asy.image_asymm[0] +\
-                                          back_asy1.image_asymm[0]) / 2.0
-                    ASY_ERROR = 2 * np.sqrt(asy.image_asymm[1]**2 + \
-                         back_asy.image_asymm[1]**2 + back_asy1.image_asymm[1]**2)
-                except:
-                    ASY = asy.image_asymm[0] - back_asy.image_asymm[0]
-                    ASY_ERROR = 2 * np.sqrt(asy.image_asymm[1]**2 \
-                                + back_asy.image_asymm[1]**2)
-    #		print asy.image_asymm[0] ,  back_asy.image_asymm[0]
-                try:
-                    ASY_ERROR = round(ASY_ERROR, 4)    
-                except:
-                    ASY_ERROR = 9999
-    #            print "ASYMMETRY, ERROR and flag_out A_wo_back BA A20 A20_ZSUM", \
-    #                   ASY, ASY_ERROR, asy.image_asymm[5], asy.image_asymm[0], \
-    #                   back_asy.image_asymm[0], asy_r20.image_asymm[0],\
-    #                   asy_r20_zsum.image_asymm[0]
-            except:
-                ASY, ASY_ERROR = 9999, 9999
+        result_GM = self.compute_gini_m20_with_error(image)
 
+        self.result = {}
+        self.result.update(result_CAS)
+        self.result.update(result_GM)
 
-            ########################
-            #   CLUMPNESS          #
-            ########################
-            try:
-                sigma = int(sigma)
-                if sigma / 2.0 == int(sigma / 2.0):
-                    sigma = sigma + 1.0
-                clump = clumpness(z, asy.image_asymm[2], asy.image_asymm[3], 
-                                  0, 0, extraction_radius, sigma, sky, 1)
-                S1 = 10.0 * clump.clumpness[0] / clump.clumpness[2]
-                error_S1 = np.sqrt((clump.clumpness[1] + \
-                                 clump.clumpness[3] / \
-                                 clump.clumpness[4]) * S1**2.0)
-                if sigma > back_extraction_radius:
-                    back_extraction_radius = sigma + 2.0
-                back_clump = clumpness(z, back_ini_xcntr, back_ini_ycntr, 0, 0,
-                                       back_extraction_radius, sigma, sky, 0)
-                S2 = 10.0 * back_clump.clumpness[0] / clump.clumpness[2]
-                error_S2 = np.sqrt((back_clump.clumpness[1] \
-                                + clump.clumpness[3] \
-                                / clump.clumpness[4]) * S2**2.0)
-                try:
-                    back_clump1 = clumpness(z, back_ini_xcntr1, 
-                                            back_ini_ycntr1, 0, 0, 
-                                            back_extraction_radius, sigma, 
-                                            sky, 0)
-                    S3 = 10.0 * back_clump1.clumpness[0] / \
-                         clump.clumpness[2]
-                    error_S3 = np.sqrt((back_clump1.clumpness[1] + \
-                               clump.clumpness[3]  / \
-                               clump.clumpness[4]) * S3**2.0)
-                    S = S1 - (S2 +S3) / 2.0
-                    ERROR_SMOO = np.sqrt(error_S1**2.0 + error_S2**2.0 + \
-                                 error_S3**2.0)
-                except:
-                    S = S1 - S2
-                    ERROR_SMOO = np.sqrt(error_S1**2.0 + error_S2**2.0)
-                try:
-                    ERROR_SMOO = round(ERROR_SMOO, 4)
-                except:
-                    ERROR_SMOO = 9999
-    #            print "SMOTHNESS AND ERROR ", S, ERROR_SMOO
-            except:
-                 S, ERROR_SMOO = 9999, 9999
+    # ------------------------------------------------
+    def compute_gini(self, image):
 
+        pixels = image.flatten()
+        pixels = pixels[pixels > 0]
 
-            ###########################
-            #   GINI COEFFICIENT  M20 #
-            ###########################
+        if len(pixels) < 2:
+            return np.nan
 
-            extraction_radius = con.TotRad # ext. rad was over riden by asym.
-            gin = gini(z, xcntr, ycntr, 0, 0, r20, r50, r80, 
-                       extraction_radius, sky, skysig)
-            gini_coef = gin.segmentation
-            # for myfile in ['segmentation.fits']:
-            #     if os.access(myfile,os.F_OK):
-            #         os.remove(myfile)
-            # Write Model galaxy image
-            # hdu = pyfits.PrimaryHDU(gin.segmentation.astype(Float32))
-            # hdu.writeto('segmentation.fits')
-            
-            # Writing all the casgm parameters to agm_result_with_radius.csv
-            if exists("agm_result_with_radius.csv"):
-                pass
-            else:
-                f_tmp = open("agm_result_with_radius.csv", "ab")
-                tmp_writer = csv.writer(f_tmp)
-                tmp_ParamToWrite = ['gal_id', 'C', 'C_err', 'A', 'A_err', 
-                                    'A_flag', 'image_A', 'back_A', 'A_20', 
-                                    'A_20_with_zsum', 'S', 'S_err', 'r20', 
-                                    'r20e', 'r50', 'r50e', 'r80', 'r80e', 
-                                    'r90', 'r90e', 'extraction_radius', 'G', 
-                                    'G_res', 'G80', 'G50', 'G20', 'M', 
-                                    'M_res', 'M80', 'M50', 'M20']
-                tmp_writer.writerow(tmp_ParamToWrite)
-                f_tmp.close()
+        pixels = np.sort(pixels)
+        n = len(pixels)
 
-            f_tmp = open("agm_result_with_radius.csv", "ab")
-            tmp_writer = csv.writer(f_tmp)
-            tmp_ParamToWrite = [c.fstring, con.concen, con.error_con, 
-                                ASY, ASY_ERROR, asy.image_asymm[5], 
-                                asy.image_asymm[0], back_asy.image_asymm[0], 
-                                asy_r20.image_asymm[0], 0.0, S, ERROR_SMOO, 
-                                con.r20, con.r20e, con.r50, con.r50e, con.r80, 
-                                con.r80e, con.r90, con.r90e,
-                                extraction_radius, gini_coef[0], gini_coef[1],
-                                gini_coef[2], gini_coef[3], gini_coef[4], 
-                                gini_coef[5], gini_coef[6], gini_coef[7], 
-                                gini_coef[8], gini_coef[9]]
-            tmp_writer.writerow(tmp_ParamToWrite)
-            f_tmp.close()
+        index = np.arange(1, n + 1)
+        mean_flux = np.mean(pixels)
 
-            # check for nan and inf values and overmasking
-            if np.isnan(con.concen) or np.isinf(con.concen):
-                con.concen = 9999
-            if np.isnan(con.error_con) or np.isinf(con.error_con) or  isinstance(con.error_con, np.ma.core.MaskedConstant):
-            #the last test is to see if the error failed because it is overmasked 
-                con.error_con = 9999
-            if np.isnan(ASY) or np.isinf(ASY):
-                ASY = 9999
-            if np.isnan(ASY_ERROR) or np.isinf(ASY_ERROR):
-                ASY_ERROR = 9999
-            if np.isnan(S) or np.isinf(S):
-                S = 9999
-            if np.isnan(ERROR_SMOO) or np.isinf(ERROR_SMOO):
-                ERROR_SMOO = 9999
+        return (1 / (mean_flux * n * (n - 1))) * \
+               np.sum((2 * index - n - 1) * pixels)
 
-            if np.isnan(gini_coef[0]) or np.isinf(gini_coef[0]):
-               Gini_Coef = 9999
-            else:
-                Gini_Coef = gini_coef[0]
+    # ------------------------------------------------
+    def compute_m20(self, image):
 
-            if np.isnan(gini_coef[5]) or np.isinf(gini_coef[5]):
-                M20_coef = 9999
-            else:
-                M20_coef = float(gini_coef[5])
+        ny, nx = image.shape
+        y, x = np.mgrid[0:ny, 0:nx]
 
-            return con.concen, con.error_con, ASY, ASY_ERROR, S, ERROR_SMOO, \
-                   Gini_Coef, M20_coef
+        flux = image.copy()
+        flux[flux < 0] = 0
 
-    #CasGm('n5585_lR.fits', 'BMask.fits', 192.03, 157.42, 40.0, 40.0, 0.0, 0.0, 0.0)
+        total_flux = np.sum(flux)
+        if total_flux <= 0:
+            return np.nan
+
+        x_c = np.sum(x * flux) / total_flux
+        y_c = np.sum(y * flux) / total_flux
+
+        r2 = (x - x_c)**2 + (y - y_c)**2
+        M_tot = np.sum(flux * r2)
+
+        pixels = flux.flatten()
+        r2_flat = r2.flatten()
+
+        order = np.argsort(pixels)[::-1]
+
+        pixels_sorted = pixels[order]
+        r2_sorted = r2_flat[order]
+
+        flux_cumsum = np.cumsum(pixels_sorted)
+
+        threshold = 0.2 * total_flux
+
+        idx = np.where(flux_cumsum <= threshold)[0]
+
+        if len(idx) < len(pixels_sorted):
+            idx = np.append(idx, len(idx))
+
+        M20 = np.sum(pixels_sorted[idx] * r2_sorted[idx])
+
+        return np.log10(M20 / M_tot)
+
+    # ------------------------------------------------
+    def compute_gini_m20_with_error(self, image, n_iter=100):
+
+        noise_sigma = np.std(image[image != 0])
+
+        gini_vals, m20_vals = [], []
+
+        for _ in range(n_iter):
+
+            noisy = image + np.random.normal(0, noise_sigma, image.shape)
+            noisy[noisy < 0] = 0
+
+            g = self.compute_gini(noisy)
+            m = self.compute_m20(noisy)
+
+            if not np.isnan(g):
+                gini_vals.append(g)
+
+            if not np.isnan(m):
+                m20_vals.append(m)
+
+        return {
+            "gini": round(np.mean(gini_vals), 4),
+            "gini_err": round(np.std(gini_vals), 4),
+            "m20": round(np.mean(m20_vals), 4),
+            "m20_err": round(np.std(m20_vals), 4)
+        }
