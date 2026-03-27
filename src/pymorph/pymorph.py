@@ -18,6 +18,7 @@ from .get_params import GetOutputParams
 from .psffunc import PSFPipeline
 from .writehtml import generate_galaxy_report
 from .plotfunc import PlotFunc
+from .catch_errors_warning import catch_pipeline_issues
 
 class GalaxyPipeline:
 
