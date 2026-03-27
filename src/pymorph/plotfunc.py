@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 
 
-class FitsPlotter:
+class PlotFunc:
 
     def __init__(self, output_file, mask_file):
         self.output_file = output_file
@@ -156,5 +156,5 @@ class FitsPlotter:
 
 if __name__=='__main__':
 
-    plotter = FitsPlotter("O_cl1358_9.fits", "EM_cl1358_9.fits")
+    plotter = PlotFunc("O_cl1358_9.fits", "EM_cl1358_9.fits")
     plotter.plot_summary("result.png")

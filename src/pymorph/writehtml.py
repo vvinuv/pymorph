@@ -3,7 +3,6 @@ import csv
 import datetime
 import numpy as np
 import fileinput
-from cosmocal import CosmoCal 
 import traceback
 
 
