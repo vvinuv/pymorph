@@ -31,13 +31,16 @@ class PipelineBase:
 
 
 
-class PipelineCriticalError(Exception):
-    pass
 
+class PipelineCriticalError(Exception):
+    #pass
+    def __init__(self, info):
+        self.info = info
+        super().__init__(str(info))
 
 
 def find_len(lst, expected_len):
-    print('What the fuck 2', lst, expected_len)
+    #print('What the fuck 2', lst, expected_len)
 
     if not lst:
         print('EMPTY')
@@ -68,7 +71,7 @@ def find_len(lst, expected_len):
             "actual": len(lst)
         }, "CRITICAL"
 
-    print('What the fuck 3 True')
+    #print('What the fuck 3 True')
     return True, {}, None
 
 
@@ -79,7 +82,7 @@ def check_params_and_errors(params, errors):
     if (not params or
         any(p is None or (isinstance(p, float) and np.isnan(p)) or np.isinf(p) for p in params)):
 
-        print('What is fuck INVALID_PARAMETERS') 
+        #print('What the fuck INVALID_PARAMETERS') 
         return False, (params, errors), {
             "stage": "params",
             "issue": "INVALID_PARAMETERS",
@@ -89,7 +92,7 @@ def check_params_and_errors(params, errors):
     #  ---- FIX ERRORS ----
     # enforce same length always
     if (not errors) or (len(errors) != len(params)):
-        errors = [0.0] * len(params)
+        errors = [9999] * len(params)
 
         return True, (params, errors), {
             "stage": "errors",
@@ -104,7 +107,7 @@ def check_params_and_errors(params, errors):
 
     for e in errors:
         if e is None or (isinstance(e, float) and math.isnan(e)):
-            new_errors.append(0.0)
+            new_errors.append(9999)
             replaced = True
         else:
             new_errors.append(e)
@@ -133,15 +136,16 @@ def check_value(value):
 
 
 
-def check_file(filename):
+def check_file(filename, flag):
 
     if not Path(filename).exists():
-        return False, {
+        return False, (filename, flag), {
             "issue": "FILE_NOT_FOUND",
-            "value": filename
+            "value": filename,
+            "flag": flag,
         }, "CRITICAL"
 
-    return True, {}, None
+    return True, (filename, flag), {}, None
 
 
 
@@ -152,33 +156,34 @@ def catch_pipeline_issues(critical=None, file_checker=False,
 
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            #print('ENTERING 1', func.__name__)
+
             # reset
             self.flags = {}
             self.critical = False
 
-            #print('ENTERING 2', func.__name__)
-            
             # RUN FUNCTION
             result = func(self, *args, **kwargs)
-
-            #print('result', func.__name__, result)
 
             # GENERIC OUTPUT CHECK. EARLIER IT IS THE FUNCTION INTO THIS
             # DECORDOR. NOW IT IS USING THE ACTUAL FUNCTION WHICH GOT 
             # THREE OUTPUTS
 
-            if file_checker == True: #isinstance(result, str):
-
-                status, info, severity = check_file(result)
+            if file_checker == True and isinstance(result, tuple) and len(result) == 2: 
+                filename = result[0]
+                flag = result[1]
+                status, (filename, flag), info, severity = check_file(filename, flag)
                 if not status:
                     self.flags = {
                         "function": func.__name__,
                         "stage": "input",
                         **info
                     }
-                    self.critical = True
-                    raise PipelineCriticalError("FIRST_ERROR")
+                    self.critical = self.flags["flag"]
+                    raise PipelineCriticalError({
+                                            "reason": self.flags["value"],
+                                            "issue": "NOT_FOUND",
+                                            "flag": self.flags["flag"]
+                                        })
                     return None
                 return info 
 
@@ -198,9 +203,6 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                     return None
                 return info["value"]
 
-            #print('ENTERING 3', func.__name__)
-        
-
             
             if expected_len is not None:
                 status, info, severity = find_len(result, expected_len)
@@ -214,15 +216,13 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                     self.critical = True
                     raise PipelineCriticalError("FIRST_ERROR")
                     return None
-            #print('What the fuck 1', func.__name__, result)
-
 
 
             # PARAMS + ERRORS CHECK (separate function)
             if isinstance(result, tuple) and len(result) == 2:
                 print("PARAMS + ERRORS")
                 params, errors = result
-                print(result)
+                #print(result)
                 status, (params, errors), info, severity = check_params_and_errors(params, errors)
 
                 if info:
@@ -297,25 +297,25 @@ class MyClass:
         return params, errors
 
     @catch_pipeline_issues(file_checker=True)
-    def check_file(self, filename):
+    def check_file(self, filename, flag):
         return filename
 
     def parse(self, lst):
         
         #try:
 
-        Ifile = self.check_file('t.txt')
+        Ifile = self.check_file('t.txt', 1)
 
         size = self.compute_value(50)
 
-        print('size', size)
+        #print('size', size)
         params = self.compute_list(lst)
         
-        print('Inside1', params)
+        #print('Inside1', params)
         #params = [1, 2, 3, 4, 5, 6, np.inf]
         
         param_err = self.check_params_and_errors(params, [1, 2]) 
-        print('Inside', param_err)
+        #print('Inside', param_err)
         #return result
 
 

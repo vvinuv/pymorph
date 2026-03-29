@@ -90,8 +90,8 @@ class GalaxyPipeline(PipelineBase):
         self.flags = {}
 
     @catch_pipeline_issues(file_checker=True)
-    def check_file(self, filename):
-        return filename
+    def check_file(self, filename, flag):
+        return filename, flag
 
     # KEEP FLAGS
     def set_flags(self, name):
@@ -620,7 +620,6 @@ class PyMorph:
         pipe.load_obj_catalog()
 
         obj_catalog = pipe.obj_catalog
-
         for i, obj in obj_catalog.iterrows():
             print(obj)
 
@@ -664,18 +663,22 @@ class PyMorph:
 
                 if pipe.run_galfit:
                     gcr.GalfitRun()
+                #CHECK WHETHER FIT.LOG EXISTS
+                fitfile = pipe.check_file("fit.log", 1)
 
                 #CASGM CLASSS
-                casgm_pipe = CASGMPipeline()
-                casgm_pipe.compute_CASGM(target)
-                
+                try:
+                    casgm_pipe = CASGMPipeline()
+                    casgm_pipe.compute_CASGM(target)
+                except:
+                    flag  = 2
                 target.update(casgm_pipe.result)
                 
                 #PARSE GALFIT OUTPUT FILE
                 g = GetOutputParams("config.ini", pipe)
-                fitfile = pipe.check_file("fit.log")
+                
                 g.parse_galfit("fit.log", gcr.components, target['Z'])
-                g.flatten()
+                g.flatten(gcr.components)
 
                 target.update(g.result)
 
@@ -705,23 +708,15 @@ class PyMorph:
                 #wcsv.writeparams(target)
                 #sys.exit()
             except PipelineCriticalError as e:
-                print("Caught:", e)
-                continue   # ✅ go to next iteration:
-#    def PyMorph():
-#        pipe = GalaxyPipeline("config.ini")
-        
-#        pipe.run_sextractor()          # run once
-        
-#        pipe.read_sex_catalog()
-        
-#        pipe.load_obj_catalog()
-        
-#        obj_catalog = pipe.obj_catalog
-        
-#        for i, obj in obj_catalog.iterrows():
-#            print(obj)
-#            run(obj)
-#
+                print("Caught:", e.info["reason"], e.info["issue"])
+                msg = f"{e.info["reason"]}_{e.info["issue"]}" 
+                flag = e.info["flag"]
+                print(msg, flag)
+                continue   # go to next iteration:
+
+
+
+
 
 if __name__ == '__main__':
     pipe = GalaxyPipeline("config.ini")

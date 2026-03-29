@@ -128,22 +128,24 @@ class GetOutputParams:
                 err_nums = list(map(float, err_nums))
                 
 
-                print('nums', nums)
-                print('err_nums', err_nums)
+                #print('nums', nums)
+                #print('err_nums', err_nums)
                 if line.startswith("sersic"):
                     nums = self.check_param_length_ser(nums)
-                    print('sersic1', nums)
-                    some_err = self.check_params_and_errors(nums, err_nums)
-                    print('sersic2', some_err[0])
-                    print('sersic err', some_err[1])
-                    nums = some_err[0]
-                    err_nums = some_err[1]
+                    #print('sersic1', nums)
+                    nums_err_nums = self.check_params_and_errors(nums, err_nums)
+                    #print('sersic2', nums_err_nums[0])
+                    #print('sersic err', nums_err_nums[1])
+                    nums = nums_err_nums[0]
+                    err_nums = nums_err_nums[1]
 
                 elif line.startswith("expdisk"):
                     nums = self.check_param_length_exp(nums)
-                    some_err = self.check_params_and_errors(nums, err_nums)
-                    nums = some_err[0]
-                    err_nums = some_err[1]
+                    nums_err_nums = self.check_params_and_errors(nums, err_nums)
+                    nums = nums_err_nums[0]
+                    err_nums = nums_err_nums[1]
+                    #print('exp2', nums_err_nums[0])
+                    #print('exp err', nums_err_nums[1])
                 #    err_nums  = self.check_elements_exp(err_nums)
                 #    print('exp', nums)
                 #    print('exp err', err_nums)
@@ -265,7 +267,7 @@ class GetOutputParams:
     # =========================================================
     # FLATTEN RESULT
     # =========================================================
-    def flatten(self, components=["bulge", "disk", "bar"]):
+    def flatten(self, components):
 
         self.flat = {}
         self.flat.update(self.result["meta"])
