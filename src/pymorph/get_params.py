@@ -3,10 +3,13 @@ import re
 import configparser
 from astropy.cosmology import Planck18 as cosmo
 import numpy as np
+from .errors_warnings import catch_pipeline_issues, PipelineCriticalError
 
 class GetOutputParams:
 
-    def __init__(self, config_file):
+    def __init__(self, config_file, pipeline):
+
+        self.pipeline = pipeline
 
         config = configparser.ConfigParser()
         config.read(config_file)
@@ -47,6 +50,23 @@ class GetOutputParams:
         else:
             print(f"{source_file} not found.")
 
+
+    @catch_pipeline_issues(expected_len=7)
+    def check_param_length_ser(self, lst):
+        return lst
+
+    @catch_pipeline_issues(expected_len=6)
+    def check_param_length_exp(self, lst):
+        return lst
+
+    @catch_pipeline_issues()
+    def check_params_and_errors(self, params, errors):
+        return params, errors
+
+    @catch_pipeline_issues()
+    def check_file(self, filename):
+        return filename
+
     # =========================================================
     # PARSE GALFIT OUTPUT
     # =========================================================
@@ -71,6 +91,7 @@ class GetOutputParams:
         current_comp_id = None
         section = "target"
 
+            
         while i < len(lines):
             line = lines[i].strip()
 
@@ -100,17 +121,39 @@ class GetOutputParams:
 
                 nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", line)
                 nums = list(map(float, nums))
-                
-                
-                x, y = nums[0], nums[1]
-
+                 
                 # errors
                 err_line = lines[i + 1]
                 err_nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", err_line)
                 err_nums = list(map(float, err_nums))
+                
 
-                result = self.get_safe(err_nums)
-                print(result)
+                print('nums', nums)
+                print('err_nums', err_nums)
+                if line.startswith("sersic"):
+                    nums = self.check_param_length_ser(nums)
+                    print('sersic1', nums)
+                    some_err = self.check_params_and_errors(nums, err_nums)
+                    print('sersic2', some_err[0])
+                    print('sersic err', some_err[1])
+                    nums = some_err[0]
+                    err_nums = some_err[1]
+
+                elif line.startswith("expdisk"):
+                    nums = self.check_param_length_exp(nums)
+                    some_err = self.check_params_and_errors(nums, err_nums)
+                    nums = some_err[0]
+                    err_nums = some_err[1]
+                #    err_nums  = self.check_elements_exp(err_nums)
+                #    print('exp', nums)
+                #    print('exp err', err_nums)
+
+
+
+                                #result = self.get_safe(err_nums)
+                #print("result", result)
+
+                x, y = nums[0], nums[1]
 
                 comp_dict = {
                     "type": comp_type,

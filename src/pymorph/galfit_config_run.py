@@ -5,7 +5,8 @@ import subprocess
 import numpy as np
 #from .flagfunc import GetFlag, isset, SetFlag
 import traceback
-#from .mask_or_fit import GetSExObj
+from .catch_errors_warning import catch_pipeline_issues
+
 
 class GalfitConfigRunFunc:
     
@@ -39,6 +40,21 @@ class GalfitConfigRunFunc:
 
         components = config.get('galfit', 'components').split(',')
         self.components = [cm.strip() for cm in components]
+
+        @catch_pipeline_issues()
+        def check_flags(self, config):
+
+            if config.get("nearest_neighbor"):
+                self.set_flag("NEAREST_NEIGHBOR")
+
+            if self.bbox:
+                self.set_flag("BBOX")
+
+            if self.barbox:
+                self.set_flag("BARBOX")
+            
+            if "bar" in self.components:
+                self.set_flag("HAS_BAR")
 
         fitting = config.get('galfit', 'fitting')
         self.fitting = [int(tf) for tf in fitting.split(',')]
@@ -469,7 +485,7 @@ class GalfitConfigRunFunc:
 
             #self.flag  = SetFlag(self.flag, GetFlag('NEIGHBOUR_FIT'))
             #print('self.components', self.components)
-            yes_bar = False
+            has_bar = False
             for comp in self.components:
                 if comp == 'bulge':
                     galfit_config += self._write_bulge()
@@ -481,12 +497,12 @@ class GalfitConfigRunFunc:
                     self._write_point(target, fcon)
                     #self.flag = SetFlag(self.flag, GetFlag('FIT_POINT'))
                 elif comp == 'bar':
-                    yes_bar = True
+                    has_bar = True
                     galfit_config += self._write_bar()
                     #self.flag = SetFlag(self.flag, GetFlag('FIT_BAR'))
             galfit_config += self._write_sky()
             
-            target['YES_BAR'] = yes_bar
+            target['HAS_BAR'] = has_bar
 
             isneighbour = 0
 

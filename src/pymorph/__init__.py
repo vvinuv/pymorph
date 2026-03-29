@@ -10,6 +10,7 @@ from .get_params import GetOutputParams
 from .writecsv import GalfitParser
 from .writehtml import generate_galaxy_report
 from .plotfunc import PlotFunc
+from .catch_errors_warning import catch_pipeline_issues
 
 __all__ = ['PyMorph',
            'PSFPipeline',
@@ -20,5 +21,6 @@ __all__ = ['PyMorph',
            'GetOutputParams',
            'GalfitParser',
            'generate_galaxy_report',
-           'PlotFunc'
+           'PlotFunc',
+           'catch_pipeline_issues'
            ]

@@ -18,9 +18,12 @@ from .get_params import GetOutputParams
 from .psffunc import PSFPipeline
 from .writehtml import generate_galaxy_report
 from .plotfunc import PlotFunc
-from .catch_errors_warning import catch_pipeline_issues
+from .errors_warnings import catch_pipeline_issues, PipelineCriticalError
+from .errors_warnings import PipelineBase
 
-class GalaxyPipeline:
+
+
+class GalaxyPipeline(PipelineBase):
 
     def __init__(self, config_file):
 
@@ -51,11 +54,21 @@ class GalaxyPipeline:
 
         self.searchrad = config.getfloat('size', 'searchrad')
 
+        self.nearest_neighbour = config.getboolean('size', 'nearest_neighbour')
+
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
         self.maglim = config.get('mag', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
+        components = config.get('galfit', 'components').split(',')
+        self.components = [cm.strip() for cm in components]
+
+
+        self.run_galfit = config.getboolean('modes', 'galfit') 
+
+        self.bbox = config.getboolean("params_limit", "bbox")
+        self.barbox = config.getboolean("params_limit", "barbox")
 
         self.sex_catalog = None
         self.obj_catalog = None
@@ -73,6 +86,77 @@ class GalaxyPipeline:
             "ISO0",
             "BACKGROUND"
         ]
+        
+        self.flags = {}
+
+    @catch_pipeline_issues(file_checker=True)
+    def check_file(self, filename):
+        return filename
+
+    # KEEP FLAGS
+    def set_flags(self, name):
+        self.flags[name] = True
+
+
+    @catch_pipeline_issues()
+    def check_neighbours(self, number):
+        if number > 0:
+            self.set_flags("NEAREST_NEIGHBOUR_FIT")
+
+
+    @catch_pipeline_issues()
+    def check_radec(self):
+        if self.flag_radec:
+            self.set_flags("RA_DEC")
+
+
+
+    @catch_pipeline_issues()
+    def check_bar(self):
+        if "bar" in self.components:
+            self.set_flag("HAS_BAR")
+
+
+    @catch_pipeline_issues(critical=True)
+    def check_image_size(self, size):
+        if size < 30:
+            self.set_flag("CRITICAL")
+            raise PipelineCriticalError("Image size < 30 pixels")
+
+
+    # SUMMARISE FLAGS
+    def summarize_flags(self):
+        summary = {
+            "has_error": False,
+            "has_warning": False,
+            "has_critical": False
+        }
+
+        for key, val in self.flags.items():
+
+            if key == "CRITICAL":
+                summary["has_critical"] = val
+            if key == "ERROR":
+                summary["has_error"] = val
+            if key == "WARNING":
+                summary["has_warning"] = val
+
+        return summary
+
+
+    def save(self):
+        """Save results + flags per object"""
+        data = {
+            "id": self.obj_id,
+            "flags": self.flags,
+        }
+
+        with open(f"result_errors.json", "w") as f:
+            json.dump(data, f, indent=2)
+
+    def p(self):
+        print(self.flags)
+
 
     # ---------------------------------------------------------
     # Run SExtractor
@@ -328,6 +412,8 @@ class GalaxyPipeline:
 
     def process_target(self, target, radius_arcmic=0.5):
 
+        self.NAME = f"{self.rootname}_{int(target["GAL_ID"])}"
+
         ra = target.get("RA", np.nan)
         dec = target.get("DEC", np.nan)
 
@@ -336,6 +422,8 @@ class GalaxyPipeline:
 
 
         position = False
+        
+        self.flag_radec = False
 
         if not pd.isna(ra) and not pd.isna(dec):
 
@@ -343,12 +431,18 @@ class GalaxyPipeline:
 
             target_sex, neighbours = self.neighbours_radec(ra, dec,
                                                            radius_arcmic=0.5)
-
+            self.flag_radec = True
+            
+            
         else:
 
             target_sex, neighbours = self.neighbours_xy(x, y)
 
 
+        print(position)
+        #@catch_pipeline_issues()
+        #if position:
+        #    self.set_flags("RA_DAC")
 
         #print(target_sex)
         target = target.to_dict()
@@ -361,8 +455,8 @@ class GalaxyPipeline:
         target['GALFIT_ANGLE'] = target_sex["THETA_IMAGE"] - 90 
         target["POSITION"] = position
         target["ROOTNAME"] = self.rootname
-        NAME = f'{self.rootname}_{target['GAL_ID']}'
-        target = {"NAME": NAME, **target}
+        #NAME = f'{self.rootname}_{target['GAL_ID']}'
+        target = {"NAME": self.NAME, **target}
         target["MAG_ZERO"] = self.mag_zero
         target["FILTER"] = self.photo_filter
         
@@ -393,6 +487,11 @@ class GalaxyPipeline:
         else:
             size = self.FixSize 
 
+        #CRITICAL FLAG 
+        self.check_image_size(size)
+
+    
+
         target['IMAGE_SIZE'] = int(size)
         print('size', target['IMAGE_SIZE'])
 
@@ -415,7 +514,7 @@ class GalaxyPipeline:
         wht_data = wht[0].data
 
         target = galaxies.get("target")
-        gal_id = target.get("GAL_ID")
+        gal_id = int(target.get("GAL_ID"))
         size = target.get("IMAGE_SIZE") 
         
         ra = target.get("RA")
@@ -496,7 +595,7 @@ class GalaxyPipeline:
             )
 
         neighbours = neighbours.loc[mask].reset_index(drop=True)
-
+        
         return target, neighbours
 
 class PyMorph:
@@ -510,6 +609,9 @@ class PyMorph:
     def run(self):
 
         pipe = GalaxyPipeline("config.ini")
+        
+        pipe.check_bar()
+
 
         pipe.run_sextractor()          # run once
 
@@ -523,75 +625,88 @@ class PyMorph:
             print(obj)
 
 
-            galaxies = pipe.process_target(obj)
+            try:
+                galaxies = pipe.process_target(obj)
 
-            target = galaxies['target']
-            neighbours = galaxies['neighbours']
-            #print(galaxies)
-            target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
-                                                          galaxies['neighbours'])
-            #print('target', target)
-            #print('neighbours', neighbours)
-            #print('galaxies', galaxies)
-            
-            pipe.generate_target_images(galaxies)
+                pipe.check_radec()
 
-            #PSF CLASS
-            psf_pipe = PSFPipeline("config.ini")
-            psf_pipe.process_target(target)
-            target.update(psf_pipe.result) 
-            
-            #print('target', target)
+                target = galaxies['target']
+                neighbours = galaxies['neighbours']
 
-            #MASK CLASS
-            mask_gen = MaskGenerator("config.ini", target, neighbours)
-            mask_gen.run()
+                #NEIGHBOUR FLAG
+                pipe.check_neighbours(neighbours.shape[0])
 
-            #GALFIT CONFIG and RUN CLASS
-            gcr = GalfitConfigRunFunc("config.ini")
-            gcr.write_config(target, neighbours)
+                #print(galaxies)
+                target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
+                                                              galaxies['neighbours'])
+                #print('target', target)
+                #print('neighbours', neighbours)
+                #print('galaxies', galaxies)
+                
+                pipe.generate_target_images(galaxies)
 
-            gcr.GalfitRun()
+                print('pipe.flags', pipe.flags)
 
-            #CASGM CLASSS
-            casgm_pipe = CASGMPipeline()
-            casgm_pipe.compute_CASGM(target)
-            
-            target.update(casgm_pipe.result)
-            
-            #PARSE GALFIT OUTPUT FILE
-            g = GetOutputParams("config.ini")
-            g.parse_galfit("fit.log", gcr.components, target['Z'])
-            g.flatten()
+                #PSF CLASS
+                psf_pipe = PSFPipeline("config.ini")
+                psf_pipe.process_target(target)
+                target.update(psf_pipe.result) 
+                
+                #print('target', target)
 
-            target.update(g.result)
+                #MASK CLASS
+                mask_gen = MaskGenerator("config.ini", target, neighbours)
+                mask_gen.run()
 
-            #print(target)
-            #SAVE CSV FORMAT
-            galaxies = {}
-            galaxies["target"] = target
-            galaxies["neighbours"] = g.neighbours
+                #GALFIT CONFIG and RUN CLASS
+                gcr = GalfitConfigRunFunc("config.ini")
+                gcr.write_config(target, neighbours)
 
-            print(galaxies["target"])
-            
-            pd.DataFrame([target]).to_csv(
-                                          "target.csv",
-                                          mode="a",
-                                          header=not os.path.exists("target.csv"),
-                                          index=False)
-           
-            #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+                if pipe.run_galfit:
+                    gcr.GalfitRun()
 
-            plotter = PlotFunc(f"O_{target["NAME"]}.fits", 
-                                  f"EM_{target["NAME"]}.fits")
-            plotter.plot_summary(f"P_{target["NAME"]}.png")
+                #CASGM CLASSS
+                casgm_pipe = CASGMPipeline()
+                casgm_pipe.compute_CASGM(target)
+                
+                target.update(casgm_pipe.result)
+                
+                #PARSE GALFIT OUTPUT FILE
+                g = GetOutputParams("config.ini", pipe)
+                fitfile = pipe.check_file("fit.log")
+                g.parse_galfit("fit.log", gcr.components, target['Z'])
+                g.flatten()
 
-            generate_galaxy_report(galaxies, output_file=f"R_{target["NAME"]}.html",
-                                   image_path=f"P_{target["NAME"]}.png")
-            #wcsv = WriteCSV("config.ini")
-            #wcsv.writeparams(target)
-            #sys.exit()
+                target.update(g.result)
 
+                #print(target)
+                #SAVE CSV FORMAT
+                galaxies = {}
+                galaxies["target"] = target
+                galaxies["neighbours"] = g.neighbours
+
+                print(galaxies["target"])
+                
+                pd.DataFrame([target]).to_csv(
+                                              "target.csv",
+                                              mode="a",
+                                              header=not os.path.exists("target.csv"),
+                                              index=False)
+               
+                #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+
+                plotter = PlotFunc(f"O_{target["NAME"]}.fits", 
+                                      f"EM_{target["NAME"]}.fits")
+                plotter.plot_summary(f"P_{target["NAME"]}.png")
+
+                generate_galaxy_report(galaxies, output_file=f"R_{target["NAME"]}.html",
+                                       image_path=f"P_{target["NAME"]}.png")
+                #wcsv = WriteCSV("config.ini")
+                #wcsv.writeparams(target)
+                #sys.exit()
+            except PipelineCriticalError as e:
+                print("Caught:", e)
+                continue   # ✅ go to next iteration:
 #    def PyMorph():
 #        pipe = GalaxyPipeline("config.ini")
         
