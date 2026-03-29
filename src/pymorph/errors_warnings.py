@@ -129,7 +129,8 @@ def check_value(value):
     if value < 50:
         return False, {
             "issue": "IMAGE_SIZE_SMALL",
-            "value": value
+            "value": value,
+            "flag": 3
         }, "CRITICAL"
 
     return True, {}, None
@@ -199,7 +200,11 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                         **info
                     }
                     self.critical = True
-                    raise PipelineCriticalError("FIRST_ERROR")
+                    raise PipelineCriticalError({
+                                            "reason": self.flags["value"],
+                                            "issue": "SMALL_IMAGE_SIZE",
+                                            "flag": self.flags["flag"]
+                                        })
                     return None
                 return info["value"]
 

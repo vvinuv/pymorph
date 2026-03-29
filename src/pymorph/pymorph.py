@@ -119,9 +119,10 @@ class GalaxyPipeline(PipelineBase):
 
     @catch_pipeline_issues(critical=True)
     def check_image_size(self, size):
-        if size < 30:
-            self.set_flag("CRITICAL")
-            raise PipelineCriticalError("Image size < 30 pixels")
+        return size
+        #if size < 30:
+        #    self.set_flag("CRITICAL")
+        #    raise PipelineCriticalError("Image size < 30 pixels")
 
 
     # SUMMARISE FLAGS
@@ -670,9 +671,16 @@ class PyMorph:
                 try:
                     casgm_pipe = CASGMPipeline()
                     casgm_pipe.compute_CASGM(target)
+                    casgm_dict = casgm_pipe.result
                 except:
                     flag  = 2
-                target.update(casgm_pipe.result)
+                    keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err', 
+                     'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
+                    casgm_dict = {}
+                    for key in keys:
+                        casgm_dict[key] = 9999
+
+                target.update(casgm_dict)
                 
                 #PARSE GALFIT OUTPUT FILE
                 g = GetOutputParams("config.ini", pipe)
