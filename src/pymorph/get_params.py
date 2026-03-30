@@ -341,6 +341,8 @@ class GetOutputParams:
             fb = 10**(-0.4 * self.result["target"]['bulge_mag'])
             fd = 10**(-0.4 * self.result["target"]['disk_mag'])
             ft = fb + fd
+            self.result["target"]['BD'] = round(fb / fd, 2)
+            self.result["target"]['BT'] = round(fb / ft, 2)
         if 'bar' in components:
             fbar = 10**(-0.4 * self.result["target"]['bar_mag'])
             ft += fbar
@@ -348,9 +350,7 @@ class GetOutputParams:
         else:
             self.result["target"]['BarT'] = 9999
 
-        self.result["target"]['BD'] = round(fb / fd, 2)
-        self.result["target"]['BT'] = round(fb / ft, 2)
-
+        
         if 'bulge' in components and "disk" not in components:
             self.result["target"]['BT'] = 1.0
             self.result["target"]['BD'] = 0.0

@@ -125,6 +125,7 @@ def check_params_and_errors(params, errors):
 
 
 def check_value(value):
+    print('value', value)
     # EXAMPLE RULE: THE VALUE SHOULD GREATER THAN 50
     if value < 50:
         return False, {

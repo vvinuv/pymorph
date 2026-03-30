@@ -92,6 +92,12 @@ class GalfitConfigRunFunc:
         constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
         constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
 
+        if component == 'sersic_main' and self.bbox != -99:
+            constraints += f'{new} {cnum} c0 -2 to 2'  
+
+        if component == 'bar' and self.barbox != -99:
+            constraints += f'{new} {cnum} c0 -2 to 2'  
+
         f_constrain = open(self.constrain_file, 'a')
         f_constrain.write(constraints)
         f_constrain.close()
@@ -179,6 +185,8 @@ class GalfitConfigRunFunc:
 
         bulge_conf += f' Z) 0 # output image (see above) {new}{new}'
     
+        print(bulge_conf)
+
         return bulge_conf
 
     def _write_disk(self):
@@ -388,7 +396,7 @@ class GalfitConfigRunFunc:
         
         new = '\n'
 
-
+        print(target["X_IMAGE"], target["Y_IMAGE"])
         self.xcntr_img = target["X_IMAGE"]
         self.ycntr_img = target["Y_IMAGE"]
         self.mag_auto = target["MAG_AUTO"]
@@ -407,7 +415,7 @@ class GalfitConfigRunFunc:
 
         rootname = target["ROOTNAME"]
         gal_id = target["GAL_ID"]
-        self.fstring = f"{rootname}_{gal_id}"
+        self.fstring = f"{target["NAME"]}"
 
         self.galfit_file = f'G_{self.fstring}.in' #GALFIT configuration file
         self.constrain_file = f'{self.fstring}.con'

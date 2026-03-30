@@ -117,7 +117,7 @@ class GalaxyPipeline(PipelineBase):
             self.set_flag("HAS_BAR")
 
 
-    @catch_pipeline_issues(critical=True)
+    @catch_pipeline_issues()
     def check_image_size(self, size):
         return size
         #if size < 30:
@@ -404,7 +404,7 @@ class GalaxyPipeline(PipelineBase):
         # remove closest object from neighbours
         neighbours = neighbours.drop(neighbours.index[min_idx])
 
-        return target_sex.to_dict(), neighbours.reset_index(drop=True)
+        return target_sex, neighbours.reset_index(drop=True)
 
     # ------------------------------------------------
     # Process one target object and its neighbours
@@ -439,7 +439,7 @@ class GalaxyPipeline(PipelineBase):
 
             target_sex, neighbours = self.neighbours_xy(x, y)
 
-
+        print(target_sex)
         print(position)
         #@catch_pipeline_issues()
         #if position:
@@ -488,8 +488,9 @@ class GalaxyPipeline(PipelineBase):
         else:
             size = self.FixSize 
 
+        #print(size)
         #CRITICAL FLAG 
-        self.check_image_size(size)
+        #self.check_image_size(size)
 
     
 
@@ -518,6 +519,8 @@ class GalaxyPipeline(PipelineBase):
         gal_id = int(target.get("GAL_ID"))
         size = target.get("IMAGE_SIZE") 
         
+        self.check_image_size(size)
+
         ra = target.get("RA")
         dec = target.get("DEC")
 
@@ -565,6 +568,23 @@ class GalaxyPipeline(PipelineBase):
         #sys.exit()
 
     def transform_to_cutout(self, target, neighbours):
+        
+        print(self.FracRad,  target['FLUX_RADIUS'])
+
+        if self.ReSize:
+            size = self.FracRad * target['FLUX_RADIUS']
+        elif self.ImSize:
+            size = fits.open(self.imagefile)[0].data.shape[0]
+        else:
+            size = self.FixSize
+
+        #print(size)
+        #CRITICAL FLAG
+        #self.check_image_size(size)
+
+        target['IMAGE_SIZE'] = int(size)
+        print('size', target['IMAGE_SIZE'])
+
 
         size = target['IMAGE_SIZE']
         half = size // 2
@@ -604,8 +624,148 @@ class PyMorph:
     def __init__(self, config_file='config.in'):
 
         self.config_file = config_file
+        
+        self.run_cutout_model()
+        #self.run()
 
-        self.run()
+
+    def sub_run(self, pipe, obj):
+        galaxies = pipe.process_target(obj)
+
+        pipe.check_radec()
+
+        target = galaxies['target']
+        neighbours = galaxies['neighbours']
+
+        #NEIGHBOUR FLAG
+        pipe.check_neighbours(neighbours.shape[0])
+
+        
+        print(pipe.imagefile, pipe.whtfile)
+        #sys.exit()
+        #print(galaxies)
+        target, neighbours = pipe.transform_to_cutout(galaxies['target'],
+                                                   galaxies['neighbours'])
+        #print('target', target)
+        #print('neighbours', neighbours)
+        #print('galaxies', galaxies)
+
+        pipe.generate_target_images(galaxies)
+
+        print('pipe.flags', pipe.flags)
+
+        #PSF CLASS
+        psf_pipe = PSFPipeline("config.ini")
+        psf_pipe.process_target(target)
+
+        target.update(psf_pipe.result)
+
+        #print('target', target)
+
+        #MASK CLASS
+        mask_gen = MaskGenerator("config.ini", target, neighbours)
+        mask_gen.run()
+
+        #GALFIT CONFIG and RUN CLASS
+        gcr = GalfitConfigRunFunc("config.ini")
+        gcr.write_config(target, neighbours)
+
+        if pipe.run_galfit:
+            gcr.GalfitRun()
+        #CHECK WHETHER FIT.LOG EXISTS
+        fitfile = pipe.check_file("fit.log", 1)
+
+        #CASGM CLASSS
+        try:
+            casgm_pipe = CASGMPipeline()
+            casgm_pipe.compute_CASGM(target)
+            casgm_dict = casgm_pipe.result
+        except:
+            flag  = 2
+            keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err',
+             'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
+            casgm_dict = {}
+            for key in keys:
+                casgm_dict[key] = 9999
+
+        target.update(casgm_dict)
+
+        #PARSE GALFIT OUTPUT FILE
+        g = GetOutputParams("config.ini", pipe)
+
+        g.parse_galfit("fit.log", gcr.components, target['Z'])
+        g.flatten(gcr.components)
+
+        target.update(g.result)
+
+        #print(target)
+        #SAVE CSV FORMAT
+        galaxies = {}
+        galaxies["target"] = target
+        galaxies["neighbours"] = g.neighbours
+
+        print(galaxies["target"])
+
+        pd.DataFrame([target]).to_csv(
+                                      "target.csv",
+                                      mode="a",
+                                  header=not os.path.exists("target.csv"),
+                                      index=False)
+
+        #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+
+        plotter = PlotFunc(f"O_{target["NAME"]}.fits",
+                              f"EM_{target["NAME"]}.fits")
+        plotter.plot_summary(f"P_{target["NAME"]}.png")
+
+
+
+
+        generate_galaxy_report(galaxies,
+                               output_file=f"R_{target["NAME"]}.html",
+                               image_path=f"P_{target["NAME"]}.png")
+        #wcsv = WriteCSV("config.ini")
+        #wcsv.writeparams(target)
+        #sys.exit()
+
+
+    def run_cutout_model(self):
+
+        pipe = GalaxyPipeline("config.ini")
+
+        
+        pipe.check_bar()
+
+        pipe.load_obj_catalog()
+        obj_catalog = pipe.obj_catalog
+
+        print(obj_catalog)
+        
+        for i, obj in obj_catalog.iterrows():
+
+            folder, filename = os.path.split(pipe.imagefile)
+            pipe.imagefile =  os.path.join(folder, obj['GIMG'])
+            pipe.whtfile =  os.path.join(folder, obj['WIMG'])
+            print(obj['GIMG'], obj['WIMG'])
+
+            pipe.run_sextractor()          # run once
+
+            pipe.read_sex_catalog()
+            galaxies = pipe.process_target(obj)
+            pipe.check_radec()
+
+            try:
+                self.sub_run(pipe, obj)
+            except PipelineCriticalError as e:
+                print("Caught:", e.info["reason"], e.info["issue"])
+                msg = f"{e.info["reason"]}_{e.info["issue"]}"
+                flag = e.info["flag"]
+                print(msg, flag)
+                continue   # go to next iteration:
+            
+            
+
+
 
     def run(self):
 
