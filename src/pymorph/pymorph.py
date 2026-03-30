@@ -578,12 +578,13 @@ class GalaxyPipeline(PipelineBase):
         else:
             size = self.FixSize
 
-        #print(size)
+        #print('size', size)
+        #sys.exit()
         #CRITICAL FLAG
         #self.check_image_size(size)
 
         target['IMAGE_SIZE'] = int(size)
-        print('size', target['IMAGE_SIZE'])
+        #print('size', target['IMAGE_SIZE'])
 
 
         size = target['IMAGE_SIZE']
@@ -602,6 +603,8 @@ class GalaxyPipeline(PipelineBase):
         # --- Transform target ---
         target["X_IMAGE"] = target["X_IMAGE"] - dx
         target["Y_IMAGE"] = target["Y_IMAGE"] - dy
+        target["DX"] = dx
+        target["DY"] = dy
 
         # --- Transform neighbours ---
         neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - dx

@@ -45,30 +45,44 @@ def find_len(lst, expected_len):
     if not lst:
         print('EMPTY')
         return False, {
-            "issue": "EMPTY"
+            "stage": "errors",
+            "issue": "EMPTY",
+            "reason": "EMPTY",
+            "flag": 10,
+            "params": ""
         }, "CRITICAL"
+
 
     if not isinstance(lst, (list, tuple)):
         print('NOT_A_LIST')
         return False, {
-            "issue": "NOT_A_LIST",
-            "actual_type": type(lst).__name__
+            "stage": "errors",
+            "issue": "NOT_A_LISTT",
+            "reason": "NOT_A_LIST",
+            "flag": 9,
+            "params": type(lst).__name__
         }, "CRITICAL"
+
 
     if any(isinstance(x, (list, tuple)) for x in lst):
         print('NESTED_LIST')
         return False, {
+            "stage": "errors",
             "issue": "NESTED_LIST",
-            "actual_type": type(lst).__name__
+            "reason": "NESTED_LIST",
+            "flag": 8,
+            "params": type(lst).__name__
         }, "CRITICAL"
 
 
     if len(lst) != expected_len:
         print('INVALID_LENGTH')
         return False, {
+            "stage": "errors",
             "issue": "INVALID_LENGTH",
-            "expected": expected_len,
-            "actual": len(lst)
+            "reason": "INVALID_LENGTH",
+            "flag": 7, 
+            "params": f"{expected_len} {len(lst)}"
         }, "CRITICAL"
 
     #print('What the fuck 3 True')
@@ -86,6 +100,8 @@ def check_params_and_errors(params, errors):
         return False, (params, errors), {
             "stage": "params",
             "issue": "INVALID_PARAMETERS",
+            "reason": "INVALID_PARAMETERS",
+            "flag": 6,
             "params": params
         }, "CRITICAL"
 
@@ -98,7 +114,8 @@ def check_params_and_errors(params, errors):
             "stage": "errors",
             "issue": "ERRORS_REPLACED",
             "reason": "EMPTY_OR_SIZE_MISMATCH",
-            "expected_len": len(params)
+            "flag": 5,
+            "params": ""
         }, "WARNING"
 
     # replace NaNs in errors
@@ -118,7 +135,9 @@ def check_params_and_errors(params, errors):
         return True, (params, errors), {
             "stage": "errors",
             "issue": "ERRORS_REPLACED",
-            "reason": "NAN_VALUES"
+            "reason": "NAN_VALUES",
+            "flag": 5,
+            "params": ""
         }, "WARNING"
 
     return True, (params, errors), {}, None
@@ -129,9 +148,11 @@ def check_value(value):
     # EXAMPLE RULE: THE VALUE SHOULD GREATER THAN 50
     if value < 50:
         return False, {
+            "stage": "errors",
             "issue": "IMAGE_SIZE_SMALL",
             "value": value,
-            "flag": 3
+            "flag": 3,
+            "params": ""
         }, "CRITICAL"
 
     return True, {}, None
@@ -142,9 +163,11 @@ def check_file(filename, flag):
 
     if not Path(filename).exists():
         return False, (filename, flag), {
+            "stage": "errors",
             "issue": "FILE_NOT_FOUND",
             "value": filename,
             "flag": flag,
+            "params": ""
         }, "CRITICAL"
 
     return True, (filename, flag), {}, None
@@ -220,13 +243,17 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                         **info
                     }
                     self.critical = True
-                    raise PipelineCriticalError("FIRST_ERROR")
+                    raise PipelineCriticalError({
+                                            "reason": self.flags["value"],
+                                            "issue": "PARAMS_LEN_LESS_DEFAULT",
+                                            "flag": self.flags["flag"]
+                                        })
                     return None
 
 
             # PARAMS + ERRORS CHECK (separate function)
             if isinstance(result, tuple) and len(result) == 2:
-                print("PARAMS + ERRORS")
+                #print("PARAMS + ERRORS")
                 params, errors = result
                 #print(result)
                 status, (params, errors), info, severity = check_params_and_errors(params, errors)
@@ -239,7 +266,11 @@ def catch_pipeline_issues(critical=None, file_checker=False,
 
                 if not status:
                     self.critical = True
-                    raise PipelineCriticalError("FIRST_ERROR")
+                    raise PipelineCriticalError({
+                                            "reason": self.flags["value"],
+                                            "issue": "PARAMS_NO_FLOAT",
+                                            "flag": self.flags["flag"]
+                                        })
                     return None
 
                 result = (params, errors)

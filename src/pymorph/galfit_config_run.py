@@ -185,8 +185,6 @@ class GalfitConfigRunFunc:
 
         bulge_conf += f' Z) 0 # output image (see above) {new}{new}'
     
-        print(bulge_conf)
-
         return bulge_conf
 
     def _write_disk(self):
