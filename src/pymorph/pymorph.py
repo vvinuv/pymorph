@@ -701,6 +701,9 @@ class PyMorph:
 
         target.update(g.result)
 
+        if os.path.exists("fit.log"):
+            os.remove("fit.log")
+
         #print(target)
         #SAVE CSV FORMAT
         galaxies = {}
