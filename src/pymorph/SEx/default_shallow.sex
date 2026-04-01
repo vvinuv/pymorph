@@ -4,13 +4,13 @@
  
 #-------------------------------- Catalog ------------------------------------
  
-CATALOG_NAME     %(shallow_cata)s       # name of the output catalog
+CATALOG_NAME     $DATADIR/shallow_cat       # name of the output catalog
 CATALOG_TYPE     ASCII     # NONE,ASCII,ASCII_HEAD, ASCII_SKYCAT,
                                 # ASCII_VOTABLE, FITS_1.0 or FITS_LDAC
-PARAMETERS_NAME  %(PYMORPH_PATH)s/SEx/default.shallow.param  # name of the file containing catalog contents
+PARAMETERS_NAME  $PYMORPH_PATH/SEx/default.shallow.param  # name of the file containing catalog contents
 
 #-------------------------------ASSOC--------------------------
-ASSOC_NAME       %(sex_cata)s
+ASSOC_NAME       $SEx_CATA
 ASSOC_PARAMS     2,3,18
 ASSOC_RADIUS     6
 ASSOC_TYPE       MAX
@@ -24,7 +24,7 @@ DETECT_THRESH    0.3            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
 ANALYSIS_THRESH  0.3            # <sigmas> or <threshold>,<ZP> in mag.arcsec-2
  
 FILTER           Y              # apply filter for detection (Y or N)?
-FILTER_NAME      %(PYMORPH_PATH)s/SEx/default.conv   # name of the file containing the filter
+FILTER_NAME      $PYMORPH_PATH/SEx/default.conv   # name of the file containing the filter
  
 DEBLEND_NTHRESH  64             # Number of deblending sub-thresholds
 DEBLEND_MINCONT  0.0005          # Minimum contrast parameter for deblending
@@ -43,15 +43,15 @@ PHOT_PETROPARAMS 2.0, 3.5       # MAG_PETRO parameters: <Petrosian_fact>,
                                 # <min_radius>
 PHOT_FLUXFRAC    0.5            # flux fraction[s] used for FLUX_RADIUS
 SATUR_LEVEL      100000.0        # level (in ADUs) at which arises saturation
-MAG_ZEROPOINT    %(mag_zero)s            # magnitude zero-point
+MAG_ZEROPOINT    $MAGZERO            # magnitude zero-point
 MAG_GAMMA        4.0            # gamma of emulsion (for photographic scans)
-GAIN             1.0            # detector gain in e-/ADU
-PIXEL_SCALE      0.045            # size of pixel in arcsec (0=use FITS WCS info)
+GAIN             $GAIN            # detector gain in e-/ADU
+PIXEL_SCALE      $PIXEL_SCALE            # size of pixel in arcsec (0=use FITS WCS info)
  
 #------------------------- Star/Galaxy Separation ----------------------------
  
 SEEING_FWHM      0.11            # stellar FWHM in arcsec
-STARNNW_NAME     %(PYMORPH_PATH)s/SEx/default.nnw    # Neural-Network_Weight table filename
+STARNNW_NAME     $PYMORPH_PATH/SEx/default.nnw    # Neural-Network_Weight table filename
  
 #------------------------------ Background -----------------------------------
  
@@ -75,7 +75,7 @@ XML_NAME         sex.xml        # Filename for XML output
 
 #-------------------------------- WEIGHTing ----------------------------------
 
-WEIGHT_TYPE      %(SEx_WEIGHT_TYPE)s     # type of WEIGHTing: NONE, BACKGROUND,
+WEIGHT_TYPE      $WEIGHT_TYPE     # type of WEIGHTing: NONE, BACKGROUND,
                                 # MAP_RMS, MAP_VAR or MAP_WEIGHT
-WEIGHT_IMAGE     %(whtfile)s    # weight-map filename
+WEIGHT_IMAGE     $WHTFILE    # weight-map filename
 WEIGHT_GAIN      N              # modulate gain (E/ADU) with weights? (Y/N)
