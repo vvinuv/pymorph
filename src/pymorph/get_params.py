@@ -337,17 +337,21 @@ class GetOutputParams:
 
 
     def get_bt(self, components):
+        if 'bulge' in components and 'disk' in components and 'bar' in components:
+            fb = 10**(-0.4 * self.result["target"]['bulge_mag'])
+            fd = 10**(-0.4 * self.result["target"]['disk_mag'])
+            fbar = 10**(-0.4 * self.result["target"]['bar_mag'])
+            ft = fb + fd + fbar
+            self.result["target"]['BD'] = round(fb / fd, 2)
+            self.result["target"]['BT'] = round(fb / ft, 2)
+            self.result["target"]['BarT'] = round(fbar / ft, 2)
+
         if 'bulge' in components and 'disk' in components:
             fb = 10**(-0.4 * self.result["target"]['bulge_mag'])
             fd = 10**(-0.4 * self.result["target"]['disk_mag'])
             ft = fb + fd
             self.result["target"]['BD'] = round(fb / fd, 2)
             self.result["target"]['BT'] = round(fb / ft, 2)
-        if 'bar' in components:
-            fbar = 10**(-0.4 * self.result["target"]['bar_mag'])
-            ft += fbar
-            self.result["target"]['BarT'] = round(fbar / ft, 2)
-        else:
             self.result["target"]['BarT'] = 9999
 
         

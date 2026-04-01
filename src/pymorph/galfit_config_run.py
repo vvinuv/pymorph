@@ -35,8 +35,8 @@ class GalfitConfigRunFunc:
 
         self.center_constrain = config.getfloat('params_limit', 'center_constrain')
 
-        self.bbox = config.getfloat('params_limit', 'bbox')
-        self.barbox = config.getfloat('params_limit', 'barbox')
+        self.bbox = config.getfloat('galfit', 'bbox')
+        self.barbox = config.getfloat('galfit', 'barbox')
 
         components = config.get('galfit', 'components').split(',')
         self.components = [cm.strip() for cm in components]
@@ -127,14 +127,18 @@ class GalfitConfigRunFunc:
         f_constrain.write(constraints)
         f_constrain.close()
 
-    def _sersic_neighbor_constrain(self, cnum, eb, pa):
+    def _sersic_neighbor_constrain(self, cnum, cx, cy,
+                                   eb, pa):
 
         new = '\n'
 
         eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
         eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
 
-        constraints = f'{new} {cnum} n 0.2 to 10'
+        constraints = f'{new} {cnum} x {cx[0]:.2f} to {cx[1]:.2f}'
+        constraints += f'{new} {cnum} y {cy[0]:.2f} to {cy[1]:.2f}'
+
+        constraints += f'{new} {cnum} n 0.2 to 10'
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
         constraints += f'{new} {cnum} re 1 to 100'
         constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
@@ -363,12 +367,15 @@ class GalfitConfigRunFunc:
         new = '\n'
 
         self.obj_counter += 1
-        
+        centerx_con = (neigh["X_IMAGE"] - 10, neigh["X_IMAGE"] + 10)
+        centery_con = (neigh["Y_IMAGE"] - 10, neigh["Y_IMAGE"] + 10)
+
         self._sersic_neighbor_constrain(self.obj_counter, 
+                                        centerx_con, centery_con,
                                         1/neigh["ELONGATION"],
                                         neigh["GALFIT_ANGLE"])
 
-        # write config file
+                # write config file
         neigh_conf = f'# Neighbor Sersic function {new}{new}'
 
         neigh_conf += f' 0) sersic # Object type {new}'

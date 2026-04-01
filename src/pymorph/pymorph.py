@@ -1,5 +1,7 @@
 import os
 import sys
+from string import Template
+from pathlib import Path
 import datetime
 import configparser
 import subprocess
@@ -27,6 +29,8 @@ class GalaxyPipeline(PipelineBase):
 
     def __init__(self, config_file):
 
+        BASE_DIR = Path(__file__).parent
+
         config = configparser.ConfigParser()
         config.read(config_file)
         self.imagefile = config.get("imagecata", "imagefile")
@@ -43,6 +47,7 @@ class GalaxyPipeline(PipelineBase):
         self.thresh_area = config.getfloat('mask', 'thresh_area')
         self.threshold = config.getfloat('mask', 'threshold')
 
+        self.pixelscale = config.getfloat('cosmology', 'pixelscale') 
 
         size = config.get('size', 'size_list')
         size = [int(s) for s in size.split(',')]
@@ -58,7 +63,7 @@ class GalaxyPipeline(PipelineBase):
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
-        self.maglim = config.get('mag', 'maglim').split(',')
+        self.maglim = config.get('findfit', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
         components = config.get('galfit', 'components').split(',')
@@ -67,8 +72,18 @@ class GalaxyPipeline(PipelineBase):
 
         self.run_galfit = config.getboolean('modes', 'galfit') 
 
-        self.bbox = config.getboolean("params_limit", "bbox")
-        self.barbox = config.getboolean("params_limit", "barbox")
+        self.galcut = config.getboolean("modes", "galcut")
+
+        self.sex_keys = {key.upper(): value
+                         for key, value in config['sextractor'].items()
+                         }
+        self.sex_keys['DATADIR'] = self.datadir
+        self.sex_keys['WHTFILE'] = self.whtfile
+        self.sex_keys['MAGZERO'] = self.mag_zero
+        self.sex_keys['PIXEL_SCALE'] = self.pixelscale
+        self.sex_keys['SEx_CATA'] = self.sex_cata
+        self.sex_keys['PYMORPH_PATH'] = Path(__file__).parent
+        self.sex_keys['PIXEL_SCALE'] = self.pixelscale
 
         self.sex_catalog = None
         self.obj_catalog = None
@@ -88,6 +103,8 @@ class GalaxyPipeline(PipelineBase):
         ]
         
         self.flags = {}
+
+
 
     @catch_pipeline_issues(file_checker=True)
     def check_file(self, filename, flag):
@@ -162,10 +179,21 @@ class GalaxyPipeline(PipelineBase):
     # ---------------------------------------------------------
     # Run SExtractor
     # ---------------------------------------------------------
-    def run_sextractor(self, config_file="SEx/default.sex"):
+    def run_sextractor(self):
+
+        tpl_file = os.path.join(self.sex_keys["PYMORPH_PATH"], 
+                                "SEx/default.sex")
+
+        with open(tpl_file) as f:
+            tpl = Template(f.read())
+        output = tpl.safe_substitute(self.sex_keys)
+        with open(os.path.join(Path.cwd(), 'default.sex'), 'w') as f:
+            f.write(output)
 
         output_cat = f"{self.rootname}_sex.cat"
-        sex_out_params = "SEx/default.param"
+        sex_out_params = os.path.join(self.sex_keys["PYMORPH_PATH"], 
+                                      "SEx/default.param")
+
 
         cmd = [
             "sex",
@@ -173,7 +201,7 @@ class GalaxyPipeline(PipelineBase):
             "-WEIGHT_IMAGE", self.whtfile,
             "-CATALOG_NAME", output_cat,
             "-PARAMETERS_NAME", sex_out_params,
-            "-c", config_file
+            "-c", "default.sex"
         ]
 
         subprocess.run(cmd, check=True)
@@ -475,6 +503,9 @@ class GalaxyPipeline(PipelineBase):
         target.pop("ALPHA_J2000", None)
         target.pop("DELTA_J2000", None)
 
+        #target["RA"] = 9999
+        #target["DEC"] = 9999
+
         if target['SKY'] == -999:
             target.pop('SKY', None)
         else:
@@ -483,6 +514,7 @@ class GalaxyPipeline(PipelineBase):
 
         print(self.FracRad,  target['FLUX_RADIUS'])
 
+        #sys.exit()
         if self.ReSize:
             size = self.FracRad * target['FLUX_RADIUS']
         else:
@@ -498,6 +530,8 @@ class GalaxyPipeline(PipelineBase):
         print('size', target['IMAGE_SIZE'])
 
         neighbours['GALFIT_ANGLE'] = neighbours["THETA_IMAGE"] - 90
+        #neighbours["RA"] = 9999
+        #neighbours["DEC"] = 9999
 
         galaxies = dict()
         galaxies['target'] = target
@@ -624,12 +658,16 @@ class GalaxyPipeline(PipelineBase):
 
 class PyMorph:
     
-    def __init__(self, config_file='config.in'):
+    def __init__(self, config_file='config.ini'):
 
-        self.config_file = config_file
-        
-        self.run_cutout_model()
-        #self.run()
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        self.galcut = config.getboolean("modes", "galcut")
+
+        if self.galcut:
+            self.run_cutout_model()
+        else:
+            self.run()
 
 
     def sub_run(self, pipe, obj):
@@ -753,6 +791,9 @@ class PyMorph:
             pipe.imagefile =  os.path.join(folder, obj['GIMG'])
             pipe.whtfile =  os.path.join(folder, obj['WIMG'])
             print(obj['GIMG'], obj['WIMG'])
+            #obj['RA'] = 9999
+            #obj['DEC'] = 9999
+            obj.drop(['GIMG', 'WIMG'], inplace=True)
 
             pipe.run_sextractor()          # run once
 
