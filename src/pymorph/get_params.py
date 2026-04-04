@@ -21,24 +21,6 @@ class GetOutputParams:
         #self.WV = config.getfloat('cosmology', 'WV')
         #self.redshift = config.getfloat('cosmology', 'redshift')
 
-    # ====================
-    # SAFELY RETURN VALUES
-    # ====================
-    def get_safe(self, arr):
-        arr = np.asarray(arr)
-
-        result = []
-        for val in arr:
-            try:
-                if val is None or (isinstance(val, float) and np.isnan(val)):
-                    result.append(9999)
-                else:
-                    result.append(val)
-            except Exception:
-                result.append(9999)
-
-        return np.array(result)
-
 
     def append_and_remove(self, source_file, target_file):
         if os.path.exists(source_file):
@@ -63,9 +45,6 @@ class GetOutputParams:
     def check_params_and_errors(self, params, errors):
         return params, errors
 
-    @catch_pipeline_issues()
-    def check_file(self, filename):
-        return filename
 
     # =========================================================
     # PARSE GALFIT OUTPUT
@@ -84,7 +63,7 @@ class GetOutputParams:
         with open(filename, "r") as f:
             lines = f.readlines()
 
-        #self.append_and_remove("fit.log", "fit2.log")
+        self.append_and_remove("fit.log", "fit2.log")
 
         i = 0
         comp_id = 0
@@ -152,7 +131,6 @@ class GetOutputParams:
 
 
 
-                                #result = self.get_safe(err_nums)
                 #print("result", result)
 
                 x, y = nums[0], nums[1]

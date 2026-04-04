@@ -1,9 +1,23 @@
 from functools import wraps
 from pathlib import Path
 import warnings
+import sys
 import math
 import numpy as np
 
+OK                = 0
+FILE_NOT_FOUND    = 1 << 0   # 1
+EMPTY_LIST        = 1 << 1   # 2
+WRONG_LENGTH      = 1 << 2   # 4
+NEGATIVE_VALUE    = 1 << 3   # 8
+NAN_VALUE         = 1 << 4   # 16
+
+FLAG_ERROR_MAP = {
+                FILE_NOT_FOUND: "FILE_NOT_FOUND",
+                EMPTY_LIST: "EMPTY_LIST",
+                WRONG_LENGTH: "WRONG_LENGTH",
+                NEGATIVE_VALUE: "NEGATIVE_VALUE",
+                NAN_VALUE: "NAN_VALUE"}
 
 class PipelineBase:
 
@@ -159,18 +173,15 @@ def check_value(value):
 
 
 
-def check_file(filename, flag):
+def check_file(filename):
 
     if not Path(filename).exists():
-        return False, (filename, flag), {
-            "stage": "errors",
-            "issue": "FILE_NOT_FOUND",
+        return False, {
+            "reason": "GALFIT_FAILED",
             "value": filename,
-            "flag": flag,
-            "params": ""
         }, "CRITICAL"
 
-    return True, (filename, flag), {}, None
+    return True, {}, None
 
 
 
@@ -183,7 +194,7 @@ def catch_pipeline_issues(critical=None, file_checker=False,
         def wrapper(self, *args, **kwargs):
 
             # reset
-            self.flags = {}
+            self.flag = {}
             self.critical = False
 
             # RUN FUNCTION
@@ -193,23 +204,19 @@ def catch_pipeline_issues(critical=None, file_checker=False,
             # DECORDOR. NOW IT IS USING THE ACTUAL FUNCTION WHICH GOT 
             # THREE OUTPUTS
 
-            if file_checker == True and isinstance(result, tuple) and len(result) == 2: 
+            #print('result', func.__name__, result)
+            if file_checker == True:# and isinstance(result, tuple) and len(result) == 2: 
                 filename = result[0]
                 flag = result[1]
-                status, (filename, flag), info, severity = check_file(filename, flag)
+                (status, info, severity) = check_file(filename)
                 if not status:
-                    self.flags = {
+                    self.flag = {
                         "function": func.__name__,
-                        "stage": "input",
+                        "error": severity,
                         **info
                     }
-                    self.critical = self.flags["flag"]
-                    raise PipelineCriticalError({
-                                            "reason": self.flags["value"],
-                                            "issue": "NOT_FOUND",
-                                            "flag": self.flags["flag"]
-                                        })
-                    return None
+                    raise PipelineCriticalError(self.flag)
+                    #return None
                 return info 
 
             # SIZE CHECK

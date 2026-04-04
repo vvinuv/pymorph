@@ -1,7 +1,9 @@
 import numpy as np
-import fitsio
+from astropy.io import fits
+from astropy.convolution import convolve, Gaussian2DKernel
 
-def return_sigma(image_data, gain=4.71, ncombine=1):
+
+def return_sigma(image_data, outname='W.fits',  gain=4.71, ncombine=1):
     '''
     This is exactly return sigma image as GALFIT in sigma.c  
     '''
@@ -32,7 +34,11 @@ def return_sigma(image_data, gain=4.71, ncombine=1):
     std_sky2 = np.std(image_data[abs(image_data - med) <= detect_sigma * std_sky])
 
 
-    image_data_smooth = gaussian_filter(image_data, sigma=gaus_sigma, radius=gaus_radius)
+    kernel = Gaussian2DKernel(x_stddev=gaus_sigma, x_size=gaus_radius, 
+                              y_size=gaus_radius)
+    image_data_smooth = convolve(image_data, kernel, nan_treatment='interpolate')
+
+    #image_data_smooth = gaussian_filter(image_data, sigma=gaus_sigma, radius=gaus_radius)
 
     #Here varp is the variance as it is the squre of sqrt(count * effgain).
     #i.e. count * gain
@@ -41,16 +47,19 @@ def return_sigma(image_data, gain=4.71, ncombine=1):
     varp[varp >= 0] = np.sqrt(varp[varp >= 0] / effgain / effgain + 1 * std_sky2 * std_sky2)
     varp[varp < 0] = std_sky2
     std = varp.copy()
-    return std
+    fits.writeto(outname, varp, overwrite=True)
+    #return std
 
 if __name__  == '__main__':
-    root = '../examples/small_image/data'
-    header = fitsio.read_header(f'{root}/I.fits')
+    ffits = "/Users/vinu/github/pymorph/examples/small_image/data/Icl1358_9.fits"
+    hdul = fits.open(ffits)
+    img_data = hdul[0].data
+    header = hdul[0].header
+
+
     gain = header['GAIN']
     ncombine = header['NCOMBINE']
-    image_data = fitsio.read(f'{root}/I.fits')
-    varp = return_sigma(image_data, gain=gain, ncombine=ncombine)
+    varp = return_sigma(img_data, gain=gain, ncombine=ncombine)
 
-    os.system(f'/bin/rm -f {root}/Isigma.fits')
-    fitsio.write(f'{rmroot}/Isigma.fits', varp, clobber=True)
+    fits.writeto("Isigma.fits", varp, overwrite=True)
 

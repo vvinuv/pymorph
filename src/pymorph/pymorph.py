@@ -22,7 +22,41 @@ from .writehtml import generate_galaxy_report
 from .plotfunc import PlotFunc
 from .errors_warnings import catch_pipeline_issues, PipelineCriticalError
 from .errors_warnings import PipelineBase
+from .weightimage import return_sigma
+#from .flagfunc import GetFlag, isset, set_flag, clr_flag 
 
+OK = 0
+GALFIT_FAILED = 1 << 0    # 1
+PARAMS_INVALID    = 1 << 1    # 2
+SMALL_IMAGE       = 1 << 2    # 4
+
+# 🟡 Warnings
+LARGE_CHISQ       = 1 << 3    # 8
+CENTER_SHIFT      = 1 << 4    # 16
+FITTING_SKY       = 1 << 5    # 32
+FITTING_NEIGHBOR  = 1 << 6    # 64
+CASGM_FAIL        = 1 << 7    # 128
+BAD_RA_DEC        = 1 << 8    # 256
+
+# 🟡 Limits
+IE_AT_LIMIT       = 1 << 9
+ID_AT_LIMIT       = 1 << 10
+BT_AT_LIMIT       = 1 << 11
+N_AT_LIMIT        = 1 << 12
+RE_AT_LIMIT       = 1 << 13
+RD_AT_LIMIT       = 1 << 14
+EB_AT_LIMIT       = 1 << 15
+ED_AT_LIMIT       = 1 << 16
+IBAR_AT_LIMIT     = 1 << 17
+NBAR_AT_LIMIT     = 1 << 18
+RBAR_AT_LIMIT     = 1 << 19
+EBAR_AT_LIMIT     = 1 << 20
+
+# 🟡 Other warnings
+ELLIPSE_FAIL      = 1 << 21
+PLOT_FAIL         = 1 << 22
+BACK_FAILED       = 1 << 23
+DETAIL_FAILED     = 1 << 24
 
 
 class GalaxyPipeline(PipelineBase):
@@ -102,47 +136,38 @@ class GalaxyPipeline(PipelineBase):
             "BACKGROUND"
         ]
         
-        self.flags = {}
+        self.flags = 0
 
-
+    def set_flag(self, f):
+        self.flags |= f
 
     @catch_pipeline_issues(file_checker=True)
-    def check_file(self, filename, flag):
-        return filename, flag
+    def check_file(self, filename):
+        return filename
 
-    # KEEP FLAGS
-    def set_flags(self, name):
-        self.flags[name] = True
+    #def check_neighbours(self, number):
+    #    if number > 0:
+    #        self.flags |= NEIGHBOUR_FIT
 
+    #def check_radec(self):
+    #    if self.flag_radec:
+    #        pass
+            #self.flags |= RA_DEC
 
-    @catch_pipeline_issues()
-    def check_neighbours(self, number):
-        if number > 0:
-            self.set_flags("NEAREST_NEIGHBOUR_FIT")
-
-
-    @catch_pipeline_issues()
-    def check_radec(self):
-        if self.flag_radec:
-            self.set_flags("RA_DEC")
-
-
-
-    @catch_pipeline_issues()
-    def check_bar(self):
-        if "bar" in self.components:
-            self.set_flag("HAS_BAR")
-
+    #def check_bar(self):
+    #    if "bar" in self.components:
+    #        self.flags |= BAR_FAKE_CNTR #("HAS_BAR")
 
     @catch_pipeline_issues()
     def check_image_size(self, size):
-        return size
-        #if size < 30:
+        #return size
+        if size < 30:
+            self.set_flag(SMALL_IMAGE)
         #    self.set_flag("CRITICAL")
         #    raise PipelineCriticalError("Image size < 30 pixels")
 
 
-    # SUMMARISE FLAGS
+    # SUMMARISE FLAG
     def summarize_flags(self):
         summary = {
             "has_error": False,
@@ -163,10 +188,10 @@ class GalaxyPipeline(PipelineBase):
 
 
     def save(self):
-        """Save results + flags per object"""
+        """Save results + flag per object"""
         data = {
             "id": self.obj_id,
-            "flags": self.flags,
+            "flag": self.flags,
         }
 
         with open(f"result_errors.json", "w") as f:
@@ -180,6 +205,17 @@ class GalaxyPipeline(PipelineBase):
     # Run SExtractor
     # ---------------------------------------------------------
     def run_sextractor(self):
+        con1 = self.sex_keys["WEIGHT_TYPE"] == "MAP_RMS"
+        con2 = not os.path.exists(self.whtfile)
+        if con1 and con2 and 0:
+            image_data = fits.open(self.imagefile)[0].data
+            return_sigma(image_data, self.whtfile,  
+                         gain=4.71, ncombine=1)
+
+        try:
+            self.whtdata = fits.open(self.whtfile)[0].data
+        except FileNotFoundError:
+            print("Missing weight file. Exiting PyMorph. ")
 
         tpl_file = os.path.join(self.sex_keys["PYMORPH_PATH"], 
                                 "SEx/default.sex")
@@ -471,7 +507,7 @@ class GalaxyPipeline(PipelineBase):
         print(position)
         #@catch_pipeline_issues()
         #if position:
-        #    self.set_flags("RA_DAC")
+        #    self.set_flag("RA_DAC")
 
         #print(target_sex)
         target = target.to_dict()
@@ -714,7 +750,7 @@ class PyMorph:
         if pipe.run_galfit:
             gcr.GalfitRun()
         #CHECK WHETHER FIT.LOG EXISTS
-        fitfile = pipe.check_file("fit.log", 1)
+        fitfile = pipe.check_file("fit.log")
 
         #CASGM CLASSS
         try:
@@ -722,7 +758,7 @@ class PyMorph:
             casgm_pipe.compute_CASGM(target)
             casgm_dict = casgm_pipe.result
         except:
-            flag  = 2
+            flags  = 2
             keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err',
              'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
             casgm_dict = {}
@@ -778,7 +814,7 @@ class PyMorph:
         pipe = GalaxyPipeline("config.ini")
 
         
-        pipe.check_bar()
+        #pipe.check_bar()
 
         pipe.load_obj_catalog()
         obj_catalog = pipe.obj_catalog
@@ -806,8 +842,8 @@ class PyMorph:
             except PipelineCriticalError as e:
                 print("Caught:", e.info["reason"], e.info["issue"])
                 msg = f"{e.info["reason"]}_{e.info["issue"]}"
-                flag = e.info["flag"]
-                print(msg, flag)
+                #self.flag = e.info["flag"]
+                #print(msg, flag)
                 continue   # go to next iteration:
             
             
@@ -818,7 +854,7 @@ class PyMorph:
 
         pipe = GalaxyPipeline("config.ini")
         
-        pipe.check_bar()
+        #pipe.check_bar()
 
 
         pipe.run_sextractor()          # run once
@@ -835,13 +871,13 @@ class PyMorph:
             try:
                 galaxies = pipe.process_target(obj)
 
-                pipe.check_radec()
+                #pipe.check_radec()
 
                 target = galaxies['target']
                 neighbours = galaxies['neighbours']
 
                 #NEIGHBOUR FLAG
-                pipe.check_neighbours(neighbours.shape[0])
+                #pipe.check_neighbours(neighbours.shape[0])
 
                 #print(galaxies)
                 target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
@@ -872,15 +908,16 @@ class PyMorph:
                 if pipe.run_galfit:
                     gcr.GalfitRun()
                 #CHECK WHETHER FIT.LOG EXISTS
-                fitfile = pipe.check_file("fit.log", 1)
+                flag_fit = pipe.check_file("fit.log")
 
+                print('fitfile', fitfile)
                 #CASGM CLASSS
                 try:
                     casgm_pipe = CASGMPipeline()
                     casgm_pipe.compute_CASGM(target)
                     casgm_dict = casgm_pipe.result
                 except:
-                    flag  = 2
+                    #flag  = 2
                     keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err', 
                      'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
                     casgm_dict = {}
@@ -923,10 +960,17 @@ class PyMorph:
                 #wcsv.writeparams(target)
                 #sys.exit()
             except PipelineCriticalError as e:
-                print("Caught:", e.info["reason"], e.info["issue"])
-                msg = f"{e.info["reason"]}_{e.info["issue"]}" 
-                flag = e.info["flag"]
-                print(msg, flag)
+                print(e)
+                #print(GALFIT_FAIL)
+                #pipe.flags |= 1 << 1 
+                #pipe.flags |= GALFIT_FAIL
+                print(type(pipe.flags), pipe.flags) 
+                #sys.exit()
+                pipe.set_flag(GALFIT_FAILED)
+                #pipe.flags['GALFIT_FAIL'] = GetFlag('GALFIT_FAIL') 
+                print(pipe.flags)
+                print(f"Caught {e.info["error"]} error {e.info["reason"]}")
+                msg = f"{e.info["value"]}" 
                 continue   # go to next iteration:
 
 
