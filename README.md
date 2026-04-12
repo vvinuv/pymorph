@@ -20,7 +20,7 @@ This repository is a modernized, Python 3 compatible fork of the original **PyMo
 * **Python 3.10+**
 * **Astropy**
 * **NumPy & SciPy**
-* **GALFIT 3.0.5** (Must be in your system `$PATH`)
+* **GALFIT 3.0.5**
 * **SExtractor**
 
 ---
