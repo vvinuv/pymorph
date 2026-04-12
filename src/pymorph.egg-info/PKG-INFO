@@ -1,0 +1,20 @@
+Metadata-Version: 2.4
+Name: pymorph
+Version: 0.8.0
+Summary: Pipeline for Morphological two dimensional decomposition and non-parametric methods
+Author: Alan Meert, Yogesh Wadadekar, Ajit Kembhavi, G V Vijayagovidan
+Author-email: Vinu Vikraman <vvinuv@gmail.com>
+Maintainer-email: Vinu Vikraman <vvinuv@gmail.com>
+Project-URL: Homepage, https://github.com/vvinuv/pymorph
+Project-URL: Repository, https://github.com/vvinuv/pymorph
+Keywords: morphology,pymorph,decomposition
+Requires-Python: >=3.12.10
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: numpy>=2.2.5
+Requires-Dist: matplotlib>=3.10.0
+Requires-Dist: fitsio>=1.2.6
+Provides-Extra: db
+Requires-Dist: sqlite3>=3.51.2; extra == "db"
+Requires-Dist: scipy>=1.15.3; extra == "db"
+Dynamic: license-file

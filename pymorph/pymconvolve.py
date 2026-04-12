@@ -23,5 +23,5 @@ def Convolve(image, kernal, zeropad=True):
     ymax = np.floor(s0 - es0)
     xmin = np.floor(es1)
     xmax = np.floor(s1 - es1)
-    ConvIm = ConvIm[ymin:ymax, xmin:xmax]
+    ConvIm = ConvIm[int(ymin):int(ymax), int(xmin):int(xmax)]
     return ConvIm

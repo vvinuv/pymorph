@@ -20,14 +20,14 @@ class ConfigIter:
     def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         self.cutimage = cutimage
         self.line_s  = line_s
-	self.whtimage = whtimage
+    self.whtimage = whtimage
         self.xcntr = xcntr
         self.ycntr = ycntr
         self.NXPTS = NXPTS
         self.NYPTS = NYPTS 
         self.psffile = psffile
         self.confiter    = confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile)
-		
+        
 
 def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     RunSex(cutimage, whtimage, 'TEMP.SEX.cat', 9999, 9999, 0)
@@ -48,9 +48,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
     constrain_file = c.fstring + '.con'
     try:
-	c.center_constrain = c.center_constrain
+    c.center_constrain = c.center_constrain
     except:
-	c.center_constrain = 2.0
+    c.center_constrain = 2.0
     def SersicMainConstrain(constrain_file, cO):
         f_constrain = open(constrain_file, 'ab')
         f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
@@ -129,11 +129,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
-    sky	 = float(values[10]) #sky 
+    sky     = float(values[10]) #sky 
     pos_ang = float(values[11]) - 90.0 #position angle
     axis_rat = 1.0/float(values[12]) #axis ration b/a
     area_o = float(values[13])   # object's area
-    major_axis = float(values[14])	#major axis of the object
+    major_axis = float(values[14])    #major axis of the object
     ParamDict = {}
     ParamDict[0] = {}
     #Add components
@@ -273,10 +273,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 9) ', str(ParamDict[RunNo][No][7]), ' ', \
                               str(FitDict[No][6]),  '\n'])
         if c.bdbox or c.bbox:
-            f.writelines(['10) 0.0 1		\n'])
+            f.writelines(['10) 0.0 1        \n'])
         else:
             f.writelines(['10) 0.0 0            \n'])
-        f.writelines([' Z) 0 			\n\n\n'])
+        f.writelines([' Z) 0             \n\n\n'])
         f.close()
     def ExpFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
@@ -319,10 +319,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f.writelines([' 9) ', str(ParamDict[RunNo][No][7]), ' ', \
                               str(FitDict[No][6]),  '\n'])
         if c.bdbox or c.bbox:
-            f.writelines(['10) 0.0 1		\n'])
+            f.writelines(['10) 0.0 1        \n'])
         else:
             f.writelines(['10) 0.0 0            \n'])
-        f.writelines([' Z) 0 			\n\n\n'])
+        f.writelines([' Z) 0             \n\n\n'])
         f.close()
     def PsfFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
@@ -581,33 +581,33 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile):
         f_constrain.close()
         f=open(config_file,'w')
         f.write('# IMAGE PARAMETERS\n')
-        f.writelines(['A) ', c.datadir + str(cutimage), '	# Input data image',\
+        f.writelines(['A) ', c.datadir + str(cutimage), '    # Input data image',\
                       ' (FITS file)\n'])
-        f.writelines(['B) ', str(outfile), '		# Name for',\
+        f.writelines(['B) ', str(outfile), '        # Name for',\
                       ' the output image\n'])
-        f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
+        f.writelines(['C) ', c.datadir + str(whtimage), '        # Noise image name', \
                       ' (made from data if blank or "none")\n'])
-        f.writelines(['D) ', c.datadir + str(psffile), '			# Input PSF', \
+        f.writelines(['D) ', c.datadir + str(psffile), '            # Input PSF', \
                       ' image for convolution (FITS file)\n'])
-        f.writelines(['E) 1			# PSF oversampling factor '\
+        f.writelines(['E) 1            # PSF oversampling factor '\
                       'relative to data\n'])
-        f.writelines(['F) ', str(mask_file), '		# Bad pixel',
+        f.writelines(['F) ', str(mask_file), '        # Bad pixel',
                       ' mask(FITS image or ASCII coord list)\n'])
         f.writelines(['G) ', str(constrain_file), '       # File with'\
                       ' parameter constraints (ASCII file)\n'])
-        f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
+        f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '        #',\
                       ' Image region to fit (xmin xmax ymin ymax)\n'])
-#        f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'	#',\
+#        f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),    '    #',\
 #                      ' Size of convolution box (x y)\n'])
         f.writelines(['I) ', str(120), ' ', str(120),      '       #',\
                       ' Size of convolution box (x y)\n'])
-        f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
+        f.writelines(['J) ', str(mag_zero), '        # Magnitude',\
                       ' photometric zeropoint\n'])
-        f.writelines(['O) regular			# Display type',\
+        f.writelines(['O) regular            # Display type',\
                       ' (regular, curses, both)\n'])
-        f.writelines(['P) 0			# Create output image only?',\
+        f.writelines(['P) 0            # Create output image only?',\
                       ' (1=yes; 0=optimize)\n'])
-        f.writelines(['S) 0			# Modify/create',\
+        f.writelines(['S) 0            # Modify/create',\
                      ' objects interactively?\n\n\n'])
         f.close()
         FitDict = DecideFitting(ParamDict, RunNo)

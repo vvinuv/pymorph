@@ -48,6 +48,6 @@ def mask(outimage, xcntr, ycntr, NXPTS, NYPTS, line_s):
 
                 R = neighbor.calc_rad(x,y)
                 z[n.where(R<=mask_reg*neighbor.maj_axis)] = 1
-	
+    
     hdu = pyfits.PrimaryHDU(n.swapaxes(z, 0, 1).astype(n.float32))
     hdu.writeto(mask_file)

@@ -39,7 +39,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                 C, C_err, A, A_err, S, S_err, G, M, EXPTIME):
 
     # this dictionary will hold any parameters that may be printed
-    all_params = dict((ParamNamesToWrite[key][0], -999) for key in ParamNamesToWrite.keys())
+    all_params = dict((ParamNamesToWrite[key][0], -999) for key in list(ParamNamesToWrite.keys()))
 
     # load some of the passed in parameters
     all_params['Name'] = c.fstring
@@ -114,7 +114,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         for line_i in fileinput.input("index.html",inplace =1):
             line_i = line_i.strip()
             if not '</BODY></HTML>' in line_i:
-                print line_i    
+                print(line_i)    
         indexfile = open('index.html', 'a+')
         NoImage = 1
         for indexline in indexfile:
@@ -153,13 +153,13 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     if c.decompose:
         initial_conf = basic_info['initial_conf']
         restart_conf = basic_info['restart_conf']
-        print restart_conf 
+        print(restart_conf) 
         # move the restart file to a reasonably named output file
         new_outname = initial_conf.replace('in','out')
         try:
             os.rename(restart_conf, new_outname)
         except:
-            print "Failed to find restart file!! Galfit may have crashed!!"
+            print("Failed to find restart file!! Galfit may have crashed!!")
         basic_info['restart_conf'] = new_outname
 
 
@@ -299,7 +299,7 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
         Point_Vals = ''
         Point_Vals_err = ''
         try:
-            for key in fit_info.keys():
+            for key in list(fit_info.keys()):
                 if 'neighbor' in key:
                     Neighbour_Sersic = str(Neighbour_Sersic) + \
                                        '<TR align="center" bgcolor=' + \
@@ -407,14 +407,14 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
                                  ' ' + ' </TD> <TD> ' + str('9999') +  \
                                  ' </TD> <TD> ' + str('9999') + \
                                  ' </TD> <TD> ' + str('9999') + ' </TD></TR>'
-        except Exception, inst:
-            print type(inst)     # the exception instance
-            print inst.args      # arguments stored in\
+        except Exception as inst:
+            print(type(inst))     # the exception instance
+            print(inst.args)      # arguments stored in\
                                                  # .args
-            print inst           # __str__ allows args\
+            print(inst)           # __str__ allows args\
                                                  # to printed directly
-            print "something bad happened writing!!!!\n\n"
-            print traceback.print_exc()                   
+            print("something bad happened writing!!!!\n\n")
+            print(traceback.print_exc())                   
         if 'bulge' in ComP:
             try:
                   pixelscale = c.pixelscale
@@ -531,20 +531,20 @@ def WriteParams(ParamNamesToWrite, cutimage, xcntr, ycntr, distance, alpha_j, de
     try:
         from utilities import WriteDb
     except:
-        print 'DB writing Problem'
+        print('DB writing Problem')
     try:
-        #pass
+        pass
         #I have temporarily suppressed this in order to keep mysql
         # connections free for others.
-        WriteDb(ParamNamesToWrite, all_params)
+        # WriteDb(ParamNamesToWrite, all_params)
     except:
-        print 'No database can be created!'
+        print('No database can be created!')
         traceback.print_exc()
 
     # Writing csv file 
-    f_res = open("result.csv", "ab")
+    f_res = open("result.csv", "a", newline='')
     writer = csv.writer(f_res)
-    writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in ParamNamesToWrite.keys()])
+    writer.writerow([all_params[ParamNamesToWrite[key][0]] for key in list(ParamNamesToWrite.keys())])
     f_res.close()
 
     if c.decompose:
@@ -645,7 +645,7 @@ def load_component(data_line, err_line):
                 obj['boxy'][1]=-999.                
 
     # now replace any nan or inf parameters
-    for key in obj.keys():
+    for key in list(obj.keys()):
         if n.isnan(obj[key][1]):
             obj[key][1] = -9999.99
             isnan = True
@@ -706,6 +706,6 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                 pass
             
     else:
-        print "File does not exist!!!!"
+        print("File does not exist!!!!")
     
     return     basic_info, fit_info, isnan

@@ -1,0 +1,1 @@
+from astropy.io.fits import *

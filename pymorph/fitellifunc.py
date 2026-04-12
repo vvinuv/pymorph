@@ -21,7 +21,7 @@ def fit_elli(clus_id, line_s):
     values = line_s.split()
     mask_file = 'ell_mask_' + str(c.rootname) + '_'  + str(clus_id) + '.fits'
     image_file = 'image_' + str(c.rootname) + '_'  + str(clus_id) + '.fits' 
-    print image_file
+    print(image_file)
     xcntr_o  = float(values[1]) #x center of the object
     ycntr_o  = float(values[2]) #y center of the object
     xcntr = (size/2.0) + 1.0 + xcntr_o - int(xcntr_o)
@@ -29,7 +29,7 @@ def fit_elli(clus_id, line_s):
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = 25.256 #magnitude zero point
-    sky	 = float(values[10]) #sky
+    sky     = float(values[10]) #sky
     if(float(values[11])>=0 and float(values[11])<=180.0): 
         pos_ang = float(values[11]) - 90.0 #position angle
     if(float(values[11])<0 and float(values[11])>=-180.0):
@@ -37,7 +37,7 @@ def fit_elli(clus_id, line_s):
     if(float(values[11])>180 and float(values[11])<=360.0):
         pos_ang = float(values[11]) - 360.0 + 90.0 #position angle
     if(float(values[11])>=-360 and float(values[11])<-180.0):
-        pos_ang = float(values[11]) + 360.0 - 90.0 #position angle	
+        pos_ang = float(values[11]) + 360.0 - 90.0 #position angle    
     axis_rat = 1.0 / float(values[12]) #axis ration b/a
     eg = 1 - axis_rat
     if(eg<=0.05):
@@ -63,9 +63,9 @@ def run_elli(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,background
         iraf.stsdas.analysis.isophote(_doprint=0)
     except:
         iraf.stsdas()
-	iraf.tables()
-	iraf.stsdas.analysis()
-	iraf.stsdas.analysis.isophote()
+    iraf.tables()
+    iraf.stsdas.analysis()
+    iraf.stsdas.analysis.isophote()
     image_exist = 1
     iraf.unlearn('geompar')
     iraf.geompar.x0=xcntr
@@ -122,9 +122,9 @@ def run_elli_full(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,backg
         iraf.stsdas.analysis.isophote(_doprint=0)
     except:
         iraf.stsdas()
-	iraf.tables()
-	iraf.stsdas.analysis()
-	iraf.stsdas.analysis.isophote()
+    iraf.tables()
+    iraf.stsdas.analysis()
+    iraf.stsdas.analysis.isophote()
     image_exist = 1
     iraf.unlearn('geompar')
     iraf.geompar.x0=xcntr
@@ -160,7 +160,7 @@ def run_elli_full(cutimage, output, xcntr, ycntr, eg, pa, sma, sky):#,radd,backg
                 showrow="no", orig_row="no", showhdr="no", showunits="no", \
                 columns="SMA, INTENS, INT_ERR, ELLIP, ELLIP_ERR, PA, PA_ERR, \
                 MAG, MAG_LERR, MAG_UERR, TMAG_E, TMAG_C, A3, \
-		A3_ERR, B3, B3_ERR, A4, A4_ERR, B4_ERR", rows="-", \
+        A3_ERR, B3, B3_ERR, A4, A4_ERR, B4_ERR", rows="-", \
                 option="plain", align="yes", sp_col="", lgroup=0, Stdout=output)
     for myfile in ['ellip','err','test.tab', EllGal]:
         if os.access(c.outdir +myfile,os.F_OK):

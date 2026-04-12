@@ -84,6 +84,6 @@ def CLUMPNESS(z, xcntr, ycntr, pa, eg, sky, ext_rad, sigma, flag_image):
     if(e2sq!=0):
         error = e1sq / e2sq
     else:
-        print "Could not find error"
+        print("Could not find error")
         error = 0.0
     return S, error, z_inside_R_sum, e3sq, e4sq    

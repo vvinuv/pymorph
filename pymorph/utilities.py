@@ -18,8 +18,8 @@ def WriteDb(ParamValues, all_params):
                                 user = "%s" %usr,
                                 passwd = "%s" %pwd,
                                 db = "%s" %dba) 
-    except mysql.Error, e:
-        print "Error %d: %s" % (e.args[0], e.args[1])
+    except mysql.Error as e:
+        print("Error %d: %s" % (e.args[0], e.args[1]))
         sys.exit (1)
     cursor = Conn.cursor()
 
@@ -66,15 +66,15 @@ def WriteDb(ParamValues, all_params):
     all_params['Total_Run'] = Total_Run
     all_params['rootname'] = c.rootname
     all_params['YetSky'] = c.SkyMin
-    print 'writing db'
+    print('writing db')
 
     if c.FirstCreateDB:
         cmd = "CREATE TABLE if not exists %s (" % tbl + ','.join(["%s %s" %(ParamValues[key][0], \
-              ParamValues[key][1]) for key in ParamValues.keys()]) + ")" 
+              ParamValues[key][1]) for key in list(ParamValues.keys())]) + ")" 
         cursor.execute(cmd)
         c.FirstCreateDB = 0
-    cmd = "INSERT INTO %s (%s) values (" %(tbl, ','.join([ParamValues[key][0] for key in ParamValues.keys()])) 
-    for p in ParamValues.keys():
+    cmd = "INSERT INTO %s (%s) values (" %(tbl, ','.join([ParamValues[key][0] for key in list(ParamValues.keys())])) 
+    for p in list(ParamValues.keys()):
         if ParamValues[p][1] in ('int', 'bigint', 'float'):
             cmd = cmd + str(all_params[ParamValues[p][0]]) + ', '
         else:
@@ -101,8 +101,8 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, F
                                 user = "%s" %usr,
                                 passwd = "%s" %pwd,
                                 db = "%s" %dba) 
-    except mysql.Error, e:
-        print "Error %d: %s" % (e.args[0], e.args[1])
+    except mysql.Error as e:
+        print("Error %d: %s" % (e.args[0], e.args[1]))
         sys.exit (1)
     cursor = Conn.cursor()
     DictParamWithValue = {}
@@ -122,7 +122,7 @@ def WriteDbDetail(Name, ParamValuesDict, ErrDict, SexSky, GalSky, RunNo, flag, F
     DictParamWithValue['rootname'] = c.rootname
     DictParamWithValue['SexHalfRad'] = c.SexHalfRad
     DictParamWithValue['goodness'] = goodness
-    print c.SexHalfRad
+    print(c.SexHalfRad)
     
     DictParamWithType2 = {'xb':'float', 'yb':'float', \
                           'xd':'float', 'yd':'float', \

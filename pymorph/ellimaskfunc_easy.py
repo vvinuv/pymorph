@@ -34,11 +34,11 @@ def emask(cutimage, xcntr, ycntr, NXPTS, NYPTS, line_s, galflag):
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
-    sky	 = float(values[10]) #sky 
+    sky     = float(values[10]) #sky 
     pos_ang = float(values[11]) #position angle
     axis_rat = 1.0 / float(values[12]) #axis ration b/a
     area_o = float(values[13]) # object area
-    major_axis 	= float(values[14])	#major axis of the object
+    major_axis     = float(values[14])    #major axis of the object
     eg = 1.0 - axis_rat
     f_tmp_mask =pyfits.open('seg.fits')
     tmp_mask = f_tmp_mask[0].data

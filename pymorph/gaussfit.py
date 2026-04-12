@@ -22,7 +22,7 @@ x=bins[nMaxArg-5:nMaxArg+5]
 y=nn[nMaxArg-5:nMaxArg+5]
 #x=bins
 #y=nn
-print x.shape, y.shape
+print(x.shape, y.shape)
 
 
 def g(p,fjac = None, x = None, y=None, err=None,weights=None):
@@ -40,9 +40,9 @@ def g(p,fjac = None, x = None, y=None, err=None,weights=None):
 fa = {'x':x, 'y':y}
 m=nmpfit.mpfit(g,p,functkw=fa)
 p=m.params
-print p
+print(p)
 #figure()
-print p[2] / abs(bins[1] - bins[0])
+print(p[2] / abs(bins[1] - bins[0]))
 yy = p[0] * n.e**(-0.5*(bins-p[1])**2/p[2]**2)
 l=plot(bins, yy, 'b--')
 setp(l, 'linewidth', 3)

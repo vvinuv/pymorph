@@ -15,7 +15,7 @@ from flagfunc import *
 try:
     from utilities import WriteDbDetail
 except:
-    print 'No database'
+    print('No database')
 class ConfigIter:
     """The class making configuration file for GALFIT. The configuration file 
        consists of bulge and disk component of the object and only Sersic 
@@ -27,7 +27,7 @@ class ConfigIter:
     def __init__(self, cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z):
         self.cutimage = cutimage
         self.line_s  = line_s
-	self.whtimage = whtimage
+    self.whtimage = whtimage
         self.xcntr = xcntr
         self.ycntr = ycntr
         self.NXPTS = NXPTS
@@ -55,9 +55,9 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     config_file = 'G_' + c.fstring + '.in' #Name of the GALFIT configuration file
     constrain_file = c.fstring + '.con'
     try:
-	c.center_constrain = c.center_constrain
+    c.center_constrain = c.center_constrain
     except:
-	c.center_constrain = 2.0
+    c.center_constrain = 2.0
     def SersicMainConstrain(constrain_file, cO, cen_con, re_con):
         f_constrain = open(constrain_file, 'ab')
         f_constrain.write(str(cO) + '      n      ' + str(c.LN) + \
@@ -146,11 +146,11 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
     mag    = float(values[7]) #Magnitude
     radius = float(values[9]) #Half light radius
     mag_zero = c.mag_zero #magnitude zero point
-    sky	 = float(values[10]) #sky 
+    sky     = float(values[10]) #sky 
     pos_ang = float(values[11]) - 90.0 #position angle
     axis_rat = 1.0/float(values[12]) #axis ration b/a
     area_o = float(values[13])   # object's area
-    major_axis = float(values[14])	#major axis of the object
+    major_axis = float(values[14])    #major axis of the object
     FourPerSky = c.SexSky * 0.02
     OnePerSky = c.SexSky * 0.02
     SkyArray = n.arange(c.SexSky - OnePerSky, c.SexSky + FourPerSky, c.SexSky * 0.008)
@@ -301,10 +301,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f.writelines([' 9) ', str(ParamDict[RunNo][No][7]), ' ', \
                               str(FitDict[No][6]),  '\n'])
         if c.bdbox or c.bbox:
-            f.writelines(['10) 0.0 1		\n'])
+            f.writelines(['10) 0.0 1        \n'])
         else:
             f.writelines(['10) 0.0 0            \n'])
-        f.writelines([' Z) 0 			\n\n\n'])
+        f.writelines([' Z) 0             \n\n\n'])
         f.close()
     def ExpFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
@@ -347,10 +347,10 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f.writelines([' 9) ', str(ParamDict[RunNo][No][7]), ' ', \
                               str(FitDict[No][6]),  '\n'])
         if c.bdbox or c.bbox:
-            f.writelines(['10) 0.0 1		\n'])
+            f.writelines(['10) 0.0 1        \n'])
         else:
             f.writelines(['10) 0.0 0            \n'])
-        f.writelines([' Z) 0 			\n\n\n'])
+        f.writelines([' Z) 0             \n\n\n'])
         f.close()
     def PsfFunc(conffile, ParamDict, FitDict, No, RunNo):
         f=open(config_file, 'ab')
@@ -487,7 +487,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             toterr = 0.01
         else:
             toterr = n.median([ffbe, reerr, nerr, ffde, rderr])
-        print n.median([ffbe, reerr, nerr, ffde, rderr])
+        print(n.median([ffbe, reerr, nerr, ffde, rderr]))
         return toterr
 #The following function is to check whether the large bulge radii is real for
 #deva + disk fitting
@@ -523,7 +523,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         ContinueLoop = 0
         HitLimitCheck = 0
         KpCArc = cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3]
-        print 'LM ', c.LMag
+        print('LM ', c.LMag)
         CntrDev = n.sqrt((ParamDict[RunNo][1][2][0] - ParamDict[RunNo][2][2][0])**2.0 + (ParamDict[RunNo][1][2][1] - ParamDict[RunNo][2][2][1])**2.0)
         if CntrDev < 1.0:
             CntrDev = 0.05
@@ -533,7 +533,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             HitLimitCheck = 1
 #        print 'Hit ', HitLimitCheck
         if ParamDict[RunNo][1][4] > ParamDict[RunNo][2][4] * 1.0 and ParamDict[RunNo][1][3] > ParamDict[RunNo][2][3] or HitLimitCheck or ParamDict[RunNo][1][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][2][4] * KpCArc > 40 and z != 9999 or ParamDict[RunNo][1][5] > 8 or ParamDict[RunNo][1][6] < 0.08:
-            print 'sati '
+            print('sati ')
             ParamDict[RunNo][1][2][0] = copy.deepcopy(ParamDict[0][1][2][0])
             ParamDict[RunNo][1][2][1] = copy.deepcopy(ParamDict[0][1][2][1])
             ParamDict[RunNo][1][3] = copy.deepcopy(ParamDict[0][1][3])
@@ -557,7 +557,7 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             c.CntrDevArr.append(CntrDev)
             ContinueLoop = 1
         else:
-            print 'not sati'
+            print('not sati')
             if cal(z, c.H0, c.WM, c.WV, c.pixelscale)[3] * \
                ParamDict[RunNo][1][4] > 20.0 and z != 9999: 
                 c.RadArr.append(1)
@@ -599,33 +599,33 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
         f_constrain.close()
         f=open(config_file,'w')
         f.write('# IMAGE PARAMETERS\n')
-        f.writelines(['A) ', c.datadir+str(cutimage), '	# Input data image',\
+        f.writelines(['A) ', c.datadir+str(cutimage), '    # Input data image',\
                       ' (FITS file)\n'])
-        f.writelines(['B) ', str(outfile), '		# Name for',\
+        f.writelines(['B) ', str(outfile), '        # Name for',\
                       ' the output image\n'])
-        f.writelines(['C) ', c.datadir + str(whtimage), '		# Noise image name', \
+        f.writelines(['C) ', c.datadir + str(whtimage), '        # Noise image name', \
                       ' (made from data if blank or "none")\n'])
-        f.writelines(['D) ', c.datadir+str(psffile), '			# Input PSF', \
+        f.writelines(['D) ', c.datadir+str(psffile), '            # Input PSF', \
                       ' image for convolution (FITS file)\n'])
-        f.writelines(['E) 1			# PSF oversampling factor '\
+        f.writelines(['E) 1            # PSF oversampling factor '\
                       'relative to data\n'])
-        f.writelines(['F) ', str(mask_file), '		# Bad pixel',
+        f.writelines(['F) ', str(mask_file), '        # Bad pixel',
                       ' mask(FITS image or ASCII coord list)\n'])
         f.writelines(['G) ', str(constrain_file), '       # File with'\
                       ' parameter constraints (ASCII file)\n'])
-        f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '		#',\
+        f.writelines(['H) 1 ', str(NXPTS), ' 1 ', str(NYPTS), '        #',\
                       ' Image region to fit (xmin xmax ymin ymax)\n'])
-#        f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),	'	#',\
+#        f.writelines(['I) ', str(NXPTS), ' ', str(NYPTS),    '    #',\
 #                      ' Size of convolution box (x y)\n'])
         f.writelines(['I) ', str(120), ' ', str(120),      '       #',\
                       ' Size of convolution box (x y)\n'])
-        f.writelines(['J) ', str(mag_zero), '		# Magnitude',\
+        f.writelines(['J) ', str(mag_zero), '        # Magnitude',\
                       ' photometric zeropoint\n'])
-        f.writelines(['O) regular			# Display type',\
+        f.writelines(['O) regular            # Display type',\
                       ' (regular, curses, both)\n'])
-        f.writelines(['P) 0			# Create output image only?',\
+        f.writelines(['P) 0            # Create output image only?',\
                       ' (1=yes; 0=optimize)\n'])
-        f.writelines(['S) 0			# Modify/create',\
+        f.writelines(['S) 0            # Modify/create',\
                      ' objects interactively?\n\n\n'])
         f.close()
         if RunNo == SkyArray.shape[0] + 1:
@@ -708,14 +708,14 @@ def confiter(cutimage, whtimage, xcntr, ycntr, NXPTS, NYPTS, line_s, psffile, z)
             try:
                 WriteDbDetail(cutimage.split('.')[0], c.ParamDictBook[RunNo], ErrDict[RunNo + 1], c.SexSky, SkyArray[RunNo-1], RunNo, c.Flag, c.Chi2DOFArr[RunNo])
             except:
-                print 'No database'
+                print('No database')
         if RunNo == SkyArray.shape[0]:
             c.Chi2DOFArr = n.array(c.Chi2DOFArr)
             c.FitArr = n.array(c.FitArr)
             c.RadArr = n.array(c.RadArr)
             c.CntrDevArr = n.array(c.CntrDevArr)
-            print SkyArray
-            print c.Chi2DOFArr
+            print(SkyArray)
+            print(c.Chi2DOFArr)
 #            c.Chi2DOFArr = c.Chi2DOFArr * c.ErrArr * c.CntrDevArr #c.CntrDevArr * c.CntrDevArr
 #                print c.Chi2DOFArr
 #                print c.FitArr

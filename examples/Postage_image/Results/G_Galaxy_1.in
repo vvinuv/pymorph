@@ -1,0 +1,48 @@
+# IMAGE PARAMETERS
+A) /Users/istiakkhan/pymorph/Data/postage_0_fpC-000745-r2-0518.fits    # Input data image (FITS file)
+B) O_Galaxy_1.fits        # Name for the output image
+C) /Users/istiakkhan/pymorph/Data/None        # Noise image name
+D) /Users/istiakkhan/pymorph/Data/psf_0_psField-000745-2-0518.fits            # Input PSF image
+E) 1            # PSF oversampling factor
+F) M_Galaxy_1.fits        # Bad pixel mask
+G) Galaxy_1.con       # File with constraints
+H) 1 215 1 215        # Image region
+I) 100 100        # Size of convolution box
+J) 24.8        # Photometric zeropoint
+O) regular            # Display type
+P) 0            # Create output image only?
+S) 0            # Interactively?
+
+
+# Sersic function
+
+ 0) sersic        # Object type
+ 1) 108.164 108.4432 1 1   # position x, y
+ 3) 14.3155 1        # total magnitude
+ 4) 5.478 1        # R_e [Pixels]
+ 5) 4.0 1        # Sersic exponent
+ 9) 0.41788549937317176 1        # axis ratio
+ 10) -87.03 1        # position angle
+ Z) 0             # output image
+
+
+# Exponential function
+
+ 0) expdisk         # Object type
+ 1) 108.164 108.4432 1 1    # position x, y
+ 3) 14.3155 1         # total magnitude
+ 4) 5.478 1         # R_e [Pixels]
+ 9) 0.41788549937317176 1        # axis ratio
+ 10) -87.03 1        # position angle
+ Z) 0             # output image
+
+
+# sky
+
+ 0) sky
+ 1) 154.9632 0    # sky background
+ 2) 0.000      0       # sky gradient in x
+ 3) 0.000      0       # sky gradient in y
+ Z) 0                  # output image
+
+

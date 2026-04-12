@@ -80,11 +80,11 @@ def PsfArr():
         for pline in psffi:
             c.psflist.append(pline.split()[0])
     else:
-        if type(c.psflist) == types.ListType:
+        if type(c.psflist) == list:
             pass
         else:
-            print "The psf list is not understood. Please use either \
-                   @filename or a list of psfs"
+            print("The psf list is not understood. Please use either \
+                   @filename or a list of psfs")
 
 
 def UpdatePsfRaDec(element):
@@ -165,15 +165,15 @@ def SelectPsf(alpha_j, delta_j):
     for element in c.psflist:
         p = pyfits.open(c.datadir + element)
         header = p[0].header
-        if (header.has_key('RA_TARG')):
+        if ('RA_TARG' in header):
             ra = header['RA_TARG']
-        elif (header.has_key('RA')):
+        elif ('RA' in header):
             ra = header['RA']
         else:
             ra = 9999
-        if (header.has_key('DEC_TARG')):
+        if ('DEC_TARG' in header):
             dec= header['DEC_TARG']
-        elif (header.has_key('DEC')):
+        elif ('DEC' in header):
             dec= header['DEC']
         else:
             dec= 9999
@@ -187,7 +187,7 @@ def SelectPsf(alpha_j, delta_j):
         d = np.sqrt((delta_j - dec)**2.0 + ((alpha_j - ra) * \
             np.cos(delta_j * r))**2.0)
         PsfDistanceDict[element] = d
-    ItemS = PsfDistanceDict.items()
+    ItemS = list(PsfDistanceDict.items())
     ItemS = [(v, k) for (k, v) in ItemS]
     ItemS.sort()
     ItemS = [(k, v) for (v, k) in ItemS]
@@ -314,25 +314,25 @@ def ReadGalfitConfig(cfile):
 
 def CheckHeader(header0):
     """Set the global keywords from the fits header"""
-    if header0.has_key('EXPTIME'):
+    if 'EXPTIME' in header0:
         c.EXPTIME = header0['EXPTIME']
     else:
         c.EXPTIME = 1.0
-    if header0.has_key('RDNOISE'):
+    if 'RDNOISE' in header0:
         c.RDNOISE= header0['RDNOISE']
     else:
         c.RDNOISE = 0.0
-    if header0.has_key('GAIN'):
+    if 'GAIN' in header0:
         c.GAIN = header0['GAIN']
         c.SEx_GAIN = header0['GAIN']
     else:
         c.GAIN = 1.0
         c.SEx_GAIN = 1.0
-    if header0.has_key('NCOMBINE'):
+    if 'NCOMBINE' in header0:
         c.NCOMBINE= header0['NCOMBINE']
     else:
         c.NCOMBINE = 1
-    if header0.has_key('FILTER2') or header0.has_key('FILTER'):
+    if 'FILTER2' in header0 or 'FILTER' in header0:
         try:
             c.FILTER = header0['FILTER2']
         except:
@@ -406,23 +406,23 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu.header.update('RA_TARG', alpha_j)
         hdu.header.update('DEC_TARG', delta_j)
     except:
-        print 'Problem updating the Ra and Dec in cutout image'
+        print('Problem updating the Ra and Dec in cutout image')
     if c.EXPTIME != -9999:
         hdu.header.update('EXPTIME', c.EXPTIME)
     else:
-        print 'c.EXPTIME have value -9999. Something wrong?'
+        print('c.EXPTIME have value -9999. Something wrong?')
     if c.RDNOISE != -9999:
         hdu.header.update('RDNOISE', c.RDNOISE)
     else:
-        print 'c.RDNOISE have value -9999. Something wrong?'
+        print('c.RDNOISE have value -9999. Something wrong?')
     if c.GAIN != -9999:
         hdu.header.update('GAIN', c.GAIN)
     else:
-        print 'c.GAIN have value -9999. Something wrong?'
+        print('c.GAIN have value -9999. Something wrong?')
     if c.NCOMBINE != -9999:
         hdu.header.update('NCOMBINE', c.NCOMBINE)
     else:
-        print 'c.NCOMBINE have value -9999. Something wrong?'
+        print('c.NCOMBINE have value -9999. Something wrong?')
     hdu.writeto(c.datadir + cutimage)
     # FIX
     #Making weight image cut
@@ -431,8 +431,8 @@ def MakeCutOut(xcntr, ycntr, alpha_j, delta_j, SizeX, SizeY, TX, TY, cutimage, w
         hdu = pyfits.PrimaryHDU(z2.astype(np.float32))
         hdu.writeto(c.datadir + whtimage)
     else:
-        print 'Cannot creat weight image. If you supply weight image please ',\
-              'check whether it exists or report a bug'
+        print('Cannot creat weight image. If you supply weight image please ',\
+              'check whether it exists or report a bug')
     #END
     return cut_xcntr, cut_ycntr, SizeX, SizeY, ExceedSize 
 
@@ -444,7 +444,7 @@ def WriteError(err):
 
 def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
     """Find 1-d profile of image"""
-    print cutimage, xcntr, ycntr, SizeX, SizeY, sky, out
+    print(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out)
     if out:
         ell_mask_file = 'OEM_' + c.fstring + '.fits'
         ell_out = 'OE_' + c.fstring + '.txt'
@@ -479,7 +479,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         MaxRad = np.min([np.log10(8 * c.SexHalfRad), \
                  np.log10(np.min(galaxy.shape))])
         NoOfPoints = int(30 * 10**MaxRad / 50.)
-        print MaxRad, NoOfPoints
+        print(MaxRad, NoOfPoints)
         # FIX The EXPTIME factor in the error and intensity. Otherwise the 
         # S/N will be different
         for i in np.logspace(0, MaxRad, NoOfPoints, endpoint=True):
@@ -489,7 +489,7 @@ def FitEllipseManual(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
                 R.append(i)
                 IntRE.append(np.sqrt(ma.sum(Isub)) / (1.0 * NonMaskNo))
                 IntR.append(np.mean(Isub))
-            print i, NonMaskNo
+            print(i, NonMaskNo)
             # If you want to see the ellipse anulus, uncoment the following
             # START
             #if i > 10 and out:
@@ -539,7 +539,7 @@ def HandleEllipseTask(cutimage, xcntr, ycntr, SizeX, SizeY, sky, out):
         use_pyraf = 1
     except ImportError:
         use_pyraf = 0
-        print 'No pyraf installed!'
+        print('No pyraf installed!')
         WriteError('Cannot find pyraf installation! Trying manual 1d ' + \
                    'profile finder\n')
     if use_pyraf:
@@ -608,9 +608,9 @@ def Distance(psffile, ra, dec):
     try:
         p = pyfits.open(psffile)
         header = p[0].header
-        if(header.has_key('RA_TARG')):
+        if('RA_TARG' in header):
             ra_p = header['RA_TARG']
-        if (header.has_key('DEC_TARG')):
+        if ('DEC_TARG' in header):
             dec_p = header['DEC_TARG']
         p.close()
         distance = 3600.0 * np.sqrt((dec - dec_p)**2.0 + \
@@ -618,7 +618,7 @@ def Distance(psffile, ra, dec):
     except:
         distance = 9999
     if distance == 9999:
-        print 'Distance between psf and image is 9999'
+        print('Distance between psf and image is 9999')
     return distance
     
 def HandlePsf(cfile, UserGivenPsf, ra, dec):
@@ -690,9 +690,9 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         S_err = caSgm[5]
         G = caSgm[6]
         M = caSgm[7]
-        print 'C, C_err, A, A_err, S, S_err, G, M >>> ', \
+        print('C, C_err, A, A_err, S, S_err, G, M >>> ', \
               str(C)[:5], str(C_err)[:5], str(A)[:5], str(A_err)[:5], \
-              str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5]
+              str(S)[:5], str(S_err)[:5], str(G)[:5], str(M)[:5])
         
         #if(c.decompose == False):
         #    f_res = open("result.csv", "ab")
@@ -710,13 +710,13 @@ def HandleCasgm(cutimage, xcntr, ycntr, alpha_j, delta_j, redshift, SizeX, SizeY
         return 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999
 
 def returngimg():
-    print "No gimg given."
+    print("No gimg given.")
     if exists(c.datadir + 'I' + c.fstring + '.fits'):
         gimg = 'I' + c.fstring + '.fits'
     elif exists(c.datadir + str(gal_id) + '.fits'):
         gimg = str(gal_id) + '.fits'
     else:
-        print "No possible gimg found"
+        print("No possible gimg found")
         gimg = 'None'
     return gimg
 

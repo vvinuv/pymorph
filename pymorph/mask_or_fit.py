@@ -11,8 +11,8 @@ class SEx_obj():
         if len(values) == 19:
             values = [float(a) for a in values]
         else:
-            print values
-            print "Non-standard SEx Cat line!!\nAll values set to -999!!"
+            print(values)
+            print("Non-standard SEx Cat line!!\nAll values set to -999!!")
             values = 20*[-999.0]
         
         self.set_sex_num(int(values[0]))

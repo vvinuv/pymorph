@@ -1,0 +1,73 @@
+
+#  Input menu file: G_Galaxy_1.in
+
+#  Chi^2/nu = 1.147,  Chi^2 = 51267.965,  Ndof = 44702
+
+================================================================================
+# IMAGE and GALFIT CONTROL PARAMETERS
+A) /Users/istiakkhan/pymorph/Data/postage_0_fpC-000745-r2-0518.fits      # Input data image (FITS file)
+B) O_Galaxy_1.fits      # Output data image block
+C) /Users/istiakkhan/pymorph/Data/None      # Sigma image name (made from data if blank or "none") 
+D) /Users/istiakkhan/pymorph/Data/psf_0_psField-000745-2-0518.fits          # Input PSF image and (optional) diffusion kernel
+E) 1                   # PSF fine sampling factor relative to data 
+F) M_Galaxy_1.fits      # Bad pixel mask (FITS image or ASCII coord list)
+G) Galaxy_1.con        # File with parameter constraints (ASCII file) 
+H) 1    215  1    215  # Image region to fit (xmin xmax ymin ymax)
+I) 100    100          # Size of the convolution box (x y)
+J) 24.800              # Magnitude photometric zeropoint 
+K) 1.000  1.000        # Plate scale (dx dy)   [arcsec per pixel]
+O) regular             # Display type (regular, curses, both)
+P) 0                   # Choose: 0=optimize, 1=model, 2=imgblock, 3=subcomps
+
+# INITIAL FITTING PARAMETERS
+#
+#   For component type, the allowed functions are: 
+#       sersic, expdisk, edgedisk, devauc, king, nuker, psf, 
+#       gaussian, moffat, ferrer, and sky. 
+#  
+#   Hidden parameters will only appear when they're specified:
+#       Bn (n=integer, Bending Modes).
+#       C0 (diskyness/boxyness), 
+#       Fn (n=integer, Azimuthal Fourier Modes).
+#       R0-R10 (coordinate rotation, for creating spiral structures).
+#       To, Ti, T0-T10 (truncation function).
+# 
+# ------------------------------------------------------------------------------
+#   par)    par value(s)    fit toggle(s)    # parameter description 
+# ------------------------------------------------------------------------------
+
+# Component number: 1
+ 0) sersic                 #  Component type
+ 1) 107.4487 108.4883 1 1  #  Position x, y
+ 3) 18.7727     1          #  Integrated magnitude 
+ 4) 6.5224      1          #  R_e (effective radius)   [pix]
+ 5) 1.8118      1          #  Sersic index n (de Vaucouleurs n=4) 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.3691      1          #  Axis ratio (b/a)  
+10) -82.9187    1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 2
+ 0) expdisk                #  Component type
+ 1) 109.9218 108.4402 1 1  #  Position x, y
+ 3) 19.9664     1          #  Integrated magnitude 
+ 4) 7.6516      1          #  R_s (disk scale-length)   [pix]
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.2067      1          #  Axis ratio (b/a)  
+10) 88.5278     1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 3
+ 0) sky                    #  Component type
+ 1) 154.9632    0          #  Sky background at center of fitting region [ADUs]
+ 2) 0.000e+00      0       #  dsky/dx (sky gradient in x)     [ADUs/pix]
+ 3) 0.000e+00      0       #  dsky/dy (sky gradient in y)     [ADUs/pix]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+================================================================================
+
