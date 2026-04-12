@@ -4,15 +4,11 @@ This repository is a modernized, Python 3 compatible fork of the original **PyMo
 
 ## Key Changes Made
 
-### 1. Python 3 Migration
-* **String/Byte Handling:** Fixed numerous `TypeError: a bytes-like object is required` errors by updating file I/O operations from binary (`ab`, `rb`) to text mode (`a`, `r`) with proper `newline` handling in `pymorph.py` and `writehtmlfunc.py`.
-* **Integer Division & Slicing:** Resolved `TypeError: slice indices must be integers` by forcing integer conversion in image masking and convolution routines (`pymconvolve.py` and `ellimaskfunc_easy.py`).
-* **Legacy Imports:** Replaced deprecated `PyFITS` and `PyWCS` with modern `astropy.io.fits` and `astropy.wcs`.
+1 **Indenation errors:** Fixed indentation inconsistencies of Python 3 and 2. 
+2 **String/Byte Handling:** Fixed numerous `TypeError: a bytes-like object is required` errors by updating file I/O operations from binary (`ab`, `rb`) to text mode (`a`, `r`) with proper `newline` handling in `pymorph.py` and `writehtmlfunc.py`.
+3 **Integer Division & Slicing:** Resolved `TypeError: slice indices must be integers` by forcing integer conversion in image masking and convolution routines (`pymconvolve.py` and `ellimaskfunc_easy.py`).
+4 **Legacy Imports:** Replaced deprecated `PyFITS` and `PyWCS` with modern `astropy.io.fits` and `astropy.wcs`.
 
-### 2. Coordinate & Matching Logic
-* **DMS/HMS Support:** Improved the handling of negative declinations (specifically the `-0` degree case) to ensure accurate sky positioning.
-* **SExtractor Integration:** Enhanced target matching logic to resolve `NO TARGET FOUND` errors, ensuring the pipeline correctly identifies the galaxy centroid within the search radius.
-* **Pixel-Based Fallback:** Added support for providing `ximg` and `yimg` pixel coordinates in the input catalog to bypass non-standard or corrupted WCS headers.
 
 ---
 
