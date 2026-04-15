@@ -13,7 +13,7 @@ clus_cata = 'input.cat'         #catalogue of galaxies from
                                       #online catalogu service
                                       #(name ra1 ra2 ra2 dec1 dec2 dec3)
 
-datadir = '/Users/istiakkhan/pymorph/examples/Postage_image/Data' 
+datadir = '/Users/istiakkhan/pymorph/examples/Postage_image/Data/' 
 				       #the directory containing input images
                                        #if commented out, then program uses
                                        # current directory
@@ -22,7 +22,7 @@ datadir = '/Users/istiakkhan/pymorph/examples/Postage_image/Data'
 out_cata = 'output.cat'      #catalogue of galaxies in the field
 rootname = 'Galaxy'
 
-outdir = '/Users/istiakkhan/pymorph/examples/Postage_image/Results'  
+outdir = '/Users/istiakkhan/pymorph/examples/Postage_image/Results/'  
 					#the directory containing output data
                                         #if commented out, then program uses
                                         # current directory
