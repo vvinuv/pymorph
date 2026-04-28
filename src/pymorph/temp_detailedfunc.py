@@ -6,10 +6,6 @@ import subprocess
 import matplotlib.pyplot as plt
 from .configfunc import GalfitConfigFunc
 
-class Teach:
-    def __init__(self):
-        self.x = 1
-        print(self.x)
 
 class Detailed:
     def __init__(self):
@@ -245,76 +241,30 @@ def load_disk(comp, lns):
     return obj
 
 
-def uniform_params(bmag, brad, n, nbar, number_random):
-    bmag = 16.9180 #14.2881
-    dmag = 16.9180 #14.2881
-    barmag = 17.4180 #14.7881
-    barmag = barmag - 1.
-    brad = 14.323
-    drad = 14.323
-    bn = 4
-    delmag = 0.5
-    delr = [0.6, 1.3]
-    dist_mod = 36.65
-    r_pc_init = 10**(-0.279 * (bmag - dist_mod) - 2.457) 
-    #Total magnitudes
-    magb = np.random.uniform(bmag-delmag, bmag+delmag, number_random)
-    magb = np.around(magb, 2)
+def uniform_params(mag, rad, n=4, nbar=None, number_random=50,
+                   delmag=0.5, delr=[0.6, 1.3], deln=[0.5, 1.5],
+                   magbar=0.5, rbar=1.2):
 
-    magd = np.random.uniform(bmag-delmag, bmag+delmag, number_random)
-    magd = np.around(magd, 2)
 
-    magbar = np.random.uniform(barmag-delmag, barmag+delmag, number_random)
-    magbar = np.around(magbar, 2)
+    mag = np.random.uniform(mag-delmag, mag+delmag, number_random)
+    mag = np.around(mag, 2)
+
+    magbar = np.around(mag-magbar, 2)
 
     #Radius
-    rb = np.random.uniform(brad * delr[0], brad * delr[1], number_random)
-    #rb_pc = 10**(-0.279 * (magb - dist_mod) - 2.457) #Quilley & de Lapparent, 2023
-    #rb = rb_pc / r_pc_init * brad
-    rb = np.around(rb, 2)
-    
-    rd = np.random.uniform(brad * delr[0], brad * delr[1], number_random)
-    #rd_pc = 10**(-0.208 * (magd - dist_mod) - 0.434) #Quilley & de Lapparent, 2023
-    #rd = rd_pc / r_pc_init * brad
-    rd = np.around(rd, 2)
+    rad = np.random.uniform(rad * delr[0], rad * delr[1], number_random)
 
-    rbmin = np.minimum(rb, rd)
-    rdmax = np.maximum(rb, rd) 
-    rb = rbmin * 1.
-    rd = rdmax * 1.
-
-    rbar = rd * np.random.uniform(1.2, 1.6, number_random)
-    rbar = np.around(rbar, 2)
+    rbar = np.around(rbar * rad , 2)
 
 
     #Sersic index
-    n = np.random.uniform(n * 0.5, n * 1.5, number_random)
+    n = np.random.uniform(n * deln[0], n * deln[1], number_random)
     n = np.around(n, 2)
 
-    nbar = np.random.uniform(nbar * 0.5, nbar * 1, number_random)
+    nbar = np.where(n > 3, 2.5, n * 0.8)
     nbar = np.around(nbar, 2)
 
-    #Ellipticity
-    #eb = np.random.uniform(be * 0.8, be * 1.2, number_random)
-    #eb[eb > 0.9] = 0.9
-    #eb[eb < 0.3] = 0.3
-    eb = np.full(number_random, be)
-    eb = np.around(eb, 2)
-
-    #ed = np.random.uniform(de * 0.8, de * 1.2, number_random)
-    #ed[ed > 0.9] = 0.9
-    #ed[ed < 0.3] = 0.3
-    ed = np.full(number_random, de)
-    ed = np.around(ed, 2)
-
-    #ebar = np.random.uniform(bare * 0.6, bare * 1.0, number_random)
-    #ebar[ebar > 0.5] = 0.5
-    #ebar[ebar < 0.1] = 0.1
-    ebar = np.full(number_random, bare)
-    ebar = np.around(ebar, 2)
-    
-    
-    return magb, rb, n, eb, magd, rd, eb, magbar, rbar, nbar, ebar
+    return mag, rad, n, nbar
 
 
 def normal_params(bmag, brad, bn, be, dmag, drad, de,

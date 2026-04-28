@@ -1,7 +1,5 @@
 import os
 import sys
-from string import Template
-from pathlib import Path
 import datetime
 import configparser
 import subprocess
@@ -22,14 +20,12 @@ from .writehtml import generate_galaxy_report
 from .plotfunc import PlotFunc
 from .errors_warnings import catch_pipeline_issues, PipelineCriticalError
 from .errors_warnings import PipelineBase
-from .detailed_galfit import GalfitDetailed
 
 
-class GalaxyPipeline:
+
+class GalaxyPipeline(PipelineBase):
 
     def __init__(self, config_file):
-
-        BASE_DIR = Path(__file__).parent
 
         config = configparser.ConfigParser()
         config.read(config_file)
@@ -47,7 +43,6 @@ class GalaxyPipeline:
         self.thresh_area = config.getfloat('mask', 'thresh_area')
         self.threshold = config.getfloat('mask', 'threshold')
 
-        self.pixelscale = config.getfloat('cosmology', 'pixelscale') 
 
         size = config.get('size', 'size_list')
         size = [int(s) for s in size.split(',')]
@@ -63,7 +58,7 @@ class GalaxyPipeline:
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
-        self.maglim = config.get('findfit', 'maglim').split(',')
+        self.maglim = config.get('mag', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
         components = config.get('galfit', 'components').split(',')
@@ -71,32 +66,7 @@ class GalaxyPipeline:
 
 
         self.run_galfit = config.getboolean('modes', 'galfit') 
-
-        self.galcut = config.getboolean("modes", "galcut")
-        self.detail = config.getboolean("modes", "detail")
-    
-        self.bbox = config.getfloat("galfit", "bbox") 
-        self.barbox = config.getfloat("galfit", "barbox") 
-
-        self.chi2nu_limit = config.getfloat("diagnosis", "chi2nu_limit")
-        self.center_deviation_limit = config.getfloat("diagnosis", "center_deviation_limit")
-
-        self.NMag = config.getfloat('params_limit', 'NMag')
-        self.NRadius = config.getfloat('params_limit', 'NRadius')
-
-        self.LN = config.getfloat('params_limit', 'LN')
-        self.UN = config.getfloat('params_limit', 'UN')
-
-        self.sex_keys = {key.upper(): value
-                         for key, value in config['sextractor'].items()
-                         }
-        self.sex_keys['DATADIR'] = self.datadir
-        self.sex_keys['WHTFILE'] = self.whtfile
-        self.sex_keys['MAGZERO'] = self.mag_zero
-        self.sex_keys['PIXEL_SCALE'] = self.pixelscale
-        self.sex_keys['SEx_CATA'] = self.sex_cata
-        self.sex_keys['PYMORPH_PATH'] = Path(__file__).parent
-        self.sex_keys['PIXEL_SCALE'] = self.pixelscale
+        self.galcut = config.getboolean('modes', 'galcut') 
 
         self.sex_catalog = None
         self.obj_catalog = None
@@ -117,45 +87,60 @@ class GalaxyPipeline:
         
         self.flags = {}
 
-
-
+    @catch_pipeline_issues(file_checker=True)
+    def check_file(self, filename, flag):
+        return filename, flag
 
     # KEEP FLAGS
-    def set_flag(self, name, flag):
-        if name not in self.flags:
-            self.flags[name] = flag   # create list
+    def set_flags(self, name):
+        self.flags[name] = True
 
 
-    def check_radec(self):
-        if self.flag_radec:
-            self.set_flag("RA_DEC", 7)
-
-
+    @catch_pipeline_issues()
     def check_neighbours(self, number):
         if number > 0:
-            self.set_flag("NEIGHBOUR_FIT", 8)
+            self.set_flags("NEAREST_NEIGHBOUR_FIT")
 
 
-    #CHECK THE SIZE OF THE IMAGE. THE FLAG IS WRITTEN IN ERRORS_WARNINGS FILE
+    @catch_pipeline_issues()
+    def check_radec(self):
+        if self.flag_radec:
+            self.set_flags("RA_DEC")
+
+
+
+    @catch_pipeline_issues()
+    def check_bar(self):
+        if "bar" in self.components:
+            self.set_flag("HAS_BAR")
+
+
     @catch_pipeline_issues()
     def check_image_size(self, size):
         return size
+        #if size < 30:
+        #    self.set_flag("CRITICAL")
+        #    raise PipelineCriticalError("Image size < 30 pixels")
 
 
-    #CHECK WHETHER FIT.LOG EXISTS. IF NOT WE ASSUME THAT GALFIT DIDN'T RUN
-    #THE FLAG IS WRITTEN IN ERRORS_WARNINGS FILE
-    @catch_pipeline_issues(file_checker=True)
-    def check_file(self, filename):
-        return filename
+    # SUMMARISE FLAGS
+    def summarize_flags(self):
+        summary = {
+            "has_error": False,
+            "has_warning": False,
+            "has_critical": False
+        }
 
+        for key, val in self.flags.items():
 
-    #PARAMETERS AND ERROR CHECK. IF PARAMETERS IS NOT FOUND IN LEGTH GIVE
-    #ERROR. IF THERE IS ERROR IS NONE, INF, NAN, NULL OR NO LIST, IT WILL BE
-    #REPLACED BY 9999
-    #THE FLAG IS WRITTEN IN ERRORS_WARNINGS FILE
-    @catch_pipeline_issues(expected_len=7)
-    def check_params_and_errors(self, params, errors):
-        return params, errors
+            if key == "CRITICAL":
+                summary["has_critical"] = val
+            if key == "ERROR":
+                summary["has_error"] = val
+            if key == "WARNING":
+                summary["has_warning"] = val
+
+        return summary
 
 
     def save(self):
@@ -175,21 +160,10 @@ class GalaxyPipeline:
     # ---------------------------------------------------------
     # Run SExtractor
     # ---------------------------------------------------------
-    def run_sextractor(self):
-
-        tpl_file = os.path.join(self.sex_keys["PYMORPH_PATH"], 
-                                "SEx/default.sex")
-
-        with open(tpl_file) as f:
-            tpl = Template(f.read())
-        output = tpl.safe_substitute(self.sex_keys)
-        with open(os.path.join(Path.cwd(), 'default.sex'), 'w') as f:
-            f.write(output)
+    def run_sextractor(self, config_file="SEx/default.sex"):
 
         output_cat = f"{self.rootname}_sex.cat"
-        sex_out_params = os.path.join(self.sex_keys["PYMORPH_PATH"], 
-                                      "SEx/default.param")
-
+        sex_out_params = "SEx/default.param"
 
         cmd = [
             "sex",
@@ -197,7 +171,7 @@ class GalaxyPipeline:
             "-WEIGHT_IMAGE", self.whtfile,
             "-CATALOG_NAME", output_cat,
             "-PARAMETERS_NAME", sex_out_params,
-            "-c", "default.sex"
+            "-c", config_file
         ]
 
         subprocess.run(cmd, check=True)
@@ -436,8 +410,14 @@ class GalaxyPipeline:
 
 
     def process_target(self, target, radius_arcmic=0.5):
-
-        self.NAME = f"{self.rootname}_{int(target["GAL_ID"])}"
+        
+        #if self.galcut:
+        #    self.NAME = f"{self.rootname}_{target["GIMG"].split('.')[0]}"
+        #    self.GAL_ID = target["GIMG"].split('.')[0]
+        #    target["GAL_ID"] = self.GAL_ID
+        #else:
+        #    self.NAME = f"{self.rootname}_{int(target["GAL_ID"])}"
+        #    target["GAL_ID"] = int(target["GAL_ID"])
 
         ra = target.get("RA", np.nan)
         dec = target.get("DEC", np.nan)
@@ -467,11 +447,13 @@ class GalaxyPipeline:
         print(position)
         #@catch_pipeline_issues()
         #if position:
-        #    self.set_flag("RA_DAC")
-
+        #    self.set_flags("RA_DAC")
+        #ALL THE GALAXY PARAMETERS ARE HERE EXCEPT SIZE. IT WILL BE ASSINGED
+        #IN TRANSFORM_TO_CUTOUT() AS THEY HAVE ESTIMATED THE SIZE OF THE
+        #IMAGE. IT IS AN IMPORTANT PART OF CUTOUT IMAGE WHERE WE NEED 
+        #THE SHAPE OF THE GALAXY IMAGE
         #print(target_sex)
         target = target.to_dict()
-        target["GAL_ID"] = int(target["GAL_ID"])
         target.setdefault("Z", -999)
         target.setdefault("SKY", -999)
         if "SKY" in target:
@@ -499,35 +481,29 @@ class GalaxyPipeline:
         target.pop("ALPHA_J2000", None)
         target.pop("DELTA_J2000", None)
 
-        #target["RA"] = 9999
-        #target["DEC"] = 9999
-
         if target['SKY'] == -999:
             target.pop('SKY', None)
         else:
             target['BACKGROUND'] = target.pop('SKY', None)
 
 
-        print(self.FracRad,  target['FLUX_RADIUS'])
+        ##print(self.FracRad,  target['FLUX_RADIUS'])
 
-        #sys.exit()
-        if self.ReSize:
-            size = int(self.FracRad * target['FLUX_RADIUS'])
-        else:
-            size = self.FixSize 
+        ##if self.ReSize:
+        ##    size = self.FracRad * target['FLUX_RADIUS']
+        ##else:
+        ##    size = self.FixSize 
 
-
+        #print(size)
         #CRITICAL FLAG 
-        self.check_image_size(size)
+        #self.check_image_size(size)
 
     
 
-        target['IMAGE_SIZE'] = int(size)
-        #print('size', target['IMAGE_SIZE'])
+        ##target['IMAGE_SIZE'] = int(size)
+        ##print('size', target['IMAGE_SIZE'])
 
         neighbours['GALFIT_ANGLE'] = neighbours["THETA_IMAGE"] - 90
-        #neighbours["RA"] = 9999
-        #neighbours["DEC"] = 9999
 
         galaxies = dict()
         galaxies['target'] = target
@@ -546,10 +522,10 @@ class GalaxyPipeline:
         wht_data = wht[0].data
 
         target = galaxies.get("target")
-        gal_id = int(target.get("GAL_ID"))
+        gal_id = target.get("GAL_ID")
         size = target.get("IMAGE_SIZE") 
         
-        #self.check_image_size(size)
+        self.check_image_size(size)
 
         ra = target.get("RA")
         dec = target.get("DEC")
@@ -563,7 +539,7 @@ class GalaxyPipeline:
 
         position = (x, y)
 
-        #print('position, size', position, size)
+        print('position, size', position, size)
         cutout_img = Cutout2D(
             img_data,
             position,
@@ -578,8 +554,8 @@ class GalaxyPipeline:
             wcs=wcs
         )
 
-        img_name = f"I_{self.rootname}_{gal_id}.fits"
-        wht_name = f"W_{self.rootname}_{gal_id}.fits"
+        img_name = f"I_{self.rootname}_{int(gal_id)}.fits"
+        wht_name = f"W_{self.rootname}_{int(gal_id)}.fits"
 
         fits.writeto(
             img_name,
@@ -598,7 +574,8 @@ class GalaxyPipeline:
         #sys.exit()
 
     def transform_to_cutout(self, target, neighbours):
-        
+
+
         print(self.FracRad,  target['FLUX_RADIUS'])
 
         if self.ReSize:
@@ -608,14 +585,12 @@ class GalaxyPipeline:
         else:
             size = self.FixSize
 
-        #print('size', size)
-        #sys.exit()
+        #print(size)
         #CRITICAL FLAG
         #self.check_image_size(size)
 
         target['IMAGE_SIZE'] = int(size)
-        #print('size', target['IMAGE_SIZE'])
-
+        print('size', target['IMAGE_SIZE'])
 
         size = target['IMAGE_SIZE']
         half = size // 2
@@ -624,20 +599,15 @@ class GalaxyPipeline:
         x0 = target["X_IMAGE"]
         y0 = target["Y_IMAGE"]
 
-        #print('x0', x0)
+        print('x0', x0)
         # Shift
         dx = x0 - half
         dy = y0 - half
-        #print('dx', dx)
+        print('dx', dx)
         
         # --- Transform target ---
         target["X_IMAGE"] = target["X_IMAGE"] - dx
         target["Y_IMAGE"] = target["Y_IMAGE"] - dy
-        target["DX"] = dx
-        target["DY"] = dy
-
-
-        print('x0', x0, target["X_IMAGE"])
 
         # --- Transform neighbours ---
         neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - dx
@@ -656,98 +626,16 @@ class GalaxyPipeline:
         return target, neighbours
 
 
+
 class PyMorph:
     
-    def __init__(self, config_file='config.ini'):
+    def __init__(self, config_file='config.in'):
 
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        self.galcut = config.getboolean("modes", "galcut")
-        self.detail = config.getboolean("modes", "detail")
-        self.number_random = config.getint("modes", "number_random")
+        self.config_file = config_file
 
-
-        if self.galcut and not self.detail:
+        self.run()
+        if 0:#pipe.galcut:
             self.run_cutout_model()
-        elif not self.galcut and not self.detail:
-            self.run()
-        elif self.galcut and self.detail:
-            self.run_cutout_detailed()
-        elif not self.galcut and self.detail:
-            self.run_detailed()
-
-    def flags_galfit(self, target, pipeline):
-
-        if target["chi2nu"] > pipeline.chi2nu_limit:
-            pipeline.set_flag("LARGE_CHISQ", 10)
-        
-        if "bulge" in pipeline.components:
-
-            xdiff_sq = (target["X_IMAGE"] - target["bulge_xctr"])**2
-            ydiff_sq = (target["Y_IMAGE"] - target["bulge_yctr"])**2
-            cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
-
-            if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
-
-            if abs(target["MAG_AUTO"] - pipeline.NMag - target["bulge_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["bulge_mag"]) < 0.5: 
-
-                pipeline.set_flag("IB_AT_LIMIT", 12)
-
-            if abs(target["bulge_n"] - pipeline.UN) < 0.5 or abs(target["bulge_n"] - pipeline.LN) < 0.1:
-
-                pipeline.set_flag("N_AT_LIMIT", 15)
-
-            if abs(target["bulge_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["bulge_Re"] < 0.5:
-
-                pipeline.set_flag("RE_AT_LIMIT", 17)
-
-        if "disk" in pipeline.components:
-
-            xdiff_sq = (target["X_IMAGE"] - target["disk_xctr"])**2
-            ydiff_sq = (target["Y_IMAGE"] - target["disk_yctr"])**2
-            cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
-
-            if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
-
-            if abs(target["MAG_AUTO"] - pipeline.NMag - target["disk_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["disk_mag"]) < 0.5: 
-
-                pipeline.set_flag("ID_AT_LIMIT", 13)
-
-            if abs(target["disk_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["disk_Re"] < 0.5:
-
-                pipeline.set_flag("RD_AT_LIMIT", 18)
-
-        if "bar" in  pipeline.components:
-
-            xdiff_sq = (target["X_IMAGE"] - target["bar_xctr"])**2
-            ydiff_sq = (target["Y_IMAGE"] - target["bar_yctr"])**2
-            cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
-
-            if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
-
-            if abs(target["MAG_AUTO"] - pipeline.NMag - target["bar_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["bar_mag"]) < 0.5: 
-
-                pipeline.set_flag("IBAR_AT_LIMIT", 14)
-
-            
-            if abs(target["bar_n"] - 2.5) < 0.1 or abs(target["bar_n"] - 0.1) < 0.1:
-                pipeline.set_flag("NBAR_AT_LIMIT", 16)
-            
-            if abs(target["bar_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["bar_Re"] < 0.5:
-
-                pipeline.set_flag("RBAR_AT_LIMIT", 19)
-
-
-    def critical_errors(self, pipe):
-        if "SMALL_IMAGE_SIZE" in pipe.flags:
-            pipe.flags = {"SMALL_IMAGE_SIZE": 0}
-        if "GALFIT_FAILED" in pipe.flags:
-            pipe.flags = {"GALFIT_FAILED": 1}
-        if 'INVALID_GALFIT_PARAMS' in pipe.flags:
-            pipe.flags = {"INVALID_GALFIT_PARAMS": 2}
 
 
     def sub_run(self, pipe, obj):
@@ -761,9 +649,10 @@ class PyMorph:
         #NEIGHBOUR FLAG
         pipe.check_neighbours(neighbours.shape[0])
 
-        
-        print(pipe.imagefile, pipe.whtfile)
-        #sys.exit()
+        if 1:
+            folder, filename = os.path.split(pipe.imagefile)
+            pipe.imagefile =  os.path.join(folder, target['GIMG'])
+            pipe.weightfile =  os.path.join(folder, target['WIMG'])
         #print(galaxies)
         target, neighbours = pipe.transform_to_cutout(galaxies['target'],
                                                    galaxies['neighbours'])
@@ -773,12 +662,11 @@ class PyMorph:
 
         pipe.generate_target_images(galaxies)
 
-        #print('pipe.flags', pipe.flags)
+        print('pipe.flags', pipe.flags)
 
         #PSF CLASS
         psf_pipe = PSFPipeline("config.ini")
         psf_pipe.process_target(target)
-
         target.update(psf_pipe.result)
 
         #print('target', target)
@@ -794,7 +682,7 @@ class PyMorph:
         if pipe.run_galfit:
             gcr.GalfitRun()
         #CHECK WHETHER FIT.LOG EXISTS
-        fitfile = pipe.check_file("fit.log")
+        fitfile = pipe.check_file("fit.log", 1)
 
         #CASGM CLASSS
         try:
@@ -802,7 +690,7 @@ class PyMorph:
             casgm_pipe.compute_CASGM(target)
             casgm_dict = casgm_pipe.result
         except:
-            self.set_flag("CASGM_FAILED", 9)
+            flag  = 2
             keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err',
              'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
             casgm_dict = {}
@@ -819,101 +707,69 @@ class PyMorph:
 
         target.update(g.result)
 
-        self.flags_galfit(target, pipe)
-        summary_flag = sum(2**v for v in pipe.flags.values())
-        target["FLAGS"] = summary_flag
-
-        if os.path.exists("fit.log"):
-            os.remove("fit.log")
-
-        
         #print(target)
         #SAVE CSV FORMAT
         galaxies = {}
         galaxies["target"] = target
         galaxies["neighbours"] = g.neighbours
 
-        #print(galaxies["target"])
-
-        
-        #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
-
-        #plotter = PlotFunc(f"O_{target["NAME"]}.fits",
-        #                      f"EM_{target["NAME"]}.fits")
-        #plotter.plot_summary(f"P_{target["NAME"]}.png")
-
+        print(galaxies["target"])
 
         pd.DataFrame([target]).to_csv(
-                                      "results.csv",
+                                      "target.csv",
                                       mode="a",
-                                  header=not os.path.exists("results.csv"),
+                                  header=not os.path.exists("target.csv"),
                                       index=False)
 
-        print(g.neighbours)
-        neighbours = {'Name': target['NAME'], **g.neighbours} 
-        pd.DataFrame([neighbours]).to_csv(
-                                      "results_neighbours.csv",
-                                      mode="a",
-                                      header=False,
-                                      index=False)
+        #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+
+        plotter = PlotFunc(f"O_{target["NAME"]}.fits",
+                              f"EM_{target["NAME"]}.fits")
+        plotter.plot_summary(f"P_{target["NAME"]}.png")
 
 
-        #generate_galaxy_report(galaxies,
-        #                       output_file=f"R_{target["NAME"]}.html",
-        #                       image_path=f"P_{target["NAME"]}.png")
 
+
+        generate_galaxy_report(galaxies, 
+                               output_file=f"R_{target["NAME"]}.html",
+                               image_path=f"P_{target["NAME"]}.png")
         #wcsv = WriteCSV("config.ini")
         #wcsv.writeparams(target)
         #sys.exit()
 
 
+        
     def run_cutout_model(self):
 
         pipe = GalaxyPipeline("config.ini")
 
-        
+        pipe.check_bar()
+
         pipe.load_obj_catalog()
         obj_catalog = pipe.obj_catalog
 
-        print(obj_catalog)
-        
         for i, obj in obj_catalog.iterrows():
-
-            folder, filename = os.path.split(pipe.imagefile)
-            pipe.imagefile =  os.path.join(folder, obj['GIMG'])
-            pipe.whtfile =  os.path.join(folder, obj['WIMG'])
-            print(obj['GIMG'], obj['WIMG'])
-            #obj['RA'] = 9999
-            #obj['DEC'] = 9999
-            obj.drop(['GIMG', 'WIMG'], inplace=True)
 
             pipe.run_sextractor()          # run once
 
             pipe.read_sex_catalog()
-            #galaxies = pipe.process_target(obj)
-            #pipe.check_radec()
-
+            galaxies = pipe.process_target(obj)
+            pipe.check_radec()
             try:
-
                 self.sub_run(pipe, obj)
-
             except PipelineCriticalError as e:
-
-                print("Caught:", e.info["error"], e.info["issue"])
-                msg = f"{e.info["error"]}_{e.info["issue"]}"
-                print(msg)
-                self.critical_errors(pipe)
-
+                print("Caught:", e.info["reason"], e.info["issue"])
+                msg = f"{e.info["reason"]}_{e.info["issue"]}"
+                flag = e.info["flag"]
+                print(msg, flag)
                 continue   # go to next iteration:
-            
-        print('pipe.flags', pipe.flags)
- 
-
 
     def run(self):
 
         pipe = GalaxyPipeline("config.ini")
         
+        pipe.check_bar()
+
 
         pipe.run_sextractor()          # run once
 
@@ -927,140 +783,105 @@ class PyMorph:
 
 
             try:
+                galaxies = pipe.process_target(obj)
 
-                self.sub_run(pipe, obj)
+                pipe.check_radec()
 
+                target = galaxies['target']
+                neighbours = galaxies['neighbours']
+
+                #NEIGHBOUR FLAG
+                pipe.check_neighbours(neighbours.shape[0])
+
+                #print(galaxies)
+                target, neighbours = pipe.transform_to_cutout(galaxies['target'], 
+                                                              galaxies['neighbours'])
+                #print('target', target)
+                #print('neighbours', neighbours)
+                #print('galaxies', galaxies)
+                
+                pipe.generate_target_images(galaxies)
+
+                print('pipe.flags', pipe.flags)
+
+                #PSF CLASS
+                psf_pipe = PSFPipeline("config.ini")
+                psf_pipe.process_target(target)
+                target.update(psf_pipe.result) 
+                
+                #print('target', target)
+
+                #MASK CLASS
+                mask_gen = MaskGenerator("config.ini", target, neighbours)
+                mask_gen.run()
+
+                #GALFIT CONFIG and RUN CLASS
+                gcr = GalfitConfigRunFunc("config.ini")
+                gcr.write_config(target, neighbours)
+
+                
+                if pipe.run_galfit:
+                    gcr.GalfitRun()
+                #CHECK WHETHER FIT.LOG EXISTS
+                fitfile = pipe.check_file("fit.log", 1)
+
+                #CASGM CLASSS
+                try:
+                    casgm_pipe = CASGMPipeline()
+                    casgm_pipe.compute_CASGM(target)
+                    casgm_dict = casgm_pipe.result
+                except:
+                    flag  = 2
+                    keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err', 
+                     'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
+                    casgm_dict = {}
+                    for key in keys:
+                        casgm_dict[key] = 9999
+
+                target.update(casgm_dict)
+                
+                #PARSE GALFIT OUTPUT FILE
+                g = GetOutputParams("config.ini", pipe)
+                
+                g.parse_galfit("fit.log", gcr.components, target['Z'])
+                g.flatten(gcr.components)
+
+                target.update(g.result)
+
+                #print(target)
+                #SAVE CSV FORMAT
+                galaxies = {}
+                galaxies["target"] = target
+                galaxies["neighbours"] = g.neighbours
+
+                print(galaxies["target"])
+                
+                pd.DataFrame([target]).to_csv(
+                                              "target.csv",
+                                              mode="a",
+                                              header=not os.path.exists("target.csv"),
+                                              index=False)
+               
+                #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
+
+                plotter = PlotFunc(f"O_{target["NAME"]}.fits", 
+                                      f"EM_{target["NAME"]}.fits")
+                plotter.plot_summary(f"P_{target["NAME"]}.png")
+
+                generate_galaxy_report(galaxies, output_file=f"R_{target["NAME"]}.html",
+                                       image_path=f"P_{target["NAME"]}.png")
+                #wcsv = WriteCSV("config.ini")
+                #wcsv.writeparams(target)
+                #sys.exit()
             except PipelineCriticalError as e:
-                print("Caught:", e.info["error"], e.info["issue"])
-                msg = f"{e.info["error"]}_{e.info["issue"]}"
-                print(msg)
-                self.critical_errors(pipe)
-
+                print("Caught:", e.info["reason"], e.info["issue"])
+                msg = f"{e.info["reason"]}_{e.info["issue"]}" 
+                flag = e.info["flag"]
+                print(msg, flag)
                 continue   # go to next iteration:
 
-        print('pipe.flags', pipe.flags)
 
 
-    def sub_detailed(self, pipe, obj):
-
-
-        galaxies = pipe.process_target(obj)
-
-        pipe.check_radec()
-
-        print('galaxies 2', galaxies)
-
-        target = galaxies['target']
-        neighbours = galaxies['neighbours']
-
-        print('target 0', target)
-        #NEIGHBOUR FLAG
-        pipe.check_neighbours(neighbours.shape[0])
-
-
-        print(pipe.imagefile, pipe.whtfile)
-        #sys.exit()
-        #print(galaxies)
-        target, neighbours = pipe.transform_to_cutout(galaxies['target'],
-                                                   galaxies['neighbours'])       
-        print('target 1', target)
-        #print('neighbours', neighbours)
-        #print('galaxies', galaxies)
-
-        pipe.generate_target_images(galaxies)
-
-        #print('pipe.flags', pipe.flags)
-
-        #PSF CLASS
-        psf_pipe = PSFPipeline("config.ini")
-        psf_pipe.process_target(target)
-
-        target.update(psf_pipe.result)
-
-        #print('target', target)
-
-        #MASK CLASS
-        mask_gen = MaskGenerator("config.ini", target, neighbours)
-        mask_gen.run()
-
-        print('target 2', target)
-        #GALFIT CONFIG and RUN CLASS
-        gcr = GalfitConfigRunFunc("config.ini")
-        gcr.write_config(target, neighbours)
-
-        gd = GalfitDetailed('config.ini', gcr.galfit_conf,
-                            target, neighbours)
-        gd.detailed(self.number_random)
-
-        #except PipelineCriticalError as e:
-        #    print("Caught:", e.info["error"], e.info["issue"])
-        #    msg = f"{e.info["error"]}_{e.info["issue"]}"
-        #    print(msg)
-        #    self.critical_errors(pipe)
-
-        #    continue   # go to next iteration:
-
-    def run_detailed(self):
-
-
-        pipe = GalaxyPipeline("config.ini")
-
-
-        pipe.run_sextractor()          # run once
-
-        pipe.read_sex_catalog()
-
-        pipe.load_obj_catalog()
-
-        obj_catalog = pipe.obj_catalog
-        for i, obj in obj_catalog.iterrows():
-            print(obj)
-            
-            self.sub_detailed(pipe, obj)
-
-
-            #except PipelineCriticalError as e:
-            #    print("Caught:", e.info["error"], e.info["issue"])
-            #    msg = f"{e.info["error"]}_{e.info["issue"]}"
-            #    print(msg)
-            #    self.critical_errors(pipe)
-
-            #    continue   # go to next iteration:
-
-
-
-    def run_cutout_detailed(self):
-
-        pipe = GalaxyPipeline("config.ini")
-
-
-        pipe.load_obj_catalog()
-        obj_catalog = pipe.obj_catalog
-
-        print(obj_catalog)
-
-        for i, obj in obj_catalog.iterrows():
-
-            folder, filename = os.path.split(pipe.imagefile)
-            pipe.imagefile =  os.path.join(folder, obj['GIMG'])
-            pipe.whtfile =  os.path.join(folder, obj['WIMG'])
-            print(obj['GIMG'], obj['WIMG'])
-            #obj['RA'] = 9999
-            #obj['DEC'] = 9999
-            obj.drop(['GIMG', 'WIMG'], inplace=True)
-
-            pipe.run_sextractor()          # run once
-
-            pipe.read_sex_catalog()
-            #galaxies = pipe.process_target(obj)
-            #pipe.check_radec()
-            #print('galaxies 1', galaxies)
-
-            #try:
-
-            self.sub_detailed(pipe, obj)
-
-            #except PipelineCriticalError as e:
 
 
 if __name__ == '__main__':
