@@ -6,7 +6,7 @@ import json
 import numpy as np
 #from .flagfunc import GetFlag, isset, SetFlag
 import traceback
-from .catch_errors_warning import catch_pipeline_issues
+from .errors_warnings import catch_pipeline_issues
 from .galfit_config_run import GalfitConfigRunFunc
 from .read_fitlog import read_fitlog
 
@@ -74,8 +74,9 @@ class GalfitDetailed:
         objects = {}
         out_info = {}
 
-        axis_ratio = [axis_ratio] * number_random
-        pos_ang = [pos_ang] * number_random
+        axis_ratio = np.around(np.ones(number_random) * axis_ratio, 
+                               2).tolist()
+        pos_ang = np.around(np.ones(number_random) * pos_ang, 2).tolist()
 
         if 'bar' in self.components:
             mag, rad, n, magbar, rbar, nbar = uniform_params(mag_auto, 
@@ -226,5 +227,6 @@ class GalfitDetailed:
             out_info[i+1] = fit_info
 
 
-        json.dump(objects, open(f"in_{fstring}.json", 'w'))
-        json.dump(out_info, open(f"out_{fstring}.json", 'w'))
+        out_info["0"] = objects
+        #json.dump(objects, open(f"in_{fstring}.json", 'w'))
+        json.dump(out_info, open(f"{fstring}_detailed.json", 'w'))
