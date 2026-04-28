@@ -79,6 +79,7 @@ def find_len(lst, expected_len):
 def check_params_and_errors(params, errors, expected_length):
 
     #print('params', params)
+    #print('expected_length', expected_length)
     #  ---- CHECK PARAMS (CRITICAL) ----
     #if (not params or
     #    any(p is None or (isinstance(p, float) and np.isnan(p)) or np.isinf(p) for p in params)):
@@ -118,7 +119,7 @@ def check_params_and_errors(params, errors, expected_length):
                 "issue": "NAN_VALUES_REPLACED_9999"
                 }
 
-    return True, (params, errors), {}
+    return True, (params, errors), {"error": "", "issue": ""}
 
 
 def check_image_size(value):
@@ -126,7 +127,7 @@ def check_image_size(value):
     if value < 30:
         return False, {
             "error": "CRITICAL",
-            "issue": "IMAGE_SIZE_SMALL"
+            "issue": "SMALL_IMAGE_SIZE"
             }
 
     return True, {}
@@ -138,7 +139,7 @@ def check_file(fname):
     if not Path(fname).exists():
         return False, fname, {
             "error": "CRITICAL",
-            "issue": "FILE_NOT_FOUND"
+            "issue": "GALFIT_FAILED"
         }
 
     return True, fname, {}
@@ -158,7 +159,9 @@ def catch_pipeline_issues(critical=None, file_checker=False,
 
             # RUN FUNCTION
             result = func(self, *args, **kwargs)
-            print(f'result  {result} {func.__name__}')
+            #print(f'result  {result} {func.__name__}')
+            #if len(result) != expected_len:
+
             # GENERIC OUTPUT CHECK. EARLIER IT IS THE FUNCTION INTO THIS
             # DECORDOR. NOW IT IS USING THE ACTUAL FUNCTION WHICH GOT 
             # THREE OUTPUTS
@@ -191,10 +194,10 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                             **info
                             }
                     f = fname.split('.')[0].upper()
-                    self.set_flag(f"{f}_NOT_FOUND", 1)
+                    self.set_flag(f"GALFIT_FAILED", 1)
                     raise PipelineCriticalError({
                                             "error": info["error"],
-                                            "issue": f"{f}_NOT_FOUND"
+                                            "issue": "GALFIT_FAILED"
                                         })
                 return info 
 
@@ -232,12 +235,21 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                         "function": func.__name__,
                         **info
                     }
-                    self.set_flag("PARAMS_NO_FLOAT", 2)
+                    self.pipeline.set_flag("PARAMS_NO_FLOAT", 2)
 
                     raise PipelineCriticalError({
                         "error": info["error"],
                         "issue": "PARAMS_NO_FLOAT"
                         })
+                
+                if status:
+                    info = {
+                        "function": func.__name__,
+                        **info
+                    }
+                    if info["issue"] != "":  
+                        self.pipeline.set_flag(info["issue"], 5)
+
 
                 return result[1]
 

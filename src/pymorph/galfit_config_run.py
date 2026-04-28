@@ -5,7 +5,7 @@ import subprocess
 import numpy as np
 #from .flagfunc import GetFlag, isset, SetFlag
 import traceback
-from .catch_errors_warning import catch_pipeline_issues
+from .errors_warnings import catch_pipeline_issues
 
 
 class GalfitConfigRunFunc:

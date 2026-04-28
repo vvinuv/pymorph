@@ -41,10 +41,13 @@ class GetOutputParams:
     def check_param_length_exp(self, lst):
         return lst
 
-    @catch_pipeline_issues()
-    def check_params_and_errors(self, params, errors):
+    @catch_pipeline_issues(expected_len=7)
+    def check_params_and_errors_ser(self, params, errors):
         return params, errors
 
+    @catch_pipeline_issues(expected_len=6)
+    def check_params_and_errors_exp(self, params, errors):
+        return params, errors
 
     # =========================================================
     # PARSE GALFIT OUTPUT
@@ -97,10 +100,8 @@ class GetOutputParams:
                 current_comp_id = comp_id
 
                 comp_type = line.split()[0]
-
                 nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", line)
                 nums = list(map(float, nums))
-                 
                 # errors
                 err_line = lines[i + 1]
                 err_nums = re.findall(r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?", err_line)
@@ -110,19 +111,19 @@ class GetOutputParams:
                 #print('nums', nums)
                 #print('err_nums', err_nums)
                 if line.startswith("sersic"):
-                    nums = self.check_param_length_ser(nums)
+                    #nums = self.check_param_length_ser(nums)
                     #print('sersic1', nums)
-                    nums_err_nums = self.check_params_and_errors(nums, err_nums)
+                    err_nums = self.check_params_and_errors_ser(nums, err_nums)
                     #print('sersic2', nums_err_nums[0])
                     #print('sersic err', nums_err_nums[1])
-                    nums = nums_err_nums[0]
-                    err_nums = nums_err_nums[1]
+                    #nums = nums_err_nums[0]
+                    #err_nums = nums_err_nums[1]
 
                 elif line.startswith("expdisk"):
-                    nums = self.check_param_length_exp(nums)
-                    nums_err_nums = self.check_params_and_errors(nums, err_nums)
-                    nums = nums_err_nums[0]
-                    err_nums = nums_err_nums[1]
+                    #nums = self.check_param_length_exp(nums)
+                    err_nums = self.check_params_and_errors_exp(nums, err_nums)
+                    #nums = nums_err_nums[0]
+                    #err_nums = nums_err_nums[1]
                     #print('exp2', nums_err_nums[0])
                     #print('exp err', nums_err_nums[1])
                 #    err_nums  = self.check_elements_exp(err_nums)
@@ -132,7 +133,8 @@ class GetOutputParams:
 
 
                 #print("result", result)
-
+                #print(err_nums)
+                #print(nums)
                 x, y = nums[0], nums[1]
 
                 comp_dict = {

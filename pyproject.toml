@@ -8,8 +8,7 @@ version = "0.8.0"
 requires-python = ">=3.12.10"
 dependencies = [
   "numpy>=2.2.5", 
-  "matplotlib>=3.10.0",
-  "fitsio>=1.2.6"
+  "matplotlib>=3.10.0"
 ]
 authors = [
   {name = "Vinu Vikraman", email = "vvinuv@gmail.com"},
@@ -48,4 +47,4 @@ pymorph_bin = "pymorph.pymorph:PyMorph"
 where = ["src"]
 
 [tool.setuptools.package-data]
-pymorph = ["config,ini", "html/*", "SEx/*"]
+pymorph = ["config.ini", "html/*", "SEx/*"]

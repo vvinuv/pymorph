@@ -849,7 +849,6 @@ class PyMorph:
                                   header=not os.path.exists("results.csv"),
                                       index=False)
 
-        print(g.neighbours)
         neighbours = {'Name': target['NAME'], **g.neighbours} 
         pd.DataFrame([neighbours]).to_csv(
                                       "results_neighbours.csv",
@@ -898,7 +897,6 @@ class PyMorph:
                 self.sub_run(pipe, obj)
 
             except PipelineCriticalError as e:
-
                 print("Caught:", e.info["error"], e.info["issue"])
                 msg = f"{e.info["error"]}_{e.info["issue"]}"
                 print(msg)
@@ -914,7 +912,6 @@ class PyMorph:
 
         pipe = GalaxyPipeline("config.ini")
         
-
         pipe.run_sextractor()          # run once
 
         pipe.read_sex_catalog()
