@@ -63,6 +63,7 @@ class GalaxyPipeline:
 
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
+
         self.maglim = config.get('findfit', 'maglim').split(',')
         self.maglim = [float(mlim) for mlim in self.maglim]
 
@@ -74,9 +75,16 @@ class GalaxyPipeline:
 
         self.galcut = config.getboolean("modes", "galcut")
         self.detail = config.getboolean("modes", "detail")
+        self.find_and_fit = config.getboolean("modes", "find_and_fit")
     
         self.bbox = config.getfloat("galfit", "bbox") 
         self.barbox = config.getfloat("galfit", "barbox") 
+        fitting = config.get("galfit", "fitting")
+        fitting = [int(tfit) for tfit in fitting.split(',')]
+        self.bulge_cntr = fitting[0]
+        self.disk_cntr = fitting[1]
+        self.sky_fit = fitting[2]
+        self.bar_cntr = fitting[3]
 
         self.chi2nu_limit = config.getfloat("diagnosis", "chi2nu_limit")
         self.center_deviation_limit = config.getfloat("diagnosis", "center_deviation_limit")
@@ -126,16 +134,63 @@ class GalaxyPipeline:
             self.flags[name] = flag   # create list
 
 
+    def check_bulge(self):
+        if 'bulge' in self.components:
+            self.set_flag("HAS_BULGE", 3)
+
+    def check_disk(self):
+        if 'disk' in self.components:
+            self.set_flag("HAS_DISK", 4)
+
+    def check_bar(self):
+        if 'bar' in self.components:
+            self.set_flag("HAS_BAR", 5)
+
+    def check_bulge_box(self):
+        if self.bbox != -99:
+            self.set_flag("BULGE_BOXINESS", 6)
+
+    def check_bar_box(self):
+        if self.barbox != -99:
+            self.set_flag("BAR_BOXINESS", 7)
+
+    def check_sky_fit(self):
+        if self.sky_fit:
+            self.set_flag("SKY_FIT", 8)
+
+    def check_detail(self):
+        if self.detail:
+            self.set_flag("DETAILED_FIT", 9)
+            
+    def check_cutout(self):
+        if self.galcut:
+            self.set_flag("CUT_OUT_IMAGE", 10)
+
+    def check_find_and_fit(self):
+        if self.find_and_fit:
+            self.set_flag("FIND_AND_FIT", 11)
+
+    def check_flags(self):
+        self.check_bulge()
+        self.check_disk()
+        self.check_bar()
+        self.check_bulge_box()
+        self.check_bar_box()
+        self.check_sky_fit()
+        self.check_detail()
+        self.check_cutout()
+        self.check_find_and_fit()
+
     def check_radec(self):
         if self.flag_radec:
-            self.set_flag("RA_DEC", 7)
+            self.set_flag("RA_DEC", 12)
 
 
     def check_neighbours(self, number):
         if number > 0:
-            self.set_flag("NEIGHBOUR_FIT", 8)
+            self.set_flag("NEIGHBOUR_FIT", 13)
 
-
+        
     #CHECK THE SIZE OF THE IMAGE. THE FLAG IS WRITTEN IN ERRORS_WARNINGS FILE
     @catch_pipeline_issues()
     def check_image_size(self, size):
@@ -171,7 +226,9 @@ class GalaxyPipeline:
     def p(self):
         print(self.flags)
 
+    
 
+    
     # ---------------------------------------------------------
     # Run SExtractor
     # ---------------------------------------------------------
@@ -465,9 +522,6 @@ class GalaxyPipeline:
 
         print(target_sex)
         print(position)
-        #@catch_pipeline_issues()
-        #if position:
-        #    self.set_flag("RA_DAC")
 
         #print(target_sex)
         target = target.to_dict()
@@ -624,11 +678,11 @@ class GalaxyPipeline:
         x0 = target["X_IMAGE"]
         y0 = target["Y_IMAGE"]
 
-        #print('x0', x0)
+        print('x0', x0)
         # Shift
         dx = x0 - half
         dy = y0 - half
-        #print('dx', dx)
+        print('dx', dx, half)
         
         # --- Transform target ---
         target["X_IMAGE"] = target["X_IMAGE"] - dx
@@ -679,7 +733,7 @@ class PyMorph:
     def flags_galfit(self, target, pipeline):
 
         if target["chi2nu"] > pipeline.chi2nu_limit:
-            pipeline.set_flag("LARGE_CHISQ", 10)
+            pipeline.set_flag("LARGE_CHISQ", 16)
         
         if "bulge" in pipeline.components:
 
@@ -688,19 +742,19 @@ class PyMorph:
             cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
 
             if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
+                pipeline.set_flag("FAKE_CNTR", 17)
 
             if abs(target["MAG_AUTO"] - pipeline.NMag - target["bulge_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["bulge_mag"]) < 0.5: 
 
-                pipeline.set_flag("IB_AT_LIMIT", 12)
+                pipeline.set_flag("IB_AT_LIMIT", 18)
 
             if abs(target["bulge_n"] - pipeline.UN) < 0.5 or abs(target["bulge_n"] - pipeline.LN) < 0.1:
 
-                pipeline.set_flag("N_AT_LIMIT", 15)
+                pipeline.set_flag("N_AT_LIMIT", 19)
 
             if abs(target["bulge_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["bulge_Re"] < 0.5:
 
-                pipeline.set_flag("RE_AT_LIMIT", 17)
+                pipeline.set_flag("RE_AT_LIMIT", 20)
 
         if "disk" in pipeline.components:
 
@@ -709,15 +763,15 @@ class PyMorph:
             cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
 
             if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
+                pipeline.set_flag("FAKE_CNTR", 17)
 
             if abs(target["MAG_AUTO"] - pipeline.NMag - target["disk_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["disk_mag"]) < 0.5: 
 
-                pipeline.set_flag("ID_AT_LIMIT", 13)
+                pipeline.set_flag("ID_AT_LIMIT", 21)
 
             if abs(target["disk_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["disk_Re"] < 0.5:
 
-                pipeline.set_flag("RD_AT_LIMIT", 18)
+                pipeline.set_flag("RD_AT_LIMIT", 22)
 
         if "bar" in  pipeline.components:
 
@@ -726,19 +780,19 @@ class PyMorph:
             cntr_diff = np.sqrt(xdiff_sq + ydiff_sq)
 
             if cntr_diff > pipeline.center_deviation_limit:
-                pipeline.set_flag("FAKE_CNTR", 11)
+                pipeline.set_flag("FAKE_CNTR", 17)
 
             if abs(target["MAG_AUTO"] - pipeline.NMag - target["bar_mag"]) < 0.5 or abs(target["MAG_AUTO"] + pipeline.NMag - target["bar_mag"]) < 0.5: 
 
-                pipeline.set_flag("IBAR_AT_LIMIT", 14)
+                pipeline.set_flag("IBAR_AT_LIMIT", 23)
 
             
             if abs(target["bar_n"] - 2.5) < 0.1 or abs(target["bar_n"] - 0.1) < 0.1:
-                pipeline.set_flag("NBAR_AT_LIMIT", 16)
+                pipeline.set_flag("NBAR_AT_LIMIT", 24)
             
             if abs(target["bar_Re"] -  target["FLUX_RADIUS"] * pipeline.NRadius) < 1 or target["bar_Re"] < 0.5:
 
-                pipeline.set_flag("RBAR_AT_LIMIT", 19)
+                pipeline.set_flag("RBAR_AT_LIMIT", 25)
 
 
     def critical_errors(self, pipe):
@@ -751,6 +805,9 @@ class PyMorph:
 
 
     def sub_run(self, pipe, obj):
+
+        pipe.check_flags()
+
         galaxies = pipe.process_target(obj)
 
         pipe.check_radec()
@@ -802,7 +859,7 @@ class PyMorph:
             casgm_pipe.compute_CASGM(target)
             casgm_dict = casgm_pipe.result
         except:
-            self.set_flag("CASGM_FAILED", 9)
+            self.set_flag("CASGM_FAILED", 14)
             keys = ['R20', 'R50', 'R80', 'R90', 'C', 'A', 'S', 'C_err',
              'A_err', 'S_err', 'gini', 'gini_err', 'm20', 'm20_err']
             casgm_dict = {}
@@ -940,6 +997,7 @@ class PyMorph:
 
     def sub_detailed(self, pipe, obj):
 
+        pipe.check_flags()
 
         galaxies = pipe.process_target(obj)
 

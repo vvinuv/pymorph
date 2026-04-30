@@ -248,7 +248,7 @@ def catch_pipeline_issues(critical=None, file_checker=False,
                         **info
                     }
                     if info["issue"] != "":  
-                        self.pipeline.set_flag(info["issue"], 5)
+                        self.pipeline.set_flag(info["issue"], 15)
 
 
                 return result[1]

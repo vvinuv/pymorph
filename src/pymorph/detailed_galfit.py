@@ -30,8 +30,6 @@ def uniform_params(mag, rad, has_bar, number_random, n=4,
 
    
     if has_bar:
-        return mag, rad, n
-    else:
         magbar = np.around(mag-magbar, 2)
         rbar = np.around(rbar * rad , 2)
         nbar = np.where(n > 3, 2.5, n * 0.8)
@@ -39,6 +37,9 @@ def uniform_params(mag, rad, has_bar, number_random, n=4,
         
         return mag, rad, n, magbar, rbar, nbar
 
+    else:
+
+        return mag, rad, n
 
 class GalfitDetailed:
 
@@ -70,6 +71,7 @@ class GalfitDetailed:
         mag_auto = self.target["MAG_AUTO"]
         flux_radius = self.target["FLUX_RADIUS"]
         fstring = self.target["NAME"]
+        print('target["X_IMAGE"]', self.target["X_IMAGE"])
         
         objects = {}
         out_info = {}
@@ -79,12 +81,14 @@ class GalfitDetailed:
         pos_ang = np.around(np.ones(number_random) * pos_ang, 2).tolist()
 
         if 'bar' in self.components:
-            mag, rad, n, magbar, rbar, nbar = uniform_params(mag_auto, 
-                                                             flux_radius, 
-                                                             True,
-                                                             number_random, 
-                                                             n=4)
-            objects['bar'] = {'xcntr': xctr_img, 'ycntr': yctr_img,
+            results = uniform_params(mag_auto, 
+                                     flux_radius, 
+                                     True,
+                                     number_random, n=4) 
+            magbar = results[3]
+            rbar = results[4]
+            nbar = results[5]
+            objects['bar'] = {'xcntr': xcntr_img, 'ycntr': ycntr_img,
                             'mag': [m for m in magbar],
                             'rad': [r for r in rbar],
                             'n': [n1 for n1 in nbar],
@@ -96,22 +100,23 @@ class GalfitDetailed:
                                          False,
                                          number_random, 
                                          n=4)
-            mag = results[0]
-            rad = results[1]
-            n = results[2]
 
-            objects['bulge'] = {'xcntr': xcntr_img,'ycntr': ycntr_img,
-                            'mag': [m for m in mag],
-                            'rad': [r for r in rad],
-                            'n': [n1 for n1 in n],
-                            'ell': axis_ratio,
-                            'pa': pos_ang}
+        mag = results[0]
+        rad = results[1]
+        n = results[2]
 
-            objects['disk'] = {'xcntr': xcntr_img, 'ycntr': ycntr_img,
-                            'mag': [m for m in mag],
-                            'rad': [r for r in rad],
-                            'ell': axis_ratio,
-                            'pa': pos_ang}
+        objects['bulge'] = {'xcntr': xcntr_img,'ycntr': ycntr_img,
+                        'mag': [m for m in mag],
+                        'rad': [r for r in rad],
+                        'n': [n1 for n1 in n],
+                        'ell': axis_ratio,
+                        'pa': pos_ang}
+
+        objects['disk'] = {'xcntr': xcntr_img, 'ycntr': ycntr_img,
+                        'mag': [m for m in mag],
+                        'rad': [r for r in rad],
+                        'ell': axis_ratio,
+                        'pa': pos_ang}
 
 
             
