@@ -520,8 +520,8 @@ class GalaxyPipeline:
 
             target_sex, neighbours = self.neighbours_xy(x, y)
 
-        print(target_sex)
-        print(position)
+        #print(target_sex)
+        #print(position)
 
         #print(target_sex)
         target = target.to_dict()
@@ -562,7 +562,7 @@ class GalaxyPipeline:
             target['BACKGROUND'] = target.pop('SKY', None)
 
 
-        print(self.FracRad,  target['FLUX_RADIUS'])
+        #print(self.FracRad,  target['FLUX_RADIUS'])
 
         #sys.exit()
         if self.ReSize:
@@ -653,7 +653,7 @@ class GalaxyPipeline:
 
     def transform_to_cutout(self, target, neighbours):
         
-        print(self.FracRad,  target['FLUX_RADIUS'])
+        #print(self.FracRad,  target['FLUX_RADIUS'])
 
         if self.ReSize:
             size = self.FracRad * target['FLUX_RADIUS']
@@ -678,11 +678,11 @@ class GalaxyPipeline:
         x0 = target["X_IMAGE"]
         y0 = target["Y_IMAGE"]
 
-        print('x0', x0)
+        #print('x0', x0)
         # Shift
         dx = x0 - half
         dy = y0 - half
-        print('dx', dx, half)
+        #print('dx', dx, half)
         
         # --- Transform target ---
         target["X_IMAGE"] = target["X_IMAGE"] - dx
@@ -691,7 +691,7 @@ class GalaxyPipeline:
         target["DY"] = dy
 
 
-        print('x0', x0, target["X_IMAGE"])
+        #print('x0', x0, target["X_IMAGE"])
 
         # --- Transform neighbours ---
         neighbours["X_IMAGE"] = neighbours["X_IMAGE"] - dx
@@ -819,7 +819,7 @@ class PyMorph:
         pipe.check_neighbours(neighbours.shape[0])
 
         
-        print(pipe.imagefile, pipe.whtfile)
+        #print(pipe.imagefile, pipe.whtfile)
         #sys.exit()
         #print(galaxies)
         target, neighbours = pipe.transform_to_cutout(galaxies['target'],
@@ -931,14 +931,14 @@ class PyMorph:
         pipe.load_obj_catalog()
         obj_catalog = pipe.obj_catalog
 
-        print(obj_catalog)
+        #print(obj_catalog)
         
         for i, obj in obj_catalog.iterrows():
 
             folder, filename = os.path.split(pipe.imagefile)
             pipe.imagefile =  os.path.join(folder, obj['GIMG'])
             pipe.whtfile =  os.path.join(folder, obj['WIMG'])
-            print(obj['GIMG'], obj['WIMG'])
+            #print(obj['GIMG'], obj['WIMG'])
             #obj['RA'] = 9999
             #obj['DEC'] = 9999
             obj.drop(['GIMG', 'WIMG'], inplace=True)
@@ -961,7 +961,7 @@ class PyMorph:
 
                 continue   # go to next iteration:
             
-        print('pipe.flags', pipe.flags)
+        #print('pipe.flags', pipe.flags)
  
 
 
@@ -977,7 +977,7 @@ class PyMorph:
 
         obj_catalog = pipe.obj_catalog
         for i, obj in obj_catalog.iterrows():
-            print(obj)
+            #print(obj)
 
 
             try:
@@ -992,7 +992,7 @@ class PyMorph:
 
                 continue   # go to next iteration:
 
-        print('pipe.flags', pipe.flags)
+        #print('pipe.flags', pipe.flags)
 
 
     def sub_detailed(self, pipe, obj):
@@ -1003,22 +1003,22 @@ class PyMorph:
 
         pipe.check_radec()
 
-        print('galaxies 2', galaxies)
+        #print('galaxies 2', galaxies)
 
         target = galaxies['target']
         neighbours = galaxies['neighbours']
 
-        print('target 0', target)
+        #print('target 0', target)
         #NEIGHBOUR FLAG
         pipe.check_neighbours(neighbours.shape[0])
 
 
-        print(pipe.imagefile, pipe.whtfile)
+        #print(pipe.imagefile, pipe.whtfile)
         #sys.exit()
         #print(galaxies)
         target, neighbours = pipe.transform_to_cutout(galaxies['target'],
                                                    galaxies['neighbours'])       
-        print('target 1', target)
+        #print('target 1', target)
         #print('neighbours', neighbours)
         #print('galaxies', galaxies)
 
@@ -1038,7 +1038,6 @@ class PyMorph:
         mask_gen = MaskGenerator("config.ini", target, neighbours)
         mask_gen.run()
 
-        print('target 2', target)
         #GALFIT CONFIG and RUN CLASS
         gcr = GalfitConfigRunFunc("config.ini")
         gcr.write_config(target, neighbours)
@@ -1069,7 +1068,7 @@ class PyMorph:
 
         obj_catalog = pipe.obj_catalog
         for i, obj in obj_catalog.iterrows():
-            print(obj)
+            #print(obj)
             
             self.sub_detailed(pipe, obj)
 
@@ -1092,14 +1091,14 @@ class PyMorph:
         pipe.load_obj_catalog()
         obj_catalog = pipe.obj_catalog
 
-        print(obj_catalog)
+        #print(obj_catalog)
 
         for i, obj in obj_catalog.iterrows():
 
             folder, filename = os.path.split(pipe.imagefile)
             pipe.imagefile =  os.path.join(folder, obj['GIMG'])
             pipe.whtfile =  os.path.join(folder, obj['WIMG'])
-            print(obj['GIMG'], obj['WIMG'])
+            #print(obj['GIMG'], obj['WIMG'])
             #obj['RA'] = 9999
             #obj['DEC'] = 9999
             obj.drop(['GIMG', 'WIMG'], inplace=True)
