@@ -1,4 +1,4 @@
-gal_id gimg wimg star z
+GAL_ID GIMG WIMG STAR Z
 00000001_r_stamp 00000001_r_stamp.fits 00000001_r_stamp_W.fits 00000001_r_psf.fits 0.030284
 00000003_r_stamp 00000003_r_stamp.fits 00000003_r_stamp_W.fits 00000003_r_psf.fits 0.160228
 00000008_r_stamp 00000008_r_stamp.fits 00000008_r_stamp_W.fits 00000008_r_psf.fits 0.080338
