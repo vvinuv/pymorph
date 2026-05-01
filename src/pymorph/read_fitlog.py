@@ -138,7 +138,7 @@ def read_fitlog(filename = 'fit.log', yes_bar = 0):
                                 box = float(val[1].split(":")[1].strip())
                                 err = float(val[2].split(':')[-1].strip())
                                 boxiness = [box, err]
-                                print(f'Bulge {val[1].split(":")[0].strip()} {box} {err}')
+                                #print(f'Bulge {val[1].split(":")[0].strip()} {box} {err}')
 
                         elif ('bar' not in fit_info and yes_bar):
                             key = 'bar'

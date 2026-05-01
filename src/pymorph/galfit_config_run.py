@@ -401,7 +401,7 @@ class GalfitConfigRunFunc:
         
         new = '\n'
 
-        print(target["X_IMAGE"], target["Y_IMAGE"])
+        #print(target["X_IMAGE"], target["Y_IMAGE"])
         self.xcntr_img = target["X_IMAGE"]
         self.ycntr_img = target["Y_IMAGE"]
         self.mag_auto = target["MAG_AUTO"]

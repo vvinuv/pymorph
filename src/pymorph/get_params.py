@@ -19,7 +19,6 @@ class GetOutputParams:
         #self.H0 = config.getfloat('cosmology', 'H0')
         #self.WM = config.getfloat('cosmology', 'WM')
         #self.WV = config.getfloat('cosmology', 'WV')
-        #self.redshift = config.getfloat('cosmology', 'redshift')
 
 
     def append_and_remove(self, source_file, target_file):

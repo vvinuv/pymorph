@@ -71,7 +71,7 @@ class GalfitDetailed:
         mag_auto = self.target["MAG_AUTO"]
         flux_radius = self.target["FLUX_RADIUS"]
         fstring = self.target["NAME"]
-        print('target["X_IMAGE"]', self.target["X_IMAGE"])
+        #print('target["X_IMAGE"]', self.target["X_IMAGE"])
         
         objects = {}
         out_info = {}
@@ -221,13 +221,13 @@ class GalfitDetailed:
             if 'bar' in self.components:
                 fbar = 10**(-0.4 * (fit_info['bar']['mag'][0]))
                 fit_info['BarT'] = round(fbar / (fb+fd+fbar), 2)
-                print(f'BarT {fit_info['BarT']}')
+                #print(f'BarT {fit_info['BarT']}')
 
             #print('basic_info', basic_info)
             #print('measured_error_bad', measured_error_bad)
             fit_info['BT'] = round(fb / (fb+fd+fbar), 2)
             fit_info['chi2nu'] = basic_info['chi2nu']
-            print(f'BT {fit_info['BT']}') 
+            #print(f'BT {fit_info['BT']}') 
 
             out_info[i+1] = fit_info
 

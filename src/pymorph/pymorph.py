@@ -71,7 +71,7 @@ class GalaxyPipeline:
         self.components = [cm.strip() for cm in components]
 
 
-        self.run_galfit = config.getboolean('modes', 'galfit') 
+        self.run_galfit = config.getboolean('modes', 'decompose') 
 
         self.galcut = config.getboolean("modes", "galcut")
         self.detail = config.getboolean("modes", "detail")
