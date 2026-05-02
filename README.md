@@ -14,95 +14,75 @@ https://github.com/vvinuv/pymorph.git
 ```
 pip install .
 ``` 
+OR
 
-### BUGS
-Current version is buggy and not recommended to use this version.
+```
+pip install . --no-deps --no-build-isolation
+```
 
-### If you want to really use this
 
-You can either run  
+You can run it by 
 
 ```pymorph_bin``` 
 
-or 
 
-```
->>> import pymorph
->>> p = pymorph.PyMorph()
->>> p.pymorph()
-```
+This assumes that there is a configuration file (config.ini) in your directory. 
 
-This assumes that there is a configuration file in your directory. It runs also with default run parameters which are mostly different from the parameters in the configuration file. You can of course change this. Keep on read this
+PyMorph is a pipeline which integrates SExtractor and GALFIT for estimating parametric and nonparametric quantities to describe the galaxy morphology. It can be used on a large frames with or without object coordinates of target galaxies or individual target objects. It can use PSF which is nearest to the target galaxy based on SExtractor star-galaxy probability or list of PSFs or individual PSF. 
 
-
-PyMorph is a pipeline which integrates SExtractor and GALFIT for estimating parametric and nonparametric quantities to describe the galaxy morphology. It can be used on a large frames with or without object coordinates of target galaxies or individual target objects. It can use PSF which is nearest to the target galaxy based on SExtractor star-galaxy probability or list of PSFs or individual PSF. It also gives the abilities to select the PSF interactively from a given PSF list or using SExtractor. It can repeat the selection procedure until you are satisfied. It can use SExtractor sky, GALFIT sky or the sky value implemented in PyMorph. It can repeat the fitting if GALFIT fails. It uses different initial parameters for GALFIT during refitting. It calculates nonparameteric quantities such as concentration, asymmetry, clumpness, Gini coefficient and moment parameters. These are implimented in PyMorph. It creates plots and a simple html page. It can write database for the output parameters.  
+It calculates nonparameteric quantities such as concentration, asymmetry, clumpness, Gini coefficient and moment parameters. These are implimented in PyMorph. It creates plots and a simple html page. It can write database for the output parameters.  
 
 PyMorph assumes a configuration file in the current directory which is shown in the below
 
 ```
+
 [imagecata]
 ;Specify the input images and Catalogues
-imagefile = withsky.fits
+imagefile = frame-r-002125-3-0104.fits 
 
 ;The weight image. If it contains the string 'rms', this will treated as 
 ;RMS_MAP and if it contains weight, then that will be treated as WEIGHT_MAP. 
 ;If nothing found, then by default it is treated as MAP_RMS 
-whtfile = rms.fits   
+whtfile = sigma.fits
 
-;The sextractor catalogue which has the format given in the file
-;catalogue of galaxies from online catalogu service
-;(name ra1 ra2 ra2 dec1 dec2 dec3)
+;catalogue of galaxies. The header information are
+;GAL_ID RA DEC Z STAR or GAL_ID RA1 RA2 RA2 DEC1 DEC2 Z STAR or
+;GAL_ID RA DEC Z or GAL_ID RA DEC
+obj_cata = input.cat 
+;The sextractor catalogue from which initial values are determined 
 sex_cata = sex.cat            
-clus_cata = input.cat         
 
 
-;Specify the output names of images and catalogues
-;catalogue of galaxies in the field
-out_cata = out.cat      
+;rootname is the unique value for all the input object. This will included to
+;filenames of every file created by pymorph
 rootname = cl1358
 
-;the directory containing input images if commented out, then program uses
-;current directory
-datadir = /Users/vinu/github/pymorph_refactoring/examples/small_image/data/ 
+;The directory containing input images. It should be in the current
+;directory. If commented out, then program uses current directory
+datadir = /Users/vinu/github/pymorph/examples/small_image
 
-;the directory containing output data if commented out, then program uses
+;The directory containing output data. If commented out, then program uses
 ;current directory
-outdir = /Users/vinu/github/pymorph_refactoring/examples/small_image/results/
+;DON'T change
+outdir = './'
 
 [external]
 ;;;----Set the SExtractor and GALFIT path here----;;;
 GALFIT_PATH = /usr/local/bin/galfit
 ;/home/vinu/software/galfit/modified/galfit 
-SEX_PATH = /usr/local/bin/sex
-PYMORPH_PATH = /Users/vinu/github/pymorph_refactoring/
+SEX_PATH = /opt/homebrew/bin//sex
 
 [psf]
-;Star-galaxy classification 
-stargal_prob = 0.8 
+;Star-galaxy classification. stargal_prob is also used as the limit
+;of star-galaxy classification in the fit_and_fit mode 
+stargal_prob = 0.7 
 
-;Psf list
-;0 => No psfselection
-;1 => Only Select psf 
-;2 => Select psf and run pipeline
-;Recommended: Run with '1' and then run pipeline
-psfselect = 0                         
-                                      
-;psf image size will be startsize times the SMA given by SExtractor
+;PSF image size will be startsize times the SMA given by SExtractor
 star_size = 20                         
 
-;List of psf containg their position information in the 
-;header (RA_TARG, DEC_TARG). Make psf with the names as here 
-;and use psf_header_update.py. It will update the header information.
-
-psflist = psf_1447219+0828392.fits
-;[psf_1216382-1200443.fits, psf_1216408-1200251.fits, psf_1216424-1202057.fits,psf_1216487-1201246.fits,psf_1216504-1202104.fits]   
-;psflist = @psflist.list
-
-;0 nearest, 1 second nearest, 2 third nearest etc
-which_psf = 0
-
-#area of object for psf selection
-area_obj = 40
+;List of psf containg their position information. psf_RA1RA2RA3+DEC1DEC2DEC3.fits. This will convert to RA and DEC and updated in the PSF header.
+;If psflist=@filename, then the PSF will read from that file.
+psflist = psf_1447218+0838538.fits, psf_1447219+0828392.fits, psf_1447219+0828392.fits, psf_1447263+0828251.fits, psf_1447314+0837484.fits, psf_1447278+0834215.fits, psf_1447258+0833591.fits, psf_1447248+0834458.fits, psf_1447184+0830495.fits
 
 [mask]
 ;;;----Conditions for Masking----;;;
@@ -112,33 +92,27 @@ area_obj = 40
 ;The masking will be for a circular region of radius mask_reg*semi-major 
 ;axis of the nighbour with respect to the center of the neightbour.
 manual_mask = 0
-mask_reg = 2.0
-thresh_area = 0.2
-threshold = 3.0                       
-                                      
+mask_reg = 12.0
+thresh_area = 1.2
+threshold = 0.2                       
+no_mask = 0
+           
 [size]
 ;Size of the cut out and search conditions
-;size = [resize?, varsize?, fracrad, square?, fixsize]
-;size of the stamp image
-size_list = 0, 1, 6, 1, 120              
-;The search radius 
-searchrad = 0.3arc                     
+;size = [resize?, imsize?, fracrad, square?, fixsize]
+size_list = 1, 0, 20, 1, 120              
+;The search radius in arcsec 
+searchrad = 0.9                     
+;Don't change this keyword
+nearest_neighbour = True
 
 [cosmology]
 ;Parameters for calculating the physical parameters of galax
 ;Pixel scale (arcsec/pixel)
-pixelscale = 0.045                    
-;Hubble parameter
-H0 = 71                               
-;Omega matter
-WM = 0.27                             
-;Omega Lambda
-WV = 0.73                             
-;redshift
-redshift = 9999
+pixelscale = 0.25                    
 
 [nonparams]
-;Parameters to be set for calculating the CASGM----;;;
+;Parameters to be set for calculating the CASGM. Don't change these parameters
 back_extraction_radius = 15.0
 ;back_ini_xcntr = 32.0 
 ;back_ini_ycntr = 22.0
@@ -146,95 +120,101 @@ angle = 180.0
 
 [modes]
 ;PyMorph fitting modes
-;Repeat the pipeline manually
-repeat = False                        
 ;True if we provide cutouts
-galcut = False                        
+galcut = False
+;This runs galfit software. Don't change
 decompose = True
-;Detailed fitting
-detail = False 
-;Always keep this True as it is not functional yet!
-galfit = True 
-cas = False
-;if findandfit= True, then maglim = [faint_mag, bright_mag]
-;findandfit takes all the objects in clus_cata and fit it in one go.
-;Need to be very careful when setting the sextractor parameters
-;images start with I and weight start with W
-findandfit = True
-crashhandler = False
+;detail=True then the galfit configuration will take random number of
+;configuration values, magnitude, radius and Sersic index, which is
+;specfied by number_random keyword. The original initial values are from
+;the sextractor 
+detail = True
+number_random = 2
+
+;Will run casgm 
+casgm = False
+;if find_and_fit = True, then maglim = [faint_mag, bright_mag]
+;find_and_fit takes all the objects in that maglim and fit it in one go.
+;Don't change it
+find_and_fit = False
+
+[findfit]
+;It is the lower and upper magnitudes of objects if the mode is find_and_fit
+maglim = 22, 15 
 
 [mag]
-;magnitude zero point
+;magnitude zero point and the photometric filter
 mag_zero = 25.256                     
-maglim = 22, 15 
+photo_filter = 'SDSS_r'
 
 [galfit]
 ;Galfit Controls
 ;The components to be fitted to the object
-components = bulge, disk, bar, point
+components = bulge, disk, bar
 ;set to False to fit sersic bulge, set to true to fit devacouler's bulge (n = 4)
 devauc = False 
 
-;;;---fixing = [bulge_center, disk_center, sky, bar_center, point_center]
-; = 0, Fix params at SExtractor value
-fitting = 1, 1, 0, 1, 0
+;;;---fixing = [bulge_center, disk_center, sky, bar_center]
+fitting = 1, 1, 1, 1
+
+;Skip if bbox=-99 and barbox=-99. Otherwise these take is as the initial
+;boxiness of bulge and bar if these are found in components
+bbox = 0
+barbox = 0
+
 
 [version]
 galfitv = 3.0.2
 pymorphv = 0.1
 
 [diagnosis]
-;;;----The following conditions are used to classify fit goo/bad----;;;
-chi2sq = 1.9                          
-Goodness = 0.60                       
+;The following conditions are used to classify fit good/bad
+;Consider the fit bad if the chi2nu larger than chi2nu_limit
+chi2nu_limit = 0.5                          
+;goodness limit is how many sigma (ie. how many significant) is classified 
+;as a good chi2 for a two tailed test. 
+goodness_limit = 3                       
 ;< abs(center - fitted center)
-center_deviation = 3.0                
+center_deviation_limit = 3.0                
+;do_plot=True makes plotting
+do_plot = False
+
+[params_limit]
+;NMag is set the limit on magnitude. It is defined as MAG_AUTO+/-NMag . 
+;Maximum of radius is defined as NRadius * Sectractor half light radius and
+;the minimum will be set to 0.2 pix. 
+NMag = 3
+NRadius = 10
+
+;Need to set lower and higher sersic index
+LN = 0.2
+UN = 10
+
 ;Keep center within +/- center_constrain
-center_constrain = 2.0                
+center_constrain = 5.0                
 
-[db]
-;;;----Database Informations----;;;
-host = localhost
-database = Cluster
-table = cluster
-usr = vinu
-pword = cluster
-dbparams = Cluster:cl1216-1201, ObsID:1:int
+
+[sextractor]
+;To find the initial configuration parameters. Some parameters 
+;such as GAIN are need to change for every telescope
+SEEING_FWHM = 1 
+DETECT_MINAREA = 6
+DETECT_THRESH = 1.5
+ANALYSIS_THRESH = 1.5
+GAIN = 4.71
+PHOT_FLUXFRAC = 0.8
+FILTER = Y
+FILTER_NAME = default.conv
+DEBLEND_NTHRESH = 32
+DEBLEND_MINCONT = 0.005
+BACK_SIZE = 64
+BACK_FILTERSIZE = 3
+BACKPHOTO_TYPE = GLOBAL
+BACKPHOTO_THICK = 24
+WEIGHT_TYPE = MAP_RMS
+
 ```
 
-We can use the following 'command line' like arguments to change the default parameters
 
-```
--e, --sex_conf: Edit SExtractor configuration (default = False)
--f, --force: Remove already existing SExtractor catalog (default = False)
--t, --test: Runs the test instance-OVERRIDES ALL OTHER INPUT-User must supply a directory for output (default = False)
---lmag: Lower magnitude cutoff (default = 500)
---umag: Upper magnitude cutoff" (default = -500)
---ln: Lower Sersic (default = 0.1)
---un: Upper Sersic (default = 500)
---lre: Lower Bulge Radius (default = 0)
---ure: Upper Bulge Radius (default = 500)
---lrd: Lower Disk Radius (default = 0)
---urd: Upper Disk Radius (default = 500)
-
---bdbox: Turns on bdbox (default = False)
---bbox: Turns on bbox (default = False)
---dbox: Turns on dbox (default = False)
---devauc: Turns on DeVacouleur's bulge fitting (dafault: False)
-
-
---with-in: Remove boundary of images (default = 50)
---with-filter: Filter used (default = 'UNKNOWN')
-                  
-
--p, --with-psf: Nearest/farthest PSF (default = 0)
---with-sg: For psf identification (default = 0.9)
---with-area: Min area of psf for selection (default = 40)
---no_mask: Turn off masking (default=False)
---norm_mask: Turns on Normal masking (default=False)
-
---with-host: MySql host used (default = 'localhost')
---with-db: Database used (default = 'UNKNOWN')
-```
 
 
