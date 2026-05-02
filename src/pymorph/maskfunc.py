@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.io import fits
 import configparser
-
+import pandas as pd
 
 class MaskGenerator:
 
@@ -60,26 +60,35 @@ class MaskGenerator:
         # --- initialize two masks ---
         conditional_mask = np.zeros_like(self.mask_image)
         full_mask = np.zeros_like(self.mask_image)
+        self.neighbours_galfit = pd.DataFrame(columns=self.neighbours.columns)
 
         a_t = target["A_IMAGE"]
         b_t = a_t / target["ELONGATION"]
-        area_t = np.pi * a_t * b_t
+        #area_t = np.pi * a_t * b_t
+        area_t = target["ISO0"]
 
         for _, neigh in self.neighbours.iterrows():
 
             a_n = neigh["A_IMAGE"]
             b_n = a_n / neigh["ELONGATION"]
-            area_n = np.pi * a_n * b_n
+            #area_n = np.pi * a_n * b_n
+            area_n = neigh["ISO0"]
 
             # distance
             d = np.sqrt(
                 (target["X_IMAGE"] - neigh["X_IMAGE"])**2 +
                 (target["Y_IMAGE"] - neigh["Y_IMAGE"])**2
             )
+            
+            #Conditions for mask. cond1 and cond2 
+            #(Area of the neighbour) * (Threshold Area) < Area of the target
+            cond1 = area_n * self.thresh_area < area_t
 
-            cond1 = area_n < self.thresh_area * area_t
+            #Distance between target and neighbour > 
+            #threshold * (SMA of the target + SMA of the neighbour)
             cond2 = d > self.threshold * (a_t + a_n)
 
+            #print(f"{cond1} {area_n} {self.thresh_area} {area_t} {cond2}, {d} {self.threshold} {a_t}  {a_n} {cond2}")
             # --- scale ellipse ---
             a = self.mask_reg * a_n
             b = self.mask_reg * b_n
@@ -98,7 +107,8 @@ class MaskGenerator:
             # --- CONDITIONAL MASK ---
             if cond1 or cond2:
                 conditional_mask[ellipse] = 1
-
+            else:
+                self.neighbours_galfit.loc[len(self.neighbours_galfit)] = neigh 
         # store in class
         self.mask_image = conditional_mask
         self.full_mask = full_mask

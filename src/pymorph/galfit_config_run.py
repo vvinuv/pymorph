@@ -2,11 +2,13 @@ import os
 import configparser
 import sys
 import subprocess
+from pathlib import Path
 import numpy as np
 #from .flagfunc import GetFlag, isset, SetFlag
 import traceback
 from .errors_warnings import catch_pipeline_issues
 
+BASE_PATH = Path.cwd()
 
 class GalfitConfigRunFunc:
     
@@ -415,7 +417,10 @@ class GalfitConfigRunFunc:
         self.bar_radius = self.flux_radius 
 
         self.size = target["IMAGE_SIZE"]
-        self.psffile = target["PSF"]
+
+        self.psffile = Path(target["PSF"])
+        self.psffile = self.psffile.relative_to(BASE_PATH)
+
         self.mag_zero = target["MAG_ZERO"]
 
         rootname = target["ROOTNAME"]

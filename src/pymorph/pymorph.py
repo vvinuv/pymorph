@@ -843,10 +843,11 @@ class PyMorph:
         #MASK CLASS
         mask_gen = MaskGenerator("config.ini", target, neighbours)
         mask_gen.run()
+        #print(mask_gen.neighbours_galfit)
 
         #GALFIT CONFIG and RUN CLASS
         gcr = GalfitConfigRunFunc("config.ini")
-        gcr.write_config(target, neighbours)
+        gcr.write_config(target, mask_gen.neighbours_galfit)
 
         if pipe.run_galfit:
             gcr.GalfitRun()
@@ -1040,7 +1041,7 @@ class PyMorph:
 
         #GALFIT CONFIG and RUN CLASS
         gcr = GalfitConfigRunFunc("config.ini")
-        gcr.write_config(target, neighbours)
+        gcr.write_config(target, mask_gen.neighbours_galfit)
 
         gd = GalfitDetailed('config.ini', gcr.galfit_conf,
                             target, neighbours)
