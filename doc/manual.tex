@@ -273,7 +273,8 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 
 \subsection{\texttt{detail}}
 \begin{itemize}
-\item Enables random perturbation of initial fitting parameters.
+\item Enables random perturbation of initial fitting parameters. 
+\item Still need to include the neighbour contribution. It may be difficult to determine whether changes in the output values arise from perturbations in the initial configuration or from neighbour effects. One possible approach is to take the neighbour parameters from the initial SExtractor values and keep them fixed for all runs.
 \end{itemize}
 
 \subsection{\texttt{number\_random}}
