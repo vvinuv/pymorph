@@ -29,34 +29,19 @@ class GalfitConfigRunFunc:
         config = configparser.ConfigParser()
         config.read(config_file)
 
+        self.Ncntr = config.getfloat('params_limit', 'Ncntr')
         self.NMag = config.getfloat('params_limit', 'NMag')
         self.NRadius = config.getfloat('params_limit', 'NRadius')
-
+        
         self.LN = config.getfloat('params_limit', 'LN')
         self.UN = config.getfloat('params_limit', 'UN')
-
-        self.center_constrain = config.getfloat('params_limit', 'center_constrain')
+        self.UNbar = config.getfloat('params_limit', 'UNbar')
 
         self.bbox = config.getfloat('galfit', 'bbox')
         self.barbox = config.getfloat('galfit', 'barbox')
 
         components = config.get('galfit', 'components').split(',')
         self.components = [cm.strip() for cm in components]
-
-        @catch_pipeline_issues()
-        def check_flags(self, config):
-
-            if config.get("nearest_neighbor"):
-                self.set_flag("NEAREST_NEIGHBOR")
-
-            if self.bbox:
-                self.set_flag("BBOX")
-
-            if self.barbox:
-                self.set_flag("BARBOX")
-            
-            if "bar" in self.components:
-                self.set_flag("HAS_BAR")
 
         fitting = config.get('galfit', 'fitting')
         self.fitting = [int(tf) for tf in fitting.split(',')]
@@ -79,11 +64,11 @@ class GalfitConfigRunFunc:
         if component == 'sersic_main':
             constraints = f'{cnum} n {self.LN} to {self.UN}' 
         elif component == 'bar':
-            constraints = f'{cnum} n 0.1 to 2.2' 
-        lx = self.xcntr_img - 5
-        ux = self.xcntr_img + 5
-        ly = self.ycntr_img - 5
-        uy = self.ycntr_img + 5
+            constraints = f'{cnum} n 0.1 to {self.UNbar}' 
+        lx = self.xcntr_img - self.Ncntr
+        ux = self.xcntr_img + self.Ncntr
+        ly = self.ycntr_img - self.Ncntr
+        uy = self.ycntr_img + self.Ncntr
 
         ure = self.NRadius * self.flux_radius
 
@@ -111,10 +96,10 @@ class GalfitConfigRunFunc:
         eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
         eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
 
-        lx = self.xcntr_img - 5
-        ux = self.xcntr_img + 5
-        ly = self.ycntr_img - 5
-        uy = self.ycntr_img + 5
+        lx = self.xcntr_img - self.Ncntr
+        ux = self.xcntr_img + self.Ncntr
+        ly = self.ycntr_img - self.Ncntr
+        uy = self.ycntr_img + self.Ncntr
 
         ure = self.NRadius * self.flux_radius
 
@@ -369,8 +354,8 @@ class GalfitConfigRunFunc:
         new = '\n'
 
         self.obj_counter += 1
-        centerx_con = (neigh["X_IMAGE"] - 10, neigh["X_IMAGE"] + 10)
-        centery_con = (neigh["Y_IMAGE"] - 10, neigh["Y_IMAGE"] + 10)
+        centerx_con = (neigh["X_IMAGE"] - 2, neigh["X_IMAGE"] + 2)
+        centery_con = (neigh["Y_IMAGE"] - 2, neigh["Y_IMAGE"] + 2)
 
         self._sersic_neighbor_constrain(self.obj_counter, 
                                         centerx_con, centery_con,

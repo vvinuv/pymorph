@@ -52,7 +52,7 @@ class PSFPipeline:
         else:
             psf_files = [p.strip() for p in self.psflist.split(",")]
 
-        print(psf_files)
+        #print(psf_files)
         return psf_files
 
 
@@ -152,7 +152,7 @@ class PSFPipeline:
             #)
 
             self.result = {
-                           "PSF": psf_file,
+                           "PSF": os.path.join(self.DATADIR, psf_file),
                            "distance_psf_arcsec": 0.0
                            }
 

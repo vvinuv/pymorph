@@ -59,8 +59,6 @@ class GalaxyPipeline:
 
         self.searchrad = config.getfloat('size', 'searchrad')
 
-        self.nearest_neighbour = config.getboolean('size', 'nearest_neighbour')
-
         self.mag_zero = config.getfloat('mag', 'mag_zero')
         self.photo_filter = config.get('mag', 'photo_filter')
 
@@ -412,7 +410,7 @@ class GalaxyPipeline:
         #print(np.argmin(sep))
         #print(target)
 
-        print('np.min(sep).arcsec', np.min(sep).arcsec)
+        #print('np.min(sep).arcsec', np.min(sep).arcsec)
         return np.min(sep).arcsec < tol_arcsec
 
 
@@ -1039,12 +1037,15 @@ class PyMorph:
         mask_gen = MaskGenerator("config.ini", target, neighbours)
         mask_gen.run()
 
+        #print('neighbours_galfit', mask_gen.neighbours_galfit)
+
         #GALFIT CONFIG and RUN CLASS
         gcr = GalfitConfigRunFunc("config.ini")
         gcr.write_config(target, mask_gen.neighbours_galfit)
 
+
         gd = GalfitDetailed('config.ini', gcr.galfit_conf,
-                            target, neighbours)
+                            target, mask_gen.neighbours_galfit)
         gd.detailed(self.number_random)
 
         #except PipelineCriticalError as e:

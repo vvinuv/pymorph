@@ -6,6 +6,7 @@ import json
 import numpy as np
 #from .flagfunc import GetFlag, isset, SetFlag
 import traceback
+import pandas as pd
 from .errors_warnings import catch_pipeline_issues
 from .galfit_config_run import GalfitConfigRunFunc
 from .read_fitlog import read_fitlog
@@ -59,7 +60,6 @@ class GalfitDetailed:
         self.neighbours = neighbours
         self.galfit_conf = galfit_conf
 
-
     def detailed(self, number_random=50):
 
         new = '\n'
@@ -72,7 +72,10 @@ class GalfitDetailed:
         flux_radius = self.target["FLUX_RADIUS"]
         fstring = self.target["NAME"]
         #print('target["X_IMAGE"]', self.target["X_IMAGE"])
-        
+       
+        #This will free the neighbour parameter and it is done free_neigh=0
+        free_neigh = 1
+
         objects = {}
         out_info = {}
 
@@ -194,7 +197,24 @@ class GalfitDetailed:
 
             gconf += f' 0) sky {new} 1) {sky} 1 {new} 2) 0.0 0 {new} 3) 0.0 0 {new} Z) 0'
 
+            for _, neigh in self.neighbours.iterrows():
+                #print('neigh1', neigh)
+                #print(neigh["X_IMAGE"])
+                gconf += f' {new}{new}'
+                gconf += f' 0) sersic # Object type {new}'
+                gconf += f' 1) {neigh["X_IMAGE"]:.2f} {neigh["Y_IMAGE"]:.2f} '
+                gconf += f' {free_neigh} {free_neigh}  {new}'
+                gconf += f' 3) {neigh["MAG_AUTO"]:.2f} {free_neigh} {new}'
+                gconf += f' 4) {neigh["FLUX_RADIUS"]:.2f} {free_neigh} {new}'
+                gconf += f' 5) 4.0 {free_neigh} {new}'
+                gconf += f' 9) {1/neigh["ELONGATION"]:.2f} {free_neigh} {new}'
+                gconf += f' 10) {neigh["GALFIT_ANGLE"]:.2f} {free_neigh} {new}'
+                gconf += f' Z) 0 {new}{new}'
 
+            #print(gconf)
+            #print('self.neighbours', self.neighbours)
+            free_neigh = 0 
+                
             f = open('temp.in', 'w')
             f.write(gconf)
             f.close()
@@ -214,6 +234,9 @@ class GalfitDetailed:
 
             basic_info, fit_info, measured_error_bad = read_fitlog(filename = f'fit_{i}_{fstring}.log', yes_bar = 1)
 
+            #print(fit_info)
+            #sys.exit()
+
             fb = 10**(-0.4 * (fit_info['bulge']['mag'][0]))
             fd = 10**(-0.4 * (fit_info['disk']['mag'][0]))
             fbar = 0.
@@ -228,6 +251,22 @@ class GalfitDetailed:
             fit_info['BT'] = round(fb / (fb+fd+fbar), 2)
             fit_info['chi2nu'] = basic_info['chi2nu']
             #print(f'BT {fit_info['BT']}') 
+
+            rows = []
+
+            for k in fit_info.keys():
+                if k.startswith('neighbor'):
+                    rows.append({
+                        'X_IMAGE': fit_info[k]['xctr'][0],
+                        'Y_IMAGE': fit_info[k]['yctr'][0],
+                        'MAG_AUTO': fit_info[k]['mag'][0],
+                        'FLUX_RADIUS': fit_info[k]['rad'][0],
+                        'n': fit_info[k]['n'][0],
+                        'ELONGATION': 1/fit_info[k]['ell'][0],
+                        'GALFIT_ANGLE': fit_info[k]['pa'][0]
+                    })
+            self.neighbours = pd.DataFrame(rows)
+
 
             out_info[i+1] = fit_info
 
