@@ -103,8 +103,6 @@ no_mask = 0
 size_list = 1, 0, 20, 1, 120              
 ;The search radius in arcsec 
 searchrad = 0.9                     
-;Don't change this keyword
-nearest_neighbour = True
 
 [cosmology]
 ;Parameters for calculating the physical parameters of galax
@@ -180,19 +178,18 @@ center_deviation_limit = 3.0
 do_plot = False
 
 [params_limit]
-;NMag is set the limit on magnitude. It is defined as MAG_AUTO+/-NMag . 
+;Ncntr set the limit on center of the components, ie, +/- Ncntr
+;NMag is set the limit on magnitude. It is defined as MAG_AUTO+/-NMag .
 ;Maximum of radius is defined as NRadius * Sectractor half light radius and
-;the minimum will be set to 0.2 pix. 
+;the minimum will be set to 0.2 pix.
+Ncntr = 2
 NMag = 3
 NRadius = 10
 
 ;Need to set lower and higher sersic index
 LN = 0.2
 UN = 10
-
-;Keep center within +/- center_constrain
-center_constrain = 5.0                
-
+UNbar = 2.2
 
 [sextractor]
 ;To find the initial configuration parameters. Some parameters 
