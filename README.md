@@ -35,7 +35,6 @@ It calculates nonparameteric quantities such as concentration, asymmetry, clumpn
 PyMorph assumes a configuration file in the current directory which is shown in the below
 
 ```
-
 [imagecata]
 ;Specify the input images and Catalogues
 imagefile = frame-r-002125-3-0104.fits 
@@ -95,7 +94,6 @@ manual_mask = 0
 mask_reg = 12.0
 thresh_area = 1.2
 threshold = 0.2                       
-no_mask = 0
            
 [size]
 ;Size of the cut out and search conditions
@@ -190,6 +188,19 @@ NRadius = 10
 LN = 0.2
 UN = 10
 UNbar = 2.2
+
+[detail_limit]
+;initial magnitude +/- delmag
+delmag = 0.5
+;radius will be between 0.6 * initial radius and 1.3 * initial radius 
+delr = 0.6, 1.3
+;Sersic index will be between 0.5 * initial Serisc and 1.5 * initial Sersic
+deln = 0.5, 1.5
+;initial bar magnitude +/- delmag
+magbar = 0.5
+;It will be frbar * radius of the bulge, is fraction of bulge radius
+frbar = 1.2
+
 
 [sextractor]
 ;To find the initial configuration parameters. Some parameters 
