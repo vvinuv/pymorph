@@ -211,10 +211,6 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 \item Masking occurs when scaled semi-major axes of object and neighbour overlap.
 \end{itemize}
 
-\subsection{\texttt{no\_mask}}
-\begin{itemize}
-\item If set to 1, masking is completely disabled.
-\end{itemize}
 
 \section{\texttt{[size]}}
 
@@ -234,10 +230,6 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 \item Search radius in arcseconds for identifying neighbouring objects.
 \end{itemize}
 
-\subsection{\texttt{nearest\_neighbour}}
-\begin{itemize}
-\item Boolean flag indicating whether to consider the nearest neighbour during processing. Don't change this value
-\end{itemize}
 
 \section{\texttt{[cosmology]}}
 
@@ -249,9 +241,11 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 
 \section{\texttt{[nonparams]}}
 
+Parameters to be set for calculating the CASGM. Don't change these parameters
+
 \subsection{\texttt{back\_extraction\_radius}}
 \begin{itemize}
-\item Radius used for background estimation.
+\item Radius used for background estimation. N
 \end{itemize}
 
 \subsection{\texttt{angle}}
@@ -272,9 +266,15 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 \end{itemize}
 
 \subsection{\texttt{detail}}
+
 \begin{itemize}
-\item Enables random perturbation of initial fitting parameters. 
-\item Still need to include the neighbour contribution. It may be difficult to determine whether changes in the output values arise from perturbations in the initial configuration or from neighbour effects. One possible approach is to take the neighbour parameters from the initial SExtractor values and keep them fixed for all runs.
+\item detail=True then the galfit configuration will take random number of
+configuration values, magnitude, radius and Sersic index, which is
+specfied by number\_random keyword. The original initial values are from
+the sextractor 
+
+
+%\item Still need to include the neighbour contribution. It may be difficult to determine whether changes in the output values arise from perturbations in the initial configuration or from neighbour effects. One possible approach is to take the neighbour parameters from the initial SExtractor values and keep them fixed for all runs.
 \end{itemize}
 
 \subsection{\texttt{number\_random}}
@@ -289,7 +289,8 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 
 \subsection{\texttt{find\_and\_fit}}
 \begin{itemize}
-\item If True, finds and fits all objects within a magnitude range.
+\item If True, finds and fits all objects within a magnitude range. It is not available and keep this  
+to find\_and\_fit = False
 \end{itemize}
 
 \section{\texttt{[findfit]}}
@@ -320,7 +321,7 @@ R\_{\text{mask}} = \texttt{mask\_reg} $\times$ (\text{semi-major axis of neighbo
 
 \subsection{\texttt{devauc}}
 \begin{itemize}
-\item If True, uses de Vaucouleurs profile ($n=4$) for bulge.
+\item If True, uses de Vaucouleurs profile ($n=4$) for bulge. Now it is not working.
 \end{itemize}
 
 \subsection{\texttt{fitting}}
@@ -389,6 +390,43 @@ The first for fitting bulge centre, second for disk center, next is for sky, nex
 \begin{itemize}
 \item Maximum allowed positional shift during fitting.
 \end{itemize}
+
+\section{\texttt{[detail\_limit]}}
+
+\subsection{\texttt{delmag}}
+\begin{itemize}
+\item initial magnitude +/- delmag
+E.g. delmag = 0.5
+\end{itemize}
+
+\subsection{\texttt{delr}}
+\begin{itemize}
+\item Radius will be between 0.6 * initial radius and 1.3 * initial radius 
+delr = 0.6, 1.3
+\end{itemize}
+
+\subsection{\texttt{deln}}
+\begin{itemize}
+\item Sersic index will be between 0.5 * initial Serisc and 1.5 * initial Sersic
+
+deln = 0.5, 1.5
+\end{itemize}
+
+\subsection{\texttt{magbar}}
+\begin{itemize}
+\item Initial bar magnitude +/- delmag
+
+magbar = 0.5
+\end{itemize}
+
+
+\subsection{\texttt{frbar}}
+\begin{itemize}
+\item It will be frbar * radius of the bulge, is fraction of bulge radius
+
+frbar = 1.2
+\end{itemize}
+
 
 \section{\texttt{[sextractor]}}
 \begin{itemize}
