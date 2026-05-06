@@ -11,9 +11,9 @@ from .errors_warnings import catch_pipeline_issues
 from .galfit_config_run import GalfitConfigRunFunc
 from .read_fitlog import read_fitlog
 
-def uniform_params(mag, rad, has_bar, number_random, n=4, 
-                   delmag=0.5, delr=[0.6, 1.3], deln=[0.5, 1.5],
-                   magbar=0.5, rbar=1.2):
+def uniform_params(mag, rad, has_bar, number_random, 
+                   delmag, delr, deln,
+                   magbar, frbar, n=4):
 
 
     mag = np.random.uniform(mag-delmag, mag+delmag, number_random)
@@ -32,7 +32,7 @@ def uniform_params(mag, rad, has_bar, number_random, n=4,
    
     if has_bar:
         magbar = np.around(mag-magbar, 2)
-        rbar = np.around(rbar * rad , 2)
+        rbar = np.around(frbar * rad , 2)
         nbar = np.where(n > 3, 2.5, n * 0.8)
         nbar = np.around(nbar, 2)
         
@@ -55,6 +55,15 @@ class GalfitDetailed:
 
         self.bbox = config.getfloat("galfit", "bbox")
         self.barbox = config.getfloat("galfit", "barbox")
+
+        self.delmag = config.getfloat("detail_limit", "delmag")
+        self.delr = config.get("detail_limit", "delr")  
+        self.delr = [float(tdr) for tdr in self.delr.split(',')]
+        self.deln = config.get("detail_limit", "deln")  
+        self.deln = [float(tdn) for tdn in self.deln.split(',')]
+
+        self.magbar = config.getfloat("detail_limit", "magbar")
+        self.frbar = config.getfloat("detail_limit", "frbar")
 
         self.target = target
         self.neighbours = neighbours
@@ -87,7 +96,13 @@ class GalfitDetailed:
             results = uniform_params(mag_auto, 
                                      flux_radius, 
                                      True,
-                                     number_random, n=4) 
+                                     number_random, 
+                                     self.delmag, 
+                                     self.delr,
+                                     self.deln,
+                                     self.magbar,
+                                     self.frbar,
+                                     n=4) 
             magbar = results[3]
             rbar = results[4]
             nbar = results[5]
