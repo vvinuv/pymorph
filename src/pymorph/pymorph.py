@@ -241,6 +241,11 @@ class GalaxyPipeline:
         with open(os.path.join(Path.cwd(), 'default.sex'), 'w') as f:
             f.write(output)
 
+        fsex_default = Path("default.sex")
+
+        if os.path.exists('default.sex'):
+            print(1, 'default.sex')
+
         output_cat = f"{self.rootname}_sex.cat"
         sex_out_params = os.path.join(self.sex_keys["PYMORPH_PATH"], 
                                       "SEx/default.param")
@@ -258,6 +263,11 @@ class GalaxyPipeline:
         subprocess.run(cmd, check=True)
 
         self.sex_cata = output_cat
+
+        if fsex_default.exists():
+            fsex_default.unlink()
+
+
         return output_cat
 
 
