@@ -86,7 +86,7 @@ class GetOutputParams:
                 self.result["meta"]["init_file"] = line.split(":", 1)[1].strip()
 
             elif "Restart file" in line:
-                self.result["meta"]["restart_file"] = line.split(":", 1)[1].strip()
+                self.result["meta"]["restart_file"] = self.result["meta"]["init_file"].split('.')[0] + '.out'
 
             elif "Output image" in line:
                 self.result["meta"]["output_image"] = line.split(":", 1)[1].strip()
@@ -209,15 +209,19 @@ class GetOutputParams:
                 section = "neighbours"
                 current_comp_id = None
 
-                brackets = re.findall(r"\[([^\]]+)\]", line)
+                value = line.split(']')[1].split()[0]
+                #brackets = re.findall(r"\[([^\]]+)\]", line)
 
-                pos_vals = list(map(float, brackets[0].split(",")))
-                self.result["meta"]["sky_x"], self.result["meta"]["sky_y"] = pos_vals
+                #pos_vals = list(map(float, brackets[0].split(",")))
+                #print('pos_vals', pos_vals)
+                #print('brackets', brackets)
+                #self.result["meta"]["sky_x"], self.result["meta"]["sky_y"] = pos_vals
 
-                self.result["meta"]["sky_err"] = float(brackets[2])
+                #self.result["meta"]["sky_err"] = float(brackets[2])
 
-                if len(brackets) > 2:
-                    self.result["meta"]["sky_val"] = float(brackets[1])
+                #if len(brackets) > 2:
+                #    self.result["meta"]["sky_val"] = float(brackets[1])
+                self.result["meta"]["sky_val"] = float(value)
 
                 i += 2
                 continue

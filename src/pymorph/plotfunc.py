@@ -5,9 +5,10 @@ from astropy.io import fits
 
 class PlotFunc:
 
-    def __init__(self, output_file, mask_file):
+    def __init__(self, output_file, mask_file, bin_width):
         self.output_file = output_file
         self.mask_file = mask_file
+        self.bin_width = bin_width
 
         self.image, self.model, self.residual = self.load_fits()
         self.mask = fits.open(mask_file)[0].data
@@ -63,15 +64,14 @@ class PlotFunc:
         ax.set_aspect('equal')
 
     # -------- Radial Profile --------
-    def radial_profile(self, center=None):
+    def radial_profile(self):
         image = self.image_m
         model = self.model_m
         valid = self.valid
 
         y, x = np.indices(image.shape)
 
-        if center is None:
-            center = np.array(image.shape) // 2
+        center = np.array(image.shape) // 2
 
         r = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
 
@@ -80,7 +80,7 @@ class PlotFunc:
         mod_flat = model[valid]
 
         r_max = r_flat.max()
-        bins = np.arange(1, r_max)
+        bins = np.arange(1, r_max, self.bin_width)
 
         img_prof, mod_prof, img_err = [], [], []
 
@@ -108,6 +108,8 @@ class PlotFunc:
 
         ax.plot(r, mod_prof, label='Model', lw=2)
 
+        ax.errorbar(r, img_prof-mod_prof, yerr=img_err,
+                    fmt='o', markersize=6, label='Image', alpha=0.7)
         ax.set_yscale('log')
         ax.set_xlabel("Radius (pixels)", size=15)
         ax.set_ylabel("Surface Brightness", size=15)
