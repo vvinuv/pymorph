@@ -86,6 +86,7 @@ class GalaxyPipeline:
 
         self.chi2nu_limit = config.getfloat("diagnosis", "chi2nu_limit")
         self.center_deviation_limit = config.getfloat("diagnosis", "center_deviation_limit")
+        self.bin_width = config.getfloat("diagnosis", "bin_width")
 
         self.NMag = config.getfloat('params_limit', 'NMag')
         self.NRadius = config.getfloat('params_limit', 'NRadius')
@@ -862,6 +863,21 @@ class PyMorph:
         #CHECK WHETHER FIT.LOG EXISTS
         fitfile = pipe.check_file("fit.log")
 
+        #Rename the new configuration galfit. to G_*.out
+        latest_files = [
+                f for f in Path(".").iterdir()
+                if f.is_file() and f.name.startswith("galfit.")
+            ]
+
+        latest_file = max(latest_files, 
+                          key=lambda f: f.stat().st_mtime)
+
+
+        old_file = Path(latest_file)
+        new_file = f"G_{Path(target["NAME"])}.out"
+
+        old_file.rename(new_file)
+
         #CASGM CLASSS
         try:
             casgm_pipe = CASGMPipeline()
@@ -905,7 +921,8 @@ class PyMorph:
         #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
 
         plotter = PlotFunc(f"O_{target["NAME"]}.fits",
-                              f"EM_{target["NAME"]}.fits")
+                              f"EM_{target["NAME"]}.fits",
+                           pipe.bin_width)
         plotter.plot_summary(f"P_{target["NAME"]}.png")
 
 
@@ -961,6 +978,7 @@ class PyMorph:
             try:
 
                 self.sub_run(pipe, obj)
+
 
             except PipelineCriticalError as e:
                 print("Caught:", e.info["error"], e.info["issue"])
