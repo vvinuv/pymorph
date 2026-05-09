@@ -904,9 +904,9 @@ class PyMorph:
         
         #PLOTTING IMAGES AND SURFACE BRIGHTNESS PROFILE
 
-        #plotter = PlotFunc(f"O_{target["NAME"]}.fits",
-        #                      f"EM_{target["NAME"]}.fits")
-        #plotter.plot_summary(f"P_{target["NAME"]}.png")
+        plotter = PlotFunc(f"O_{target["NAME"]}.fits",
+                              f"EM_{target["NAME"]}.fits")
+        plotter.plot_summary(f"P_{target["NAME"]}.png")
 
 
         pd.DataFrame([target]).to_csv(
@@ -923,9 +923,9 @@ class PyMorph:
                                       index=False)
 
 
-        #generate_galaxy_report(galaxies,
-        #                       output_file=f"R_{target["NAME"]}.html",
-        #                       image_path=f"P_{target["NAME"]}.png")
+        generate_galaxy_report(galaxies,
+                               output_file=f"R_{target["NAME"]}.html",
+                               image_path=f"P_{target["NAME"]}.png")
 
         #wcsv = WriteCSV("config.ini")
         #wcsv.writeparams(target)
