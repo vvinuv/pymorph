@@ -31,7 +31,7 @@ def uniform_params(mag, rad, has_bar, number_random,
 
    
     if has_bar:
-        magbar = np.around(mag-magbar, 2)
+        magbar = np.around(mag + magbar, 2)
         rbar = np.around(frbar * rad , 2)
         nbar = np.where(n > 3, 2.5, n * 0.8)
         nbar = np.around(nbar, 2)
