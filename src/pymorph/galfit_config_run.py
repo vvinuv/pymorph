@@ -58,13 +58,13 @@ class GalfitConfigRunFunc:
 
         new = '\n'
 
-        eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
-        eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
+        eb_min = 0.1 if eb - 0.1 < 0.2 else eb - 0.2
+        eb_max = 0.9 if eb + 0.1 > 0.8 else eb + 0.2
        
         if component == 'sersic_main':
-            constraints = f'{cnum} n {self.LN} to {self.UN}' 
+            constraints = f'{new} {cnum} n {self.LN} to {self.UN}' 
         elif component == 'bar':
-            constraints = f'{cnum} n 0.1 to {self.UNbar}' 
+            constraints = f'{new} {cnum} n 0.1 to {self.UNbar}' 
         lx = self.xcntr_img - self.Ncntr
         ux = self.xcntr_img + self.Ncntr
         ly = self.ycntr_img - self.Ncntr
@@ -77,7 +77,7 @@ class GalfitConfigRunFunc:
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
         constraints += f'{new} {cnum} re 0.2 to {ure:.2f}'
         constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
-        constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
+        constraints += f'{new} {cnum} pa {pa - 25:.2f} to {pa + 25:.2f}'
 
         if component == 'sersic_main' and self.bbox != -99:
             constraints += f'{new} {cnum} c0 -2 to 2'  
@@ -93,8 +93,8 @@ class GalfitConfigRunFunc:
 
         new = '\n'
 
-        eb_min = 0.1 if eb - 0.1 < 0.1 else eb - 0.1
-        eb_max = 0.9 if eb + 0.1 > 0.9 else eb + 0.1
+        eb_min = 0.1 if eb - 0.1 < 0.2 else eb - 0.2
+        eb_max = 0.9 if eb + 0.1 > 0.8 else eb + 0.2
 
         lx = self.xcntr_img - self.Ncntr
         ux = self.xcntr_img + self.Ncntr
@@ -108,7 +108,7 @@ class GalfitConfigRunFunc:
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
         constraints += f'{new} {cnum} re 0.2 to {ure:.2f}'
         constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
-        constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
+        constraints += f'{new} {cnum} pa {pa - 25:.2f} to {pa + 25:.2f}'
         
         f_constrain = open(self.constrain_file, 'a')
         f_constrain.write(constraints)
@@ -125,9 +125,9 @@ class GalfitConfigRunFunc:
         constraints = f'{new} {cnum} x {cx[0]:.2f} to {cx[1]:.2f}'
         constraints += f'{new} {cnum} y {cy[0]:.2f} to {cy[1]:.2f}'
 
-        constraints += f'{new} {cnum} n 0.2 to 10'
+        constraints += f'{new} {cnum} n 0.2 to 8'
         constraints += f'{new} {cnum} mag {self.mag_auto - self.NMag:.2f} to {self.mag_auto + self.NMag:.2f}'
-        constraints += f'{new} {cnum} re 1 to 100'
+        constraints += f'{new} {cnum} re 1 to 60'
         constraints += f'{new} {cnum} q {eb_min:.2f} to {eb_max:.2f}'
         constraints += f'{new} {cnum} pa {pa - 15:.2f} to {pa + 15:.2f}'
 
